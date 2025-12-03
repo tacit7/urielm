@@ -1,0 +1,19 @@
+[Unit]
+Description=Urielm Phoenix App
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/urielm
+Environment=MIX_ENV=prod
+Environment=PORT=4000
+ExecStart=/usr/bin/mix phx.server
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

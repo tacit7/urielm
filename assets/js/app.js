@@ -30,13 +30,15 @@ import Counter from "../svelte/Counter.svelte"
 import Navbar from "../svelte/Navbar.svelte"
 import CodeSnippetCard from "../svelte/CodeSnippetCard.svelte"
 import WorkflowStatusCard from "../svelte/WorkflowStatusCard.svelte"
+import ThemeToggle from "../svelte/ThemeToggle.svelte"
 
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,
   Navbar,
   CodeSnippetCard,
-  WorkflowStatusCard
+  WorkflowStatusCard,
+  ThemeToggle
 })
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
