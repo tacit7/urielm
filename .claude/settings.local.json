@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "Bash(~/projects/eye-in-the-sky/bin/eye-in-the-sky:*)",
+      "mcp__eits__i-speak",
+      "Bash(mix tailwind:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
