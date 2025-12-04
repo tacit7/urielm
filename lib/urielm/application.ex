@@ -9,6 +9,7 @@ defmodule Urielm.Application do
   def start(_type, _args) do
     children = [
       UrielmWeb.Telemetry,
+      Urielm.Repo,
       {DNSCluster, query: Application.get_env(:urielm, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Urielm.PubSub},
       # Start a worker by calling: Urielm.Worker.start_link(arg)

@@ -8,6 +8,7 @@
 import Config
 
 config :urielm,
+  ecto_repos: [Urielm.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint

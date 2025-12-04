@@ -5,7 +5,10 @@
       "Bash(test:*)",
       "Bash(~/projects/eye-in-the-sky/bin/eye-in-the-sky:*)",
       "mcp__eits__i-speak",
-      "Bash(mix tailwind:*)"
+      "Bash(mix tailwind:*)",
+      "mcp__eits__i-note-add",
+      "Bash(mix assets.build:*)",
+      "mcp__eits__i-save-session-context"
     ],
     "deny": [],
     "ask": []

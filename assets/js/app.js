@@ -29,17 +29,45 @@ import topbar from "../vendor/topbar"
 import Counter from "../svelte/Counter.svelte"
 import Navbar from "../svelte/Navbar.svelte"
 import CodeSnippetCard from "../svelte/CodeSnippetCard.svelte"
-import WorkflowStatusCard from "../svelte/WorkflowStatusCard.svelte"
 import ThemeToggle from "../svelte/ThemeToggle.svelte"
+import SubNav from "../svelte/SubNav.svelte"
+
+// Infinite scroll hook
+const InfiniteScroll = {
+  mounted() {
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting) {
+          this.pushEvent("load_more", {})
+        }
+      },
+      {
+        root: null,
+        rootMargin: "100px",
+        threshold: 0.1
+      }
+    )
+    this.observer.observe(this.el)
+  },
+  destroyed() {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+  }
+}
 
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,
   Navbar,
   CodeSnippetCard,
-  WorkflowStatusCard,
-  ThemeToggle
+  ThemeToggle,
+  SubNav
 })
+
+// Add custom hooks
+Hooks.InfiniteScroll = InfiniteScroll
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

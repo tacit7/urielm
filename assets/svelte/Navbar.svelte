@@ -1,23 +1,39 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
 
-  let isScrolled = $state(false);
-  let mobileMenuOpen = $state(false);
+  export let currentPage = '';
+
+  let isScrolled = false;
+  let isMenuOpen = false;
+  let dropdownRef;
 
   function handleScroll() {
     isScrolled = window.scrollY > 20;
   }
 
-  function toggleMobileMenu() {
-    mobileMenuOpen = !mobileMenuOpen;
+  function toggleMenu() {
+    isMenuOpen = !isMenuOpen;
+  }
+
+  function closeMenu() {
+    isMenuOpen = false;
+  }
+
+  function handleClickOutside(event) {
+    if (dropdownRef && !dropdownRef.contains(event.target)) {
+      closeMenu();
+    }
   }
 
   onMount(() => {
+    handleScroll(); // Set initial state
     window.addEventListener('scroll', handleScroll);
+    document.addEventListener('click', handleClickOutside);
   });
 
   onDestroy(() => {
     window.removeEventListener('scroll', handleScroll);
+    document.removeEventListener('click', handleClickOutside);
   });
 </script>
 
@@ -27,41 +43,86 @@
   }`}
 >
   <div class="navbar-start">
-    <div class="dropdown md:hidden">
+    <!-- Mobile Dropdown -->
+    <div class="dropdown lg:hidden" class:dropdown-open={isMenuOpen} bind:this={dropdownRef}>
       <button
-        tabindex="0"
+        on:click={toggleMenu}
+        aria-label="Toggle navigation menu"
+        aria-expanded={isMenuOpen}
+        aria-controls="mobile-nav"
         class="btn btn-ghost"
-        onclick={toggleMobileMenu}
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      {#if mobileMenuOpen}
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-          <li><a href="#content">Content</a></li>
-          <li><a href="#automation">Automation</a></li>
-          <li><a href="#consulting">Consulting</a></li>
-          <li class="mt-2">
-            <button class="btn btn-primary btn-sm w-full">Get in Touch</button>
-          </li>
+      {#if isMenuOpen}
+        <ul id="mobile-nav" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+          <li><a href="/" class:active={currentPage === 'home'} on:click={closeMenu}>Home</a></li>
+          <li><a href="/references?category=coding" on:click={closeMenu}>Coding</a></li>
+          <li><a href="/references?category=ai" on:click={closeMenu}>AI</a></li>
+          <li><a href="/references?category=n8n" on:click={closeMenu}>n8n</a></li>
+          <li><a href="/references?category=tools" on:click={closeMenu}>Tools</a></li>
+          <li><a href="/references" class:active={currentPage === 'references'} on:click={closeMenu}>Prompts</a></li>
         </ul>
       {/if}
     </div>
+
+    <!-- Logo -->
     <a href="/" class="btn btn-ghost text-xl font-semibold tracking-tight">
-      urielm<span class="text-base-content/50">.dev</span>
+      UrielM<span class="text-base-content/50">.dev</span>
     </a>
   </div>
 
-  <div class="navbar-center hidden md:flex">
-    <ul class="menu menu-horizontal px-1">
-      <li><a href="#content">Content</a></li>
-      <li><a href="#automation">Automation</a></li>
-      <li><a href="#consulting">Consulting</a></li>
-    </ul>
+  <!-- Desktop Navigation - Center -->
+  <div class="navbar-center hidden lg:flex">
+    <div class="flex items-center gap-8">
+      <a
+        href="/"
+        class={`font-medium transition-colors ${currentPage === 'home' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
+      >
+        Home
+      </a>
+      <a
+        href="/references?category=coding"
+        class="font-medium text-base-content hover:text-primary transition-colors"
+      >
+        Coding
+      </a>
+      <a
+        href="/references?category=ai"
+        class="font-medium text-base-content hover:text-primary transition-colors"
+      >
+        AI
+      </a>
+      <a
+        href="/references?category=n8n"
+        class="font-medium text-base-content hover:text-primary transition-colors"
+      >
+        n8n
+      </a>
+      <a
+        href="/references?category=tools"
+        class="font-medium text-base-content hover:text-primary transition-colors"
+      >
+        Tools
+      </a>
+      <a
+        href="/references"
+        class={`font-medium transition-colors ${currentPage === 'references' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
+      >
+        Prompts
+      </a>
+    </div>
   </div>
 
+  <!-- CTA Button - Right -->
   <div class="navbar-end">
-    <button class="btn btn-primary btn-sm">Get in Touch</button>
+    <a
+      href="mailto:hello@urielm.dev"
+      class="btn btn-sm bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 border-0 rounded-full px-6"
+    >
+      Get in Touch
+    </a>
   </div>
 </div>
