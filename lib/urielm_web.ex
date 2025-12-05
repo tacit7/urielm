@@ -52,6 +52,8 @@ defmodule UrielmWeb do
     quote do
       use Phoenix.LiveView
 
+      on_mount {UrielmWeb.UserAuth, :mount_current_user}
+
       unquote(html_helpers())
     end
   end
