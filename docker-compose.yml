@@ -2,10 +2,11 @@ version: '3.8'
 
 services:
   web:
-    image: urielm:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: urielm/urielm:latest
+    # Uncomment to build locally instead of pulling from Docker Hub
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     ports:
       - "4000:4000"
     environment:

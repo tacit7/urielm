@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+echo "🚀 Deploying urielm.dev..."
+
+# Pull latest image from Docker Hub
+echo "📦 Pulling latest image..."
+docker-compose pull
+
+# Stop old container
+echo "🛑 Stopping old container..."
+docker-compose down
+
+# Start new container
+echo "▶️  Starting new container..."
+docker-compose up -d
+
+# Wait for health check
+echo "⏳ Waiting for container to be healthy..."
+sleep 10
+
+# Run migrations
+echo "🗄️  Running migrations..."
+docker-compose exec -T web bin/urielm eval "Urielm.Release.migrate()"
+
+# Show status
+echo "✅ Deployment complete!"
+docker-compose ps
+
+echo ""
+echo "🌐 Site: https://urielm.dev"
+echo "📊 Logs: docker-compose logs -f"
