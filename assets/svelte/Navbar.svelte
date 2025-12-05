@@ -122,7 +122,7 @@
     <ThemeSelector />
     <a
       href="mailto:hello@urielm.dev"
-      class="btn btn-sm bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 border-0 rounded-full px-6"
+      class="btn btn-sm btn-primary rounded-full px-6"
     >
       Get in Touch
     </a>
