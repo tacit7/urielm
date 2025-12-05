@@ -43,12 +43,16 @@ FROM elixir:1.17-alpine
 
 RUN apk add --no-cache \
     openssl \
-    ncurses-libs
+    ncurses-libs \
+    ca-certificates
 
 WORKDIR /app
 
 # Copy release from builder
 COPY --from=builder /app/_build/prod/rel/urielm ./
+
+# Copy Digital Ocean CA certificate for database SSL verification
+COPY priv/certs/do-ca.crt /etc/ssl/certs/do-ca.crt
 
 # Create non-root user
 RUN addgroup -g 1000 urielm && \
