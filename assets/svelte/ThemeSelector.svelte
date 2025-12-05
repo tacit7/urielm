@@ -12,12 +12,6 @@
   let currentTheme = 'dark'
   let isOpen = false
 
-  onMount(() => {
-    // Read from localStorage or default to dark
-    const savedTheme = localStorage.getItem('theme') || 'dark'
-    applyTheme(savedTheme)
-  })
-
   function applyTheme(theme) {
     currentTheme = theme
     document.documentElement.setAttribute('data-theme', theme)
@@ -41,6 +35,11 @@
   }
 
   onMount(() => {
+    // Read from localStorage or default to dark
+    const savedTheme = localStorage.getItem('theme') || 'dark'
+    applyTheme(savedTheme)
+
+    // Add click outside listener
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   })
