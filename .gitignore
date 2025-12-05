@@ -42,3 +42,6 @@ bin/docker-deploy.sh
 
 # Database dumps (contain credentials)
 *.sql
+
+# Deployment directory copies
+/deploy@*/
