@@ -9,8 +9,18 @@ defmodule Urielm.Content.Prompt do
     field(:category, :string)
     field(:tags, {:array, :string})
 
+    # Counter fields
+    field(:likes_count, :integer, default: 0)
+    field(:comments_count, :integer, default: 0)
+    field(:saves_count, :integer, default: 0)
+
     # Virtual field for search result ranking
     field(:rank, :float, virtual: true)
+
+    # Associations
+    has_many :comments, Urielm.Content.Comment
+    has_many :likes, Urielm.Content.Like
+    has_many :saved_prompts, Urielm.Accounts.SavedPrompt
 
     timestamps(type: :utc_datetime)
   end

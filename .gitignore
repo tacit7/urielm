@@ -45,3 +45,4 @@ bin/docker-deploy.sh
 
 # Deployment directory copies
 /deploy@*/
+.env

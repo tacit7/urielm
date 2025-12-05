@@ -32,6 +32,8 @@ import CodeSnippetCard from "../svelte/CodeSnippetCard.svelte"
 import ThemeToggle from "../svelte/ThemeToggle.svelte"
 import ThemeSelector from "../svelte/ThemeSelector.svelte"
 import SubNav from "../svelte/SubNav.svelte"
+import AuthModal from "../svelte/AuthModal.svelte"
+import UserMenu from "../svelte/UserMenu.svelte"
 
 // Infinite scroll hook
 const InfiniteScroll = {
@@ -65,7 +67,9 @@ let Hooks = getHooks({
   CodeSnippetCard,
   ThemeToggle,
   ThemeSelector,
-  SubNav
+  SubNav,
+  AuthModal,
+  UserMenu
 })
 
 // Add custom hooks

@@ -63,7 +63,12 @@ defmodule Urielm.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:ueberauth, "~> 0.10"},
+      {:ueberauth_google, "~> 0.12"},
+      {:ueberauth_twitter, "~> 0.4"},
+      {:ueberauth_facebook, "~> 0.9"},
+      {:dotenvy, "~> 0.8.0"}
     ]
   end
 

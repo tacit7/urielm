@@ -1,10 +1,12 @@
 <script>
-  import ThemeSelector from './ThemeSelector.svelte';
+  import AuthModal from './AuthModal.svelte';
+  import UserMenu from './UserMenu.svelte';
 
-  let { currentPage = '' } = $props()
+  let { currentPage = '', currentUser = null } = $props()
 
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
+  let showAuthModal = $state(false)
   let dropdownRef
 
   function handleScroll() {
@@ -17,6 +19,10 @@
 
   function closeMenu() {
     isMenuOpen = false
+  }
+
+  function openAuthModal() {
+    showAuthModal = true
   }
 
   function handleClickOutside(event) {
@@ -118,12 +124,17 @@
 
   <!-- CTA Button - Right -->
   <div class="navbar-end gap-2">
-    <ThemeSelector />
-    <a
-      href="mailto:hello@urielm.dev"
-      class="btn btn-sm btn-primary rounded-full px-6"
-    >
-      Get in Touch
-    </a>
+    {#if currentUser}
+      <UserMenu {currentUser} />
+    {:else}
+      <button
+        onclick={openAuthModal}
+        class="btn btn-sm btn-primary rounded-full px-6"
+      >
+        Sign In
+      </button>
+    {/if}
   </div>
 </div>
+
+<AuthModal bind:isOpen={showAuthModal} />

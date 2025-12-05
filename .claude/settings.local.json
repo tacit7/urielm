@@ -10,7 +10,11 @@
       "Bash(mix assets.build:*)",
       "mcp__eits__i-save-session-context",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(mix ecto.gen.migration:*)",
+      "Bash(mix ecto.migrate:*)",
+      "Bash(pkill:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []

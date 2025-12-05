@@ -4,14 +4,14 @@ defmodule UrielmWeb.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :current_user, serialize_user(socket.assigns[:current_user]))}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
-      <.Navbar currentPage="home" socket={@socket} />
+      <.Navbar currentPage="home" currentUser={@current_user} socket={@socket} />
 
       <.hero socket={@socket} />
       <.tech_stack />
@@ -216,5 +216,16 @@ defmodule UrielmWeb.HomeLive do
       </div>
     </footer>
     """
+  end
+
+  defp serialize_user(nil), do: nil
+
+  defp serialize_user(user) do
+    %{
+      id: to_string(user.id),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatar_url
+    }
   end
 end

@@ -25,6 +25,7 @@ defmodule UrielmWeb.ReferencesLive do
       |> assign(:prompts, serialize_prompts(prompts))
       |> assign(:page, 1)
       |> assign(:has_more, length(prompts) == @page_size)
+      |> assign(:current_user, serialize_user(socket.assigns[:current_user]))
 
     {:ok, socket}
   end
@@ -100,7 +101,7 @@ defmodule UrielmWeb.ReferencesLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 text-base-content">
-      <.Navbar currentPage="references" socket={@socket} />
+      <.Navbar currentPage="references" currentUser={@current_user} socket={@socket} />
 
       <div class="pt-16">
         <.SubNav activeFilter={@current_filter} categories={@categories} socket={@socket} />
@@ -220,5 +221,16 @@ defmodule UrielmWeb.ReferencesLive do
         tags: prompt.tags || []
       }
     end)
+  end
+
+  defp serialize_user(nil), do: nil
+
+  defp serialize_user(user) do
+    %{
+      id: to_string(user.id),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatar_url
+    }
   end
 end

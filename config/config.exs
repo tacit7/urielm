@@ -58,6 +58,14 @@ config :nodejs,
   # Keep small pool; adjust if you render many components concurrently
   pool_size: 4
 
+# Configure Ueberauth for OAuth authentication
+config :ueberauth, Ueberauth,
+  providers: [
+    google: {Ueberauth.Strategy.Google, [default_scope: "email profile"]},
+    twitter: {Ueberauth.Strategy.Twitter, []},
+    facebook: {Ueberauth.Strategy.Facebook, [default_scope: "email,public_profile"]}
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
