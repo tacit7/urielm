@@ -1,5 +1,6 @@
 defmodule UrielmWeb.ReferencesLive do
   use UrielmWeb, :live_view
+  use LiveSvelte.Components
 
   alias Urielm.Content
 
@@ -99,14 +100,10 @@ defmodule UrielmWeb.ReferencesLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 text-base-content">
-      <.svelte name="Navbar" props={%{currentPage: "references"}} socket={@socket} />
+      <.Navbar currentPage="references" socket={@socket} />
 
       <div class="pt-16">
-        <.svelte
-          name="SubNav"
-          props={%{activeFilter: @current_filter, categories: @categories}}
-          socket={@socket}
-        />
+        <.SubNav activeFilter={@current_filter} categories={@categories} socket={@socket} />
 
         <div class="container mx-auto px-4 py-8">
           <div class="mb-8">
@@ -118,12 +115,12 @@ defmodule UrielmWeb.ReferencesLive do
 
           <div class="mb-6">
             <form phx-change="search" phx-submit="search" class="w-full">
-              <input
+              <.input
                 type="text"
                 name="query"
                 value={@search_query}
                 placeholder="Search prompts, e.g. &quot;tiktok hooks&quot;, &quot;email subject line&quot;"
-                class="w-full px-4 py-3 rounded-lg bg-base-200 border border-base-300 text-base-content placeholder-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary"
+                class="input input-bordered w-full"
                 phx-debounce="300"
               />
             </form>
@@ -133,60 +130,64 @@ defmodule UrielmWeb.ReferencesLive do
             <%= if @prompts == [] do %>
               <div class="col-span-full text-center py-12 text-base-content/50">
                 <%= if @search_query != "" do %>
-                  No prompts found for "<%= @search_query %>". Try different keywords or browse by category.
+                  No prompts found for "{@search_query}". Try different keywords or browse by category.
                 <% else %>
                   No prompts found. Add some to get started!
                 <% end %>
               </div>
             <% else %>
               <%= for prompt <- @prompts do %>
-                <div class="bg-base-200 rounded-lg p-4 hover:bg-base-300 transition-colors border border-base-300">
-                  <div class="flex items-start justify-between gap-2 mb-3">
-                    <h2 class="text-lg font-semibold text-base-content flex-1">
-                      <%= prompt.title %>
-                    </h2>
-                    <span class="bg-primary/20 text-primary px-2 py-1 rounded text-xs capitalize font-medium">
-                      <%= prompt.category %>
-                    </span>
-                  </div>
-
-                  <%= if prompt.description do %>
-                    <p class="text-sm text-base-content/60 mb-3 line-clamp-2">
-                      <%= prompt.description %>
-                    </p>
-                  <% end %>
-
-                  <%= if prompt.tags && length(prompt.tags) > 0 do %>
-                    <div class="flex flex-wrap gap-1 mb-3">
-                      <%= for tag <- prompt.tags do %>
-                        <span class="bg-base-300 text-base-content/70 px-2 py-0.5 rounded text-xs"><%= tag %></span>
-                      <% end %>
+                <div class="card bg-base-200 border border-base-300 hover:bg-base-300 transition-colors">
+                  <div class="card-body p-4 gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                      <h2 class="card-title text-base-content text-lg">
+                        {prompt.title}
+                      </h2>
+                      <span class="badge badge-primary capitalize font-medium">
+                        {prompt.category}
+                      </span>
                     </div>
-                  <% end %>
 
-                  <div class="flex">
-                    <a
-                      href={prompt.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1.5 btn btn-primary btn-sm"
-                    >
-                      View Prompt
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    <%= if prompt.description do %>
+                      <p class="text-sm text-base-content/60 line-clamp-2">
+                        {prompt.description}
+                      </p>
+                    <% end %>
+
+                    <%= if prompt.tags && length(prompt.tags) > 0 do %>
+                      <div class="flex flex-wrap gap-1">
+                        <%= for tag <- prompt.tags do %>
+                          <span class="badge badge-ghost text-xs">
+                            {tag}
+                          </span>
+                        <% end %>
+                      </div>
+                    <% end %>
+
+                    <div class="card-actions justify-start pt-1">
+                      <a
+                        href={prompt.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 btn btn-primary btn-sm"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                      </svg>
-                    </a>
+                        View Prompt
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                          />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
                 </div>
               <% end %>

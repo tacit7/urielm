@@ -138,10 +138,11 @@ defmodule Urielm.Content do
   """
   def list_categories do
     Repo.all(
-      from p in Prompt,
+      from(p in Prompt,
         select: p.category,
         distinct: true,
         order_by: p.category
+      )
     )
   end
 

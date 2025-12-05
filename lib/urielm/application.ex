@@ -12,6 +12,8 @@ defmodule Urielm.Application do
       Urielm.Repo,
       {DNSCluster, query: Application.get_env(:urielm, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Urielm.PubSub},
+      # Enable Server-Side Rendering (SSR) for LiveSvelte
+      {NodeJS.Supervisor, name: NodeJS, path: System.find_executable("node")},
       # Start a worker by calling: Urielm.Worker.start_link(arg)
       # {Urielm.Worker, arg},
       # Start to serve requests, typically the last entry

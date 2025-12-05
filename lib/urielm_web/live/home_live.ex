@@ -1,5 +1,6 @@
 defmodule UrielmWeb.HomeLive do
   use UrielmWeb, :live_view
+  use LiveSvelte.Components
 
   @impl true
   def mount(_params, _session, socket) do
@@ -10,11 +11,7 @@ defmodule UrielmWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
-      <.svelte
-        name="Navbar"
-        props={%{currentPage: "home"}}
-        socket={@socket}
-      />
+      <.Navbar currentPage="home" socket={@socket} />
 
       <.hero socket={@socket} />
       <.tech_stack />
@@ -31,40 +28,44 @@ defmodule UrielmWeb.HomeLive do
         <!-- Badge -->
         <div class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up">
           <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75">
+            </span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
           </span>
           <span class="text-[10px] uppercase tracking-wider font-semibold text-base-content/70">
             New Video: Claude 3.5 Opus Workflow
           </span>
         </div>
-
-        <!-- Headline -->
+        
+    <!-- Headline -->
         <h1 class="text-5xl md:text-7xl lg:text-8xl font-semibold text-base-content tracking-tight mb-8 max-w-5xl mx-auto leading-[1.1] animate-fade-in-up delay-100">
           Building the future with <span class="text-base-content/50">AI & Automation.</span>
         </h1>
-
-        <!-- Subhead -->
+        
+    <!-- Subhead -->
         <p class="text-lg md:text-xl text-base-content/70 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
           I help developers and creators master Claude Code, build n8n workflows, and automate the boring stuff so you can focus on creating.
         </p>
-
-        <!-- CTAs -->
+        
+    <!-- CTAs -->
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in-up delay-300">
           <button class="btn btn-primary h-12 px-8 rounded-full font-medium flex items-center space-x-2 transition-all transform hover:scale-105">
             <span>Explore Tutorials</span>
-            <.icon name="hero-play-solid" class="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <.icon
+              name="hero-play-solid"
+              class="h-4 w-4 group-hover:translate-x-1 transition-transform"
+            />
           </button>
           <button class="btn btn-outline h-12 px-8 rounded-full font-medium transition-all">
             Book Consultation
           </button>
         </div>
       </div>
-
-      <!-- Floating Elements -->
-      <.svelte name="CodeSnippetCard" props={%{delay: 0}} socket={@socket} />
-
-      <!-- Background Gradients -->
+      
+    <!-- Floating Elements -->
+      <.CodeSnippetCard delay={0} socket={@socket} />
+      
+    <!-- Background Gradients -->
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-blue-50 to-white rounded-full blur-3xl -z-10 opacity-60">
       </div>
     </section>
@@ -82,7 +83,7 @@ defmodule UrielmWeb.HomeLive do
           <%= for tool <- ["Claude", "OpenAI", "n8n", "Svelte", "Phoenix"] do %>
             <div class="flex items-center space-x-2 group cursor-default">
               <span class="text-xl font-bold font-sans tracking-tight text-base-content/80 group-hover:text-base-content transition-colors">
-                <%= tool %>
+                {tool}
               </span>
             </div>
           <% end %>
@@ -125,8 +126,8 @@ defmodule UrielmWeb.HomeLive do
             <div class="absolute right-[-20px] bottom-[-20px] w-64 h-64 bg-gradient-to-tl from-red-500/20 to-transparent rounded-full opacity-0 group-hover:opacity-50 blur-3xl transition-opacity duration-700 ease-out">
             </div>
           </div>
-
-          <!-- Tall Card - Automation Services -->
+          
+    <!-- Tall Card - Automation Services -->
           <div class="md:row-span-2 rounded-3xl bg-base-300 p-8 text-base-content relative overflow-hidden group">
             <div class="relative z-10 h-full flex flex-col justify-between">
               <div>
@@ -134,18 +135,24 @@ defmodule UrielmWeb.HomeLive do
                   <.icon name="hero-bolt" class="h-6 w-6 text-warning" />
                 </div>
                 <h3 class="text-2xl font-semibold mb-2">Automation Systems</h3>
-                <p class="text-base-content/60">Custom n8n workflows that run your business while you sleep.</p>
+                <p class="text-base-content/60">
+                  Custom n8n workflows that run your business while you sleep.
+                </p>
               </div>
-
-              <!-- Animated Terminal Visual -->
+              
+    <!-- Animated Terminal Visual -->
               <div class="mt-12 bg-base-100 rounded-xl p-4 border border-base-300 font-mono text-xs text-success opacity-80">
-                <div class="mb-2 text-base-content/50 border-b border-base-300 pb-2">workflow_engine.log</div>
+                <div class="mb-2 text-base-content/50 border-b border-base-300 pb-2">
+                  workflow_engine.log
+                </div>
                 <div class="space-y-2">
                   <div class="flex gap-2">
-                    <span class="text-base-content/40">09:00:01</span> <span>Fetching new leads...</span>
+                    <span class="text-base-content/40">09:00:01</span>
+                    <span>Fetching new leads...</span>
                   </div>
                   <div class="flex gap-2">
-                    <span class="text-base-content/40">09:00:02</span> <span>Enriching data w/ GPT-4o</span>
+                    <span class="text-base-content/40">09:00:02</span>
+                    <span>Enriching data w/ GPT-4o</span>
                   </div>
                   <div class="flex gap-2">
                     <span class="text-base-content/40">09:00:04</span> <span>Drafting email...</span>
@@ -158,23 +165,27 @@ defmodule UrielmWeb.HomeLive do
               </div>
             </div>
           </div>
-
-          <!-- Small Card 1 - Prompt Engineering -->
+          
+    <!-- Small Card 1 - Prompt Engineering -->
           <div class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-primary/10 transition-colors duration-500">
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <.icon name="hero-chat-bubble-left-right" class="h-6 w-6 text-primary" />
             </div>
             <h3 class="text-xl font-semibold mb-2 text-base-content">Prompting</h3>
-            <p class="text-base-content/70 text-sm">Library of system prompts for coding & writing.</p>
+            <p class="text-base-content/70 text-sm">
+              Library of system prompts for coding & writing.
+            </p>
           </div>
-
-          <!-- Small Card 2 - Code/Consulting -->
+          
+    <!-- Small Card 2 - Code/Consulting -->
           <div class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-success/10 transition-colors duration-500">
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <.icon name="hero-code-bracket" class="h-6 w-6 text-success" />
             </div>
             <h3 class="text-xl font-semibold mb-2 text-base-content">Code</h3>
-            <p class="text-base-content/70 text-sm">Phoenix + Svelte integration patterns & snippets.</p>
+            <p class="text-base-content/70 text-sm">
+              Phoenix + Svelte integration patterns & snippets.
+            </p>
           </div>
         </div>
       </div>

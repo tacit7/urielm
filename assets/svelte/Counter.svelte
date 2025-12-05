@@ -1,6 +1,5 @@
 <script>
-  export let count = 0
-  export let live
+  let { count = 0, live } = $props()
 
   function increment() {
     live.pushEvent('increment', {})
@@ -16,15 +15,15 @@
 
   <div class="flex gap-2">
     <button
-      on:click={decrement}
-      class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+      onclick={decrement}
+      class="btn btn-error"
     >
       Decrement
     </button>
 
     <button
-      on:click={increment}
-      class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+      onclick={increment}
+      class="btn btn-primary"
     >
       Increment
     </button>

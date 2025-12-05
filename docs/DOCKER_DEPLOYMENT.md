@@ -249,10 +249,11 @@ version: '3.8'
 
 services:
   web:
-    image: urielm:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: urielm/urielm:latest
+    # Uncomment to build locally instead of pulling from Docker Hub
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     ports:
       - "4000:4000"
     environment:
@@ -269,6 +270,8 @@ services:
       retries: 3
       start_period: 40s
 ```
+
+**Key change:** Uses `urielm/urielm:latest` from Docker Hub instead of building locally. GitHub Actions automatically builds and pushes images on every commit to main.
 
 ### 3.3 Release Module for Migrations
 
@@ -304,98 +307,136 @@ defmodule Urielm.Release do
 end
 ```
 
-## Part 4: Deployment Workflow
+## Part 4: CI/CD with GitHub Actions
 
-### 4.1 Initial Deployment
+### 4.1 Automated Image Building
+
+GitHub Actions automatically builds and pushes Docker images to Docker Hub on every push to main.
+
+**Workflow:** `.github/workflows/docker-build.yml`
+- Triggers on push to main branch
+- Builds Docker image using multi-stage Dockerfile
+- Tags with commit SHA and `latest`
+- Pushes to Docker Hub (`urielm/urielm`)
+- Uses Docker layer caching for faster builds
+
+**Setup GitHub Secrets:**
+
+1. **Create Docker Hub Access Token:**
+   - Go to https://hub.docker.com/settings/security
+   - Create new token with Read/Write/Delete permissions
+   - Copy the token
+
+2. **Add to GitHub Secrets:**
+   - Go to https://github.com/tacit7/urielm/settings/secrets/actions
+   - Add `DOCKER_USERNAME`: `urielm`
+   - Add `DOCKER_TOKEN`: `<your-token>`
+
+### 4.2 Initial Deployment
 
 ```bash
-# On server
+# SSH to server
+ssh -i ~/.ssh/tacit7 deploy@167.172.194.233
+
+# Set environment variables (one time - add to ~/.bashrc to persist)
+export SECRET_KEY_BASE="***REMOVED***"
+export DATABASE_URL="postgresql://doadmin:***REMOVED***@db-postgresql-sfo2-18861-do-user-4084462-0.l.db.ondigitalocean.com:25060/defaultdb?sslmode=require"
+export PHX_HOST="urielm.dev"
+export MIX_ENV="prod"
+export PORT="4000"
+
+# Navigate to app directory
 cd /home/deploy/urielm
+
+# Pull latest code (for docker-compose.yml)
 git pull origin main
 
-# Build and start container
-docker-compose up -d --build
+# Pull pre-built image from Docker Hub
+docker-compose pull
 
-# Check logs
-docker-compose logs -f
+# Start container
+docker-compose up -d
 
-# Wait for container to be healthy, then run migrations
+# Run migrations
 docker-compose exec -T web bin/urielm eval "Urielm.Release.migrate()"
 
-# Verify container is running
+# Verify
 docker-compose ps
 ```
 
-Expected output:
-```
-NAME                IMAGE               COMMAND                  SERVICE   CREATED         STATUS                   PORTS
-urielm-web-1        urielm:latest       "bin/urielm start"      web       2 minutes ago   Up 2 minutes (healthy)   0.0.0.0:4000->4000/tcp
-```
+### 4.3 Simple Deployments with bin/deploy Script
 
-### 4.2 Testing Locally
-
-Before deploying to production, test the Docker build locally:
-
-```bash
-# On your Mac
-cd /Users/urielmaldonado/projects/urielm
-
-# Build image
-docker build -t urielm:test .
-
-# Run container
-docker run -d -p 4000:4000 \
-  --name urielm-test \
-  -e MIX_ENV=prod \
-  -e SECRET_KEY_BASE="your_secret_key" \
-  -e DATABASE_URL="postgresql://user:pass@host:25060/defaultdb?sslmode=require" \
-  -e PHX_HOST="urielm.dev" \
-  urielm:test
-
-# Check logs
-docker logs urielm-test -f
-
-# Test at http://localhost:4000
-open http://localhost:4000
-
-# Clean up
-docker stop urielm-test
-docker rm urielm-test
-```
-
-### 4.3 Future Deployments
+Use the deployment script for one-command deployments:
 
 ```bash
 # SSH to server
 ssh -i ~/.ssh/tacit7 deploy@167.172.194.233
 cd /home/deploy/urielm
 
-# Pull latest code
-git pull origin main
+# Deploy latest image
+./bin/deploy
+```
 
-# Rebuild and restart
-docker-compose up -d --build
+The script automatically:
+1. Pulls latest image from Docker Hub
+2. Stops old container
+3. Starts new container
+4. Runs migrations
+5. Shows status
+
+### 4.4 Manual Deployment
+
+```bash
+# SSH to server
+ssh -i ~/.ssh/tacit7 deploy@167.172.194.233
+cd /home/deploy/urielm
+
+# Pull latest image (built by GitHub Actions)
+docker-compose pull
+
+# Restart with new image
+docker-compose down
+docker-compose up -d
 
 # Run migrations
 docker-compose exec -T web bin/urielm eval "Urielm.Release.migrate()"
 ```
 
-### 4.4 Rollback
+**No building on the server!** Images are pre-built by GitHub Actions and pulled from Docker Hub.
+
+### 4.5 Rollback to Previous Version
+
+GitHub Actions tags each image with the commit SHA, making rollbacks easy:
 
 ```bash
-# List available images
-docker images | grep urielm
+# SSH to server
+ssh -i ~/.ssh/tacit7 deploy@167.172.194.233
+cd /home/deploy/urielm
 
-# Stop current container
+# List available images on Docker Hub
+docker search urielm/urielm --limit 5
+
+# Or check GitHub Actions for commit SHA
+# Go to: https://github.com/tacit7/urielm/actions
+
+# Update docker-compose.yml to use specific commit
+# Change: image: urielm/urielm:latest
+# To: image: urielm/urielm:main-abc1234
+
+# Pull and restart
+docker-compose pull
 docker-compose down
+docker-compose up -d
 
-# Run specific version (if you tagged it)
-docker run -d -p 4000:4000 --env-file .env urielm:20241204_120345
-
-# Or rebuild from a previous git commit
-git checkout <previous-commit-hash>
-docker-compose up -d --build
-git checkout main
+# Or use docker run directly
+docker run -d -p 4000:4000 \
+  --name urielm-web \
+  -e SECRET_KEY_BASE="..." \
+  -e DATABASE_URL="..." \
+  -e PHX_HOST="urielm.dev" \
+  -e MIX_ENV="prod" \
+  -e PORT="4000" \
+  urielm/urielm:main-abc1234
 ```
 
 ## Part 5: Cloudflare Configuration
@@ -549,15 +590,15 @@ docker-compose up -d --build
 
 ## Key Lessons Learned
 
-1. **Runtime image must match build image** - Using different Alpine versions causes OpenSSL/crypto NIF errors
-2. **Digital Ocean uses defaultdb not postgres** - Skip `mix ecto.create`, run migrations directly
-3. **Digital Ocean CA certificate must be in Docker image** - The private CA cert from DO dashboard must be copied into the image during build, not mounted from host
-4. **SSL verification is critical** - Use `verify: :verify_peer` with proper CA cert, never use `verify: :verify_none` in production
-5. **.env file format matters** - NO leading spaces allowed; docker-compose will silently ignore malformed lines
-6. **Migrations in releases** - Need Release module with `Urielm.Release.migrate()` since Mix isn't available in production builds
-7. **.env file security** - Use `chmod 600` to protect environment variables
+1. **Build once, deploy everywhere** - GitHub Actions builds images; servers just pull pre-built images. Much faster than building on servers.
+2. **Runtime image must match build image** - Using different Alpine versions causes OpenSSL/crypto NIF errors
+3. **Digital Ocean uses defaultdb not postgres** - Skip `mix ecto.create`, run migrations directly
+4. **Digital Ocean CA certificate must be in Docker image** - The private CA cert from DO dashboard must be copied into the image during build, not mounted from host
+5. **SSL verification is critical** - Use `verify: :verify_peer` with proper CA cert, never use `verify: :verify_none` in production
+6. **Export environment variables instead of .env files** - Leading spaces in .env cause silent failures. `export VAR=value` is more reliable.
+7. **Migrations in releases** - Need Release module with `Urielm.Release.migrate()` since Mix isn't available in production builds
 8. **Health checks** - Docker compose health checks help ensure container is ready before routing traffic
-9. **Environment variables** - Can pass inline if .env parsing fails: `VAR=value docker-compose up -d`
+9. **Image tagging with commit SHA** - Makes rollbacks trivial and tracks exactly what's deployed
 
 ## Image Size Evolution
 
@@ -610,12 +651,14 @@ Trade-off: Larger image size for guaranteed compatibility.
 
 ## Next Steps
 
-1. Set up automated deployments via GitHub Actions
-2. Implement image tagging strategy (git commit hash or timestamp)
-3. Set up container monitoring (Prometheus + Grafana)
-4. Configure automated backups for database
-5. Set up log aggregation (ELK stack or similar)
-6. Implement blue-green deployment for zero downtime
+1. ✅ **Automated CI/CD** - GitHub Actions builds and pushes images
+2. ✅ **Image tagging** - Commit SHA and latest tags
+3. **Container monitoring** - Set up Prometheus + Grafana or Digital Ocean monitoring
+4. **Automated database backups** - Daily backups to S3 or DO Spaces
+5. **Log aggregation** - ELK stack, Papertrail, or Logflare
+6. **Zero-downtime deployments** - Blue-green or rolling updates
+7. **Alerts** - PagerDuty, Slack, or email for downtime/errors
+8. **Staging environment** - Test deployments before production
 
 ---
 

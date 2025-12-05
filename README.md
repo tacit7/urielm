@@ -302,27 +302,42 @@ Ensure you're passing the socket:
 
 ## Deployment
 
-This project supports Docker-based deployment to Digital Ocean with Cloudflare.
+Automated CI/CD deployment to Digital Ocean using Docker Hub and GitHub Actions.
 
-**Quick Start:**
+**How it works:**
+1. Push code to GitHub
+2. GitHub Actions automatically builds Docker image
+3. Image pushed to Docker Hub (`urielm/urielm:latest`)
+4. Server pulls pre-built image and deploys
+
+**Quick Deployment:**
 ```bash
-# Build Docker image
-docker build -t urielm:latest .
+# On server
+cd /home/deploy/urielm
+./bin/deploy
+```
 
-# Run with docker-compose
-docker-compose up -d
+**Manual Deployment:**
+```bash
+# Pull latest image from Docker Hub
+docker-compose pull
+
+# Restart with new image
+docker-compose down && docker-compose up -d
 
 # Run migrations
 docker-compose exec -T web bin/urielm eval "Urielm.Release.migrate()"
 ```
 
 **Full deployment guides:**
-- **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** (recommended) - Complete guide for Docker + docker-compose deployment
+- **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** (recommended) - Complete CI/CD guide with GitHub Actions
 - **[Systemd Deployment](docs/DEPLOYMENT_WALKTHROUGH.md)** - Traditional systemd service deployment
 
 **Key files:**
+- `.github/workflows/docker-build.yml` - CI/CD pipeline
 - `Dockerfile` - Multi-stage build (Elixir, npm assets, release)
-- `docker-compose.yml` - Service orchestration
+- `docker-compose.yml` - Pulls from Docker Hub (`urielm/urielm:latest`)
+- `bin/deploy` - One-command deployment script
 - `lib/urielm/release.ex` - Migration runner for production releases
 
 ## Resources

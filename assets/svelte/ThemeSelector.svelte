@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from 'svelte'
-
   const themes = [
+    { value: 'light', label: 'Light', icon: '☀️' },
     { value: 'dark', label: 'Dark', icon: '🌙' },
     { value: 'dracula', label: 'Dracula', icon: '🧛' },
     { value: 'synthwave', label: 'Synthwave', icon: '🌆' },
@@ -9,13 +8,21 @@
     { value: 'dim', label: 'Dim', icon: '🌑' }
   ]
 
-  let currentTheme = 'dark'
-  let isOpen = false
+  let currentTheme = $state('dark')
+  let isOpen = $state(false)
 
   function applyTheme(theme) {
     currentTheme = theme
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
+    if (theme === 'system') {
+      document.documentElement.removeAttribute('data-theme')
+      localStorage.removeItem('phx:theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+      // Use the same storage key as Phoenix + other toggles
+      localStorage.setItem('phx:theme', theme)
+    }
+    // Notify listeners (e.g., Phoenix head script)
+    window.dispatchEvent(new CustomEvent('phx:set-theme', { detail: { theme } }))
   }
 
   function selectTheme(theme) {
@@ -34,20 +41,41 @@
     }
   }
 
-  onMount(() => {
-    // Read from localStorage or default to dark
-    const savedTheme = localStorage.getItem('theme') || 'dark'
-    applyTheme(savedTheme)
+  $effect(() => {
+    // Sync from page/head initialization
+    const savedTheme = localStorage.getItem('phx:theme') || 'system'
+    if (savedTheme === 'system') {
+      currentTheme = document.documentElement.getAttribute('data-theme') || 'light'
+    } else {
+      currentTheme = savedTheme
+    }
 
-    // Add click outside listener
+    // Keep in sync with other controls (Layouts.theme_toggle, other tabs)
+    const storageHandler = (e) => {
+      if (e.key === 'phx:theme') {
+        const next = e.newValue || 'system'
+        currentTheme = next === 'system' ? (document.documentElement.getAttribute('data-theme') || 'light') : next
+      }
+    }
+    const themeEventHandler = (e) => {
+      const next = e.detail?.theme ?? e.target?.dataset?.phxTheme ?? 'system'
+      currentTheme = next === 'system' ? (document.documentElement.getAttribute('data-theme') || 'light') : next
+    }
+
     document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
+    window.addEventListener('storage', storageHandler)
+    window.addEventListener('phx:set-theme', themeEventHandler)
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+      window.removeEventListener('storage', storageHandler)
+      window.removeEventListener('phx:set-theme', themeEventHandler)
+    }
   })
 </script>
 
 <div class="theme-selector relative">
   <button
-    on:click={toggleDropdown}
+    onclick={toggleDropdown}
     class="btn btn-ghost btn-sm gap-2"
     aria-label="Select theme"
   >
@@ -70,7 +98,7 @@
         {#each themes as theme}
           <li>
             <button
-              on:click={() => selectTheme(theme.value)}
+              onclick={() => selectTheme(theme.value)}
               class="flex items-center gap-3 {currentTheme === theme.value ? 'active bg-primary text-primary-content' : ''}"
             >
               <span class="text-lg">{theme.icon}</span>

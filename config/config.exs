@@ -51,6 +51,13 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Configure NodeJS runtime used by LiveSvelte SSR
+config :nodejs,
+  # Resolve absolute path to the Node binary at runtime
+  path: System.find_executable("node"),
+  # Keep small pool; adjust if you render many components concurrently
+  pool_size: 4
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

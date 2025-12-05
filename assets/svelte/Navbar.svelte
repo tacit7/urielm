@@ -1,41 +1,40 @@
 <script>
-  import { onMount, onDestroy } from 'svelte';
   import ThemeSelector from './ThemeSelector.svelte';
 
-  export let currentPage = '';
+  let { currentPage = '' } = $props()
 
-  let isScrolled = false;
-  let isMenuOpen = false;
-  let dropdownRef;
+  let isScrolled = $state(false)
+  let isMenuOpen = $state(false)
+  let dropdownRef
 
   function handleScroll() {
-    isScrolled = window.scrollY > 20;
+    isScrolled = window.scrollY > 20
   }
 
   function toggleMenu() {
-    isMenuOpen = !isMenuOpen;
+    isMenuOpen = !isMenuOpen
   }
 
   function closeMenu() {
-    isMenuOpen = false;
+    isMenuOpen = false
   }
 
   function handleClickOutside(event) {
     if (dropdownRef && !dropdownRef.contains(event.target)) {
-      closeMenu();
+      closeMenu()
     }
   }
 
-  onMount(() => {
-    handleScroll(); // Set initial state
-    window.addEventListener('scroll', handleScroll);
-    document.addEventListener('click', handleClickOutside);
-  });
-
-  onDestroy(() => {
-    window.removeEventListener('scroll', handleScroll);
-    document.removeEventListener('click', handleClickOutside);
-  });
+  $effect(() => {
+    // run once on mount; re-run if handlers change (they don't)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll)
+    document.addEventListener('click', handleClickOutside)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('click', handleClickOutside)
+    }
+  })
 </script>
 
 <div
@@ -47,7 +46,7 @@
     <!-- Mobile Dropdown -->
     <div class="dropdown lg:hidden" class:dropdown-open={isMenuOpen} bind:this={dropdownRef}>
       <button
-        on:click={toggleMenu}
+        onclick={toggleMenu}
         aria-label="Toggle navigation menu"
         aria-expanded={isMenuOpen}
         aria-controls="mobile-nav"
@@ -59,12 +58,12 @@
       </button>
       {#if isMenuOpen}
         <ul id="mobile-nav" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-          <li><a href="/" class:active={currentPage === 'home'} on:click={closeMenu}>Home</a></li>
-          <li><a href="/references?category=coding" on:click={closeMenu}>Coding</a></li>
-          <li><a href="/references?category=ai" on:click={closeMenu}>AI</a></li>
-          <li><a href="/references?category=n8n" on:click={closeMenu}>n8n</a></li>
-          <li><a href="/references?category=tools" on:click={closeMenu}>Tools</a></li>
-          <li><a href="/references" class:active={currentPage === 'references'} on:click={closeMenu}>Prompts</a></li>
+          <li><a href="/" class:active={currentPage === 'home'} onclick={closeMenu}>Home</a></li>
+          <li><a href="/references?category=coding" onclick={closeMenu}>Coding</a></li>
+          <li><a href="/references?category=ai" onclick={closeMenu}>AI</a></li>
+          <li><a href="/references?category=n8n" onclick={closeMenu}>n8n</a></li>
+          <li><a href="/references?category=tools" onclick={closeMenu}>Tools</a></li>
+          <li><a href="/references" class:active={currentPage === 'references'} onclick={closeMenu}>Prompts</a></li>
         </ul>
       {/if}
     </div>

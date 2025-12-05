@@ -4,6 +4,7 @@ FROM elixir:1.17-alpine AS builder
 # Install build dependencies
 RUN apk add --no-cache \
     build-base \
+    nodejs \
     npm \
     git \
     python3
@@ -44,7 +45,8 @@ FROM elixir:1.17-alpine
 RUN apk add --no-cache \
     openssl \
     ncurses-libs \
-    ca-certificates
+    ca-certificates \
+    nodejs
 
 WORKDIR /app
 
@@ -63,6 +65,7 @@ USER urielm
 
 ENV HOME=/app
 ENV MIX_ENV=prod
+ENV NODE_ENV=production
 ENV PORT=4000
 
 EXPOSE 4000

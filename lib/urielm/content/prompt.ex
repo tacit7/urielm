@@ -3,14 +3,14 @@ defmodule Urielm.Content.Prompt do
   import Ecto.Changeset
 
   schema "prompts" do
-    field :title, :string
-    field :url, :string
-    field :description, :string
-    field :category, :string
-    field :tags, {:array, :string}
+    field(:title, :string)
+    field(:url, :string)
+    field(:description, :string)
+    field(:category, :string)
+    field(:tags, {:array, :string})
 
     # Virtual field for search result ranking
-    field :rank, :float, virtual: true
+    field(:rank, :float, virtual: true)
 
     timestamps(type: :utc_datetime)
   end

@@ -1,35 +1,33 @@
 <script>
-  import { onMount } from 'svelte';
-
-  let currentTheme = $state('light');
+  let currentTheme = $state('light')
 
   function toggleTheme() {
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    currentTheme = newTheme;
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('phx:theme', newTheme);
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light'
+    currentTheme = newTheme
+    document.documentElement.setAttribute('data-theme', newTheme)
+    localStorage.setItem('phx:theme', newTheme)
 
     // Dispatch event for other components
     window.dispatchEvent(new CustomEvent('phx:set-theme', {
       detail: { theme: newTheme }
-    }));
+    }))
   }
 
-  onMount(() => {
+  $effect(() => {
     // Get initial theme
-    const stored = localStorage.getItem('phx:theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    currentTheme = stored || (prefersDark ? 'dark' : 'light');
+    const stored = localStorage.getItem('phx:theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    currentTheme = stored || (prefersDark ? 'dark' : 'light')
 
     if (!document.documentElement.hasAttribute('data-theme')) {
-      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme)
     }
-  });
+  })
 </script>
 
 <button
   onclick={toggleTheme}
-  class="relative w-8 h-8 rounded-full flex items-center justify-center hover:bg-base-200 transition-colors"
+  class="btn btn-ghost btn-circle btn-sm"
   aria-label="Toggle theme"
 >
   {#if currentTheme === 'light'}

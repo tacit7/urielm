@@ -8,7 +8,9 @@
       "Bash(mix tailwind:*)",
       "mcp__eits__i-note-add",
       "Bash(mix assets.build:*)",
-      "mcp__eits__i-save-session-context"
+      "mcp__eits__i-save-session-context",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

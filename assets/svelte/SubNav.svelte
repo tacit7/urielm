@@ -1,38 +1,35 @@
 <script>
-  export let activeFilter = 'all';
-  export let categories = [];
-  export let live;
+  let { activeFilter = 'all', categories = [], live } = $props()
 
   function selectFilter(filter) {
-    live.pushEvent('filter_changed', {category: filter});
+    live.pushEvent('filter_changed', { category: filter })
   }
 </script>
 
-<div class="border-b border-base-300 bg-base-100">
+<div class="bg-base-100 border-b border-base-300">
   <div class="container mx-auto px-4">
-    <nav class="flex gap-6 overflow-x-auto scrollbar-hide" aria-label="Reference filters">
+    <div class="tabs tabs-bordered overflow-x-auto scrollbar-hide" aria-label="Reference filters" role="tablist">
       <button
-        on:click={() => selectFilter('all')}
-        class={`py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
-          activeFilter === 'all'
-            ? 'border-primary text-primary'
-            : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-300'
-        }`}
+        type="button"
+        onclick={() => selectFilter('all')}
+        role="tab"
+        aria-selected={activeFilter === 'all'}
+        class={`tab tab-sm sm:tab-md whitespace-nowrap transition-colors duration-200 hover:text-primary ${activeFilter === 'all' ? 'tab-active' : ''}`}
       >
         All
       </button>
       {#each categories as category}
         <button
-          on:click={() => selectFilter(category)}
-          class={`py-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap capitalize ${
-            activeFilter === category
-              ? 'border-primary text-primary'
-              : 'border-transparent text-base-content/60 hover:text-base-content hover:border-base-300'
-          }`}
+          type="button"
+          onclick={() => selectFilter(category)}
+          role="tab"
+          aria-selected={activeFilter === category}
+          class={`tab tab-sm sm:tab-md whitespace-nowrap capitalize transition-colors duration-200 hover:text-primary ${activeFilter === category ? 'tab-active' : ''}`}
         >
           {category}
         </button>
       {/each}
-    </nav>
+    </div>
   </div>
+  
 </div>

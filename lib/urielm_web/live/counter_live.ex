@@ -1,5 +1,6 @@
 defmodule UrielmWeb.CounterLive do
   use UrielmWeb, :live_view
+  use LiveSvelte.Components
 
   @impl true
   def mount(_params, _session, socket) do
@@ -25,11 +26,7 @@ defmodule UrielmWeb.CounterLive do
           Svelte + Phoenix LiveView
         </h1>
 
-        <.svelte
-          name="Counter"
-          props={%{count: @count}}
-          socket={@socket}
-        />
+        <.Counter count={@count} socket={@socket} />
 
         <div class="mt-8 text-center text-gray-600">
           <p>This counter is a Svelte component running in Phoenix LiveView</p>

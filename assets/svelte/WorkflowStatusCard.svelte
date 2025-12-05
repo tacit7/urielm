@@ -1,5 +1,5 @@
 <script>
-  export let delay = 0;
+  let { delay = 0 } = $props()
 </script>
 
 <div
