@@ -35,3 +35,10 @@ svelte_app-*.tar
 npm-debug.log
 /assets/node_modules/
 /logs/
+bin/docker-deploy.sh
+
+# Eye in the Sky session tracking
+/.claude/hooks/
+
+# Database dumps (contain credentials)
+*.sql
