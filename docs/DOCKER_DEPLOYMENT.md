@@ -62,22 +62,44 @@ git clone https://github.com/tacit7/urielm.git .
 
 ### 1.4 Create Environment File
 
-```bash
-nano .env
-```
+**Option 1: Using .env file (recommended)**
 
-Paste (replace with your actual credentials):
 ```bash
+cat > .env << 'EOF'
 SECRET_KEY_BASE=your_secret_key_here
 DATABASE_URL=postgresql://doadmin:PASSWORD@db-host:25060/defaultdb?sslmode=require
 PHX_HOST=urielm.dev
 MIX_ENV=prod
 PORT=4000
+EOF
 ```
 
-Save (`Ctrl+X`, `Y`, `Enter`) and set permissions:
+**⚠️ CRITICAL:** .env files MUST NOT have leading spaces. Wrong:
+```bash
+  SECRET_KEY_BASE=...  # ❌ Leading spaces cause docker-compose to ignore the line
+```
+
+Correct:
+```bash
+SECRET_KEY_BASE=...    # ✅ No leading spaces
+```
+
+Set permissions:
 ```bash
 chmod 600 .env
+```
+
+**Option 2: Pass environment variables inline**
+
+If you have issues with .env file parsing, pass variables directly:
+
+```bash
+SECRET_KEY_BASE="your_secret" \
+DATABASE_URL="postgresql://doadmin:PASSWORD@db-host:25060/defaultdb?sslmode=require" \
+PHX_HOST="urielm.dev" \
+MIX_ENV="prod" \
+PORT="4000" \
+docker-compose up -d
 ```
 
 ## Part 2: Database Setup
@@ -89,17 +111,36 @@ chmod 600 .env
 3. Same datacenter as droplet (SFO2)
 4. Note connection details
 
-### 2.2 Download CA Certificate
+### 2.2 Download and Add CA Certificate to Project
 
-1. Database dashboard → Connection Details
-2. Download CA Certificate (`ca-certificate.crt`)
-3. This file is needed for SSL verification
+Digital Ocean managed databases use a **private CA certificate** unique to your database cluster. This certificate must be included in the Docker image.
 
-**Note:** The CA certificate is already baked into the Docker image via the Dockerfile. You don't need to manually upload it to the server.
+**On your development machine:**
+
+1. **Download CA Certificate from Digital Ocean:**
+   - Database dashboard → Connection Details
+   - Download CA Certificate (`ca-certificate.crt`)
+
+2. **Add certificate to project:**
+   ```bash
+   # On your Mac
+   cd /Users/urielmaldonado/projects/urielm
+   mkdir -p priv/certs
+   cp ~/Downloads/ca-certificate.crt priv/certs/do-ca.crt
+   ```
+
+3. **Commit to repository:**
+   ```bash
+   git add priv/certs/do-ca.crt
+   git commit -m "Add Digital Ocean CA certificate for SSL verification"
+   git push origin main
+   ```
+
+**Important:** This CA certificate is not sensitive - it's only used to verify the server's identity, not to authenticate your connection. The actual credentials are in the DATABASE_URL.
 
 ### 2.3 Update config/runtime.exs
 
-Ensure your `config/runtime.exs` includes:
+Ensure your `config/runtime.exs` includes proper SSL configuration:
 
 ```elixir
 if config_env() == :prod do
@@ -107,14 +148,23 @@ if config_env() == :prod do
     raise "environment variable DATABASE_URL is missing."
 
   config :urielm, Urielm.Repo,
+    ssl: [
+      verify: :verify_peer,
+      cacertfile: "/etc/ssl/certs/do-ca.crt",
+      depth: 3
+    ],
     url: database_url,
-    ssl: [cacertfile: "/etc/ssl/certs/ca-certificate.crt"],
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: []
 
   # ... rest of config
 end
 ```
+
+**Why this matters:**
+- `verify: :verify_peer` - Properly verifies the server's certificate (prevents MITM attacks)
+- `cacertfile: "/etc/ssl/certs/do-ca.crt"` - Points to the Digital Ocean CA certificate
+- `depth: 3` - Allows certificate chain verification up to 3 levels
 
 ### 2.4 Database Migrations
 
@@ -161,11 +211,14 @@ RUN mix release
 # Runtime stage - MUST match build stage for OpenSSL compatibility
 FROM elixir:1.17-alpine
 
-RUN apk add --no-cache openssl ncurses-libs
+RUN apk add --no-cache openssl ncurses-libs ca-certificates
 WORKDIR /app
 
 # Copy release from builder
 COPY --from=builder /app/_build/prod/rel/urielm ./
+
+# Copy Digital Ocean CA certificate
+COPY priv/certs/do-ca.crt /etc/ssl/certs/do-ca.crt
 
 # Create non-root user
 RUN addgroup -g 1000 urielm && \
@@ -450,8 +503,17 @@ docker-compose logs
 - **Fix:** Skip `ecto.create`, run only `ecto.migrate`
 
 **"TLS client: Unknown CA"**
-- **Cause:** Missing or incorrect SSL certificate configuration
-- **Fix:** Ensure `config/runtime.exs` has `ssl: [cacertfile: "/etc/ssl/certs/ca-certificate.crt"]`
+- **Cause:** Missing Digital Ocean CA certificate in Docker image
+- **Fix:**
+  1. Download CA cert from DO dashboard
+  2. Add to `priv/certs/do-ca.crt` in project
+  3. Update Dockerfile: `COPY priv/certs/do-ca.crt /etc/ssl/certs/do-ca.crt`
+  4. Update runtime.exs: `ssl: [verify: :verify_peer, cacertfile: "/etc/ssl/certs/do-ca.crt", depth: 3]`
+  5. Rebuild image: `docker-compose build --no-cache`
+
+**".env file not loading / wrong DATABASE_URL"**
+- **Cause:** Leading spaces in .env file lines
+- **Fix:** Recreate .env with no leading spaces (use `cat > .env << 'EOF'` method above)
 
 ### Port already in use
 
@@ -489,10 +551,13 @@ docker-compose up -d --build
 
 1. **Runtime image must match build image** - Using different Alpine versions causes OpenSSL/crypto NIF errors
 2. **Digital Ocean uses defaultdb not postgres** - Skip `mix ecto.create`, run migrations directly
-3. **SSL certificate required** - Must configure `cacertfile` in runtime.exs, connection string `?sslmode=require` alone is not enough
-4. **Migrations in releases** - Need Release module with `Urielm.Release.migrate()` since Mix isn't available in production builds
-5. **.env file security** - Use `chmod 600` to protect environment variables
-6. **Health checks** - Docker compose health checks help ensure container is ready before routing traffic
+3. **Digital Ocean CA certificate must be in Docker image** - The private CA cert from DO dashboard must be copied into the image during build, not mounted from host
+4. **SSL verification is critical** - Use `verify: :verify_peer` with proper CA cert, never use `verify: :verify_none` in production
+5. **.env file format matters** - NO leading spaces allowed; docker-compose will silently ignore malformed lines
+6. **Migrations in releases** - Need Release module with `Urielm.Release.migrate()` since Mix isn't available in production builds
+7. **.env file security** - Use `chmod 600` to protect environment variables
+8. **Health checks** - Docker compose health checks help ensure container is ready before routing traffic
+9. **Environment variables** - Can pass inline if .env parsing fails: `VAR=value docker-compose up -d`
 
 ## Image Size Evolution
 
