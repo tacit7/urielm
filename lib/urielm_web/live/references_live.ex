@@ -110,8 +110,8 @@ defmodule UrielmWeb.ReferencesLive do
 
         <div class="container mx-auto px-4 py-8">
           <div class="mb-8">
-            <h1 class="text-4xl font-bold mb-2 text-gray-900 dark:text-white">Prompts</h1>
-            <p class="text-gray-600 dark:text-white/60">
+            <h1 class="text-4xl font-bold mb-2 text-white">Prompts</h1>
+            <p class="text-white/60">
               Curated collection of AI prompts and templates
             </p>
           </div>
@@ -123,7 +123,7 @@ defmodule UrielmWeb.ReferencesLive do
                 name="query"
                 value={@search_query}
                 placeholder="Search prompts, e.g. &quot;tiktok hooks&quot;, &quot;email subject line&quot;"
-                class="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-[#212121] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                class="w-full px-4 py-3 rounded-lg bg-[#212121] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 phx-debounce="300"
               />
             </form>
@@ -131,7 +131,7 @@ defmodule UrielmWeb.ReferencesLive do
 
           <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <%= if @prompts == [] do %>
-              <div class="col-span-full text-center py-12 text-gray-400 dark:text-white/50">
+              <div class="col-span-full text-center py-12 text-white/50">
                 <%= if @search_query != "" do %>
                   No prompts found for "<%= @search_query %>". Try different keywords or browse by category.
                 <% else %>
@@ -140,18 +140,18 @@ defmodule UrielmWeb.ReferencesLive do
               </div>
             <% else %>
               <%= for prompt <- @prompts do %>
-                <div class="bg-gray-50 dark:bg-[#212121] rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors border border-gray-200 dark:border-white/10">
+                <div class="bg-[#212121] rounded-lg p-4 hover:bg-[#2a2a2a] transition-colors border border-white/10">
                   <div class="flex items-start justify-between gap-2 mb-3">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex-1">
+                    <h2 class="text-lg font-semibold text-white flex-1">
                       <%= prompt.title %>
                     </h2>
-                    <span class="bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-xs capitalize font-medium">
+                    <span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs capitalize font-medium">
                       <%= prompt.category %>
                     </span>
                   </div>
 
                   <%= if prompt.description do %>
-                    <p class="text-sm text-gray-600 dark:text-white/60 mb-3 line-clamp-2">
+                    <p class="text-sm text-white/60 mb-3 line-clamp-2">
                       <%= prompt.description %>
                     </p>
                   <% end %>
@@ -159,7 +159,7 @@ defmodule UrielmWeb.ReferencesLive do
                   <%= if prompt.tags && length(prompt.tags) > 0 do %>
                     <div class="flex flex-wrap gap-1 mb-3">
                       <%= for tag <- prompt.tags do %>
-                        <span class="bg-gray-200 dark:bg-white/5 text-gray-700 dark:text-white/70 px-2 py-0.5 rounded text-xs"><%= tag %></span>
+                        <span class="bg-white/5 text-white/70 px-2 py-0.5 rounded text-xs"><%= tag %></span>
                       <% end %>
                     </div>
                   <% end %>
@@ -199,7 +199,7 @@ defmodule UrielmWeb.ReferencesLive do
               phx-hook="InfiniteScroll"
               class="h-20 flex items-center justify-center"
             >
-              <div class="text-gray-400 dark:text-white/40 text-sm">Loading more...</div>
+              <div class="text-white/40 text-sm">Loading more...</div>
             </div>
           <% end %>
         </div>
