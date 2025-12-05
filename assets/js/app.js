@@ -30,6 +30,7 @@ import Counter from "../svelte/Counter.svelte"
 import Navbar from "../svelte/Navbar.svelte"
 import CodeSnippetCard from "../svelte/CodeSnippetCard.svelte"
 import ThemeToggle from "../svelte/ThemeToggle.svelte"
+import ThemeSelector from "../svelte/ThemeSelector.svelte"
 import SubNav from "../svelte/SubNav.svelte"
 
 // Infinite scroll hook
@@ -63,6 +64,7 @@ let Hooks = getHooks({
   Navbar,
   CodeSnippetCard,
   ThemeToggle,
+  ThemeSelector,
   SubNav
 })
 

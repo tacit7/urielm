@@ -1,5 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import ThemeSelector from './ThemeSelector.svelte';
 
   export let currentPage = '';
 
@@ -117,7 +118,8 @@
   </div>
 
   <!-- CTA Button - Right -->
-  <div class="navbar-end">
+  <div class="navbar-end gap-2">
+    <ThemeSelector />
     <a
       href="mailto:hello@urielm.dev"
       class="btn btn-sm bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 border-0 rounded-full px-6"

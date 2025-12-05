@@ -9,7 +9,7 @@ defmodule UrielmWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-[#0f0f0f] font-sans text-white selection:bg-white/20 selection:text-white antialiased" data-theme="dark">
+    <div class="min-h-screen bg-[#0f0f0f] font-sans text-white selection:bg-white/20 selection:text-white antialiased">
       <.svelte
         name="Navbar"
         props={%{currentPage: "home"}}
