@@ -98,7 +98,7 @@ defmodule UrielmWeb.ReferencesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-white dark:bg-[#0f0f0f] text-gray-900 dark:text-white">
+    <div class="min-h-screen bg-[#0f0f0f] text-white" data-theme="dark">
       <.svelte name="Navbar" props={%{currentPage: "references"}} socket={@socket} />
 
       <div class="pt-16">
