@@ -300,6 +300,31 @@ Ensure you're passing the socket:
 />
 ```
 
+## Deployment
+
+This project supports Docker-based deployment to Digital Ocean with Cloudflare.
+
+**Quick Start:**
+```bash
+# Build Docker image
+docker build -t urielm:latest .
+
+# Run with docker-compose
+docker-compose up -d
+
+# Run migrations
+docker-compose exec -T web bin/urielm eval "Urielm.Release.migrate()"
+```
+
+**Full deployment guides:**
+- **[Docker Deployment](docs/DOCKER_DEPLOYMENT.md)** (recommended) - Complete guide for Docker + docker-compose deployment
+- **[Systemd Deployment](docs/DEPLOYMENT_WALKTHROUGH.md)** - Traditional systemd service deployment
+
+**Key files:**
+- `Dockerfile` - Multi-stage build (Elixir, npm assets, release)
+- `docker-compose.yml` - Service orchestration
+- `lib/urielm/release.ex` - Migration runner for production releases
+
 ## Resources
 
 - [live_svelte GitHub](https://github.com/woutdp/live_svelte)
