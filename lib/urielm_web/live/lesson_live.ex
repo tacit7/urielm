@@ -18,9 +18,12 @@ defmodule UrielmWeb.LessonLive do
              |> push_navigate(to: ~p"/")}
 
           lesson ->
+            lessons = Learning.list_lessons(course.id)
+
             {:ok, socket
              |> assign(:course, course)
              |> assign(:lesson, lesson)
+             |> assign(:lessons, lessons)
              |> assign(:current_page, "courses")
              |> assign(:sidebar_open, true)
              |> assign(:page_title, lesson.title)}
@@ -36,7 +39,7 @@ defmodule UrielmWeb.LessonLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-[1800px] mx-auto px-4 py-6">
+    <div class="max-w-[1800px] mx-auto px-4 py-6 relative">
       <div class={["grid grid-cols-1 gap-6", if(@sidebar_open, do: "lg:grid-cols-3", else: "lg:grid-cols-1")]}>
         <!-- Main Content -->
         <div class={if @sidebar_open, do: "lg:col-span-2", else: "lg:col-span-1"}>
@@ -53,22 +56,8 @@ defmodule UrielmWeb.LessonLive do
             </iframe>
           </div>
 
-          <!-- Video Title & Toggle -->
-          <div class="flex items-start justify-between gap-4 mb-3">
-            <h1 class="text-2xl font-bold text-base-content flex-1">{@lesson.title}</h1>
-            <button
-              phx-click="toggle_sidebar"
-              class="btn btn-ghost btn-sm btn-square lg:flex hidden"
-              title={if @sidebar_open, do: "Hide sidebar", else: "Show sidebar"}
-            >
-              <svg :if={@sidebar_open} class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <svg :if={!@sidebar_open} class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          </div>
+          <!-- Video Title -->
+          <h1 class="text-2xl font-bold text-base-content mb-3">{@lesson.title}</h1>
 
           <!-- Course/Channel Info -->
           <div class="flex items-start justify-between gap-4 pb-4 border-b border-base-300 mb-4">
@@ -111,34 +100,106 @@ defmodule UrielmWeb.LessonLive do
           </div>
         </div>
 
-        <!-- Sidebar - More from this course -->
+        <!-- Sidebar - Course Videos -->
         <div class={["lg:col-span-1", unless(@sidebar_open, do: "hidden")]}>
-          <div class="bg-base-200 rounded-xl p-4 sticky top-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="font-semibold text-base-content">Course Videos</h2>
-              <.link navigate={~p"/courses/#{@course.slug}"} class="text-xs text-primary hover:underline">
-                View all
-              </.link>
+          <div class="bg-base-200 rounded-xl overflow-hidden sticky top-6">
+            <div class="p-4 border-b border-base-300">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="font-semibold text-base-content">Course Videos</h2>
+                  <p class="text-xs text-base-content/60">{@course.title}</p>
+                </div>
+              </div>
             </div>
 
-            <.link
-              navigate={~p"/courses/#{@course.slug}"}
-              class="block mb-4 pb-4 border-b border-base-300 hover:bg-base-300/50 rounded-lg p-2 transition-colors"
-            >
-              <div class="flex items-center gap-2 text-sm">
-                <svg class="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4 4h16v2H4zm0 5h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-                </svg>
-                <span class="font-medium text-base-content">View full playlist</span>
-              </div>
-            </.link>
+            <div class="max-h-[calc(100vh-12rem)] overflow-y-auto">
+              <div :for={course_lesson <- @lessons} class="group">
+                <.link
+                  navigate={~p"/courses/#{@course.slug}/lessons/#{course_lesson.slug}"}
+                  class={[
+                    "flex gap-2 p-2 transition-colors",
+                    if(course_lesson.id == @lesson.id,
+                      do: "bg-primary/10 border-l-4 border-primary",
+                      else: "hover:bg-base-300 border-l-4 border-transparent"
+                    )
+                  ]}
+                >
+                  <!-- Thumbnail -->
+                  <div class="relative flex-shrink-0 w-32 aspect-video bg-base-300 rounded overflow-hidden">
+                    <img
+                      src={"https://i.ytimg.com/vi/#{course_lesson.youtube_video_id}/mqdefault.jpg"}
+                      alt={course_lesson.title}
+                      class="w-full h-full object-cover"
+                    />
+                    <div :if={course_lesson.id == @lesson.id} class="absolute inset-0 bg-base-content/20 flex items-center justify-center">
+                      <div class="bg-base-content/90 text-base-100 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M6 4h4v16H6zm8 0h4v16h-4z"/>
+                        </svg>
+                        NOW PLAYING
+                      </div>
+                    </div>
+                    <div class="absolute top-1 left-1 bg-base-content text-base-100 px-1.5 py-0.5 rounded text-xs font-bold">
+                      #{course_lesson.lesson_number}
+                    </div>
+                  </div>
 
-            <p class="text-xs text-base-content/60 text-center py-8">
-              More lessons coming soon...
-            </p>
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <h3 class={[
+                      "text-sm font-medium line-clamp-2 mb-1",
+                      if(course_lesson.id == @lesson.id,
+                        do: "text-primary",
+                        else: "text-base-content group-hover:text-primary"
+                      )
+                    ]}>
+                      {course_lesson.title}
+                    </h3>
+                    <p class="text-xs text-base-content/60">
+                      Lesson {course_lesson.lesson_number}
+                    </p>
+                  </div>
+                </.link>
+              </div>
+            </div>
+
+            <div class="p-3 border-t border-base-300">
+              <.link
+                navigate={~p"/courses/#{@course.slug}"}
+                class="btn btn-ghost btn-sm w-full justify-start"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                View all lessons
+              </.link>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Toggle Buttons -->
+      <button
+        :if={@sidebar_open}
+        phx-click="toggle_sidebar"
+        class="fixed right-[calc((100vw-1800px)/2+600px)] top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 btn btn-circle btn-sm bg-base-200 border-2 border-base-300 hover:bg-base-300 shadow-lg hidden lg:flex"
+        title="Hide sidebar"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <button
+        :if={!@sidebar_open}
+        phx-click="toggle_sidebar"
+        class="fixed right-8 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-primary shadow-lg hidden lg:flex"
+        title="Show sidebar"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
     </div>
     """
   end
