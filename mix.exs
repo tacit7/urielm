@@ -66,9 +66,8 @@ defmodule Urielm.MixProject do
       {:bandit, "~> 1.5"},
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.12"},
-      {:ueberauth_twitter, "~> 0.4"},
-      {:ueberauth_facebook, "~> 0.9"},
-      {:dotenvy, "~> 0.8.0"}
+      {:dotenvy, "~> 0.8.0"},
+      {:bcrypt_elixir, "~> 3.0"}
     ]
   end
 

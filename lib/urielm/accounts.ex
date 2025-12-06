@@ -75,6 +75,38 @@ defmodule Urielm.Accounts do
     end)
   end
 
+  ## Email/Password Authentication
+
+  @doc """
+  Registers a new user with email and password.
+  """
+  def register_user(attrs) do
+    %User{}
+    |> User.registration_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Authenticates a user with email and password.
+  Returns {:ok, user} if credentials are valid, {:error, :invalid_credentials} otherwise.
+  """
+  def authenticate_user(email, password) when is_binary(email) and is_binary(password) do
+    user = get_user_by_email(email)
+
+    cond do
+      user && User.valid_password?(user, password) ->
+        {:ok, user}
+
+      user ->
+        {:error, :invalid_credentials}
+
+      true ->
+        # Run a dummy password check to prevent timing attacks
+        Bcrypt.no_user_verify()
+        {:error, :invalid_credentials}
+    end
+  end
+
   ## Saved Prompts
 
   @doc """

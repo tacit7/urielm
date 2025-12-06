@@ -4,6 +4,7 @@ defmodule UrielmWeb.Layouts do
   used by your application.
   """
   use UrielmWeb, :html
+  use LiveSvelte.Components
 
   # Embed all files in layouts/* within this module.
   # The default root.html.heex file contains the HTML
@@ -20,55 +21,33 @@ defmodule UrielmWeb.Layouts do
 
   ## Examples
 
-      <Layouts.app flash={@flash}>
+      <Layouts.app flash={@flash} current_user={@current_user} current_page="home">
         <h1>Content</h1>
       </Layouts.app>
 
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :current_user, :map, default: nil, doc: "the current user"
+  attr :current_page, :string, default: "home", doc: "the current page identifier"
 
   attr :current_scope, :map,
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
-  slot :inner_block, required: true
-
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
-        </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </header>
+    <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+      <.Navbar
+        currentPage={assigns[:current_page] || "home"}
+        currentUser={serialize_user(assigns[:current_user])}
+      />
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
-        {render_slot(@inner_block)}
-      </div>
-    </main>
+      <main class="pt-16">
+        {@inner_content}
+      </main>
 
-    <.flash_group flash={@flash} />
+      <.flash_group flash={@flash} />
+    </div>
     """
   end
 
@@ -150,5 +129,16 @@ defmodule UrielmWeb.Layouts do
       </button>
     </div>
     """
+  end
+
+  defp serialize_user(nil), do: nil
+
+  defp serialize_user(user) do
+    %{
+      id: to_string(user.id),
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatar_url
+    }
   end
 end

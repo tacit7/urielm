@@ -122,14 +122,6 @@ if config_env() == :prod do
   config :ueberauth, Ueberauth.Strategy.Google.OAuth,
     client_id: System.get_env("GOOGLE_CLIENT_ID"),
     client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
-
-  config :ueberauth, Ueberauth.Strategy.Twitter.OAuth,
-    consumer_key: System.get_env("TWITTER_CONSUMER_KEY"),
-    consumer_secret: System.get_env("TWITTER_CONSUMER_SECRET")
-
-  config :ueberauth, Ueberauth.Strategy.Facebook.OAuth,
-    client_id: System.get_env("FACEBOOK_APP_ID"),
-    client_secret: System.get_env("FACEBOOK_APP_SECRET")
 end
 
 # OAuth provider secrets (dev/test)
@@ -137,12 +129,4 @@ if config_env() in [:dev, :test] do
   config :ueberauth, Ueberauth.Strategy.Google.OAuth,
     client_id: env!("GOOGLE_CLIENT_ID", :string),
     client_secret: env!("GOOGLE_CLIENT_SECRET", :string)
-
-  config :ueberauth, Ueberauth.Strategy.Twitter.OAuth,
-    consumer_key: env!("TWITTER_CONSUMER_KEY", :string, ""),
-    consumer_secret: env!("TWITTER_CONSUMER_SECRET", :string, "")
-
-  config :ueberauth, Ueberauth.Strategy.Facebook.OAuth,
-    client_id: env!("FACEBOOK_APP_ID", :string, ""),
-    client_secret: env!("FACEBOOK_APP_SECRET", :string, "")
 end

@@ -61,9 +61,7 @@ config :nodejs,
 # Configure Ueberauth for OAuth authentication
 config :ueberauth, Ueberauth,
   providers: [
-    google: {Ueberauth.Strategy.Google, [default_scope: "email profile"]},
-    twitter: {Ueberauth.Strategy.Twitter, []},
-    facebook: {Ueberauth.Strategy.Facebook, [default_scope: "email,public_profile"]}
+    google: {Ueberauth.Strategy.Google, [default_scope: "email profile"]}
   ]
 
 # Import environment specific config. This must remain at the bottom

@@ -27,13 +27,21 @@ defmodule UrielmWeb.Router do
     get "/:provider/callback", AuthController, :callback
     post "/:provider/callback", AuthController, :callback
     delete "/logout", AuthController, :delete
+
+    # Email/password authentication
+    post "/signup", AuthController, :signup
+    post "/signin", AuthController, :signin
   end
 
   scope "/", UrielmWeb do
     pipe_through :browser
 
-    live "/", HomeLive
-    live "/references", ReferencesLive
+    live_session :default, layout: {UrielmWeb.Layouts, :app} do
+      live "/", HomeLive
+      live "/references", ReferencesLive
+      live "/courses/:course_slug", CourseLive
+      live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
+    end
   end
 
   # Other scopes may use custom stacks.
