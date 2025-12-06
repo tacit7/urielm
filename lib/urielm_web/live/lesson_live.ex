@@ -1,6 +1,7 @@
 defmodule UrielmWeb.LessonLive do
   use UrielmWeb, :live_view
   alias Urielm.Learning
+  alias Urielm.Learning.LessonComment
 
   @impl true
   def mount(%{"course_slug" => course_slug, "lesson_slug" => lesson_slug}, _session, socket) do
@@ -11,7 +12,7 @@ defmodule UrielmWeb.LessonLive do
          |> push_navigate(to: ~p"/")}
 
       course ->
-        case Learning.get_lesson_by_slug(course.id, lesson_slug) do
+        case Learning.get_lesson_with_comments(course.id, lesson_slug) do
           nil ->
             {:ok, socket
              |> put_flash(:error, "Lesson not found")
@@ -19,11 +20,14 @@ defmodule UrielmWeb.LessonLive do
 
           lesson ->
             lessons = Learning.list_lessons(course.id)
+            changeset = Learning.change_lesson_comment(%LessonComment{})
 
             {:ok, socket
              |> assign(:course, course)
              |> assign(:lesson, lesson)
              |> assign(:lessons, lessons)
+             |> assign(:comment_changeset, changeset)
+             |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))
              |> assign(:current_page, "courses")
              |> assign(:sidebar_open, true)
              |> assign(:page_title, lesson.title)}
@@ -34,6 +38,37 @@ defmodule UrielmWeb.LessonLive do
   @impl true
   def handle_event("toggle_sidebar", _params, socket) do
     {:noreply, assign(socket, :sidebar_open, !socket.assigns.sidebar_open)}
+  end
+
+  @impl true
+  def handle_event("save_comment", %{"comment" => params}, socket) do
+    lesson = socket.assigns.lesson
+    user = socket.assigns[:current_user]
+
+    attrs =
+      params
+      |> Map.put("lesson_id", lesson.id)
+      |> Map.put("user_id", user && user.id)
+
+    case Learning.create_lesson_comment(attrs) do
+      {:ok, _comment} ->
+        lesson = Learning.get_lesson_with_comments(socket.assigns.course.id, lesson.slug)
+
+        {:noreply,
+         socket
+         |> put_flash(:info, "Comment added.")
+         |> assign(:lesson, lesson)
+         |> assign(:comment_changeset, Learning.change_lesson_comment(%LessonComment{}))
+         |> assign(:comment_form,
+           Phoenix.Component.to_form(Learning.change_lesson_comment(%LessonComment{}), as: :comment)
+         )}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply,
+         socket
+         |> assign(:comment_changeset, changeset)
+         |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))}
+    end
   end
 
   @impl true
@@ -98,6 +133,46 @@ defmodule UrielmWeb.LessonLive do
             <h3 class="font-semibold text-base-content mb-2">About this course</h3>
             <p class="text-sm text-base-content/70">{@course.description}</p>
           </div>
+
+          <!-- Comments Section -->
+          <section class="mt-8 space-y-4">
+            <h2 class="text-xl font-semibold text-base-content">Comments</h2>
+
+            <%= if @lesson.comments == [] do %>
+              <p class="text-sm text-base-content/60 text-center py-8">
+                No comments yet. Be the first to share your thoughts!
+              </p>
+            <% end %>
+
+            <ul class="space-y-3">
+              <%= for comment <- @lesson.comments do %>
+                <li class="bg-base-200 rounded-xl p-4">
+                  <p class="text-sm text-base-content whitespace-pre-line mb-3">
+                    <%= comment.body %>
+                  </p>
+                  <p class="text-xs text-base-content/60">
+                    <%= if comment.user do %>
+                      <span class="font-medium"><%= comment.user.name || comment.user.email %></span>
+                    <% else %>
+                      <span class="font-medium">Anonymous</span>
+                    <% end %>
+                    · <%= Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M") %>
+                  </p>
+                </li>
+              <% end %>
+            </ul>
+
+            <.form for={@comment_form} id="lesson-comment-form" phx-submit="save_comment" class="mt-6 space-y-3">
+              <.input
+                field={@comment_form[:body]}
+                type="textarea"
+                rows="3"
+                label="Add a comment"
+                placeholder="Share your thoughts about this lesson..."
+              />
+              <button class="btn btn-primary btn-sm">Post Comment</button>
+            </.form>
+          </section>
         </div>
 
         <!-- Sidebar - Course Videos -->

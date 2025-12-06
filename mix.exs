@@ -9,9 +9,7 @@ defmodule Urielm.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
-      compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      deps: deps()
     ]
   end
 
@@ -49,6 +47,7 @@ defmodule Urielm.MixProject do
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.19"},
+      {:phoenix_ecto, "~> 4.6"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       {:heroicons,
@@ -83,7 +82,7 @@ defmodule Urielm.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       "assets.setup": ["tailwind.install --if-missing", "cmd --cd assets npm install"],
-      "assets.build": ["compile", "tailwind urielm", "cmd --cd assets node build.js"],
+      "assets.build": ["tailwind urielm", "cmd --cd assets node build.js"],
       "assets.deploy": [
         "tailwind urielm --minify",
         "cmd --cd assets node build.js --deploy",

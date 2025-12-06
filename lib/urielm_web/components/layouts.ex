@@ -29,21 +29,19 @@ defmodule UrielmWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :current_user, :map, default: nil, doc: "the current user"
   attr :current_page, :string, default: "home", doc: "the current page identifier"
-
-  attr :current_scope, :map,
-    default: nil,
-    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+  attr :current_scope, :map, default: nil, doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+  slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
       <.Navbar
-        currentPage={assigns[:current_page] || "home"}
-        currentUser={serialize_user(assigns[:current_user])}
+        currentPage={@current_page || "home"}
+        currentUser={serialize_user(@current_user)}
       />
 
       <main class="pt-16">
-        {@inner_content}
+        <%= @inner_content %>
       </main>
 
       <.flash_group flash={@flash} />
@@ -133,6 +131,10 @@ defmodule UrielmWeb.Layouts do
 
   defp serialize_user(nil), do: nil
 
+  # If already serialized (has string key "id"), return as-is
+  defp serialize_user(%{"id" => _} = user), do: user
+
+  # If it's a User struct (has atom key :id), serialize it
   defp serialize_user(user) do
     %{
       id: to_string(user.id),

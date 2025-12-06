@@ -30,9 +30,7 @@ defmodule UrielmWeb.AuthController do
     end
   end
 
-  @doc """
-  OAuth callback - failed authentication
-  """
+  # OAuth callback - failed authentication
   def callback(%{assigns: %{ueberauth_failure: _fails}} = conn, _params) do
     conn
     |> put_flash(:error, "Failed to authenticate. Please try again.")

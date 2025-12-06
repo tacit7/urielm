@@ -1,3 +1,25 @@
+// Theme management: keep theme in sync with localStorage and custom events
+(() => {
+  const setTheme = (theme) => {
+    if (theme === "system") {
+      try { localStorage.removeItem("phx:theme") } catch (_) {}
+      document.documentElement.removeAttribute("data-theme")
+    } else {
+      try { localStorage.setItem("phx:theme", theme) } catch (_) {}
+      document.documentElement.setAttribute("data-theme", theme)
+    }
+  }
+  if (!document.documentElement.hasAttribute("data-theme")) {
+    try {
+      setTheme(localStorage.getItem("phx:theme") || "system")
+    } catch (_) {
+      setTheme("system")
+    }
+  }
+  window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"))
+  window.addEventListener("phx:set-theme", (e) => setTheme(e.detail?.theme ?? e.target?.dataset?.phxTheme ?? "system"))
+})()
+
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"
@@ -130,4 +152,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

@@ -101,7 +101,6 @@ defmodule UrielmWeb.ReferencesLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 text-base-content">
-      <.Navbar currentPage="references" currentUser={@current_user} socket={@socket} />
 
       <div class="pt-16">
         <.SubNav activeFilter={@current_filter} categories={@categories} socket={@socket} />
@@ -225,6 +224,10 @@ defmodule UrielmWeb.ReferencesLive do
 
   defp serialize_user(nil), do: nil
 
+  # If already serialized (has string key "id"), return as-is
+  defp serialize_user(%{"id" => _} = user), do: user
+
+  # If it's a User struct (has atom key :id), serialize it
   defp serialize_user(user) do
     %{
       id: to_string(user.id),

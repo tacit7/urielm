@@ -3,7 +3,6 @@ defmodule UrielmWeb.UserAuth do
   Handles mounting current user into LiveView socket assigns.
   """
 
-  import Phoenix.LiveView
   import Phoenix.Component
   alias Urielm.Accounts
 

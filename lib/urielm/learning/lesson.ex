@@ -10,6 +10,7 @@ defmodule Urielm.Learning.Lesson do
     field :youtube_video_id, :string
 
     belongs_to :course, Urielm.Learning.Course
+    has_many :comments, Urielm.Learning.LessonComment
 
     timestamps(type: :utc_datetime)
   end
