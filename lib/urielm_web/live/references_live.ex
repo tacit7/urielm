@@ -100,6 +100,7 @@ defmodule UrielmWeb.ReferencesLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="references" socket={@socket}>
     <div class="min-h-screen bg-base-100 text-base-content">
 
       <div class="pt-16">
@@ -206,6 +207,7 @@ defmodule UrielmWeb.ReferencesLive do
         </div>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 
@@ -224,10 +226,11 @@ defmodule UrielmWeb.ReferencesLive do
 
   defp serialize_user(nil), do: nil
 
-  # If already serialized (has string key "id"), return as-is
-  defp serialize_user(%{"id" => _} = user), do: user
+  # If already serialized (check for avatarUrl in camelCase - only serialized maps have this)
+  defp serialize_user(%{avatarUrl: _} = user), do: user
+  defp serialize_user(%{"avatarUrl" => _} = user), do: user
 
-  # If it's a User struct (has atom key :id), serialize it
+  # If it's a User struct (has avatar_url with underscore), serialize it
   defp serialize_user(user) do
     %{
       id: to_string(user.id),

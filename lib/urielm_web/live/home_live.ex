@@ -10,10 +10,12 @@ defmodule UrielmWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <.hero socket={@socket} />
-    <.tech_stack />
-    <.bento_grid />
-    <.footer />
+    <Layouts.app flash={@flash} current_user={@current_user} current_page={@current_page} socket={@socket}>
+      <.hero socket={@socket} />
+      <.tech_stack />
+      <.bento_grid />
+      <.footer />
+    </Layouts.app>
     """
   end
 

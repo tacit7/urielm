@@ -30,18 +30,20 @@ defmodule UrielmWeb.Layouts do
   attr :current_user, :map, default: nil, doc: "the current user"
   attr :current_page, :string, default: "home", doc: "the current page identifier"
   attr :current_scope, :map, default: nil, doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+  attr :socket, :any, default: nil, doc: "LiveView socket (for LiveSvelte components)"
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
       <.Navbar
+        socket={@socket}
         currentPage={@current_page || "home"}
         currentUser={serialize_user(@current_user)}
       />
 
       <main class="pt-16">
-        <%= @inner_content %>
+        <%= if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block) %>
       </main>
 
       <.flash_group flash={@flash} />
@@ -131,10 +133,11 @@ defmodule UrielmWeb.Layouts do
 
   defp serialize_user(nil), do: nil
 
-  # If already serialized (has string key "id"), return as-is
-  defp serialize_user(%{"id" => _} = user), do: user
+  # If already serialized (check for avatarUrl in camelCase - only serialized maps have this)
+  defp serialize_user(%{avatarUrl: _} = user), do: user
+  defp serialize_user(%{"avatarUrl" => _} = user), do: user
 
-  # If it's a User struct (has atom key :id), serialize it
+  # If it's a User struct (has avatar_url with underscore), serialize it
   defp serialize_user(user) do
     %{
       id: to_string(user.id),
