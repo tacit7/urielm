@@ -44,6 +44,19 @@ defmodule UrielmWeb.LessonLive do
   end
 
   @impl true
+  def handle_event("comment_focus", _params, socket) do
+    user = socket.assigns[:current_user]
+
+    if !user do
+      {:noreply,
+       socket
+       |> put_flash(:info, "Sign in to comment on this lesson.")}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_event("save_comment", %{"comment" => params}, socket) do
     user = socket.assigns[:current_user]
 
@@ -235,6 +248,7 @@ defmodule UrielmWeb.LessonLive do
                 <textarea
                   name="comment[body]"
                   placeholder="Add a comment..."
+                  phx-focus="comment_focus"
                   class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows="3"
                 />
