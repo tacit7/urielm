@@ -45,35 +45,42 @@ defmodule UrielmWeb.LessonLive do
 
   @impl true
   def handle_event("save_comment", %{"comment" => params}, socket) do
-    lesson = socket.assigns.lesson
     user = socket.assigns[:current_user]
 
-    attrs =
-      params
-      |> Map.put("lesson_id", lesson.id)
-      |> Map.put("user_id", user && user.id)
+    if !user do
+      {:noreply,
+       socket
+       |> put_flash(:info, "Sign in to comment on this lesson.")}
+    else
+      lesson = socket.assigns.lesson
 
-    case Learning.create_lesson_comment(attrs) do
-      {:ok, _comment} ->
-        lesson = Learning.get_lesson_with_comments(socket.assigns.course.id, lesson.slug)
+      attrs =
+        params
+        |> Map.put("lesson_id", lesson.id)
+        |> Map.put("user_id", user.id)
 
-        {:noreply,
-         socket
-         |> put_flash(:info, "Comment added.")
-         |> assign(:lesson, lesson)
-         |> assign(:comment_changeset, Learning.change_lesson_comment(%LessonComment{}))
-         |> assign(
-           :comment_form,
-           Phoenix.Component.to_form(Learning.change_lesson_comment(%LessonComment{}),
-             as: :comment
-           )
-         )}
+      case Learning.create_lesson_comment(attrs) do
+        {:ok, _comment} ->
+          lesson = Learning.get_lesson_with_comments(socket.assigns.course.id, lesson.slug)
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply,
-         socket
-         |> assign(:comment_changeset, changeset)
-         |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))}
+          {:noreply,
+           socket
+           |> put_flash(:info, "Comment added.")
+           |> assign(:lesson, lesson)
+           |> assign(:comment_changeset, Learning.change_lesson_comment(%LessonComment{}))
+           |> assign(
+             :comment_form,
+             Phoenix.Component.to_form(Learning.change_lesson_comment(%LessonComment{}),
+               as: :comment
+             )
+           )}
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply,
+           socket
+           |> assign(:comment_changeset, changeset)
+           |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))}
+      end
     end
   end
 
@@ -222,16 +229,20 @@ defmodule UrielmWeb.LessonLive do
               for={@comment_form}
               id="lesson-comment-form"
               phx-submit="save_comment"
-              class="mt-6 space-y-3"
+              class="mt-6"
             >
-              <.input
-                field={@comment_form[:body]}
-                type="textarea"
-                rows="3"
-                label="Add a comment"
-                placeholder="Share your thoughts about this lesson..."
-              />
-              <button class="btn btn-primary btn-sm">Post Comment</button>
+              <div class="space-y-2">
+                <textarea
+                  name="comment[body]"
+                  placeholder="Add a comment..."
+                  class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows="3"
+                />
+                <div class="flex justify-end gap-2">
+                  <button type="reset" class="btn btn-ghost btn-sm">Cancel</button>
+                  <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+                </div>
+              </div>
             </.form>
           </section>
         </div>
