@@ -32,9 +32,15 @@ defmodule UrielmWeb.LessonLive do
              |> assign(:comment_changeset, changeset)
              |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))
              |> assign(:current_page, "courses")
-             |> assign(:page_title, lesson.title)}
+             |> assign(:page_title, lesson.title)
+             |> assign(:dock_tab, "home")}
         end
     end
+  end
+
+  @impl true
+  def handle_event("set_dock_tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, :dock_tab, tab)}
   end
 
   @impl true
@@ -109,57 +115,95 @@ defmodule UrielmWeb.LessonLive do
           <!-- Video Title -->
           <h1 class="text-2xl font-bold text-base-content mb-3 hidden lg:block">{@lesson.title}</h1>
 
-          <!-- Course/Channel Info -->
-          <div class="flex items-start justify-between gap-4 pb-4 border-b border-base-300 mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <svg
-                  class="w-5 h-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <!-- Dock Content Sections -->
+          <div class="space-y-4 pb-24 lg:pb-0">
+            <!-- HOME TAB -->
+            <div class={["space-y-4", if(@dock_tab != "home", do: "hidden lg:block")]}>
+              <!-- Course/Channel Info -->
+              <div class="flex items-start justify-between gap-4 pb-4 border-b border-base-300 mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <svg
+                      class="w-5 h-5 text-primary"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <.link
+                      navigate={~p"/courses/#{@course.slug}"}
+                      class="font-semibold text-base-content hover:text-primary"
+                    >
+                      {@course.title}
+                    </.link>
+                    <p class="text-xs text-base-content/60">Lesson {@lesson.lesson_number}</p>
+                  </div>
+                </div>
+
+                <a
+                  :if={@course.youtube_playlist_id}
+                  href={"https://www.youtube.com/playlist?list=#{@course.youtube_playlist_id}"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-primary btn-sm"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
+                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                  YouTube
+                </a>
               </div>
-              <div>
-                <.link
-                  navigate={~p"/courses/#{@course.slug}"}
-                  class="font-semibold text-base-content hover:text-primary"
-                >
-                  {@course.title}
-                </.link>
-                <p class="text-xs text-base-content/60">Lesson {@lesson.lesson_number}</p>
+
+              <div :if={@lesson.body} class="bg-base-200 rounded-xl p-4">
+                <p class="text-sm text-base-content/80 whitespace-pre-wrap">{@lesson.body}</p>
+              </div>
+
+              <div :if={@course.description} class="mt-4 bg-base-200 rounded-xl p-4">
+                <h3 class="font-semibold text-base-content mb-2">About this course</h3>
+                <p class="text-sm text-base-content/70">{@course.description}</p>
               </div>
             </div>
 
-            <a
-              :if={@course.youtube_playlist_id}
-              href={"https://www.youtube.com/playlist?list=#{@course.youtube_playlist_id}"}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-primary btn-sm"
-            >
-              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-              YouTube
-            </a>
-          </div>
+            <!-- NOTES TAB -->
+            <div class={["space-y-4", if(@dock_tab != "notes", do: "hidden lg:block")]}>
+              <h3 class="text-lg font-semibold text-base-content">Lesson notes</h3>
+              <div :if={@lesson.body} class="bg-base-200 rounded-xl p-4">
+                <p class="text-sm text-base-content/80 whitespace-pre-wrap">{@lesson.body}</p>
+              </div>
+              <div :if={!@lesson.body} class="text-sm text-base-content/60 text-center py-8">
+                No notes available for this lesson.
+              </div>
+            </div>
 
-          <!-- Description -->
-          <div :if={@lesson.body} class="bg-base-200 rounded-xl p-4">
-            <p class="text-sm text-base-content/80 whitespace-pre-wrap">{@lesson.body}</p>
-          </div>
+            <!-- RESOURCES TAB -->
+            <div class={["space-y-4", if(@dock_tab != "resources", do: "hidden lg:block")]}>
+              <h3 class="text-lg font-semibold text-base-content">Resources</h3>
+              <p class="text-sm text-base-content/70">Coming soon: links, downloads, repo, and more resources.</p>
+            </div>
 
-          <div :if={@course.description} class="mt-4 bg-base-200 rounded-xl p-4">
-            <h3 class="font-semibold text-base-content mb-2">About this course</h3>
-            <p class="text-sm text-base-content/70">{@course.description}</p>
+            <!-- TIMESTAMPS TAB -->
+            <div class={["space-y-4", if(@dock_tab != "timestamps", do: "hidden lg:block")]}>
+              <h3 class="text-lg font-semibold text-base-content">Timestamps</h3>
+              <ul class="text-sm text-primary space-y-2">
+                <li>
+                  <button type="button" class="link">00:00 Introduction</button>
+                </li>
+                <li>
+                  <button type="button" class="link">02:30 Core concepts</button>
+                </li>
+                <li>
+                  <button type="button" class="link">05:00 Examples</button>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <!-- Comments Section -->
@@ -206,6 +250,61 @@ defmodule UrielmWeb.LessonLive do
               <button class="btn btn-primary btn-sm">Post Comment</button>
             </.form>
           </section>
+        </div>
+
+        <!-- Mobile Lesson Dock -->
+        <div class="dock fixed bottom-0 left-0 right-0 z-20 lg:hidden bg-base-200 border-t border-base-300">
+          <button
+            type="button"
+            phx-click="set_dock_tab"
+            phx-value-tab="home"
+            class={["dock-item", if(@dock_tab == "home", do: "dock-active", else: "")]}
+            aria-label="Home tab"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="dock-label text-xs">Home</span>
+          </button>
+
+          <button
+            type="button"
+            phx-click="set_dock_tab"
+            phx-value-tab="notes"
+            class={["dock-item", if(@dock_tab == "notes", do: "dock-active", else: "")]}
+            aria-label="Notes tab"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="dock-label text-xs">Notes</span>
+          </button>
+
+          <button
+            type="button"
+            phx-click="set_dock_tab"
+            phx-value-tab="resources"
+            class={["dock-item", if(@dock_tab == "resources", do: "dock-active", else: "")]}
+            aria-label="Resources tab"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <span class="dock-label text-xs">Resources</span>
+          </button>
+
+          <button
+            type="button"
+            phx-click="set_dock_tab"
+            phx-value-tab="timestamps"
+            class={["dock-item", if(@dock_tab == "timestamps", do: "dock-active", else: "")]}
+            aria-label="Timestamps tab"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="dock-label text-xs">Times</span>
+          </button>
         </div>
       </div>
 
