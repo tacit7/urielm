@@ -1,23 +1,30 @@
 <script>
+  import { LayoutDashboard, BookOpen, Bookmark, User, Settings, LogOut, Loader2 } from 'lucide-svelte'
+
   let { currentUser } = $props()
 
-  let isOpen = $state(false)
+  let isLoggingOut = $state(false)
 
-  function toggleMenu() {
-    isOpen = !isOpen
-  }
-
-  function closeMenu() {
-    isOpen = false
-  }
-
-  function handleClickOutside(event) {
-    if (!event.target.closest('.dropdown')) {
-      closeMenu()
+  function getUserInitials() {
+    if (currentUser.name) {
+      return currentUser.name
+        .split(' ')
+        .map(n => n.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     }
+    if (currentUser.email) {
+      return currentUser.email.charAt(0).toUpperCase()
+    }
+    return 'U'
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    if (isLoggingOut) return
+
+    isLoggingOut = true
+
     // Create a form and submit it to perform DELETE request
     const form = document.createElement('form')
     form.method = 'POST'
@@ -41,59 +48,77 @@
     document.body.appendChild(form)
     form.submit()
   }
-
-  $effect(() => {
-    document.addEventListener('click', handleClickOutside)
-    return () => {
-      document.removeEventListener('click', handleClickOutside)
-    }
-  })
 </script>
 
-<div class="dropdown dropdown-end" class:dropdown-open={isOpen}>
+<div class="dropdown dropdown-end">
   <button
-    onclick={toggleMenu}
-    class="btn btn-ghost btn-circle avatar online"
-    aria-label="User menu"
+    tabindex="0"
+    class="btn btn-ghost btn-circle avatar"
+    aria-label="{currentUser.name || currentUser.email} account menu"
   >
-    {#if currentUser.avatarUrl}
-      <div class="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+    <div class="w-10 rounded-full">
+      {#if currentUser.avatarUrl}
         <img
           src={currentUser.avatarUrl}
           alt={currentUser.name || currentUser.email}
         />
-      </div>
-    {:else}
-      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-content font-bold ring ring-primary ring-offset-base-100 ring-offset-2">
-        {currentUser.name?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase() || 'U'}
-      </div>
-    {/if}
+      {:else}
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content w-10 rounded-full">
+            <span class="text-sm">{getUserInitials()}</span>
+          </div>
+        </div>
+      {/if}
+    </div>
   </button>
 
-  {#if isOpen}
-    <ul class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow-xl border border-base-300 mt-3">
-      <li class="menu-title px-4 py-2">
-        <div class="flex flex-col">
-          <span class="font-semibold text-base-content">{currentUser.name || 'User'}</span>
-          <span class="text-xs text-base-content/60">{currentUser.email}</span>
-        </div>
-      </li>
-      <li>
-        <a href="/saved" onclick={closeMenu}>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          My Saved
-        </a>
-      </li>
-      <li>
-        <button onclick={handleLogout}>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Sign Out
-        </button>
-      </li>
-    </ul>
-  {/if}
+  <ul tabindex="0" class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow mt-3">
+    <li class="menu-title">
+      <span>{currentUser.name || 'User'}</span>
+      <span class="text-xs opacity-50">@{currentUser.username || currentUser.email?.split('@')[0] || 'user'}</span>
+    </li>
+    <li><div class="divider my-0"></div></li>
+    <li>
+      <a href="/">
+        <LayoutDashboard class="w-4 h-4" />
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <a href="/lessons">
+        <BookOpen class="w-4 h-4" />
+        Courses
+      </a>
+    </li>
+    <li>
+      <a href="/romanov-prompts">
+        <Bookmark class="w-4 h-4" />
+        Saved
+      </a>
+    </li>
+    <li>
+      <a href="/profile">
+        <User class="w-4 h-4" />
+        Profile
+      </a>
+    </li>
+    <li>
+      <a href="/settings">
+        <Settings class="w-4 h-4" />
+        Settings
+      </a>
+    </li>
+    <li><div class="divider my-0"></div></li>
+    <li>
+      <button onclick={handleLogout} disabled={isLoggingOut}>
+        {#if isLoggingOut}
+          <Loader2 class="w-4 h-4 animate-spin" />
+          Logging out...
+        {:else}
+          <LogOut class="w-4 h-4" />
+          Log out
+        {/if}
+      </button>
+    </li>
+  </ul>
 </div>

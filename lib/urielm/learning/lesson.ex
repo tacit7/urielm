@@ -3,14 +3,14 @@ defmodule Urielm.Learning.Lesson do
   import Ecto.Changeset
 
   schema "lessons" do
-    field :slug, :string
-    field :title, :string
-    field :body, :string
-    field :lesson_number, :integer
-    field :youtube_video_id, :string
+    field(:slug, :string)
+    field(:title, :string)
+    field(:body, :string)
+    field(:lesson_number, :integer)
+    field(:youtube_video_id, :string)
 
-    belongs_to :course, Urielm.Learning.Course
-    has_many :comments, Urielm.Learning.LessonComment
+    belongs_to(:course, Urielm.Learning.Course)
+    has_many(:comments, Urielm.Learning.LessonComment)
 
     timestamps(type: :utc_datetime)
   end
@@ -32,7 +32,9 @@ defmodule Urielm.Learning.Lesson do
           nil -> changeset
           title -> put_change(changeset, :slug, slugify(title))
         end
-      _slug -> changeset
+
+      _slug ->
+        changeset
     end
   end
 

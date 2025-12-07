@@ -134,8 +134,13 @@ defmodule Urielm.Learning do
   """
   def get_lesson_with_comments(course_id, slug) do
     case get_lesson_by_slug(course_id, slug) do
-      nil -> nil
-      lesson -> Repo.preload(lesson, comments: from(c in LessonComment, order_by: [asc: c.inserted_at], preload: :user))
+      nil ->
+        nil
+
+      lesson ->
+        Repo.preload(lesson,
+          comments: from(c in LessonComment, order_by: [asc: c.inserted_at], preload: :user)
+        )
     end
   end
 end

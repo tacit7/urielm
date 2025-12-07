@@ -1,4 +1,7 @@
 <script>
+  import { Eye, EyeOff, X } from 'lucide-svelte'
+  import GoogleSignInButton from './GoogleSignInButton.svelte'
+
   let { isOpen = $bindable(false), live } = $props()
 
   let mode = $state('signin') // 'signin' or 'signup'
@@ -7,10 +10,7 @@
   let name = $state('')
   let error = $state('')
   let loading = $state(false)
-
-  function handleOAuthLogin() {
-    window.location.href = '/auth/google'
-  }
+  let showPassword = $state(false)
 
   function closeModal() {
     isOpen = false
@@ -18,6 +18,7 @@
     password = ''
     name = ''
     error = ''
+    showPassword = false
   }
 
   function switchMode() {
@@ -67,7 +68,7 @@
         class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
         aria-label="Close"
       >
-        ✕
+        <X class="w-4 h-4" />
       </button>
     </form>
 
@@ -77,13 +78,7 @@
     </p>
 
     <!-- Google OAuth -->
-    <button
-      onclick={handleOAuthLogin}
-      class="btn btn-neutral btn-lg w-full justify-start gap-4 mb-4"
-    >
-      <span class="text-2xl">🔍</span>
-      <span class="flex-1 text-left">Continue with Google</span>
-    </button>
+    <GoogleSignInButton disabled={loading} />
 
     <!-- Divider -->
     <div class="divider text-xs text-base-content/50">or</div>
@@ -92,49 +87,63 @@
     <form onsubmit={handleEmailAuth} class="flex flex-col gap-4">
       {#if mode === 'signup'}
         <div class="form-control w-full">
-          <label class="label flex-col items-start gap-1" for="name">
-            <span class="label-text">Name</span>
-            <input
-              id="name"
-              type="text"
-              bind:value={name}
-              placeholder="Your name"
-              class="input input-bordered w-full"
-              required
-              disabled={loading}
-            />
+          <label class="label pb-1" for="name">
+            <span class="label-text text-sm">Name</span>
           </label>
+          <input
+            id="name"
+            type="text"
+            bind:value={name}
+            placeholder="Your name"
+            class="input input-bordered w-full"
+            required
+            disabled={loading}
+          />
         </div>
       {/if}
 
       <div class="form-control w-full">
-        <label class="label flex-col items-start gap-1" for="email">
-          <span class="label-text">Email</span>
-          <input
-            id="email"
-            type="email"
-            bind:value={email}
-            placeholder="you@example.com"
-            class="input input-bordered w-full"
-            required
-            disabled={loading}
-          />
+        <label class="label pb-1" for="email">
+          <span class="label-text text-sm">Email</span>
         </label>
+        <input
+          id="email"
+          type="email"
+          bind:value={email}
+          placeholder="you@example.com"
+          class="input input-bordered w-full"
+          required
+          disabled={loading}
+        />
       </div>
 
       <div class="form-control w-full">
-        <label class="label flex-col items-start gap-1" for="password">
-          <span class="label-text">Password</span>
+        <label class="label pb-1" for="password">
+          <span class="label-text text-sm">Password</span>
+        </label>
+        <label class="input input-bordered w-full flex items-center gap-2">
           <input
             id="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             bind:value={password}
             placeholder="••••••••"
-            class="input input-bordered w-full"
+            class="grow bg-transparent outline-none"
             required
             minlength="8"
             disabled={loading}
           />
+          <button
+            type="button"
+            onclick={() => showPassword = !showPassword}
+            class="btn btn-ghost btn-xs btn-circle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {#if showPassword}
+              <Eye class="w-4 h-4" />
+            {:else}
+              <EyeOff class="w-4 h-4" />
+            {/if}
+          </button>
         </label>
       </div>
 

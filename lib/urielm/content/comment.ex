@@ -3,14 +3,14 @@ defmodule Urielm.Content.Comment do
   import Ecto.Changeset
 
   schema "comments" do
-    field :body, :string
-    field :edited_at, :utc_datetime
-    field :deleted_at, :utc_datetime
+    field(:body, :string)
+    field(:edited_at, :utc_datetime)
+    field(:deleted_at, :utc_datetime)
 
-    belongs_to :user, Urielm.Accounts.User
-    belongs_to :prompt, Urielm.Content.Prompt
-    belongs_to :parent, __MODULE__
-    has_many :replies, __MODULE__, foreign_key: :parent_id
+    belongs_to(:user, Urielm.Accounts.User)
+    belongs_to(:prompt, Urielm.Content.Prompt)
+    belongs_to(:parent, __MODULE__)
+    has_many(:replies, __MODULE__, foreign_key: :parent_id)
 
     timestamps(type: :utc_datetime)
   end

@@ -14,7 +14,9 @@
       "Bash(mix ecto.gen.migration:*)",
       "Bash(mix ecto.migrate:*)",
       "Bash(pkill:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(mix seed_prompts:*)",
+      "Bash(mix compile:*)"
     ],
     "deny": [],
     "ask": []

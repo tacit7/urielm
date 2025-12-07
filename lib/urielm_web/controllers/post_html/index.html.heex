@@ -1,0 +1,31 @@
+<div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+  <h1 class="text-3xl font-bold mb-4">Blog</h1>
+
+  <%= if @posts == [] do %>
+    <p class="text-base-content/60">
+      No posts yet.
+    </p>
+  <% end %>
+
+  <ul class="space-y-6">
+    <%= for post <- @posts do %>
+      <li class="border-b border-base-300 pb-4">
+        <h2 class="text-xl font-semibold mb-1">
+          <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary">
+            <%= post.title %>
+          </.link>
+        </h2>
+
+        <p class="text-xs text-base-content/60 mb-2">
+          <%= if post.published_at do %>
+            <%= Calendar.strftime(post.published_at, "%b %d, %Y") %>
+          <% end %>
+        </p>
+
+        <p class="text-sm text-base-content/80">
+          <%= post.excerpt || String.slice(post.body, 0, 160) <> "..." %>
+        </p>
+      </li>
+    <% end %>
+  </ul>
+</div>

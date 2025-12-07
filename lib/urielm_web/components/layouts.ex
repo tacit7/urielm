@@ -29,7 +29,11 @@ defmodule UrielmWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :current_user, :map, default: nil, doc: "the current user"
   attr :current_page, :string, default: "home", doc: "the current page identifier"
-  attr :current_scope, :map, default: nil, doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+
+  attr :current_scope, :map,
+    default: nil,
+    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
+
   attr :socket, :any, default: nil, doc: "LiveView socket (for LiveSvelte components)"
   slot :inner_block, required: true
 
@@ -43,7 +47,7 @@ defmodule UrielmWeb.Layouts do
       />
 
       <main class="pt-16">
-        <%= if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block) %>
+        {if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block)}
       </main>
 
       <.flash_group flash={@flash} />
@@ -143,6 +147,7 @@ defmodule UrielmWeb.Layouts do
       id: to_string(user.id),
       name: user.name,
       email: user.email,
+      username: user.username,
       avatarUrl: user.avatar_url
     }
   end

@@ -3,7 +3,7 @@ defmodule Urielm.Repo.Migrations.CreateComments do
 
   def change do
     create table(:comments) do
-      add :user_id, references(:users, on_delete: :nilify), null: false
+      add :user_id, references(:users, on_delete: :nilify_all), null: false
       add :prompt_id, references(:prompts, on_delete: :delete_all), null: false
       add :parent_id, references(:comments, on_delete: :delete_all)
       add :body, :text, null: false

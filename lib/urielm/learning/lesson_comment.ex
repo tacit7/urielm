@@ -3,10 +3,10 @@ defmodule Urielm.Learning.LessonComment do
   import Ecto.Changeset
 
   schema "lesson_comments" do
-    field :body, :string
+    field(:body, :string)
 
-    belongs_to :lesson, Urielm.Learning.Lesson
-    belongs_to :user, Urielm.Accounts.User
+    belongs_to(:lesson, Urielm.Learning.Lesson)
+    belongs_to(:user, Urielm.Accounts.User)
 
     timestamps(type: :utc_datetime)
   end

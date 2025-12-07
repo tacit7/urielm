@@ -55,9 +55,10 @@ defmodule Urielm.Accounts do
         email_verified: email != nil
       }
 
-      {:ok, user} = %User{}
-      |> User.changeset(user_params)
-      |> Repo.insert()
+      {:ok, user} =
+        %User{}
+        |> User.changeset(user_params)
+        |> Repo.insert()
 
       identity_params = %{
         user_id: user.id,
@@ -107,6 +108,31 @@ defmodule Urielm.Accounts do
     end
   end
 
+  @doc """
+  Updates a user's profile information.
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates a user's password.
+  """
+  def update_user_password(%User{} = user, attrs) do
+    user
+    |> User.registration_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a user account and all associated data.
+  """
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
   ## Saved Prompts
 
   @doc """
@@ -146,8 +172,9 @@ defmodule Urielm.Accounts do
   """
   def is_prompt_saved?(%User{id: user_id}, prompt_id) do
     Repo.exists?(
-      from s in SavedPrompt,
+      from(s in SavedPrompt,
         where: s.user_id == ^user_id and s.prompt_id == ^prompt_id
+      )
     )
   end
 
@@ -206,8 +233,9 @@ defmodule Urielm.Accounts do
   """
   def is_prompt_liked?(%User{id: user_id}, prompt_id) do
     Repo.exists?(
-      from l in Like,
+      from(l in Like,
         where: l.user_id == ^user_id and l.prompt_id == ^prompt_id
+      )
     )
   end
 

@@ -3,12 +3,12 @@ defmodule Urielm.Accounts.OAuthIdentity do
   import Ecto.Changeset
 
   schema "oauth_identities" do
-    field :provider, :string
-    field :provider_uid, :string
-    field :provider_token, :string
-    field :raw_info, :map
+    field(:provider, :string)
+    field(:provider_uid, :string)
+    field(:provider_token, :string)
+    field(:raw_info, :map)
 
-    belongs_to :user, Urielm.Accounts.User
+    belongs_to(:user, Urielm.Accounts.User)
 
     timestamps(type: :utc_datetime)
   end

@@ -38,9 +38,19 @@ defmodule UrielmWeb.Router do
 
     live_session :default, layout: {UrielmWeb.Layouts, :app} do
       live "/", HomeLive
-      live "/references", ReferencesLive
+      live "/romanov-prompts", ReferencesLive
       live "/courses/:course_slug", CourseLive
       live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
+    end
+
+    get "/blog", PostController, :index
+    get "/blog/:slug", PostController, :show
+
+    live_session :authenticated,
+      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}],
+      layout: {UrielmWeb.Layouts, :app} do
+      live "/profile", ProfileLive
+      live "/settings", SettingsLive
     end
   end
 

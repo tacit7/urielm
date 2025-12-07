@@ -9,7 +9,8 @@ defmodule Urielm.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      listeners: [Phoenix.CodeReloader]
     ]
   end
 
@@ -66,6 +67,7 @@ defmodule Urielm.MixProject do
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.12"},
       {:dotenvy, "~> 0.8.0"},
+      {:earmark, "~> 1.4"},
       {:bcrypt_elixir, "~> 3.0"}
     ]
   end

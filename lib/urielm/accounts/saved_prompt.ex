@@ -3,10 +3,10 @@ defmodule Urielm.Accounts.SavedPrompt do
   import Ecto.Changeset
 
   schema "saved_prompts" do
-    field :notes, :string
+    field(:notes, :string)
 
-    belongs_to :user, Urielm.Accounts.User
-    belongs_to :prompt, Urielm.Content.Prompt
+    belongs_to(:user, Urielm.Accounts.User)
+    belongs_to(:prompt, Urielm.Content.Prompt)
 
     timestamps(type: :utc_datetime, updated_at: false)
   end
