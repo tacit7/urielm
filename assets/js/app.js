@@ -56,6 +56,8 @@ import ThemeSelector from "../svelte/ThemeSelector.svelte"
 import SubNav from "../svelte/SubNav.svelte"
 import AuthModal from "../svelte/AuthModal.svelte"
 import UserMenu from "../svelte/UserMenu.svelte"
+import GoogleSignInButton from "../svelte/GoogleSignInButton.svelte"
+import YouTubePlayer from "../svelte/lib/youtube/YouTubePlayer.svelte"
 
 // Infinite scroll hook
 const InfiniteScroll = {
@@ -82,6 +84,24 @@ const InfiniteScroll = {
   }
 }
 
+// Copy to clipboard hook
+const CopyToClipboard = {
+  mounted() {
+    this.el.addEventListener("phx:copy", () => {
+      const text = this.el.textContent
+      navigator.clipboard.writeText(text).then(
+        () => {
+          // Visual feedback - could add a toast here
+          console.log("Copied to clipboard")
+        },
+        (err) => {
+          console.error("Failed to copy:", err)
+        }
+      )
+    })
+  }
+}
+
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,
@@ -91,11 +111,14 @@ let Hooks = getHooks({
   ThemeSelector,
   SubNav,
   AuthModal,
-  UserMenu
+  UserMenu,
+  GoogleSignInButton,
+  YouTubePlayer
 })
 
 // Add custom hooks
 Hooks.InfiniteScroll = InfiniteScroll
+Hooks.CopyToClipboard = CopyToClipboard
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

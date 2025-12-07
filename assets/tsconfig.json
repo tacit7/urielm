@@ -26,7 +26,8 @@
       "*": ["../deps/*"]
     },
     "allowJs": true,
-    "noEmit": true
+    "noEmit": true,
+    "verbatimModuleSyntax": true
   },
   "include": ["js/**/*"]
 }
