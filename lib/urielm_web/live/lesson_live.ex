@@ -109,7 +109,6 @@ defmodule UrielmWeb.LessonLive do
               </svg>
             </.link>
             <h1 class="text-lg font-bold text-base-content truncate flex-1">{@lesson.title}</h1>
-            <label for="lesson-drawer" class="btn btn-primary btn-sm">Up next</label>
           </div>
 
           <!-- Video Title -->
@@ -120,46 +119,31 @@ defmodule UrielmWeb.LessonLive do
             <!-- HOME TAB -->
             <div class={["space-y-4", if(@dock_tab != "home", do: "hidden lg:block")]}>
               <!-- Course/Channel Info -->
-              <div class="flex items-start justify-between gap-4 pb-4 border-b border-base-300 mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <svg
-                      class="w-5 h-5 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <.link
-                      navigate={~p"/courses/#{@course.slug}"}
-                      class="font-semibold text-base-content hover:text-primary"
-                    >
-                      {@course.title}
-                    </.link>
-                    <p class="text-xs text-base-content/60">Lesson {@lesson.lesson_number}</p>
-                  </div>
-                </div>
-
-                <a
-                  :if={@course.youtube_playlist_id}
-                  href={"https://www.youtube.com/playlist?list=#{@course.youtube_playlist_id}"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-primary btn-sm"
-                >
-                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              <div class="flex items-center gap-3 pb-4 border-b border-base-300 mb-4">
+                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <svg
+                    class="w-5 h-5 text-primary"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
                   </svg>
-                  YouTube
-                </a>
+                </div>
+                <div>
+                  <.link
+                    navigate={~p"/courses/#{@course.slug}"}
+                    class="font-semibold text-base-content hover:text-primary"
+                  >
+                    {@course.title}
+                  </.link>
+                  <p class="text-xs text-base-content/60">Lesson {@lesson.lesson_number}</p>
+                </div>
               </div>
 
               <div :if={@lesson.body} class="bg-base-200 rounded-xl p-4">
