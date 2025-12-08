@@ -243,49 +243,51 @@ root.html.heex
 
 ## 7. CSS Styling Pipeline
 
-**File**: `assets/css/app.css`
+**File**: `assets/css/app.css` (lines 196-330)
 
-### Prose styling rules (lines 196-330):
+### Approach: Custom CSS + daisyUI semantics
+
+We write custom `.prose` rules that use daisyUI CSS variables for theme-aware colors:
 
 ```css
 .prose {
-  color: hsl(var(--bc) / 0.9);  /* text color from daisyUI theme */
+  color: hsl(var(--bc) / 0.9);  /* base-content from daisyUI */
 }
 
 .prose h2 {
   font-size: 1.5em;
-  margin-top: 3.5rem;  /* Strong section break */
+  margin-top: 3.5rem;  /* Strong section break via spacing, not decoration */
   margin-bottom: 1em;
 }
 
-.prose h3 {
-  font-size: 1.25em;
-  margin-top: 2rem;  /* Subsection break */
-  margin-bottom: 0.5em;
-}
-
 .prose :not(pre) > code {
-  background-color: hsl(var(--b3) / 0.6);  /* Subtle background */
-  border: none;
-  padding: 0.2em 0.4em;
-  color: hsl(var(--p));  /* Primary color */
+  background-color: hsl(var(--b3) / 0.6);  /* base-300 at 60% opacity */
+  border: none;  /* Minimal visual noise */
+  color: hsl(var(--p));  /* primary color from theme */
   font-weight: 500;
 }
 
 .prose pre {
-  background-color: hsl(var(--b2) / 0.5);  /* Light code block background */
+  background-color: hsl(var(--b2) / 0.5);  /* base-200 at 50% opacity */
+  border: none;
   padding: 1rem;
   margin: 1.5em 0;
   border-radius: 0.5rem;
-  border: none;  /* No border decoration */
 }
 ```
 
-**How styling flows:**
-1. Template has `<article class="prose prose-invert">`
-2. CSS rules prefixed with `.prose` apply to all elements inside article
-3. Uses daisyUI CSS variables (`--bc` = base content, `--b2` = base-200, `--p` = primary)
-4. These variables change based on active theme (tokyo-night, catppuccin-mocha, etc.)
+**Why this approach:**
+- Tailwind Typography (`@plugin "@tailwindcss/typography"`) is registered but not used directly
+- We avoid hardcoding colors; instead use daisyUI's semantic variable system
+- daisyUI variables update automatically when theme changes
+- Custom rules give us control over restraint (no borders, subtle backgrounds)
+- Result: editorial aesthetic that adapts to any theme
+
+**Theme variables used:**
+- `--bc` (base-content): Text color
+- `--b2` (base-200): Code block background
+- `--b3` (base-300): Inline code background
+- `--p` (primary): Links and code color
 
 ## 8. JavaScript Bundle Integration
 
@@ -373,24 +375,23 @@ end
 
 ## 11. Theme System Integration
 
-daisyUI theme variables control colors:
+daisyUI exposes theme colors as CSS variables:
 
 ```css
-/* Current theme (set via data-theme attribute) */
-:root[data-theme="tokyo-night"] {
-  --color-primary: #7aa2f7;
-  --color-base-100: #1a1b26;
-  --color-base-200: #16161e;
-  --color-base-content: #c0caf5;
-  /* ... more colors */
+/* Tokyo Night theme (when data-theme="tokyo-night") */
+:root {
+  --p: 240 100% 68%;  /* primary: #7aa2f7 in HSL */
+  --b2: 230 40% 11%;  /* base-200: #16161e in HSL */
+  --b3: 228 35% 15%;  /* base-300 (custom) */
+  --bc: 256 89% 82%;  /* base-content: #c0caf5 in HSL */
 }
 ```
 
 **How blog uses themes:**
-- `bg-base-100`: Text background (dark)
-- `text-base-content`: Text color (light)
-- `hsl(var(--p))`: Links and inline code (primary color)
-- All colors automatically adapt when user switches theme
+- `color: hsl(var(--bc))`: Text color (adapts to light/dark)
+- `background-color: hsl(var(--b2) / 0.5)`: Code block background at 50% opacity
+- `color: hsl(var(--p))`: Links and inline code (primary accent)
+- All colors automatically update when user switches themes (tokyo-night, catppuccin-mocha, etc.)
 
 ## Summary: Complete Request Flow
 

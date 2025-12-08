@@ -204,6 +204,15 @@ data
 Pattern matching and pipes make Elixir code expressive and composable.
 ```
 
+## Security Note
+
+**HTML Sanitization**: Blog posts use `Phoenix.HTML.raw()` to bypass escaping on Earmark's HTML output. This is safe because:
+- Posts are author-only content (created by you)
+- Markdown is not user-generated from untrusted sources
+- If user-generated markdown ever becomes an input, you must sanitize HTML before rendering
+
+Do **not** apply `raw()` to user-submitted markdown without proper sanitization.
+
 ## Enforcement
 
 When adding new blog posts:
