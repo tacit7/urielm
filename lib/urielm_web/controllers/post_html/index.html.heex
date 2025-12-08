@@ -1,38 +1,63 @@
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-  <header class="mb-8 lg:mb-10">
-    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-      Blog
-    </h1>
-    <p class="text-sm text-base-content/70 max-w-[60ch]">
-      Essays, notes, and deep dives on Elixir, Phoenix, AI workflows, and whatever else I'm obsessing over.
-    </p>
-  </header>
+<div class="min-h-screen bg-base-100 flex flex-col">
+  <div class="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+    <header class="mb-12 lg:mb-16">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+        Blog
+      </h1>
+      <p class="text-base sm:text-lg text-base-content/75 max-w-[70ch] leading-relaxed">
+        Essays, notes, and deep dives on Elixir, Phoenix, AI workflows, and building products that matter. A space to think out loud.
+      </p>
+    </header>
 
-  <%= if @posts == [] do %>
-    <p class="text-base-content/60 text-center py-12">
-      No posts yet.
-    </p>
-  <% else %>
-    <div class="space-y-4">
-      <%= for post <- @posts do %>
-        <article class="border border-base-300/70 bg-base-200/40 rounded-xl p-4 sm:p-5 hover:border-primary/60 transition-colors">
-          <h2 class="text-lg sm:text-xl font-semibold mb-1">
-            <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary transition-colors">
-              <%= post.title %>
-            </.link>
-          </h2>
+    <%= if @posts == [] do %>
+      <p class="text-base-content/60 text-center py-12">
+        No posts yet.
+      </p>
+    <% else %>
+      <div class="space-y-5">
+        <%= for {post, index} <- Enum.with_index(@posts) do %>
+          <article class={[
+            "border rounded-lg p-5 sm:p-6 transition-all hover:border-primary/60",
+            if index == 0 do
+              "border-base-300 bg-base-200/60 shadow-sm"
+            else
+              "border-base-300/50 bg-base-100 hover:shadow-sm"
+            end
+          ]}>
+            <div class="flex items-start justify-between gap-4 mb-2">
+              <h2 class="text-lg sm:text-xl font-semibold flex-1 leading-tight">
+                <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary transition-colors">
+                  <%= post.title %>
+                </.link>
+              </h2>
+              <%= if index == 0 do %>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-primary/10 text-primary/80">
+                  Latest
+                </span>
+              <% end %>
+            </div>
 
-          <p class="text-xs text-base-content/60 mb-2">
-            <%= if post.published_at do %>
-              <%= Calendar.strftime(post.published_at, "%b %d, %Y") %>
-            <% end %>
-          </p>
+            <p class="text-xs text-base-content/50 mb-3">
+              <%= if post.published_at do %>
+                <%= Calendar.strftime(post.published_at, "%B %d, %Y") %>
+              <% end %>
+            </p>
 
-          <p class="text-sm text-base-content/80 line-clamp-3">
-            <%= post.excerpt || String.slice(post.body, 0, 200) <> "…" %>
-          </p>
-        </article>
-      <% end %>
+            <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed">
+              <%= post.excerpt || String.slice(post.body, 0, 180) <> "…" %>
+            </p>
+          </article>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Footer anchor -->
+  <footer class="border-t border-base-300/30 bg-base-100/50 py-8 px-4 sm:px-6 lg:px-8 mt-auto">
+    <div class="max-w-4xl mx-auto">
+      <p class="text-xs text-base-content/40 text-center">
+        More writing coming. Follow along.
+      </p>
     </div>
-  <% end %>
+  </footer>
 </div>
