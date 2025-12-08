@@ -31,15 +31,15 @@
   --color-primary-content: #1a1b26;
   --color-secondary: #bb9af7;
   --color-secondary-content: #1a1b26;
-  --color-accent: #7dcfff;
+  --color-accent: #73daca;
   --color-accent-content: #1a1b26;
-  --color-neutral: #565f89;
+  --color-neutral: #414868;
   --color-neutral-content: #c0caf5;
   --color-base-100: #1a1b26;
-  --color-base-200: #16161e;
-  --color-base-300: #131419;
+  --color-base-200: #24283b;
+  --color-base-300: #414868;
   --color-base-content: #c0caf5;
-  --color-info: #7dcfff;
+  --color-info: #2ac3de;
   --color-success: #9ece6a;
   --color-warning: #e0af68;
   --color-error: #f7768e;
@@ -193,137 +193,67 @@
 .delay-200 { animation-delay: 200ms; }
 .delay-300 { animation-delay: 300ms; }
 
+/* Heading Component Classes */
+@layer components {
+  .h1 { @apply text-primary text-4xl sm:text-5xl font-semibold tracking-tight; }
+  .h2 { @apply text-secondary text-2xl sm:text-3xl font-semibold; }
+  .h3 { @apply text-accent text-xl sm:text-2xl font-semibold; }
+}
+
 /* Blog Prose Styling */
-.prose {
-  color: hsl(var(--bc) / 0.9);
-}
+@layer components {
+  .prose { @apply text-base-content/90; }
 
-.prose a {
-  color: hsl(var(--p));
-  text-decoration: none;
-  font-weight: 500;
-  transition: text-decoration 200ms ease;
-}
+  .prose.prose a { @apply text-primary font-medium no-underline hover:underline; }
 
-.prose a:hover {
-  text-decoration: underline;
-}
+  .prose.prose code {
+    @apply font-mono text-primary font-semibold;
+  }
 
-.prose code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: hsl(var(--p));
-  font-weight: 600;
-}
+  .prose.prose :not(pre) > code {
+    @apply bg-base-300/40 rounded px-1.5 py-0.5 text-[0.9em] font-medium text-primary;
+  }
 
-.prose :not(pre) > code {
-  background-color: hsl(var(--b3) / 0.6);
-  border: none;
-  border-radius: 0.25rem;
-  padding: 0.2em 0.4em;
-  font-size: 0.9em;
-  color: hsl(var(--p));
-  font-weight: 500;
-}
+  .prose.prose pre {
+    @apply rounded-lg bg-base-200/50 p-4 overflow-x-auto my-6 text-[0.85em] leading-6;
+    border: none;
+  }
 
-.prose pre {
-  border-radius: 0.5rem;
-  border: none;
-  background-color: hsl(var(--b2) / 0.5);
-  padding: 1rem;
-  overflow-x: auto;
-  margin: 1.5em 0;
-  font-size: 0.85em;
-  line-height: 1.5;
-}
+  .prose.prose pre code {
+    @apply bg-transparent p-0 text-base-content font-medium;
+  }
 
-.prose pre code {
-  background-color: transparent;
-  padding: 0;
-  font-size: 1em;
-  font-weight: 500;
-  color: hsl(var(--bc));
-}
+  .prose.prose h1,
+  .prose.prose h2,
+  .prose.prose h3,
+  .prose.prose h4 {
+    @apply font-bold mb-2;
+  }
 
-.prose h1,
-.prose h2,
-.prose h3,
-.prose h4 {
-  color: hsl(var(--bc));
-  font-weight: 700;
-  margin-bottom: 0.5em;
-}
+  .prose.prose h1 { @apply text-primary text-3xl mt-10 mb-3; }
+  .prose.prose h2 { @apply text-secondary text-2xl mt-12 mb-4; }
+  .prose.prose h3 { @apply text-accent text-xl mt-8 mb-2; }
+  .prose.prose h4 { @apply text-base-content text-lg mt-6 mb-2; }
 
-.prose h1 {
-  font-size: 2em;
-  margin-top: 2em;
-  margin-bottom: 0.75em;
-}
+  .prose.prose p { @apply mb-4 text-base-content/80; }
 
-.prose h2 {
-  font-size: 1.5em;
-  margin-top: 3.5rem;
-  margin-bottom: 1em;
-}
+  .prose.prose ul,
+  .prose.prose ol { @apply my-5 pl-7; }
 
-.prose h3 {
-  font-size: 1.25em;
-  margin-top: 2rem;
-  margin-bottom: 0.5em;
-}
+  .prose.prose li { @apply my-2; }
 
-.prose h4 {
-  font-size: 1.125em;
-  margin-top: 1.25em;
-}
+  .prose.prose li > p { @apply my-2; }
 
-.prose p {
-  margin-bottom: 1em;
-}
+  .prose.prose blockquote {
+    @apply border-l-2 border-primary/30 pl-4 italic text-base-content/75;
+  }
 
-.prose ul,
-.prose ol {
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
-  padding-left: 1.75em;
-}
+  .prose.prose hr { @apply my-8 border-0 border-t border-base-300; }
 
-.prose li {
-  margin-bottom: 0.75em;
-  margin-top: 0.5em;
-}
+  .prose.prose table { @apply w-full border-collapse my-4; }
 
-.prose li > p {
-  margin: 0.5em 0;
-}
+  .prose.prose table td,
+  .prose.prose table th { @apply border border-base-300 p-3 text-left; }
 
-.prose blockquote {
-  border-left: 2px solid hsl(var(--p) / 0.3);
-  padding-left: 1rem;
-  font-style: italic;
-  color: hsl(var(--bc) / 0.75);
+  .prose.prose table th { @apply bg-base-200 font-semibold; }
 }
-
-.prose hr {
-  border: none;
-  border-top: 1px solid hsl(var(--b2));
-  margin: 2em 0;
-}
-
-.prose table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1em 0;
-}
-
-.prose table td,
-.prose table th {
-  border: 1px solid hsl(var(--b2));
-  padding: 0.75em;
-  text-align: left;
-}
-
-.prose table th {
-  background-color: hsl(var(--b2));
-  font-weight: 600;
-}
-

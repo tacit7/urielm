@@ -34,14 +34,17 @@
     </article>
 
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
+      function highlightBlogArticle() {
         const article = document.getElementById('blog-article')
         if (article && window.hljs) {
           article.querySelectorAll('pre code').forEach((block) => {
             window.hljs.highlightElement(block)
           })
         }
-      })
+      }
+
+      document.addEventListener('DOMContentLoaded', highlightBlogArticle);
+      window.addEventListener('phx:page-loading-stop', highlightBlogArticle);
     </script>
   </div>
 </div>
