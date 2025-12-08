@@ -29,8 +29,19 @@
       </div>
     </header>
 
-    <article class="prose prose-invert max-w-[70ch]" phx-hook="HighlightCode">
+    <article class="prose prose-invert max-w-[70ch]" id="blog-article">
       <%= markdown_to_html(@post.body) %>
     </article>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const article = document.getElementById('blog-article')
+        if (article && window.hljs) {
+          article.querySelectorAll('pre code').forEach((block) => {
+            window.hljs.highlightElement(block)
+          })
+        }
+      })
+    </script>
   </div>
 </div>
