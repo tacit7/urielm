@@ -29,7 +29,7 @@
       </div>
     </header>
 
-    <article class="prose prose-invert max-w-[70ch]">
+    <article class="prose prose-invert max-w-[70ch]" phx-hook="HighlightCode">
       <%= markdown_to_html(@post.body) %>
     </article>
   </div>

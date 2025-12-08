@@ -46,6 +46,7 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {getHooks} from "live_svelte"
 import topbar from "../vendor/topbar"
+import hljs from "highlight.js"
 
 // Import Svelte components
 import Counter from "../svelte/Counter.svelte"
@@ -102,6 +103,21 @@ const CopyToClipboard = {
   }
 }
 
+// Syntax highlighting for code blocks
+const HighlightCode = {
+  mounted() {
+    this.highlightAll()
+  },
+  updated() {
+    this.highlightAll()
+  },
+  highlightAll() {
+    this.el.querySelectorAll("pre code").forEach((block) => {
+      hljs.highlightElement(block)
+    })
+  }
+}
+
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,
@@ -119,6 +135,7 @@ let Hooks = getHooks({
 // Add custom hooks
 Hooks.InfiniteScroll = InfiniteScroll
 Hooks.CopyToClipboard = CopyToClipboard
+Hooks.HighlightCode = HighlightCode
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

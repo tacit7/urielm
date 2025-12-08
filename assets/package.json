@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "esbuild": "^0.27.0",
     "esbuild-plugin-import-glob": "^0.1.1",
     "esbuild-svelte": "^0.9.3",
@@ -8,6 +9,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "daisyui": "^5.5.8",
+    "highlight.js": "^11.11.1",
     "live_svelte": "file:../deps/live_svelte",
     "lucide-svelte": "^0.556.0",
     "phoenix": "file:../deps/phoenix",

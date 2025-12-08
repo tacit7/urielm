@@ -7,6 +7,9 @@
 @source "../svelte";
 @source "../../lib/urielm_web";
 
+/* Highlight.js theme for syntax highlighting */
+@import "highlight.js/styles/atom-one-dark";
+
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";
@@ -84,6 +87,72 @@
   --color-success: #40a02b;
   --color-warning: #df8e1d;
   --color-error: #d20f39;
+}
+
+/* Custom Dracula Theme */
+@plugin "daisyui/theme" {
+  name: "dracula-custom";
+  color-scheme: dark;
+  --color-primary: #ff79c6;
+  --color-primary-content: #1e1b28;
+  --color-secondary: #8be9fd;
+  --color-secondary-content: #1e1b28;
+  --color-accent: #50fa7b;
+  --color-accent-content: #1e1b28;
+  --color-neutral: #44475a;
+  --color-neutral-content: #f8f8f2;
+  --color-base-100: #282a36;
+  --color-base-200: #21222c;
+  --color-base-300: #1e1b28;
+  --color-base-content: #f8f8f2;
+  --color-info: #8be9fd;
+  --color-success: #50fa7b;
+  --color-warning: #f1fa8c;
+  --color-error: #ff5555;
+}
+
+/* Custom GitHub Light Theme */
+@plugin "daisyui/theme" {
+  name: "github-light";
+  color-scheme: light;
+  --color-primary: #0969da;
+  --color-primary-content: #ffffff;
+  --color-secondary: #6e40aa;
+  --color-secondary-content: #ffffff;
+  --color-accent: #1298f3;
+  --color-accent-content: #ffffff;
+  --color-neutral: #57606a;
+  --color-neutral-content: #ffffff;
+  --color-base-100: #ffffff;
+  --color-base-200: #f6f8fa;
+  --color-base-300: #eaeef2;
+  --color-base-content: #24292f;
+  --color-info: #0969da;
+  --color-success: #1a7f64;
+  --color-warning: #9e6a03;
+  --color-error: #da3633;
+}
+
+/* Custom GitHub Dark Theme */
+@plugin "daisyui/theme" {
+  name: "github-dark";
+  color-scheme: dark;
+  --color-primary: #58a6ff;
+  --color-primary-content: #0d1117;
+  --color-secondary: #bc8ef9;
+  --color-secondary-content: #0d1117;
+  --color-accent: #79c0ff;
+  --color-accent-content: #0d1117;
+  --color-neutral: #8b949e;
+  --color-neutral-content: #c9d1d9;
+  --color-base-100: #0d1117;
+  --color-base-200: #161b22;
+  --color-base-300: #21262d;
+  --color-base-content: #c9d1d9;
+  --color-info: #58a6ff;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-error: #f85149;
 }
 
 
