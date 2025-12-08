@@ -14,11 +14,76 @@
 /* Tailwind Typography Plugin for prose styling */
 @plugin "@tailwindcss/typography";
 
-/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
-   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
+/* daisyUI Tailwind Plugin. Installed via npm, update with: npm install daisyui@latest
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
-@plugin "../vendor/daisyui" {
+@plugin "daisyui" {
   themes: all;
+}
+
+/* Custom Tokyo Night Theme */
+@plugin "daisyui/theme" {
+  name: "tokyo-night";
+  color-scheme: dark;
+  --color-primary: #7aa2f7;
+  --color-primary-content: #1a1b26;
+  --color-secondary: #bb9af7;
+  --color-secondary-content: #1a1b26;
+  --color-accent: #7dcfff;
+  --color-accent-content: #1a1b26;
+  --color-neutral: #565f89;
+  --color-neutral-content: #c0caf5;
+  --color-base-100: #1a1b26;
+  --color-base-200: #16161e;
+  --color-base-300: #131419;
+  --color-base-content: #c0caf5;
+  --color-info: #7dcfff;
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-error: #f7768e;
+}
+
+/* Custom Catppuccin Mocha Theme */
+@plugin "daisyui/theme" {
+  name: "catppuccin-mocha";
+  color-scheme: dark;
+  --color-primary: #89b4fa;
+  --color-primary-content: #1e1e2e;
+  --color-secondary: #cba6f7;
+  --color-secondary-content: #1e1e2e;
+  --color-accent: #94e2d5;
+  --color-accent-content: #1e1e2e;
+  --color-neutral: #585b70;
+  --color-neutral-content: #cdd6f4;
+  --color-base-100: #1e1e2e;
+  --color-base-200: #181825;
+  --color-base-300: #11111b;
+  --color-base-content: #cdd6f4;
+  --color-info: #89dceb;
+  --color-success: #a6e3a1;
+  --color-warning: #f9e2af;
+  --color-error: #f38ba8;
+}
+
+/* Custom Catppuccin Latte Theme */
+@plugin "daisyui/theme" {
+  name: "catppuccin-latte";
+  color-scheme: light;
+  --color-primary: #1e66f5;
+  --color-primary-content: #eff1f5;
+  --color-secondary: #ea76cb;
+  --color-secondary-content: #eff1f5;
+  --color-accent: #179299;
+  --color-accent-content: #eff1f5;
+  --color-neutral: #8c8fa1;
+  --color-neutral-content: #eff1f5;
+  --color-base-100: #eff1f5;
+  --color-base-200: #e6e9f0;
+  --color-base-300: #dce0e8;
+  --color-base-content: #4c4f69;
+  --color-info: #209fb5;
+  --color-success: #40a02b;
+  --color-warning: #df8e1d;
+  --color-error: #d20f39;
 }
 
 
@@ -77,17 +142,18 @@
 
 .prose code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  background-color: hsl(var(--b2));
-  border-radius: 0.375rem;
-  padding: 0.15rem 0.4rem;
-  font-size: 0.9em;
+  color: hsl(var(--p));
+  font-weight: 600;
 }
 
 .prose :not(pre) > code {
-  background-color: hsl(var(--b2));
+  background-color: hsl(var(--b3));
+  border: 1px solid hsl(var(--b3) / 0.8);
   border-radius: 0.375rem;
-  padding: 0.15rem 0.4rem;
+  padding: 0.25em 0.5em;
   font-size: 0.9em;
+  color: hsl(var(--p));
+  font-weight: 600;
 }
 
 .prose pre {
