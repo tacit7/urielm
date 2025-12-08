@@ -216,24 +216,24 @@
 }
 
 .prose :not(pre) > code {
-  background-color: hsl(var(--b3));
-  border: 1px solid hsl(var(--b3) / 0.8);
-  border-radius: 0.375rem;
-  padding: 0.25em 0.5em;
+  background-color: hsl(var(--b3) / 0.6);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.2em 0.4em;
   font-size: 0.9em;
   color: hsl(var(--p));
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .prose pre {
-  border-radius: 0.75rem;
-  border: 1px solid hsl(var(--b3));
-  background-color: hsl(var(--b2));
-  padding: 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: hsl(var(--b2) / 0.5);
+  padding: 1rem;
   overflow-x: auto;
   margin: 1.5em 0;
-  font-size: 0.875em;
-  line-height: 1.6;
+  font-size: 0.85em;
+  line-height: 1.5;
 }
 
 .prose pre code {
@@ -261,10 +261,8 @@
 
 .prose h2 {
   font-size: 1.5em;
-  margin-top: 3rem;
-  margin-bottom: 0.75em;
-  border-bottom: 1px solid hsl(var(--b2) / 0.5);
-  padding-bottom: 0.5em;
+  margin-top: 3.5rem;
+  margin-bottom: 1em;
 }
 
 .prose h3 {
@@ -299,10 +297,10 @@
 }
 
 .prose blockquote {
-  border-left: 3px solid hsl(var(--p) / 0.5);
+  border-left: 2px solid hsl(var(--p) / 0.3);
   padding-left: 1rem;
   font-style: italic;
-  color: hsl(var(--bc) / 0.8);
+  color: hsl(var(--bc) / 0.75);
 }
 
 .prose hr {
