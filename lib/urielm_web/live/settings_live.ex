@@ -238,32 +238,39 @@ defmodule UrielmWeb.SettingsLive do
 
             <div class="divider"></div>
 
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="font-medium">Theme</p>
-                <p class="text-xs text-base-content/60">Choose your preferred color scheme</p>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-medium">Theme</p>
+                  <p class="text-xs text-base-content/60">Choose your preferred color scheme</p>
+                </div>
+                <div class="join">
+                  <button
+                    class="btn btn-sm join-item"
+                    data-theme="light"
+                    phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})}
+                  >
+                    Light
+                  </button>
+                  <button
+                    class="btn btn-sm join-item"
+                    data-theme="dark"
+                    phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
+                  >
+                    Dark
+                  </button>
+                  <button
+                    class="btn btn-sm join-item"
+                    phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})}
+                  >
+                    System
+                  </button>
+                </div>
               </div>
-              <div class="join">
-                <button
-                  class="btn btn-sm join-item"
-                  data-theme="light"
-                  phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})}
-                >
-                  Light
-                </button>
-                <button
-                  class="btn btn-sm join-item"
-                  data-theme="dark"
-                  phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
-                >
-                  Dark
-                </button>
-                <button
-                  class="btn btn-sm join-item"
-                  phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})}
-                >
-                  System
-                </button>
+              <div class="flex justify-end">
+                <a href="/themes" class="btn btn-outline btn-sm">
+                  More Themes
+                </a>
               </div>
             </div>
           </div>

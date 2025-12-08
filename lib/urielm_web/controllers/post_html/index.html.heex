@@ -1,31 +1,38 @@
-<div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
-  <h1 class="text-3xl font-bold mb-4">Blog</h1>
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+  <header class="mb-8 lg:mb-10">
+    <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
+      Blog
+    </h1>
+    <p class="text-sm text-base-content/70 max-w-[60ch]">
+      Essays, notes, and deep dives on Elixir, Phoenix, AI workflows, and whatever else I'm obsessing over.
+    </p>
+  </header>
 
   <%= if @posts == [] do %>
-    <p class="text-base-content/60">
+    <p class="text-base-content/60 text-center py-12">
       No posts yet.
     </p>
+  <% else %>
+    <div class="space-y-4">
+      <%= for post <- @posts do %>
+        <article class="border border-base-300/70 bg-base-200/40 rounded-xl p-4 sm:p-5 hover:border-primary/60 transition-colors">
+          <h2 class="text-lg sm:text-xl font-semibold mb-1">
+            <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary transition-colors">
+              <%= post.title %>
+            </.link>
+          </h2>
+
+          <p class="text-xs text-base-content/60 mb-2">
+            <%= if post.published_at do %>
+              <%= Calendar.strftime(post.published_at, "%b %d, %Y") %>
+            <% end %>
+          </p>
+
+          <p class="text-sm text-base-content/80 line-clamp-3">
+            <%= post.excerpt || String.slice(post.body, 0, 200) <> "…" %>
+          </p>
+        </article>
+      <% end %>
+    </div>
   <% end %>
-
-  <ul class="space-y-6">
-    <%= for post <- @posts do %>
-      <li class="border-b border-base-300 pb-4">
-        <h2 class="text-xl font-semibold mb-1">
-          <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary">
-            <%= post.title %>
-          </.link>
-        </h2>
-
-        <p class="text-xs text-base-content/60 mb-2">
-          <%= if post.published_at do %>
-            <%= Calendar.strftime(post.published_at, "%b %d, %Y") %>
-          <% end %>
-        </p>
-
-        <p class="text-sm text-base-content/80">
-          <%= post.excerpt || String.slice(post.body, 0, 160) <> "..." %>
-        </p>
-      </li>
-    <% end %>
-  </ul>
 </div>

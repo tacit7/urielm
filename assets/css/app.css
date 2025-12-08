@@ -15,7 +15,68 @@
    curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
-  themes: all;
+  themes: all, "tokyo-night", "catppuccin-mocha", "catppuccin-latte";
+
+  /* Custom themes */
+  theme "tokyo-night" {
+    color-scheme: dark;
+    --color-primary: #7aa2f7;
+    --color-primary-content: #1a1b26;
+    --color-secondary: #bb9af7;
+    --color-secondary-content: #1a1b26;
+    --color-accent: #7dcfff;
+    --color-accent-content: #1a1b26;
+    --color-neutral: #565f89;
+    --color-neutral-content: #c0caf5;
+    --color-base-100: #1a1b26;
+    --color-base-200: #16161e;
+    --color-base-300: #131419;
+    --color-base-content: #c0caf5;
+    --color-info: #7dcfff;
+    --color-success: #9ece6a;
+    --color-warning: #e0af68;
+    --color-error: #f7768e;
+  }
+
+  theme "catppuccin-mocha" {
+    color-scheme: dark;
+    --color-primary: #89b4fa;
+    --color-primary-content: #1e1e2e;
+    --color-secondary: #cba6f7;
+    --color-secondary-content: #1e1e2e;
+    --color-accent: #94e2d5;
+    --color-accent-content: #1e1e2e;
+    --color-neutral: #585b70;
+    --color-neutral-content: #cdd6f4;
+    --color-base-100: #1e1e2e;
+    --color-base-200: #181825;
+    --color-base-300: #11111b;
+    --color-base-content: #cdd6f4;
+    --color-info: #89dceb;
+    --color-success: #a6e3a1;
+    --color-warning: #f9e2af;
+    --color-error: #f38ba8;
+  }
+
+  theme "catppuccin-latte" {
+    color-scheme: light;
+    --color-primary: #1e66f5;
+    --color-primary-content: #eff1f5;
+    --color-secondary: #ea76cb;
+    --color-secondary-content: #eff1f5;
+    --color-accent: #179299;
+    --color-accent-content: #eff1f5;
+    --color-neutral: #8c8fa1;
+    --color-neutral-content: #eff1f5;
+    --color-base-100: #eff1f5;
+    --color-base-200: #e6e9f0;
+    --color-base-300: #dce0e8;
+    --color-base-content: #4c4f69;
+    --color-info: #209fb5;
+    --color-success: #40a02b;
+    --color-warning: #df8e1d;
+    --color-error: #d20f39;
+  }
 }
 
 /* Add variants based on LiveView classes */
@@ -54,3 +115,126 @@
 .delay-100 { animation-delay: 100ms; }
 .delay-200 { animation-delay: 200ms; }
 .delay-300 { animation-delay: 300ms; }
+
+/* Blog Prose Styling */
+.prose {
+  color: hsl(var(--bc) / 0.9);
+}
+
+.prose a {
+  color: hsl(var(--p));
+  text-decoration: none;
+  font-weight: 500;
+  transition: text-decoration 200ms ease;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: hsl(var(--b2));
+  border-radius: 0.375rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.9em;
+}
+
+.prose :not(pre) > code {
+  background-color: hsl(var(--b2));
+  border-radius: 0.375rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.9em;
+}
+
+.prose pre {
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--b3) / 0.7);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--b2)),
+    hsl(var(--b3))
+  );
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.9em;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: hsl(var(--bc));
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose h1 {
+  font-size: 1.875em;
+}
+
+.prose h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid hsl(var(--b2));
+  padding-bottom: 0.5em;
+}
+
+.prose h3 {
+  font-size: 1.25em;
+}
+
+.prose h4 {
+  font-size: 1.125em;
+}
+
+.prose p {
+  margin-bottom: 1em;
+}
+
+.prose ul,
+.prose ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-bottom: 0.5em;
+}
+
+.prose blockquote {
+  border-left: 3px solid hsl(var(--p) / 0.5);
+  padding-left: 1rem;
+  font-style: italic;
+  color: hsl(var(--bc) / 0.8);
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid hsl(var(--b2));
+  margin: 2em 0;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.prose table td,
+.prose table th {
+  border: 1px solid hsl(var(--b2));
+  padding: 0.75em;
+  text-align: left;
+}
+
+.prose table th {
+  background-color: hsl(var(--b2));
+  font-weight: 600;
+}
+

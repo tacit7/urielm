@@ -41,6 +41,7 @@ defmodule UrielmWeb.Router do
       live "/romanov-prompts", ReferencesLive
       live "/courses/:course_slug", CourseLive
       live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
+      live "/themes", ThemesLive
     end
 
     get "/blog", PostController, :index
