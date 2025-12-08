@@ -48,6 +48,9 @@ import {getHooks} from "live_svelte"
 import topbar from "../vendor/topbar"
 import hljs from "highlight.js"
 
+// Expose hljs globally for syntax highlighting in templates
+window.hljs = hljs
+
 // Import Svelte components
 import Counter from "../svelte/Counter.svelte"
 import Navbar from "../svelte/Navbar.svelte"
