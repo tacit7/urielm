@@ -29,7 +29,18 @@
       </div>
     </header>
 
-    <article class="prose prose-invert" id="blog-article">
+    <%= if @post.hero_image do %>
+      <div class="mb-12 lg:mb-16">
+        <img
+          src={@post.hero_image}
+          alt={@post.title}
+          class="w-full h-auto rounded-lg"
+          loading="lazy"
+        />
+      </div>
+    <% end %>
+
+    <article class="prose" id="blog-article">
       <%= markdown_to_html(@post.body) %>
     </article>
 

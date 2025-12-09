@@ -10,6 +10,7 @@ defmodule Urielm.Content.Post do
     field :excerpt, :string
     field :status, :string, default: "draft"
     field :published_at, :utc_datetime
+    field :hero_image, :string
 
     belongs_to :author, Urielm.Accounts.User
 
@@ -20,7 +21,7 @@ defmodule Urielm.Content.Post do
 
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:title, :slug, :body, :excerpt, :status, :published_at, :author_id])
+    |> cast(attrs, [:title, :slug, :body, :excerpt, :status, :published_at, :author_id, :hero_image])
     |> validate_required([:title, :slug, :body, :status])
     |> validate_inclusion(:status, @statuses)
     |> unique_constraint(:slug)

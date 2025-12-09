@@ -10,6 +10,15 @@ config :urielm, Urielm.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+# Configure Cloudflare R2 for blog images
+config :urielm, :r2,
+  account_id: System.get_env("CLOUDFLARE_ACCOUNT_ID"),
+  api_token: System.get_env("CLOUDFLARE_R2_API_TOKEN"),
+  secret_key: System.get_env("CLOUDFLARE_R2_SECRET"),
+  bucket: "urielm/img/blog",
+  region: "auto",
+  public_url_base: System.get_env("CLOUDFLARE_R2_PUBLIC_URL")
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
