@@ -11,9 +11,9 @@
   }
   if (!document.documentElement.hasAttribute("data-theme")) {
     try {
-      setTheme(localStorage.getItem("phx:theme") || "system")
+      setTheme(localStorage.getItem("phx:theme") || "dark")
     } catch (_) {
-      setTheme("system")
+      setTheme("dark")
     }
   }
   window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"))
