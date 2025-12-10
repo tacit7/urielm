@@ -39,6 +39,7 @@ defmodule UrielmWeb.Router do
     live_session :default, layout: {UrielmWeb.Layouts, :app} do
       live "/", HomeLive
       live "/romanov-prompts", ReferencesLive
+      live "/courses", CoursesLive
       live "/courses/:course_slug", CourseLive
       live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
       live "/themes", ThemesLive
