@@ -339,8 +339,8 @@ GitHub Actions automatically builds and pushes Docker images to Docker Hub on ev
 ssh -i ~/.ssh/tacit7 deploy@167.172.194.233
 
 # Set environment variables (one time - add to ~/.bashrc to persist)
-export SECRET_KEY_BASE="vkCOKHuTvSwwCFmy850/ZedDh0L+IP/qarxxmy1s46rLVoUP52en+WWuDs48goJX"
-export DATABASE_URL="postgresql://doadmin:AVNS_yO3HL6VJLCKA5yyG7kn@db-postgresql-sfo2-18861-do-user-4084462-0.l.db.ondigitalocean.com:25060/defaultdb?sslmode=require"
+export SECRET_KEY_BASE="<your-secret-key-base>"
+export DATABASE_URL="<your-database-url>"
 export PHX_HOST="urielm.dev"
 export MIX_ENV="prod"
 export PORT="4000"
