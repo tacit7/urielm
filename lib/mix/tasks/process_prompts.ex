@@ -18,7 +18,7 @@ defmodule Mix.Tasks.ProcessPrompts do
   end
 
   defp process_pending_prompts do
-    case Repo.all(from(p in Prompt, where: p.process_status == "pending", limit: 50)) do
+    case Repo.all(from(p in Prompt, where: p.processed == false, limit: 50)) do
       [] ->
         send_nats_message("Agent complete: All pending prompts processed")
         IO.puts("No more pending prompts.")
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.ProcessPrompts do
     # Mark as processing
     Repo.update_all(
       from(p in Prompt, where: p.id == ^prompt.id),
-      set: [process_status: "processing"]
+      set: [processed: false]
     )
 
     # Use the Romanov tagging prompt
@@ -66,7 +66,7 @@ defmodule Mix.Tasks.ProcessPrompts do
         # Update category
         Repo.update_all(
           from(p in Prompt, where: p.id == ^prompt.id),
-          set: [category: category, process_status: "processed"]
+          set: [category: category, processed: true]
         )
 
         tag_names = Enum.map(tag_ids, fn id ->
@@ -82,7 +82,7 @@ defmodule Mix.Tasks.ProcessPrompts do
 
         Repo.update_all(
           from(p in Prompt, where: p.id == ^prompt.id),
-          set: [process_status: "pending"]
+          set: [processed: false]
         )
     end
   end
