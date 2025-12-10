@@ -65,11 +65,8 @@
       {#if isMenuOpen}
         <ul id="mobile-nav" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
           <li><a href="/" class:active={currentPage === 'home'} onclick={closeMenu}>Home</a></li>
-          <li><a href="/blog" class:active={currentPage === 'blog'} onclick={closeMenu}>Blog</a></li>
-          <li><a href="/romanov-prompts?category=coding" onclick={closeMenu}>Coding</a></li>
-          <li><a href="/romanov-prompts?category=ai" onclick={closeMenu}>AI</a></li>
-          <li><a href="/romanov-prompts?category=n8n" onclick={closeMenu}>n8n</a></li>
-          <li><a href="/romanov-prompts?category=tools" onclick={closeMenu}>Tools</a></li>
+          <li><a href="/blog" class:active={currentPage === 'blog'} onclick={closeMenu}>Blogs</a></li>
+          <li><a href="/courses" class:active={currentPage === 'courses'} onclick={closeMenu}>Courses</a></li>
           <li><a href="/romanov-prompts" class:active={currentPage === 'references'} onclick={closeMenu}>Prompts</a></li>
         </ul>
       {/if}
@@ -94,31 +91,13 @@
         href="/blog"
         class={`font-medium transition-colors ${currentPage === 'blog' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
-        Blog
+        Blogs
       </a>
       <a
-        href="/romanov-prompts?category=coding"
-        class="font-medium text-base-content hover:text-primary transition-colors"
+        href="/courses"
+        class={`font-medium transition-colors ${currentPage === 'courses' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
-        Coding
-      </a>
-      <a
-        href="/romanov-prompts?category=ai"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        AI
-      </a>
-      <a
-        href="/romanov-prompts?category=n8n"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        n8n
-      </a>
-      <a
-        href="/romanov-prompts?category=tools"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        Tools
+        Courses
       </a>
       <a
         href="/romanov-prompts"

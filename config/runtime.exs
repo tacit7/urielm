@@ -42,10 +42,18 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
+  # Use DO CA cert from system path (Docker) or priv directory (local dev)
+  cacertfile =
+    cond do
+      File.exists?("/etc/ssl/certs/do-ca.crt") -> "/etc/ssl/certs/do-ca.crt"
+      File.exists?("priv/certs/do-ca.crt") -> "priv/certs/do-ca.crt"
+      true -> raise "DO CA certificate not found"
+    end
+
   config :urielm, Urielm.Repo,
     ssl: [
       verify: :verify_peer,
-      cacertfile: "/etc/ssl/certs/do-ca.crt",
+      cacertfile: cacertfile,
       depth: 3
     ],
     url: database_url,
