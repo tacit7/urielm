@@ -99,9 +99,9 @@
   }
 </script>
 
-<div class="chat-wrapper bg-base-300 flex flex-col h-full">
+<div class="chat-wrapper bg-base-100 flex flex-col h-full">
   <!-- Header -->
-  <div class="chat-header bg-base-100 border-b border-base-200 px-6 py-4 flex items-center justify-between">
+  <div class="chat-header bg-base-100 border-b border-base-300 px-6 py-4 flex items-center justify-between">
     <div>
       <h2 class="text-xl font-bold text-base-content"># {room.name}</h2>
       {#if room.description}
@@ -115,7 +115,7 @@
   </div>
 
   <!-- Messages -->
-  <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-6 py-2 bg-base-300 space-y-0.5">
+  <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-6 py-2 bg-base-100 space-y-0.5">
     {#if messages.length === 0}
       <div class="flex flex-col items-center justify-center h-full gap-3 text-base-content/50">
         <div class="text-5xl opacity-60">💬</div>
@@ -127,7 +127,7 @@
         {@const isSequence = isMessageSequence(i)}
         {@const isMine = msg.user_id.toString() === userId}
 
-        <div class="flex gap-3 py-0.5 hover:bg-base-200 group transition-colors rounded px-2 -mx-2" in:fly={{ y: 20, duration: 300 }}>
+        <div class="flex gap-3 py-0.5 hover:bg-base-200/50 group transition-colors rounded px-2 -mx-2" in:fly={{ y: 20, duration: 300 }}>
           <!-- Avatar -->
           <div class="flex-shrink-0 pt-0.5">
             {#if !isSequence}
@@ -155,8 +155,8 @@
   </div>
 
   <!-- Input Area -->
-  <div class="input-section bg-base-300 border-t border-base-200 px-4 py-3">
-    <div class="flex gap-2 items-end rounded-3xl bg-base-100 px-4 py-2">
+  <div class="input-section bg-base-100 border-t border-base-300 px-4 py-3">
+    <div class="flex gap-2 items-end rounded-3xl bg-base-200 px-4 py-2">
       <textarea
         bind:this={textareaElement}
         bind:value={newMessage}
@@ -171,7 +171,7 @@
         disabled={!isConnected}
         autocomplete="off"
         rows="1"
-        class="textarea textarea-bordered-0 flex-1 bg-base-100 text-base-content placeholder-base-content/50 focus:outline-none resize-none max-h-[120px] p-0 border-0"
+        class="textarea textarea-bordered-0 flex-1 bg-base-200 text-base-content placeholder-base-content/50 focus:outline-none resize-none max-h-[120px] p-0 border-0"
       />
       <button
         on:click={sendMessage}

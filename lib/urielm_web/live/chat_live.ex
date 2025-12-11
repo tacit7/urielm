@@ -60,7 +60,7 @@ defmodule UrielmWeb.ChatLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="flex h-[calc(100vh-4rem)] bg-base-300">
+    <div class="flex h-[calc(100vh-4rem)] bg-base-200">
       <!-- Create Room Modal -->
       <div class={["modal", @show_create_modal && "modal-open"]}>
         <div class="modal-box">
@@ -112,8 +112,8 @@ defmodule UrielmWeb.ChatLive do
       </div>
 
       <!-- Sidebar with rooms -->
-      <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-200">
-        <div class="p-4 border-b border-base-200">
+      <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-300">
+        <div class="p-4 border-b border-base-300">
           <h1 class="text-2xl font-bold text-base-content">Chat</h1>
         </div>
 
@@ -135,7 +135,7 @@ defmodule UrielmWeb.ChatLive do
               class={[
                 "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
                 @selected_room && @selected_room.id == room.id && "bg-primary/10 text-primary border-l-primary font-semibold",
-                @selected_room && @selected_room.id != room.id && "text-base-content hover:bg-base-200"
+                @selected_room && @selected_room.id != room.id && "text-base-content hover:bg-base-200/50"
               ]}
             >
               # <%= room.name %>
@@ -145,7 +145,7 @@ defmodule UrielmWeb.ChatLive do
       </div>
 
       <!-- Main chat area -->
-      <div class="flex-1 flex flex-col bg-base-300 h-full">
+      <div class="flex-1 flex flex-col bg-base-100 h-full">
         <%= if @selected_room do %>
           <.svelte
             name="ChatWindow"
