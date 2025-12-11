@@ -60,7 +60,7 @@ defmodule UrielmWeb.ChatLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="flex h-screen bg-base-200">
+    <div class="flex h-[calc(100vh-4rem)] bg-base-200">
       <!-- Create Room Modal -->
       <div class={["modal", @show_create_modal && "modal-open"]}>
         <div class="modal-box">
@@ -147,6 +147,7 @@ defmodule UrielmWeb.ChatLive do
         <%= if @selected_room do %>
           <.svelte
             name="ChatWindow"
+            class="h-full"
             props={%{
               room: serialize_room(@selected_room),
               messages: Enum.map(@messages, &serialize_message/1),
