@@ -126,17 +126,17 @@ defmodule UrielmWeb.ChatLive do
           </button>
         </div>
 
-        <nav class="space-y-2 p-4">
+        <nav class="space-y-1 p-3">
           <%= for room <- @rooms do %>
             <a
               href={~p"/chat?room_id=#{room.id}"}
               class={[
-                "block px-4 py-2 rounded-lg transition",
-                @selected_room && @selected_room.id == room.id && "bg-primary text-primary-content",
-                @selected_room && @selected_room.id != room.id && "text-base-content hover:bg-base-200"
+                "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
+                @selected_room && @selected_room.id == room.id && "bg-primary/10 text-primary border-l-primary font-semibold",
+                @selected_room && @selected_room.id != room.id && "text-base-content hover:bg-base-200/50"
               ]}
             >
-              <%= room.name %>
+              # <%= room.name %>
             </a>
           <% end %>
         </nav>

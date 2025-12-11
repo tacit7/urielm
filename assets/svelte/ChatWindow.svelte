@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { Socket } from "phoenix"
+  import { fly } from "svelte/transition"
 
   export let room
   export let messages = []
@@ -11,7 +12,7 @@
   let socket = null
   let isConnected = false
   let messageList = null
-  let hoveredMessageId = null
+  let textareaElement = null
 
   onMount(async () => {
     socket = new Socket("/socket", {
@@ -54,6 +55,9 @@
     if (!newMessage.trim() || !isConnected) return
     channel.push("new_message", { body: newMessage.trim() })
     newMessage = ""
+    if (textareaElement) {
+      textareaElement.style.height = "auto"
+    }
   }
 
   function scrollToBottom() {
@@ -70,6 +74,13 @@
     }
   }
 
+  function handleInput(e) {
+    const target = e.target
+    target.style.height = "auto"
+    target.style.height = Math.min(target.scrollHeight, 120) + "px"
+    handleTyping()
+  }
+
   function formatTime(timestamp) {
     const date = new Date(timestamp)
     return date.toLocaleTimeString("en-US", {
@@ -77,6 +88,14 @@
       minute: "2-digit",
       hour12: true
     })
+  }
+
+  function isMessageSequence(index) {
+    return index > 0 && messages[index - 1].user_id === messages[index].user_id
+  }
+
+  function isCurrentUser(userId) {
+    return userId === parseInt(userId)
   }
 </script>
 
@@ -96,7 +115,7 @@
   </div>
 
   <!-- Messages -->
-  <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-base-100">
+  <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-4 py-4 bg-base-100">
     {#if messages.length === 0}
       <div class="flex flex-col items-center justify-center h-full gap-3 text-base-content/50">
         <div class="text-5xl opacity-60">💬</div>
@@ -104,27 +123,25 @@
         <p class="text-sm">Start the conversation</p>
       </div>
     {:else}
-      {#each messages as msg (msg.id)}
-        <div
-          class="message-group hover:bg-base-200 rounded p-2 transition-colors duration-150"
-          on:mouseenter={() => (hoveredMessageId = msg.id)}
-          on:mouseleave={() => (hoveredMessageId = null)}
-        >
-          <div class="flex gap-3">
-            <div class="avatar flex-shrink-0">
-              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-content font-bold text-sm shadow-lg">
+      {#each messages as msg, i (msg.id)}
+        {@const isSequence = isMessageSequence(i)}
+        {@const isMine = msg.user_id.toString() === userId}
+
+        <div class="chat {isMine ? 'chat-end' : 'chat-start'} {isSequence ? 'mt-1' : 'mt-4'}" in:fly={{ y: 20, duration: 300 }}>
+          {#if !isSequence}
+            <div class="chat-image avatar">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-content font-bold text-xs shadow-md">
                 {(msg.username || "?").charAt(0).toUpperCase()}
               </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-base-content text-sm">{msg.username || "Unknown"}</span>
-                <span class="text-xs text-base-content/50 opacity-0 transition-opacity" class:opacity-100={hoveredMessageId === msg.id}>
-                  {formatTime(msg.inserted_at)}
-                </span>
-              </div>
-              <p class="text-base-content/80 text-sm mt-1 break-words leading-relaxed">{msg.body}</p>
+            <div class="chat-header text-xs text-base-content/60 mb-1">
+              {msg.username || "Unknown"}
+              <time class="text-[10px] text-base-content/40 ml-2">{formatTime(msg.inserted_at)}</time>
             </div>
+          {/if}
+
+          <div class="chat-bubble {isMine ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content'} max-w-xs break-words">
+            {msg.body}
           </div>
         </div>
       {/each}
@@ -132,22 +149,28 @@
   </div>
 
   <!-- Input Area -->
-  <div class="input-section bg-base-100 border-t border-base-300 px-6 py-4">
-    <div class="flex gap-2 items-center">
-      <input
-        type="text"
+  <div class="input-section bg-base-100 border-t border-base-300 px-4 py-3">
+    <div class="flex gap-2 items-end rounded-3xl bg-base-200 px-4 py-2">
+      <textarea
+        bind:this={textareaElement}
         bind:value={newMessage}
-        on:keydown={(e) => e.key === "Enter" && sendMessage()}
-        on:input={handleTyping}
+        on:keydown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault()
+            sendMessage()
+          }
+        }}
+        on:input={handleInput}
         placeholder="Message #{room.name}"
         disabled={!isConnected}
         autocomplete="off"
-        class="input input-bordered input-sm flex-1 bg-base-200 border-base-300 text-base-content placeholder-base-content/50 focus:outline-none focus:border-primary"
+        rows="1"
+        class="textarea textarea-bordered-0 flex-1 bg-base-200 text-base-content placeholder-base-content/50 focus:outline-none resize-none max-h-[120px] p-0 border-0"
       />
       <button
         on:click={sendMessage}
         disabled={!isConnected || !newMessage.trim()}
-        class="btn btn-primary btn-sm btn-circle"
+        class="btn btn-primary btn-sm btn-circle flex-shrink-0"
         aria-label="Send message"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
