@@ -23,136 +23,136 @@
   themes: all;
 }
 
-/* Custom Tokyo Night Theme */
+/* Custom Tokyo Night Theme (OKLCH) */
 @plugin "daisyui/theme" {
   name: "tokyo-night";
   color-scheme: dark;
-  --color-primary: #7aa2f7;
-  --color-primary-content: #1a1b26;
-  --color-secondary: #bb9af7;
-  --color-secondary-content: #1a1b26;
-  --color-accent: #73daca;
-  --color-accent-content: #1a1b26;
-  --color-neutral: #414868;
-  --color-neutral-content: #c0caf5;
-  --color-base-100: #1a1b26;
-  --color-base-200: #24283b;
-  --color-base-300: #414868;
-  --color-base-content: #c0caf5;
-  --color-info: #2ac3de;
-  --color-success: #9ece6a;
-  --color-warning: #e0af68;
-  --color-error: #f7768e;
+  --color-primary: oklch(74.84% 0.149 263.94);
+  --color-primary-content: oklch(12.51% 0.01 247.36);
+  --color-secondary: oklch(75.12% 0.176 284.26);
+  --color-secondary-content: oklch(12.51% 0.01 247.36);
+  --color-accent: oklch(76.83% 0.146 168.48);
+  --color-accent-content: oklch(12.51% 0.01 247.36);
+  --color-neutral: oklch(28.22% 0.024 262.35);
+  --color-neutral-content: oklch(80.71% 0.038 265.68);
+  --color-base-100: oklch(12.51% 0.01 247.36);
+  --color-base-200: oklch(16.71% 0.012 253.87);
+  --color-base-300: oklch(28.22% 0.024 262.35);
+  --color-base-content: oklch(80.71% 0.038 265.68);
+  --color-info: oklch(79.68% 0.152 201.73);
+  --color-success: oklch(80.95% 0.174 133.4);
+  --color-warning: oklch(82.21% 0.17 74.49);
+  --color-error: oklch(70.18% 0.22 15.48);
 }
 
-/* Custom Catppuccin Mocha Theme */
+/* Custom Catppuccin Mocha Theme (OKLCH) */
 @plugin "daisyui/theme" {
   name: "catppuccin-mocha";
   color-scheme: dark;
-  --color-primary: #89b4fa;
-  --color-primary-content: #1e1e2e;
-  --color-secondary: #cba6f7;
-  --color-secondary-content: #1e1e2e;
-  --color-accent: #94e2d5;
-  --color-accent-content: #1e1e2e;
-  --color-neutral: #585b70;
-  --color-neutral-content: #cdd6f4;
-  --color-base-100: #1e1e2e;
-  --color-base-200: #181825;
-  --color-base-300: #11111b;
-  --color-base-content: #cdd6f4;
-  --color-info: #89dceb;
-  --color-success: #a6e3a1;
-  --color-warning: #f9e2af;
-  --color-error: #f38ba8;
+  --color-primary: oklch(77.45% 0.144 253.13);
+  --color-primary-content: oklch(13.96% 0.008 280.51);
+  --color-secondary: oklch(80.22% 0.154 288.06);
+  --color-secondary-content: oklch(13.96% 0.008 280.51);
+  --color-accent: oklch(80.8% 0.124 177.65);
+  --color-accent-content: oklch(13.96% 0.008 280.51);
+  --color-neutral: oklch(36.64% 0.022 276.02);
+  --color-neutral-content: oklch(84.28% 0.036 264.49);
+  --color-base-100: oklch(13.96% 0.008 280.51);
+  --color-base-200: oklch(12.21% 0.007 280.51);
+  --color-base-300: oklch(9.87% 0.006 260.59);
+  --color-base-content: oklch(84.28% 0.036 264.49);
+  --color-info: oklch(84.41% 0.122 207.99);
+  --color-success: oklch(82.82% 0.143 147.88);
+  --color-warning: oklch(85.33% 0.144 98.33);
+  --color-error: oklch(76.15% 0.197 13.44);
 }
 
-/* Custom Catppuccin Latte Theme */
+/* Custom Catppuccin Latte Theme (OKLCH) */
 @plugin "daisyui/theme" {
   name: "catppuccin-latte";
   color-scheme: light;
-  --color-primary: #1e66f5;
-  --color-primary-content: #eff1f5;
-  --color-secondary: #ea76cb;
-  --color-secondary-content: #eff1f5;
-  --color-accent: #179299;
-  --color-accent-content: #eff1f5;
-  --color-neutral: #8c8fa1;
-  --color-neutral-content: #eff1f5;
-  --color-base-100: #eff1f5;
-  --color-base-200: #e6e9f0;
-  --color-base-300: #dce0e8;
-  --color-base-content: #4c4f69;
-  --color-info: #209fb5;
-  --color-success: #40a02b;
-  --color-warning: #df8e1d;
-  --color-error: #d20f39;
+  --color-primary: oklch(59.49% 0.194 256.39);
+  --color-primary-content: oklch(96.68% 0.008 260.49);
+  --color-secondary: oklch(69.27% 0.232 320.59);
+  --color-secondary-content: oklch(96.68% 0.008 260.49);
+  --color-accent: oklch(64.27% 0.205 205.9);
+  --color-accent-content: oklch(96.68% 0.008 260.49);
+  --color-neutral: oklch(63.77% 0.095 273.45);
+  --color-neutral-content: oklch(96.68% 0.008 260.49);
+  --color-base-100: oklch(96.68% 0.008 260.49);
+  --color-base-200: oklch(93.3% 0.008 260.49);
+  --color-base-300: oklch(89.44% 0.007 260.49);
+  --color-base-content: oklch(35.48% 0.048 256.74);
+  --color-info: oklch(69.03% 0.18 215.78);
+  --color-success: oklch(71.68% 0.184 142.31);
+  --color-warning: oklch(74.66% 0.2 72.73);
+  --color-error: oklch(62.19% 0.273 15.85);
 }
 
-/* Custom Dracula Theme */
+/* Custom Dracula Theme (OKLCH) */
 @plugin "daisyui/theme" {
   name: "dracula-custom";
   color-scheme: dark;
-  --color-primary: #ff79c6;
-  --color-primary-content: #1e1b28;
-  --color-secondary: #8be9fd;
-  --color-secondary-content: #1e1b28;
-  --color-accent: #50fa7b;
-  --color-accent-content: #1e1b28;
-  --color-neutral: #44475a;
-  --color-neutral-content: #f8f8f2;
-  --color-base-100: #282a36;
-  --color-base-200: #21222c;
-  --color-base-300: #1e1b28;
-  --color-base-content: #f8f8f2;
-  --color-info: #8be9fd;
-  --color-success: #50fa7b;
-  --color-warning: #f1fa8c;
-  --color-error: #ff5555;
+  --color-primary: oklch(74.21% 0.264 328.91);
+  --color-primary-content: oklch(12.34% 0.007 273.68);
+  --color-secondary: oklch(82.49% 0.159 215.59);
+  --color-secondary-content: oklch(12.34% 0.007 273.68);
+  --color-accent: oklch(79.22% 0.183 143.87);
+  --color-accent-content: oklch(12.34% 0.007 273.68);
+  --color-neutral: oklch(29.23% 0.017 263.45);
+  --color-neutral-content: oklch(96.14% 0.018 104.68);
+  --color-base-100: oklch(17.97% 0.008 253.78);
+  --color-base-200: oklch(15.51% 0.007 254.74);
+  --color-base-300: oklch(12.34% 0.007 273.68);
+  --color-base-content: oklch(96.14% 0.018 104.68);
+  --color-info: oklch(82.49% 0.159 215.59);
+  --color-success: oklch(79.22% 0.183 143.87);
+  --color-warning: oklch(88.78% 0.189 78.62);
+  --color-error: oklch(72.8% 0.226 13.19);
 }
 
-/* Custom GitHub Light Theme */
+/* Custom GitHub Light Theme (OKLCH) */
 @plugin "daisyui/theme" {
   name: "github-light";
   color-scheme: light;
-  --color-primary: #0969da;
-  --color-primary-content: #ffffff;
-  --color-secondary: #6e40aa;
-  --color-secondary-content: #ffffff;
-  --color-accent: #1298f3;
-  --color-accent-content: #ffffff;
-  --color-neutral: #57606a;
-  --color-neutral-content: #ffffff;
-  --color-base-100: #ffffff;
-  --color-base-200: #f6f8fa;
-  --color-base-300: #eaeef2;
-  --color-base-content: #24292f;
-  --color-info: #0969da;
-  --color-success: #1a7f64;
-  --color-warning: #9e6a03;
-  --color-error: #da3633;
+  --color-primary: oklch(52.6% 0.253 262.44);
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(52.17% 0.187 297.49);
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: oklch(65.31% 0.216 227.03);
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: oklch(53.41% 0.097 254.16);
+  --color-neutral-content: oklch(100% 0 0);
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(96.58% 0.002 247.84);
+  --color-base-300: oklch(93.04% 0.002 261.38);
+  --color-base-content: oklch(22.49% 0.026 264.84);
+  --color-info: oklch(52.6% 0.253 262.44);
+  --color-success: oklch(53.77% 0.198 189.9);
+  --color-warning: oklch(65.97% 0.219 54.48);
+  --color-error: oklch(60.17% 0.267 19.28);
 }
 
-/* Custom GitHub Dark Theme */
+/* Custom GitHub Dark Theme (OKLCH) */
 @plugin "daisyui/theme" {
   name: "github-dark";
   color-scheme: dark;
-  --color-primary: #58a6ff;
-  --color-primary-content: #0d1117;
-  --color-secondary: #bc8ef9;
-  --color-secondary-content: #0d1117;
-  --color-accent: #79c0ff;
-  --color-accent-content: #0d1117;
-  --color-neutral: #8b949e;
-  --color-neutral-content: #c9d1d9;
-  --color-base-100: #0d1117;
-  --color-base-200: #161b22;
-  --color-base-300: #21262d;
-  --color-base-content: #c9d1d9;
-  --color-info: #58a6ff;
-  --color-success: #3fb950;
-  --color-warning: #d29922;
-  --color-error: #f85149;
+  --color-primary: oklch(70.77% 0.172 250.23);
+  --color-primary-content: oklch(8.25% 0.005 252.52);
+  --color-secondary: oklch(75.63% 0.187 281.59);
+  --color-secondary-content: oklch(8.25% 0.005 252.52);
+  --color-accent: oklch(77.46% 0.129 222.77);
+  --color-accent-content: oklch(8.25% 0.005 252.52);
+  --color-neutral: oklch(57.48% 0.08 262.95);
+  --color-neutral-content: oklch(84.44% 0.029 264.59);
+  --color-base-100: oklch(8.25% 0.005 252.52);
+  --color-base-200: oklch(10.73% 0.006 255.15);
+  --color-base-300: oklch(14.51% 0.009 257.87);
+  --color-base-content: oklch(84.44% 0.029 264.59);
+  --color-info: oklch(70.77% 0.172 250.23);
+  --color-success: oklch(72.23% 0.207 140.3);
+  --color-warning: oklch(74.11% 0.24 56.12);
+  --color-error: oklch(67.83% 0.262 17.77);
 }
 
 

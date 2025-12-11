@@ -39,17 +39,17 @@ defmodule UrielmWeb.HomeLive do
             New Video: Claude 3.5 Opus Workflow
           </span>
         </div>
-        
+
     <!-- Headline -->
         <h1 class="text-5xl md:text-7xl lg:text-8xl font-semibold text-base-content tracking-tight mb-8 max-w-5xl mx-auto leading-[1.1] animate-fade-in-up delay-100">
           Building the future with <span class="text-base-content/50">AI & Automation.</span>
         </h1>
-        
+
     <!-- Subhead -->
         <p class="text-lg md:text-xl text-base-content/70 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
           I help developers and creators master Claude Code, build n8n workflows, and automate the boring stuff so you can focus on creating.
         </p>
-        
+
     <!-- CTAs -->
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in-up delay-300">
           <button class="btn btn-primary h-12 px-8 rounded-full font-medium flex items-center space-x-2 transition-all transform hover:scale-105">
@@ -64,12 +64,16 @@ defmodule UrielmWeb.HomeLive do
           </button>
         </div>
       </div>
-      
+
     <!-- Floating Elements -->
       <.CodeSnippetCard delay={0} socket={@socket} />
-      
+
     <!-- Background Gradients -->
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-blue-50 to-white rounded-full blur-3xl -z-10 opacity-60">
+      <div class="absolute inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[800px] rounded-full blur-3xl opacity-100" style="background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 40%, transparent 70%)">
+        </div>
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-100" style="background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)">
+        </div>
       </div>
     </section>
     """
@@ -129,7 +133,7 @@ defmodule UrielmWeb.HomeLive do
             <div class="absolute right-[-20px] bottom-[-20px] w-64 h-64 bg-gradient-to-tl from-red-500/20 to-transparent rounded-full opacity-0 group-hover:opacity-50 blur-3xl transition-opacity duration-700 ease-out">
             </div>
           </div>
-          
+
     <!-- Tall Card - Automation Services -->
           <div class="md:row-span-2 rounded-3xl bg-base-300 p-8 text-base-content relative overflow-hidden group">
             <div class="relative z-10 h-full flex flex-col justify-between">
@@ -142,7 +146,7 @@ defmodule UrielmWeb.HomeLive do
                   Custom n8n workflows that run your business while you sleep.
                 </p>
               </div>
-              
+
     <!-- Animated Terminal Visual -->
               <div class="mt-12 bg-base-100 rounded-xl p-4 border border-base-300 font-mono text-xs text-success opacity-80">
                 <div class="mb-2 text-base-content/50 border-b border-base-300 pb-2">
@@ -168,7 +172,7 @@ defmodule UrielmWeb.HomeLive do
               </div>
             </div>
           </div>
-          
+
     <!-- Small Card 1 - Prompt Engineering -->
           <div class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-primary/10 transition-colors duration-500">
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
@@ -179,7 +183,7 @@ defmodule UrielmWeb.HomeLive do
               Library of system prompts for coding & writing.
             </p>
           </div>
-          
+
     <!-- Small Card 2 - Code/Consulting -->
           <div class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-success/10 transition-colors duration-500">
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
