@@ -115,7 +115,7 @@
   </div>
 
   <!-- Messages -->
-  <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-4 py-4 bg-base-100">
+  <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-6 py-2 bg-base-100 space-y-0.5">
     {#if messages.length === 0}
       <div class="flex flex-col items-center justify-center h-full gap-3 text-base-content/50">
         <div class="text-5xl opacity-60">💬</div>
@@ -127,21 +127,27 @@
         {@const isSequence = isMessageSequence(i)}
         {@const isMine = msg.user_id.toString() === userId}
 
-        <div class="chat {isMine ? 'chat-end' : 'chat-start'} {isSequence ? 'mt-1' : 'mt-4'}" in:fly={{ y: 20, duration: 300 }}>
-          {#if !isSequence}
-            <div class="chat-image avatar">
+        <div class="flex gap-3 py-0.5 hover:bg-base-200/50 group transition-colors rounded px-2 -mx-2" in:fly={{ y: 20, duration: 300 }}>
+          <!-- Avatar -->
+          <div class="flex-shrink-0 pt-0.5">
+            {#if !isSequence}
               <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-content font-bold text-xs shadow-md">
                 {(msg.username || "?").charAt(0).toUpperCase()}
               </div>
-            </div>
-            <div class="chat-header text-xs text-base-content/60 mb-1">
-              {msg.username || "Unknown"}
-              <time class="text-[10px] text-base-content/40 ml-2">{formatTime(msg.inserted_at)}</time>
-            </div>
-          {/if}
+            {:else}
+              <div class="w-8 h-8" />
+            {/if}
+          </div>
 
-          <div class="chat-bubble {isMine ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content'} max-w-xs break-words">
-            {msg.body}
+          <!-- Message Content -->
+          <div class="flex-1 min-w-0">
+            {#if !isSequence}
+              <div class="flex items-baseline gap-2 mb-1">
+                <span class="font-semibold text-sm text-base-content">{msg.username || "Unknown"}</span>
+                <span class="text-xs text-base-content/50 group-hover:block hidden">{formatTime(msg.inserted_at)}</span>
+              </div>
+            {/if}
+            <p class="text-sm text-base-content/80 break-words leading-normal">{msg.body}</p>
           </div>
         </div>
       {/each}

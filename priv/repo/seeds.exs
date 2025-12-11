@@ -148,3 +148,70 @@ case Content.create_post(%{
 end
 
 IO.puts("\nSeed complete!")
+
+# Chat test data
+IO.puts("\n\nSeeding chat test data...")
+
+alias Urielm.Accounts
+alias Urielm.Chat
+
+# Clean up existing test users and data
+Repo.query!("DELETE FROM messages WHERE user_id IN (SELECT id FROM users WHERE email IN ('alice@test.com', 'bob@test.com'))")
+Repo.query!("DELETE FROM room_memberships WHERE user_id IN (SELECT id FROM users WHERE email IN ('alice@test.com', 'bob@test.com'))")
+Repo.query!("DELETE FROM users WHERE email IN ('alice@test.com', 'bob@test.com')")
+
+# Create two test users
+{:ok, user1} = Accounts.register_user(%{
+  "email" => "alice@test.com",
+  "password" => "password123",
+  "username" => "Alice"
+})
+
+{:ok, user2} = Accounts.register_user(%{
+  "email" => "bob@test.com",
+  "password" => "password123",
+  "username" => "Bob"
+})
+
+IO.puts("✓ Created users:")
+IO.puts("  Alice (ID: #{user1.id}) - alice@test.com")
+IO.puts("  Bob (ID: #{user2.id}) - bob@test.com")
+
+# Create a chat room
+{:ok, room} = Chat.create_room(%{
+  name: "general",
+  description: "General discussion",
+  created_by_id: user1.id
+})
+
+IO.puts("\n✓ Created room: ##{room.name} (ID: #{room.id})")
+
+# Add both users as members
+Chat.add_member(user1.id, room.id)
+Chat.add_member(user2.id, room.id)
+
+IO.puts("✓ Added both users to room")
+
+# Create test messages
+messages = [
+  {user1.id, "Hey Bob! How's it going?"},
+  {user2.id, "Hi Alice! Doing great, thanks for asking."},
+  {user1.id, "That's awesome!"},
+  {user1.id, "Want to grab coffee later?"},
+  {user2.id, "Sure! Let's meet at the usual place around 3 PM."},
+  {user1.id, "Perfect, see you then!"},
+]
+
+Enum.each(messages, fn {user_id, body} ->
+  {:ok, _msg} = Chat.create_message(%{
+    body: body,
+    user_id: user_id,
+    room_id: room.id
+  })
+end)
+
+IO.puts("\n✓ Created #{length(messages)} test messages")
+IO.puts("\n📝 Test Credentials:")
+IO.puts("  Alice: alice@test.com / password123")
+IO.puts("  Bob: bob@test.com / password123")
+IO.puts("\nVisit /chat and log in with either account to see the conversation!")
