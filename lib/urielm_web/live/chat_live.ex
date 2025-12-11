@@ -117,14 +117,16 @@ defmodule UrielmWeb.ChatLive do
           <h1 class="text-2xl font-bold text-base-content">Chat</h1>
         </div>
 
-        <div class="p-4">
-          <button
-            phx-click="toggle_create_modal"
-            class="w-full btn btn-primary btn-sm"
-          >
-            + New Room
-          </button>
-        </div>
+        <%= if @current_user.is_admin do %>
+          <div class="p-4">
+            <button
+              phx-click="toggle_create_modal"
+              class="w-full btn btn-primary btn-sm"
+            >
+              + New Room
+            </button>
+          </div>
+        <% end %>
 
         <nav class="space-y-1 p-3">
           <%= for room <- @rooms do %>
@@ -173,23 +175,28 @@ defmodule UrielmWeb.ChatLive do
   def handle_event("create_room", %{"name" => name, "description" => description}, socket) do
     user = socket.assigns[:current_user]
 
-    case Chat.create_room(%{
-      name: name,
-      description: description,
-      created_by_id: user.id
-    }) do
-      {:ok, room} ->
-        Chat.add_member(user.id, room.id)
+    # Only allow admins to create rooms
+    if user.is_admin do
+      case Chat.create_room(%{
+        name: name,
+        description: description,
+        created_by_id: user.id
+      }) do
+        {:ok, room} ->
+          Chat.add_member(user.id, room.id)
 
-        {:noreply,
-         socket
-         |> assign(:rooms, Chat.list_rooms())
-         |> assign(:show_create_modal, false)
-         |> assign(:room_form, %{"name" => "", "description" => ""})
-         |> push_navigate(to: ~p"/chat?room_id=#{room.id}")}
+          {:noreply,
+           socket
+           |> assign(:rooms, Chat.list_rooms())
+           |> assign(:show_create_modal, false)
+           |> assign(:room_form, %{"name" => "", "description" => ""})
+           |> push_navigate(to: ~p"/chat?room_id=#{room.id}")}
 
-      {:error, _changeset} ->
-        {:noreply, socket}
+        {:error, _changeset} ->
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
     end
   end
 

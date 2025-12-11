@@ -9,6 +9,7 @@ defmodule Urielm.Accounts.User do
     field(:avatar_url, :string)
     field(:email_verified, :boolean, default: false)
     field(:active, :boolean, default: true)
+    field(:is_admin, :boolean, default: false)
     field(:password_hash, :string)
     field(:password, :string, virtual: true)
 
