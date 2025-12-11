@@ -47,6 +47,15 @@ mix assets.build            # Compile Tailwind + run build.js
 mix assets.deploy           # Production asset build + digest
 ```
 
+### Database
+```bash
+mix ecto.create             # Create development database
+mix ecto.drop               # Drop development database
+mix ecto.migrate            # Run all pending migrations
+mix ecto.gen.migration name # Generate new migration file
+mix ecto.reset              # Drop + create + migrate
+```
+
 ## Architecture
 
 ### Dual Build System
@@ -184,7 +193,14 @@ Development watchers (configured in `config/dev.exs`):
 
 - LiveViews: `UrielmWeb.PageLive`, `UrielmWeb.CounterLive`
 - Routes in `:browser` scope are aliased with `UrielmWeb`, so use `live "/path", PageLive`
-- No database/Ecto in this project currently
+
+### Database & Ecto
+
+- PostgreSQL is configured with Ecto in `lib/urielm/repo.ex`
+- Development database: `urielm_dev` (configured in `config/dev.exs`)
+- Run `mix ecto.create` to create the database
+- Run `mix ecto.migrate` to run pending migrations
+- Migrations are stored in `priv/repo/migrations/`
 
 ## Important Notes
 
@@ -286,7 +302,7 @@ end
 3. **Use the Req library** for HTTP requests, not httpoison/tesla
 4. **Follow Phoenix 1.8 guidelines** in AGENTS.md (proper scope aliasing, no deprecated functions)
 5. **Avoid LiveComponents** unless there's a specific need
-6. This is a **no-Ecto project** currently (no database)
+6. **Database migrations**: Always create migrations before adding new tables/columns (`mix ecto.gen.migration migration_name`)
 
 ## Additional Documentation
 

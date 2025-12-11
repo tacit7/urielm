@@ -9,7 +9,6 @@ defmodule Urielm.Content.Prompt do
     field(:description, :string)
     field(:source, :string)
     field(:category, :string)
-    field(:tags, {:array, :string})
     field(:process_status, :string, default: "pending")
 
     # Counter fields
@@ -32,7 +31,7 @@ defmodule Urielm.Content.Prompt do
   @doc false
   def changeset(prompt, attrs) do
     prompt
-    |> cast(attrs, [:title, :url, :prompt, :description, :source, :category, :tags, :process_status])
+    |> cast(attrs, [:title, :url, :prompt, :description, :source, :category, :process_status])
     |> validate_required([:title, :category])
   end
 end

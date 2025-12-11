@@ -16,6 +16,9 @@ defmodule Urielm.Accounts.User do
     has_many(:saved_prompts, Urielm.Accounts.SavedPrompt)
     has_many(:comments, Urielm.Content.Comment)
     has_many(:likes, Urielm.Content.Like)
+    has_many(:room_memberships, Urielm.Chat.RoomMembership)
+    has_many(:rooms, through: [:room_memberships, :room])
+    has_many(:messages, Urielm.Chat.Message)
 
     timestamps(type: :utc_datetime)
   end

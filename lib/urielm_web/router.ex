@@ -52,6 +52,7 @@ defmodule UrielmWeb.Router do
       layout: {UrielmWeb.Layouts, :app} do
       live "/profile", ProfileLive
       live "/settings", SettingsLive
+      live "/chat", ChatLive
     end
   end
 

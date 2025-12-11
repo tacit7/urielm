@@ -153,7 +153,7 @@ defmodule Urielm.Content do
   ## Options
 
     * `:category` - Filter by category (optional)
-    * `:tags` - Filter by tags (list, optional)
+    * `:tag_ids` - Filter by tag IDs via join table (list, optional)
     * `:limit` - Maximum number of results (default: 20)
     * `:offset` - Number of results to skip (default: 0)
 
@@ -165,7 +165,7 @@ defmodule Urielm.Content do
       iex> search_prompts("", category: "coding")
       [%Prompt{}, ...]
 
-      iex> search_prompts("email", tags: ["marketing"])
+      iex> search_prompts("email", tag_ids: [1, 2, 3])
       [%Prompt{}, ...]
 
   """
@@ -205,10 +205,10 @@ defmodule Urielm.Content do
       end
 
     base =
-      case Map.get(opts, :tags) do
+      case Map.get(opts, :tag_ids) do
         nil -> base
         [] -> base
-        tags -> from(p in base, where: fragment("? && ?", p.tags, ^tags))
+        tag_ids -> from(p in base, join: pt in assoc(p, :prompt_tags), where: pt.tag_id in ^tag_ids, distinct: true)
       end
 
     base

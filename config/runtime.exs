@@ -4,12 +4,6 @@ import Dotenvy
 # Load .env file for development
 if config_env() in [:dev, :test] do
   source!([".env", System.get_env()])
-
-  # Debug: Log loaded environment variables
-  IO.puts("\n=== Environment Variables Loaded ===")
-  IO.puts("GOOGLE_CLIENT_ID: #{env!("GOOGLE_CLIENT_ID", :string)}")
-  IO.puts("GOOGLE_CLIENT_SECRET: #{env!("GOOGLE_CLIENT_SECRET", :string)}")
-  IO.puts("====================================\n")
 end
 
 # config/runtime.exs is executed for all environments, including

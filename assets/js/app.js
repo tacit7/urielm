@@ -62,6 +62,7 @@ import AuthModal from "../svelte/AuthModal.svelte"
 import UserMenu from "../svelte/UserMenu.svelte"
 import GoogleSignInButton from "../svelte/GoogleSignInButton.svelte"
 import YouTubePlayer from "../svelte/lib/youtube/YouTubePlayer.svelte"
+import ChatWindow from "../svelte/ChatWindow.svelte"
 
 // Infinite scroll hook
 const InfiniteScroll = {
@@ -117,7 +118,8 @@ let Hooks = getHooks({
   AuthModal,
   UserMenu,
   GoogleSignInButton,
-  YouTubePlayer
+  YouTubePlayer,
+  ChatWindow
 })
 
 // Add custom hooks

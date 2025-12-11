@@ -8,7 +8,7 @@ config :urielm, Urielm.Repo,
   database: "urielm_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 1
 
 # Configure Cloudflare R2 for blog images
 config :urielm, :r2,
