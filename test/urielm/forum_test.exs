@@ -127,9 +127,9 @@ defmodule Urielm.ForumTest do
       author = user_fixture()
 
       attrs = %{
-        title: "New Thread",
-        slug: "new-thread",
-        body: "Thread body"
+        "title" => "New Thread",
+        "slug" => "new-thread",
+        "body" => "Thread body"
       }
 
       {:ok, thread} = Forum.create_thread(board.id, author.id, attrs)
@@ -183,7 +183,7 @@ defmodule Urielm.ForumTest do
       thread = thread_fixture()
       author = user_fixture()
 
-      attrs = %{body: "Test comment"}
+      attrs = %{"body" => "Test comment"}
       {:ok, comment} = Forum.create_comment(thread.id, author.id, attrs)
 
       assert comment.body == "Test comment"
@@ -200,7 +200,7 @@ defmodule Urielm.ForumTest do
       parent = comment_fixture(thread)
       author = user_fixture()
 
-      attrs = %{body: "Reply", parent_id: parent.id}
+      attrs = %{"body" => "Reply", "parent_id" => parent.id}
       {:ok, comment} = Forum.create_comment(thread.id, author.id, attrs)
 
       assert comment.parent_id == parent.id

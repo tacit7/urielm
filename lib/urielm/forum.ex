@@ -101,7 +101,7 @@ defmodule Urielm.Forum do
 
   def create_thread(board_id, author_id, attrs \\ %{}) do
     %Thread{}
-    |> Thread.changeset(Map.merge(attrs, %{board_id: board_id, author_id: author_id}))
+    |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
     |> Repo.insert()
   end
 
@@ -144,7 +144,7 @@ defmodule Urielm.Forum do
 
     with :ok <- validate_comment_depth(parent_id) do
       %Comment{}
-      |> Comment.changeset(Map.merge(attrs, %{thread_id: thread_id, author_id: author_id}))
+      |> Comment.changeset(Map.merge(attrs, %{"thread_id" => thread_id, "author_id" => author_id}))
       |> Repo.insert()
       |> case do
         {:ok, comment} ->

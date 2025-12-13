@@ -73,9 +73,9 @@ defmodule Urielm.Fixtures do
     author_id = author_id || user_fixture().id
 
     thread_attrs = %{
-      title: "Test Thread",
-      slug: "test-thread-#{System.unique_integer([:positive])}",
-      body: "This is a test thread body"
+      "title" => "Test Thread",
+      "slug" => "test-thread-#{System.unique_integer([:positive])}",
+      "body" => "This is a test thread body"
     }
 
     {:ok, thread} =
@@ -88,7 +88,7 @@ defmodule Urielm.Fixtures do
     author = author || user_fixture()
 
     comment_attrs = %{
-      body: "This is a test comment"
+      "body" => "This is a test comment"
     }
 
     {:ok, comment} =
