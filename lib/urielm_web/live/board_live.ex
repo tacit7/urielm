@@ -144,7 +144,7 @@ defmodule UrielmWeb.BoardLive do
         </div>
 
         <div id="threads" phx-update="stream" class="space-y-4">
-          <div class="hidden only:block text-center py-12 text-base-content/50">
+          <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
             No threads yet. Be the first to start a discussion!
           </div>
           <div :for={{id, thread} <- @streams.threads} id={id}>

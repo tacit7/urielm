@@ -79,7 +79,13 @@ defmodule UrielmWeb.ForumLive do
 
   defp serialize_boards(boards) do
     Enum.map(boards, fn board ->
-      thread_count = length(board.threads || [])
+      # Get thread count, handling unloaded association
+      thread_count =
+        case board.threads do
+          %Ecto.Association.NotLoaded{} -> 0
+          threads when is_list(threads) -> length(threads)
+          _ -> 0
+        end
 
       %{
         id: to_string(board.id),

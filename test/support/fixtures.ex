@@ -78,6 +78,9 @@ defmodule Urielm.Fixtures do
       "body" => "This is a test thread body"
     }
 
+    # Normalize attrs to string keys and merge
+    attrs = Map.new(attrs, fn {k, v} -> {to_string(k), v} end)
+
     {:ok, thread} =
       Urielm.Forum.create_thread(board_id, author_id, Map.merge(thread_attrs, attrs))
 
@@ -90,6 +93,9 @@ defmodule Urielm.Fixtures do
     comment_attrs = %{
       "body" => "This is a test comment"
     }
+
+    # Normalize attrs to string keys and merge
+    attrs = Map.new(attrs, fn {k, v} -> {to_string(k), v} end)
 
     {:ok, comment} =
       Urielm.Forum.create_comment(thread.id, author.id, Map.merge(comment_attrs, attrs))
