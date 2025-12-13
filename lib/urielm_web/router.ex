@@ -3,11 +3,13 @@ defmodule UrielmWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug :fetch_cookies
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {UrielmWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug UrielmWeb.Plugs.Theme
     plug UrielmWeb.Plugs.Auth, :fetch_current_user
   end
 
@@ -39,9 +41,13 @@ defmodule UrielmWeb.Router do
     live_session :default, layout: {UrielmWeb.Layouts, :app} do
       live "/", HomeLive
       live "/romanov-prompts", ReferencesLive
+      live "/prompts/:id", PromptLive
       live "/courses/:course_slug", CourseLive
       live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
       live "/themes", ThemesLive
+      live "/forum", ForumLive
+      live "/forum/b/:board_slug", BoardLive
+      live "/forum/t/:thread_id", ThreadLive
     end
 
     get "/blog", PostController, :index
@@ -53,6 +59,7 @@ defmodule UrielmWeb.Router do
       live "/profile", ProfileLive
       live "/settings", SettingsLive
       live "/chat", ChatLive
+      live "/forum/b/:board_slug/new", NewThreadLive
     end
   end
 
