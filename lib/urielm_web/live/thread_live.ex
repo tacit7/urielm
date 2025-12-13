@@ -27,13 +27,11 @@ defmodule UrielmWeb.ThreadLive do
 
       user ->
         thread_id = thread_data.id
-        # Convert string ID back to binary for DB operation
-        thread_id_binary = String.to_atom(thread_id)
 
-        case Forum.create_comment(thread_id_binary, user.id, %{"body" => body}) do
+        case Forum.create_comment(thread_id, user.id, %{"body" => body}) do
           {:ok, _comment} ->
             # Reload thread and rebuild comment tree
-            thread = Forum.get_thread!(thread_id_binary)
+            thread = Forum.get_thread!(thread_id)
             comment_tree = build_comment_tree(thread.comments)
 
             {:noreply,
@@ -52,20 +50,19 @@ defmodule UrielmWeb.ThreadLive do
         %{"target_type" => target_type, "target_id" => target_id, "value" => value},
         socket
       ) do
-    %{current_user: user} = socket.assigns
+    %{current_user: user, thread: thread_data} = socket.assigns
 
     case user do
       nil ->
         {:noreply, put_flash(socket, :error, "Sign in to vote")}
 
       user ->
-        target_id_binary = target_id
         value_int = String.to_integer(value)
 
-        case Forum.cast_vote(user.id, target_type, target_id_binary, value_int) do
+        case Forum.cast_vote(user.id, target_type, target_id, value_int) do
           {:ok, _vote} ->
             # Reload thread with updated scores
-            thread = Forum.get_thread!(target_id_binary)
+            thread = Forum.get_thread!(thread_data.id)
             comment_tree = build_comment_tree(thread.comments)
 
             {:noreply,
@@ -82,14 +79,12 @@ defmodule UrielmWeb.ThreadLive do
   def handle_event("delete_thread", _params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    thread_id_binary = thread_data.id
-
     case user do
       nil ->
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
-        thread = Forum.get_thread!(thread_id_binary)
+        thread = Forum.get_thread!(thread_data.id)
 
         case Forum.remove_thread(thread, user) do
           {:ok, _} ->
@@ -110,20 +105,17 @@ defmodule UrielmWeb.ThreadLive do
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    thread_id_binary = thread_data.id
-    comment_id_binary = comment_id
-
     case user do
       nil ->
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
-        comment = Forum.get_comment!(comment_id_binary)
+        comment = Forum.get_comment!(comment_id)
 
         case Forum.remove_comment(comment, user) do
           {:ok, _} ->
             # Reload thread and rebuild tree
-            thread = Forum.get_thread!(thread_id_binary)
+            thread = Forum.get_thread!(thread_data.id)
             comment_tree = build_comment_tree(thread.comments)
 
             {:noreply,

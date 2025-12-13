@@ -4,8 +4,7 @@ defmodule Urielm.Fixtures do
   """
 
   alias Urielm.Repo
-  alias Urielm.Accounts.User
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote}
+  alias Urielm.Forum.Vote
 
   def user_fixture(attrs \\ %{}) do
     {:ok, user} =

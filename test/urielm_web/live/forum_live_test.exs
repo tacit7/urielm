@@ -158,7 +158,7 @@ defmodule UrielmWeb.ForumLiveTest do
     test "sort=top parameter works", %{board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?sort=top")
 
-      assert html =~ "Forum"
+      assert html =~ board.name
     end
   end
 
@@ -357,6 +357,8 @@ defmodule UrielmWeb.ForumLiveTest do
     end
 
     test "displays back link to board", %{thread: thread} do
+      # Reload thread to get preloaded board association
+      thread = Urielm.Repo.preload(thread, :board)
       {:ok, _live, html} = live(build_conn(), ~p"/forum/t/#{thread.id}")
 
       assert html =~ ~p"/forum/b/#{thread.board.slug}"

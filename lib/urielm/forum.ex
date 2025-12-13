@@ -144,7 +144,9 @@ defmodule Urielm.Forum do
 
     with :ok <- validate_comment_depth(parent_id) do
       %Comment{}
-      |> Comment.changeset(Map.merge(attrs, %{"thread_id" => thread_id, "author_id" => author_id}))
+      |> Comment.changeset(
+        Map.merge(attrs, %{"thread_id" => thread_id, "author_id" => author_id})
+      )
       |> Repo.insert()
       |> case do
         {:ok, comment} ->

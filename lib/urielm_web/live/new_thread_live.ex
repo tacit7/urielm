@@ -26,6 +26,10 @@ defmodule UrielmWeb.NewThreadLive do
     {:noreply, assign(socket, :thread_form, to_form(changeset))}
   end
 
+  def handle_event("validate", _params, socket) do
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_event("save", %{"thread" => thread_params}, socket) do
     %{board: board, current_user: user} = socket.assigns
@@ -68,7 +72,7 @@ defmodule UrielmWeb.NewThreadLive do
                   class="input input-bordered w-full"
                   required
                 />
-                <%= for msg <- @thread_form[:title].errors do %>
+                <%= for {msg, _opts} <- @thread_form[:title].errors do %>
                   <p class="text-error text-sm mt-1">{msg}</p>
                 <% end %>
               </div>
@@ -85,7 +89,7 @@ defmodule UrielmWeb.NewThreadLive do
                 <p class="text-xs text-base-content/50 mt-1">
                   Auto-generated from title if left empty
                 </p>
-                <%= for msg <- @thread_form[:slug].errors do %>
+                <%= for {msg, _opts} <- @thread_form[:slug].errors do %>
                   <p class="text-error text-sm mt-1">{msg}</p>
                 <% end %>
               </div>
@@ -99,7 +103,7 @@ defmodule UrielmWeb.NewThreadLive do
                   class="textarea textarea-bordered w-full min-h-80"
                   required
                 />
-                <%= for msg <- @thread_form[:body].errors do %>
+                <%= for {msg, _opts} <- @thread_form[:body].errors do %>
                   <p class="text-error text-sm mt-1">{msg}</p>
                 <% end %>
               </div>
