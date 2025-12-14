@@ -607,4 +607,105 @@ defmodule Urielm.ForumTest do
       assert changeset.errors |> Enum.any?(fn {field, _} -> field == :user_id end)
     end
   end
+
+  describe "tags/flair" do
+    test "create_tag/1 creates a tag" do
+      {:ok, tag} = Forum.create_tag(%{name: "Beginner", slug: "beginner"})
+
+      assert tag.name == "Beginner"
+      assert tag.slug == "beginner"
+    end
+
+    test "get_tag!/1 retrieves tag by id" do
+      {:ok, tag} = Forum.create_tag(%{name: "Advanced", slug: "advanced"})
+
+      retrieved = Forum.get_tag!(tag.id)
+
+      assert retrieved.id == tag.id
+      assert retrieved.name == "Advanced"
+    end
+
+    test "get_tag_by_slug/1 retrieves tag by slug" do
+      {:ok, tag} = Forum.create_tag(%{name: "Question", slug: "question"})
+
+      retrieved = Forum.get_tag_by_slug("question")
+
+      assert retrieved.id == tag.id
+    end
+
+    test "list_tags/1 returns all tags" do
+      {:ok, tag1} = Forum.create_tag(%{name: "Bug", slug: "bug"})
+      {:ok, tag2} = Forum.create_tag(%{name: "Feature", slug: "feature"})
+
+      tags = Forum.list_tags()
+
+      assert length(tags) >= 2
+      assert Enum.any?(tags, &(&1.id == tag1.id))
+      assert Enum.any?(tags, &(&1.id == tag2.id))
+    end
+
+    test "add_tag_to_thread/2 adds tag to thread" do
+      {:ok, tag} = Forum.create_tag(%{name: "Help", slug: "help"})
+      thread = thread_fixture()
+
+      {:ok, thread_tag} = Forum.add_tag_to_thread(thread.id, tag.id)
+
+      assert thread_tag.thread_id == thread.id
+      assert thread_tag.tag_id == tag.id
+    end
+
+    test "remove_tag_from_thread/2 removes tag from thread" do
+      {:ok, tag} = Forum.create_tag(%{name: "Solved", slug: "solved"})
+      thread = thread_fixture()
+      {:ok, _} = Forum.add_tag_to_thread(thread.id, tag.id)
+
+      {:ok, _} = Forum.remove_tag_from_thread(thread.id, tag.id)
+
+      tags = Forum.list_thread_tags(thread.id)
+      assert !Enum.any?(tags, &(&1.id == tag.id))
+    end
+
+    test "list_thread_tags/1 returns tags for a thread" do
+      {:ok, tag1} = Forum.create_tag(%{name: "Tag1", slug: "tag1"})
+      {:ok, tag2} = Forum.create_tag(%{name: "Tag2", slug: "tag2"})
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.add_tag_to_thread(thread.id, tag1.id)
+      {:ok, _} = Forum.add_tag_to_thread(thread.id, tag2.id)
+
+      tags = Forum.list_thread_tags(thread.id)
+
+      assert length(tags) == 2
+      assert Enum.any?(tags, &(&1.id == tag1.id))
+      assert Enum.any?(tags, &(&1.id == tag2.id))
+    end
+
+    test "list_threads_by_tag/2 returns threads with tag" do
+      {:ok, tag} = Forum.create_tag(%{name: "Popular", slug: "popular"})
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      removed = thread_fixture(%{is_removed: true})
+
+      {:ok, _} = Forum.add_tag_to_thread(thread1.id, tag.id)
+      {:ok, _} = Forum.add_tag_to_thread(thread2.id, tag.id)
+      {:ok, _} = Forum.add_tag_to_thread(removed.id, tag.id)
+
+      threads = Forum.list_threads_by_tag(tag.id)
+
+      assert length(threads) == 2
+      assert Enum.any?(threads, &(&1.id == thread1.id))
+      assert Enum.any?(threads, &(&1.id == thread2.id))
+      assert !Enum.any?(threads, &(&1.id == removed.id))
+    end
+
+    test "add_tag_to_thread/2 enforces unique constraint" do
+      {:ok, tag} = Forum.create_tag(%{name: "Unique", slug: "unique"})
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.add_tag_to_thread(thread.id, tag.id)
+      {:error, changeset} = Forum.add_tag_to_thread(thread.id, tag.id)
+
+      assert changeset.errors |> Enum.any?(fn {field, _} -> field == :thread_id end)
+    end
+  end
 end

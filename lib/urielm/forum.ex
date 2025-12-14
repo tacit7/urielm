@@ -11,7 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag}
 
   @max_comment_depth 8
 
@@ -402,6 +402,71 @@ defmodule Urielm.Forum do
   def count_saved_threads(user_id) do
     from(st in SavedThread, where: st.user_id == ^user_id)
     |> Repo.aggregate(:count)
+  end
+
+  # Tags/Flair
+
+  def create_tag(attrs \\ %{}) do
+    %Tag{}
+    |> Tag.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def get_tag!(id) do
+    Repo.get!(Tag, id)
+  end
+
+  def get_tag_by_slug(slug) do
+    Repo.get_by(Tag, slug: slug)
+  end
+
+  def list_tags(opts \\ []) do
+    limit = Keyword.get(opts, :limit, 50)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Tag)
+    |> order_by([t], t.name)
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def add_tag_to_thread(thread_id, tag_id) do
+    %ThreadTag{}
+    |> ThreadTag.changeset(%{thread_id: thread_id, tag_id: tag_id})
+    |> Repo.insert()
+  end
+
+  def remove_tag_from_thread(thread_id, tag_id) do
+    case Repo.get_by(ThreadTag, thread_id: thread_id, tag_id: tag_id) do
+      nil -> {:error, :not_found}
+      thread_tag -> Repo.delete(thread_tag)
+    end
+  end
+
+  def list_thread_tags(thread_id) do
+    from(tt in ThreadTag,
+      where: tt.thread_id == ^thread_id,
+      join: t in Tag, on: tt.tag_id == t.id,
+      select: t
+    )
+    |> Repo.all()
+  end
+
+  def list_threads_by_tag(tag_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread,
+      join: tt in ThreadTag, on: tt.thread_id == t.id,
+      where: tt.tag_id == ^tag_id,
+      where: t.is_removed == false,
+      limit: ^limit,
+      offset: ^offset,
+      preload: [:author, :board],
+      order_by: [desc: t.inserted_at]
+    )
+    |> Repo.all()
   end
 
   # Search
