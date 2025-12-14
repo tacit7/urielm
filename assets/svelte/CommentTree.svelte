@@ -10,6 +10,8 @@
   export let live
 
   const MAX_DEPTH = 8
+  let replyingTo = null
+  let replyText = ""
 
   function formatDate(date) {
     if (!date) return ""
@@ -34,6 +36,30 @@
   function canDelete(authorId) {
     if (!current_user_id) return false
     return current_user_id === authorId || current_user_is_admin
+  }
+
+  function startReply(commentId) {
+    replyingTo = commentId
+    replyText = ""
+  }
+
+  function cancelReply() {
+    replyingTo = null
+    replyText = ""
+  }
+
+  function submitReply(parentId) {
+    if (!replyText.trim()) return
+
+    if (live) {
+      live.pushEvent("create_comment", {
+        body: replyText,
+        parent_id: parentId
+      })
+    }
+
+    replyText = ""
+    replyingTo = null
   }
 </script>
 
@@ -65,6 +91,14 @@
                   user_vote={comment.user_vote}
                   {live}
                 />
+                {#if current_user_id && depth < MAX_DEPTH}
+                  <button
+                    on:click={() => startReply(comment.id)}
+                    class="text-sm link link-primary"
+                  >
+                    Reply
+                  </button>
+                {/if}
               </div>
             </div>
 
@@ -77,6 +111,34 @@
               </button>
             {/if}
           </div>
+
+          <!-- Reply form -->
+          {#if replyingTo === comment.id}
+            <div class="mt-4 pt-4 border-t border-base-300">
+              <div class="space-y-2">
+                <textarea
+                  bind:value={replyText}
+                  placeholder="Write a reply..."
+                  class="textarea textarea-bordered w-full min-h-20 text-sm"
+                />
+                <div class="flex gap-2 justify-end">
+                  <button
+                    on:click={cancelReply}
+                    class="btn btn-sm btn-ghost"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    on:click={() => submitReply(comment.id)}
+                    disabled={!replyText.trim()}
+                    class="btn btn-sm btn-primary"
+                  >
+                    Reply
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/if}
 
           <!-- Nested replies -->
           {#if comment.replies && comment.replies.length > 0 && depth < MAX_DEPTH}
