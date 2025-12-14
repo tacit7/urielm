@@ -14,6 +14,8 @@ defmodule Urielm.Application do
       {Phoenix.PubSub, name: Urielm.PubSub},
       # Enable Server-Side Rendering (SSR) for LiveSvelte
       {NodeJS.Supervisor, name: NodeJS, path: System.find_executable("node")},
+      # Rate limiter for forum operations
+      Urielm.RateLimiter,
       # Start a worker by calling: Urielm.Worker.start_link(arg)
       # {Urielm.Worker, arg},
       # Start to serve requests, typically the last entry

@@ -100,9 +100,16 @@ defmodule Urielm.Forum do
   end
 
   def create_thread(board_id, author_id, attrs \\ %{}) do
-    %Thread{}
-    |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
-    |> Repo.insert()
+    # Rate limit: 5 threads per minute per user
+    case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_thread", max_requests: 5, window_seconds: 60) do
+      {:error, :rate_limited} ->
+        {:error, :rate_limited}
+
+      {:ok, _remaining} ->
+        %Thread{}
+        |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
+        |> Repo.insert()
+    end
   end
 
   def update_thread(%Thread{} = thread, attrs) do
@@ -140,9 +147,10 @@ defmodule Urielm.Forum do
   end
 
   def create_comment(thread_id, author_id, attrs \\ %{}) do
-    parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
-
-    with :ok <- validate_comment_depth(parent_id) do
+    # Rate limit: 20 comments per minute per user
+    with {:ok, _remaining} <- Urielm.RateLimiter.check_limit("user:#{author_id}", "create_comment", max_requests: 20, window_seconds: 60),
+         parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id),
+         :ok <- validate_comment_depth(parent_id) do
       %Comment{}
       |> Comment.changeset(
         Map.merge(attrs, %{"thread_id" => thread_id, "author_id" => author_id})
@@ -157,6 +165,9 @@ defmodule Urielm.Forum do
           error
       end
     else
+      {:error, :rate_limited} ->
+        {:error, :rate_limited}
+
       {:error, :max_depth_exceeded} ->
         {:error, :max_depth_exceeded}
     end
