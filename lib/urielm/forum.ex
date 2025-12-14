@@ -383,6 +383,14 @@ defmodule Urielm.Forum do
     Repo.exists?(from(st in SavedThread, where: st.user_id == ^user_id and st.thread_id == ^thread_id))
   end
 
+  def toggle_save_thread(user_id, thread_id) do
+    if is_thread_saved?(user_id, thread_id) do
+      unsave_thread(user_id, thread_id)
+    else
+      save_thread(user_id, thread_id)
+    end
+  end
+
   def list_saved_threads(user_id, opts \\ []) do
     limit = Keyword.get(opts, :limit, 20)
     offset = Keyword.get(opts, :offset, 0)

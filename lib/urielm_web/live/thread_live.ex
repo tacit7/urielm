@@ -10,11 +10,23 @@ defmodule UrielmWeb.ThreadLive do
     thread = Forum.get_thread!(id)
     comment_tree = build_comment_tree(thread.comments)
 
+    is_saved =
+      if socket.assigns.current_user,
+        do: Forum.is_thread_saved?(socket.assigns.current_user.id, thread.id),
+        else: false
+
+    is_subscribed =
+      if socket.assigns.current_user,
+        do: Forum.is_subscribed?(socket.assigns.current_user.id, thread.id),
+        else: false
+
     {:ok,
      socket
      |> assign(:page_title, thread.title)
      |> assign(:thread, serialize_thread(thread, socket.assigns.current_user))
-     |> assign(:comment_tree, comment_tree)}
+     |> assign(:comment_tree, comment_tree)
+     |> assign(:thread_is_saved, is_saved)
+     |> assign(:thread_is_subscribed, is_subscribed)}
   end
 
   @impl true
@@ -98,6 +110,63 @@ defmodule UrielmWeb.ThreadLive do
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to delete thread")}
+        end
+    end
+  end
+
+  def handle_event("save_thread", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to save threads")}
+
+      user ->
+        case Forum.toggle_save_thread(user.id, thread_data.id) do
+          {:ok, _} ->
+            thread = Forum.get_thread!(thread_data.id)
+            is_saved = Forum.is_thread_saved?(user.id, thread.id)
+
+            {:noreply, assign(socket, :thread_is_saved, is_saved)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to save thread")}
+        end
+    end
+  end
+
+  def handle_event("subscribe", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to subscribe")}
+
+      user ->
+        case Forum.subscribe_to_thread(user.id, thread_data.id) do
+          {:ok, _} ->
+            {:noreply, assign(socket, :thread_is_subscribed, true)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to subscribe")}
+        end
+    end
+  end
+
+  def handle_event("unsubscribe", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, socket}
+
+      user ->
+        case Forum.unsubscribe_from_thread(user.id, thread_data.id) do
+          {:ok, _} ->
+            {:noreply, assign(socket, :thread_is_subscribed, false)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
         end
     end
   end

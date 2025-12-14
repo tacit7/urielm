@@ -66,6 +66,69 @@ defmodule UrielmWeb.BoardLive do
     end
   end
 
+  def handle_event("save_thread", %{"thread_id" => thread_id}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to save threads")}
+
+      user ->
+        case Forum.toggle_save_thread(user.id, thread_id) do
+          {:ok, _} ->
+            thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
+            serialized = serialize_thread(thread, user)
+
+            {:noreply, stream_insert(socket, :threads, serialized)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to save thread")}
+        end
+    end
+  end
+
+  def handle_event("subscribe", %{"thread_id" => thread_id}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to subscribe")}
+
+      user ->
+        case Forum.subscribe_to_thread(user.id, thread_id) do
+          {:ok, _} ->
+            thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
+            serialized = serialize_thread(thread, user)
+
+            {:noreply, stream_insert(socket, :threads, serialized)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to subscribe")}
+        end
+    end
+  end
+
+  def handle_event("unsubscribe", %{"thread_id" => thread_id}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, socket}
+
+      user ->
+        case Forum.unsubscribe_from_thread(user.id, thread_id) do
+          {:ok, _} ->
+            thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
+            serialized = serialize_thread(thread, user)
+
+            {:noreply, stream_insert(socket, :threads, serialized)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
+        end
+    end
+  end
+
   # PAGINATION STABILITY NOTE:
   # Offset-based pagination with "Top" sorting may cause missing/duplicate threads
   # if votes change scores mid-scroll. Acceptable for MVP. For high-traffic boards,
@@ -179,6 +242,9 @@ defmodule UrielmWeb.BoardLive do
   end
 
   defp serialize_thread(thread, current_user) do
+    is_saved = current_user && Forum.is_thread_saved?(current_user.id, thread.id)
+    is_subscribed = current_user && Forum.is_subscribed?(current_user.id, thread.id)
+
     %{
       id: to_string(thread.id),
       title: thread.title,
@@ -190,7 +256,9 @@ defmodule UrielmWeb.BoardLive do
         username: thread.author.username
       },
       created_at: thread.inserted_at,
-      user_vote: get_user_vote(current_user, "thread", thread.id)
+      user_vote: get_user_vote(current_user, "thread", thread.id),
+      is_saved: is_saved,
+      is_subscribed: is_subscribed
     }
   end
 

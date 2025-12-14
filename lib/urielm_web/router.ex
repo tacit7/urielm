@@ -48,6 +48,7 @@ defmodule UrielmWeb.Router do
       live "/forum", ForumLive
       live "/forum/b/:board_slug", BoardLive
       live "/forum/t/:thread_id", ThreadLive
+      live "/forum/search", SearchLive
     end
 
     get "/blog", PostController, :index
@@ -60,6 +61,8 @@ defmodule UrielmWeb.Router do
       live "/settings", SettingsLive
       live "/chat", ChatLive
       live "/forum/b/:board_slug/new", NewThreadLive
+      live "/saved", SavedThreadsLive
+      live "/notifications", NotificationsLive
     end
   end
 
