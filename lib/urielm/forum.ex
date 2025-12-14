@@ -11,7 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread}
 
   @max_comment_depth 8
 
@@ -362,6 +362,46 @@ defmodule Urielm.Forum do
       preload: [:author, :board]
     )
     |> Repo.all()
+  end
+
+  # Saves/Bookmarks
+
+  def save_thread(user_id, thread_id) do
+    %SavedThread{}
+    |> SavedThread.changeset(%{user_id: user_id, thread_id: thread_id})
+    |> Repo.insert()
+  end
+
+  def unsave_thread(user_id, thread_id) do
+    case Repo.get_by(SavedThread, user_id: user_id, thread_id: thread_id) do
+      nil -> {:error, :not_found}
+      saved -> Repo.delete(saved)
+    end
+  end
+
+  def is_thread_saved?(user_id, thread_id) do
+    Repo.exists?(from(st in SavedThread, where: st.user_id == ^user_id and st.thread_id == ^thread_id))
+  end
+
+  def list_saved_threads(user_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread,
+      join: st in SavedThread, on: st.thread_id == t.id,
+      where: st.user_id == ^user_id,
+      where: t.is_removed == false,
+      limit: ^limit,
+      offset: ^offset,
+      preload: [:author, :board],
+      order_by: [desc: st.inserted_at]
+    )
+    |> Repo.all()
+  end
+
+  def count_saved_threads(user_id) do
+    from(st in SavedThread, where: st.user_id == ^user_id)
+    |> Repo.aggregate(:count)
   end
 
   # Search

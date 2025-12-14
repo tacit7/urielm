@@ -510,4 +510,101 @@ defmodule Urielm.ForumTest do
       assert changeset.errors |> Enum.any?(fn {field, _} -> field == :link_type end)
     end
   end
+
+  describe "saved threads" do
+    test "save_thread/2 saves a thread for a user" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, saved} = Forum.save_thread(user.id, thread.id)
+
+      assert saved.user_id == user.id
+      assert saved.thread_id == thread.id
+    end
+
+    test "unsave_thread/2 removes a saved thread" do
+      user = user_fixture()
+      thread = thread_fixture()
+      {:ok, _} = Forum.save_thread(user.id, thread.id)
+
+      {:ok, _} = Forum.unsave_thread(user.id, thread.id)
+
+      assert !Forum.is_thread_saved?(user.id, thread.id)
+    end
+
+    test "unsave_thread/2 returns error if thread not saved" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:error, :not_found} = Forum.unsave_thread(user.id, thread.id)
+    end
+
+    test "is_thread_saved?/2 checks if thread is saved" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      assert !Forum.is_thread_saved?(user.id, thread.id)
+
+      {:ok, _} = Forum.save_thread(user.id, thread.id)
+
+      assert Forum.is_thread_saved?(user.id, thread.id)
+    end
+
+    test "list_saved_threads/2 returns user's saved threads" do
+      user = user_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      removed = thread_fixture(%{is_removed: true})
+
+      {:ok, _} = Forum.save_thread(user.id, thread1.id)
+      {:ok, _} = Forum.save_thread(user.id, thread2.id)
+      {:ok, _} = Forum.save_thread(user.id, removed.id)
+
+      results = Forum.list_saved_threads(user.id)
+
+      assert length(results) == 2
+      assert Enum.any?(results, &(&1.id == thread1.id))
+      assert Enum.any?(results, &(&1.id == thread2.id))
+      assert !Enum.any?(results, &(&1.id == removed.id))
+    end
+
+    test "list_saved_threads/2 respects limit and offset" do
+      user = user_fixture()
+      Enum.each(1..5, fn _ ->
+        thread = thread_fixture()
+        Forum.save_thread(user.id, thread.id)
+      end)
+
+      page1 = Forum.list_saved_threads(user.id, limit: 2, offset: 0)
+      page2 = Forum.list_saved_threads(user.id, limit: 2, offset: 2)
+
+      assert length(page1) == 2
+      assert length(page2) == 2
+      assert Enum.at(page1, 0).id != Enum.at(page2, 0).id
+    end
+
+    test "count_saved_threads/1 returns count of saved threads" do
+      user = user_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      assert Forum.count_saved_threads(user.id) == 0
+
+      {:ok, _} = Forum.save_thread(user.id, thread1.id)
+      assert Forum.count_saved_threads(user.id) == 1
+
+      {:ok, _} = Forum.save_thread(user.id, thread2.id)
+      assert Forum.count_saved_threads(user.id) == 2
+    end
+
+    test "save_thread/2 enforces unique constraint per user" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.save_thread(user.id, thread.id)
+      {:error, changeset} = Forum.save_thread(user.id, thread.id)
+
+      assert changeset.errors |> Enum.any?(fn {field, _} -> field == :user_id end)
+    end
+  end
 end
