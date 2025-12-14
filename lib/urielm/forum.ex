@@ -11,7 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification}
 
   @max_comment_depth 8
 
@@ -519,6 +519,129 @@ defmodule Urielm.Forum do
       order_by: [desc: r.inserted_at]
     )
     |> Repo.all()
+  end
+
+  # Subscriptions
+
+  def subscribe_to_thread(user_id, thread_id) do
+    %Subscription{}
+    |> Subscription.changeset(%{user_id: user_id, thread_id: thread_id})
+    |> Repo.insert()
+  end
+
+  def unsubscribe_from_thread(user_id, thread_id) do
+    case Repo.get_by(Subscription, user_id: user_id, thread_id: thread_id) do
+      nil -> {:error, :not_found}
+      subscription -> Repo.delete(subscription)
+    end
+  end
+
+  def is_subscribed?(user_id, thread_id) do
+    Repo.exists?(from(s in Subscription, where: s.user_id == ^user_id and s.thread_id == ^thread_id))
+  end
+
+  def list_subscriptions(user_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread,
+      join: s in Subscription, on: s.thread_id == t.id,
+      where: s.user_id == ^user_id,
+      where: t.is_removed == false,
+      limit: ^limit,
+      offset: ^offset,
+      preload: [:author, :board],
+      order_by: [desc: s.inserted_at]
+    )
+    |> Repo.all()
+  end
+
+  def count_subscriptions(user_id) do
+    from(s in Subscription, where: s.user_id == ^user_id)
+    |> Repo.aggregate(:count)
+  end
+
+  # Notifications
+
+  def create_notification(user_id, subject_type, subject_id, opts \\ %{}) do
+    attrs = Map.merge(opts, %{
+      user_id: user_id,
+      subject_type: subject_type,
+      subject_id: subject_id
+    })
+
+    %Notification{}
+    |> Notification.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def list_notifications(user_id, opts \\ []) do
+    unread_only = Keyword.get(opts, :unread_only, false)
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    query =
+      from(n in Notification,
+        where: n.user_id == ^user_id,
+        limit: ^limit,
+        offset: ^offset,
+        preload: [:actor, :thread],
+        order_by: [desc: n.inserted_at]
+      )
+
+    query =
+      if unread_only do
+        where(query, [n], is_nil(n.read_at))
+      else
+        query
+      end
+
+    Repo.all(query)
+  end
+
+  def mark_notification_as_read(notification_id) do
+    case Repo.get(Notification, notification_id) do
+      nil ->
+        {:error, :not_found}
+
+      notification ->
+        notification
+        |> Notification.changeset(%{read_at: DateTime.utc_now()})
+        |> Repo.update()
+    end
+  end
+
+  def mark_all_notifications_as_read(user_id) do
+    from(n in Notification,
+      where: n.user_id == ^user_id and is_nil(n.read_at)
+    )
+    |> Repo.update_all(set: [read_at: DateTime.utc_now()])
+  end
+
+  def count_unread_notifications(user_id) do
+    from(n in Notification,
+      where: n.user_id == ^user_id and is_nil(n.read_at)
+    )
+    |> Repo.aggregate(:count)
+  end
+
+  def notify_thread_subscribers(thread_id, actor_id, subject_type, message) do
+    subscribers =
+      from(s in Subscription,
+        where: s.thread_id == ^thread_id and s.user_id != ^actor_id,
+        select: s.user_id
+      )
+      |> Repo.all()
+
+    Enum.each(subscribers, fn user_id ->
+      create_notification(user_id, subject_type, thread_id, %{
+        actor_id: actor_id,
+        thread_id: thread_id,
+        message: message
+      })
+    end)
+
+    {:ok, length(subscribers)}
   end
 
   # Search

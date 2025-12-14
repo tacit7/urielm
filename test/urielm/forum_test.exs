@@ -842,4 +842,199 @@ defmodule Urielm.ForumTest do
       assert changeset.errors |> Enum.any?(fn {field, _} -> field == :user_id end)
     end
   end
+
+  describe "subscriptions" do
+    test "subscribe_to_thread/2 subscribes user to thread" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, subscription} = Forum.subscribe_to_thread(user.id, thread.id)
+
+      assert subscription.user_id == user.id
+      assert subscription.thread_id == thread.id
+    end
+
+    test "unsubscribe_from_thread/2 unsubscribes user" do
+      user = user_fixture()
+      thread = thread_fixture()
+      {:ok, _} = Forum.subscribe_to_thread(user.id, thread.id)
+
+      {:ok, _} = Forum.unsubscribe_from_thread(user.id, thread.id)
+
+      assert !Forum.is_subscribed?(user.id, thread.id)
+    end
+
+    test "is_subscribed?/2 checks subscription status" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      assert !Forum.is_subscribed?(user.id, thread.id)
+
+      {:ok, _} = Forum.subscribe_to_thread(user.id, thread.id)
+
+      assert Forum.is_subscribed?(user.id, thread.id)
+    end
+
+    test "list_subscriptions/2 returns user's subscribed threads" do
+      user = user_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      removed = thread_fixture(%{is_removed: true})
+
+      {:ok, _} = Forum.subscribe_to_thread(user.id, thread1.id)
+      {:ok, _} = Forum.subscribe_to_thread(user.id, thread2.id)
+      {:ok, _} = Forum.subscribe_to_thread(user.id, removed.id)
+
+      subscriptions = Forum.list_subscriptions(user.id)
+
+      assert length(subscriptions) == 2
+      assert Enum.any?(subscriptions, &(&1.id == thread1.id))
+      assert Enum.any?(subscriptions, &(&1.id == thread2.id))
+      assert !Enum.any?(subscriptions, &(&1.id == removed.id))
+    end
+
+    test "count_subscriptions/1 returns subscription count" do
+      user = user_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      assert Forum.count_subscriptions(user.id) == 0
+
+      {:ok, _} = Forum.subscribe_to_thread(user.id, thread1.id)
+      assert Forum.count_subscriptions(user.id) == 1
+
+      {:ok, _} = Forum.subscribe_to_thread(user.id, thread2.id)
+      assert Forum.count_subscriptions(user.id) == 2
+    end
+  end
+
+  describe "notifications" do
+    test "create_notification/4 creates a notification" do
+      user = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, notification} = Forum.create_notification(user.id, "comment", thread.id, %{
+        actor_id: actor.id,
+        thread_id: thread.id,
+        message: "Someone replied to your comment"
+      })
+
+      assert notification.user_id == user.id
+      assert notification.subject_type == "comment"
+      assert notification.subject_id == thread.id
+      assert is_nil(notification.read_at)
+    end
+
+    test "list_notifications/2 returns user's notifications" do
+      user = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, notif1} = Forum.create_notification(user.id, "comment", thread.id, %{actor_id: actor.id})
+      {:ok, notif2} = Forum.create_notification(user.id, "reply", thread.id, %{actor_id: actor.id})
+
+      notifications = Forum.list_notifications(user.id)
+
+      assert length(notifications) >= 2
+      assert Enum.any?(notifications, &(&1.id == notif1.id))
+      assert Enum.any?(notifications, &(&1.id == notif2.id))
+    end
+
+    test "list_notifications/2 filters unread only" do
+      user = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, notif1} = Forum.create_notification(user.id, "comment", thread.id, %{actor_id: actor.id})
+      {:ok, notif2} = Forum.create_notification(user.id, "reply", thread.id, %{actor_id: actor.id})
+
+      Forum.mark_notification_as_read(notif1.id)
+
+      unread = Forum.list_notifications(user.id, unread_only: true)
+
+      assert length(unread) >= 1
+      assert !Enum.any?(unread, &(&1.id == notif1.id))
+      assert Enum.any?(unread, &(&1.id == notif2.id))
+    end
+
+    test "mark_notification_as_read/1 marks notification read" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, notification} = Forum.create_notification(user.id, "comment", thread.id)
+
+      {:ok, updated} = Forum.mark_notification_as_read(notification.id)
+
+      assert updated.read_at != nil
+    end
+
+    test "mark_all_notifications_as_read/1 marks all as read" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.create_notification(user.id, "comment", thread.id)
+      {:ok, _} = Forum.create_notification(user.id, "reply", thread.id)
+
+      {count, _} = Forum.mark_all_notifications_as_read(user.id)
+
+      assert count == 2
+
+      unread = Forum.list_notifications(user.id, unread_only: true)
+      assert length(unread) == 0
+    end
+
+    test "count_unread_notifications/1 returns unread count" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      assert Forum.count_unread_notifications(user.id) == 0
+
+      {:ok, notif1} = Forum.create_notification(user.id, "comment", thread.id)
+      assert Forum.count_unread_notifications(user.id) == 1
+
+      {:ok, _notif2} = Forum.create_notification(user.id, "reply", thread.id)
+      assert Forum.count_unread_notifications(user.id) == 2
+
+      Forum.mark_notification_as_read(notif1.id)
+      assert Forum.count_unread_notifications(user.id) == 1
+    end
+
+    test "notify_thread_subscribers/4 notifies all subscribers" do
+      subscriber1 = user_fixture()
+      subscriber2 = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.subscribe_to_thread(subscriber1.id, thread.id)
+      {:ok, _} = Forum.subscribe_to_thread(subscriber2.id, thread.id)
+
+      {:ok, count} = Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
+
+      assert count == 2
+
+      notif1 = Forum.list_notifications(subscriber1.id) |> Enum.at(0)
+      notif2 = Forum.list_notifications(subscriber2.id) |> Enum.at(0)
+
+      assert notif1.actor_id == actor.id
+      assert notif2.actor_id == actor.id
+      assert notif1.message == "New comment"
+    end
+
+    test "notify_thread_subscribers/4 excludes actor" do
+      subscriber = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.subscribe_to_thread(subscriber.id, thread.id)
+      {:ok, _} = Forum.subscribe_to_thread(actor.id, thread.id)
+
+      {:ok, count} = Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
+
+      assert count == 1
+
+      actor_notifications = Forum.list_notifications(actor.id)
+      assert length(actor_notifications) == 0
+    end
+  end
 end
