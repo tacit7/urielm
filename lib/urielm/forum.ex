@@ -11,7 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report}
 
   @max_comment_depth 8
 
@@ -465,6 +465,58 @@ defmodule Urielm.Forum do
       offset: ^offset,
       preload: [:author, :board],
       order_by: [desc: t.inserted_at]
+    )
+    |> Repo.all()
+  end
+
+  # Reporting/Moderation
+
+  def create_report(user_id, target_type, target_id, attrs \\ %{}) do
+    %Report{}
+    |> Report.changeset(Map.merge(attrs, %{user_id: user_id, target_type: target_type, target_id: target_id}))
+    |> Repo.insert()
+  end
+
+  def list_reports(opts \\ []) do
+    status = Keyword.get(opts, :status, "pending")
+    limit = Keyword.get(opts, :limit, 50)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(r in Report)
+    |> where([r], r.status == ^status)
+    |> preload(:user)
+    |> order_by([r], [desc: r.inserted_at])
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def get_report!(id) do
+    Repo.get!(Report, id)
+    |> Repo.preload([:user, :reviewed_by])
+  end
+
+  def review_report(%Report{} = report, reviewer_id, status, resolution_notes \\ nil) do
+    report
+    |> Report.changeset(%{
+      status: status,
+      reviewed_by_id: reviewer_id,
+      resolved_at: DateTime.utc_now(),
+      resolution_notes: resolution_notes
+    })
+    |> Repo.update()
+  end
+
+  def count_pending_reports do
+    from(r in Report, where: r.status == "pending")
+    |> Repo.aggregate(:count)
+  end
+
+  def list_reports_by_target(target_type, target_id) do
+    from(r in Report,
+      where: r.target_type == ^target_type and r.target_id == ^target_id,
+      preload: :user,
+      order_by: [desc: r.inserted_at]
     )
     |> Repo.all()
   end

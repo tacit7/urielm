@@ -708,4 +708,138 @@ defmodule Urielm.ForumTest do
       assert changeset.errors |> Enum.any?(fn {field, _} -> field == :thread_id end)
     end
   end
+
+  describe "reporting/moderation" do
+    test "create_report/4 creates a report for a thread" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, report} = Forum.create_report(user.id, "thread", thread.id, %{
+        reason: "spam",
+        description: "This is spam content"
+      })
+
+      assert report.user_id == user.id
+      assert report.target_type == "thread"
+      assert report.target_id == thread.id
+      assert report.reason == "spam"
+      assert report.status == "pending"
+    end
+
+    test "create_report/4 creates a report for a comment" do
+      user = user_fixture()
+      thread = thread_fixture()
+      comment = comment_fixture(thread)
+
+      {:ok, report} = Forum.create_report(user.id, "comment", comment.id, %{
+        reason: "abuse"
+      })
+
+      assert report.target_type == "comment"
+      assert report.target_id == comment.id
+    end
+
+    test "list_reports/1 returns pending reports by default" do
+      user = user_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      {:ok, report1} = Forum.create_report(user.id, "thread", thread1.id, %{reason: "spam"})
+      {:ok, _report2} = Forum.create_report(user.id, "thread", thread2.id, %{reason: "abuse"})
+
+      reports = Forum.list_reports()
+
+      assert length(reports) >= 2
+      assert Enum.all?(reports, &(&1.status == "pending"))
+    end
+
+    test "list_reports/1 filters by status" do
+      user = user_fixture()
+      admin = admin_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      {:ok, report1} = Forum.create_report(user.id, "thread", thread1.id, %{reason: "spam"})
+      {:ok, _report2} = Forum.create_report(user.id, "thread", thread2.id, %{reason: "abuse"})
+
+      # Review one report
+      {:ok, _} = Forum.review_report(report1, admin.id, "resolved", "Removed spam")
+
+      pending = Forum.list_reports(status: "pending")
+      resolved = Forum.list_reports(status: "resolved")
+
+      assert Enum.all?(pending, &(&1.status == "pending"))
+      assert Enum.all?(resolved, &(&1.status == "resolved"))
+    end
+
+    test "get_report!/1 retrieves report with preloads" do
+      user = user_fixture()
+      thread = thread_fixture()
+      {:ok, report} = Forum.create_report(user.id, "thread", thread.id, %{reason: "spam"})
+
+      retrieved = Forum.get_report!(report.id)
+
+      assert retrieved.id == report.id
+      assert retrieved.user.id == user.id
+    end
+
+    test "review_report/4 updates report status" do
+      user = user_fixture()
+      admin = admin_fixture()
+      thread = thread_fixture()
+      {:ok, report} = Forum.create_report(user.id, "thread", thread.id, %{reason: "spam"})
+
+      {:ok, updated} = Forum.review_report(report, admin.id, "resolved", "Removed spam")
+
+      assert updated.status == "resolved"
+      assert updated.reviewed_by_id == admin.id
+      assert updated.resolution_notes == "Removed spam"
+      assert updated.resolved_at != nil
+    end
+
+    test "count_pending_reports/0 counts pending reports" do
+      user = user_fixture()
+      admin = admin_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      assert Forum.count_pending_reports() == 0
+
+      {:ok, report1} = Forum.create_report(user.id, "thread", thread1.id, %{reason: "spam"})
+      assert Forum.count_pending_reports() == 1
+
+      {:ok, _} = Forum.create_report(user.id, "thread", thread2.id, %{reason: "abuse"})
+      assert Forum.count_pending_reports() == 2
+
+      {:ok, _} = Forum.review_report(report1, admin.id, "resolved")
+      assert Forum.count_pending_reports() == 1
+    end
+
+    test "list_reports_by_target/2 returns reports for a specific target" do
+      user1 = user_fixture()
+      user2 = user_fixture()
+      user3 = user_fixture()
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      {:ok, _} = Forum.create_report(user1.id, "thread", thread1.id, %{reason: "spam"})
+      {:ok, _} = Forum.create_report(user2.id, "thread", thread1.id, %{reason: "abuse"})
+      {:ok, _} = Forum.create_report(user3.id, "thread", thread2.id, %{reason: "offensive"})
+
+      reports = Forum.list_reports_by_target("thread", thread1.id)
+
+      assert length(reports) == 2
+      assert Enum.all?(reports, &(&1.target_id == thread1.id))
+    end
+
+    test "create_report/4 enforces unique constraint per user" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.create_report(user.id, "thread", thread.id, %{reason: "spam"})
+      {:error, changeset} = Forum.create_report(user.id, "thread", thread.id, %{reason: "abuse"})
+
+      assert changeset.errors |> Enum.any?(fn {field, _} -> field == :user_id end)
+    end
+  end
 end
