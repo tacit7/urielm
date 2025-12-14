@@ -441,4 +441,73 @@ defmodule Urielm.ForumTest do
       assert Enum.at(page1, 0).id != Enum.at(page2, 0).id
     end
   end
+
+  describe "thread links" do
+    test "create_thread_link/3 links a thread to a lesson" do
+      thread = thread_fixture()
+
+      {:ok, link} = Forum.create_thread_link(thread.id, "lesson", 123)
+
+      assert link.thread_id == thread.id
+      assert link.link_type == "lesson"
+      assert link.link_id == 123
+    end
+
+    test "get_thread_by_link/2 retrieves thread by link" do
+      thread = thread_fixture()
+      {:ok, _link} = Forum.create_thread_link(thread.id, "lesson", 123)
+
+      result = Forum.get_thread_by_link("lesson", 123)
+
+      assert result.id == thread.id
+    end
+
+    test "get_thread_by_link/2 returns nil if link doesn't exist" do
+      result = Forum.get_thread_by_link("lesson", 999)
+
+      assert result == nil
+    end
+
+    test "list_lesson_threads/2 returns threads linked to lesson" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      other = thread_fixture()
+
+      {:ok, _} = Forum.create_thread_link(thread1.id, "lesson", 100)
+      {:ok, _} = Forum.create_thread_link(thread2.id, "lesson", 101)
+      {:ok, _} = Forum.create_thread_link(other.id, "lesson", 102)
+
+      results = Forum.list_lesson_threads(100)
+
+      assert length(results) == 1
+      assert Enum.any?(results, &(&1.id == thread1.id))
+      assert !Enum.any?(results, &(&1.id == thread2.id))
+      assert !Enum.any?(results, &(&1.id == other.id))
+    end
+
+    test "list_lesson_threads/2 excludes removed threads" do
+      active = thread_fixture()
+      removed = thread_fixture(%{is_removed: true})
+
+      {:ok, _} = Forum.create_thread_link(active.id, "lesson", 100)
+      {:ok, _} = Forum.create_thread_link(removed.id, "lesson", 101)
+
+      results = Forum.list_lesson_threads(100)
+
+      assert Enum.any?(results, &(&1.id == active.id))
+
+      results_other = Forum.list_lesson_threads(101)
+      assert !Enum.any?(results_other, &(&1.id == removed.id))
+    end
+
+    test "create_thread_link/3 enforces unique constraint on link_type and link_id" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+
+      {:ok, _} = Forum.create_thread_link(thread1.id, "lesson", 100)
+      {:error, changeset} = Forum.create_thread_link(thread2.id, "lesson", 100)
+
+      assert changeset.errors |> Enum.any?(fn {field, _} -> field == :link_type end)
+    end
+  end
 end

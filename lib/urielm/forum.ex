@@ -11,7 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink}
 
   @max_comment_depth 8
 
@@ -301,6 +301,67 @@ defmodule Urielm.Forum do
 
   def get_user_vote(user_id, target_type, target_id) do
     Repo.get_by(Vote, user_id: user_id, target_type: target_type, target_id: target_id)
+  end
+
+  # Thread Links
+
+  def create_thread_link(thread_id, link_type, link_id) do
+    %ThreadLink{}
+    |> ThreadLink.changeset(%{thread_id: thread_id, link_type: link_type, link_id: link_id})
+    |> Repo.insert()
+  end
+
+  def get_thread_by_link(link_type, link_id) do
+    ThreadLink
+    |> where([tl], tl.link_type == ^link_type and tl.link_id == ^link_id)
+    |> preload(:thread)
+    |> Repo.one()
+    |> case do
+      nil -> nil
+      %ThreadLink{thread: thread} -> thread
+    end
+  end
+
+  def get_or_create_lesson_thread(lesson_id, board_id) do
+    case get_thread_by_link("lesson", lesson_id) do
+      %Thread{} = thread ->
+        {:ok, thread}
+
+      nil ->
+        # Create a new thread for the lesson
+        lesson = Urielm.Learning.get_lesson!(lesson_id)
+        title = "Discussion: #{lesson.title}"
+        slug = Urielm.Slugify.slugify(title)
+
+        case create_thread(board_id, 1, %{
+               "title" => title,
+               "slug" => slug,
+               "body" => "Discuss this lesson in the forum."
+             }) do
+          {:ok, thread} ->
+            {:ok, _link} = create_thread_link(thread.id, "lesson", lesson_id)
+            {:ok, thread}
+
+          error ->
+            error
+        end
+    end
+  end
+
+  def list_lesson_threads(lesson_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 10)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread,
+      join: tl in ThreadLink,
+      on: t.id == tl.thread_id,
+      where: tl.link_type == "lesson" and tl.link_id == ^lesson_id,
+      where: t.is_removed == false,
+      limit: ^limit,
+      offset: ^offset,
+      preload: [:author, :board]
+    )
+    |> Repo.all()
   end
 
   # Search
