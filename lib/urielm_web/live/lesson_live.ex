@@ -102,8 +102,8 @@ defmodule UrielmWeb.LessonLive do
     ~H"""
     <div class="drawer drawer-end lg:drawer-open">
       <input id="lesson-drawer" type="checkbox" class="drawer-toggle" />
-
-      <!-- Drawer Content (Main) -->
+      
+    <!-- Drawer Content (Main) -->
       <div class="drawer-content flex flex-col">
         <!-- Video Player -->
         <div class="aspect-video bg-base-content overflow-hidden max-w-[1800px] mx-auto w-full lg:rounded-xl">
@@ -114,8 +114,8 @@ defmodule UrielmWeb.LessonLive do
             class="w-full h-full"
           />
         </div>
-
-        <!-- Main Content -->
+        
+    <!-- Main Content -->
         <div class="max-w-[1800px] mx-auto w-full px-4 py-6">
           <!-- Mobile Sticky Header -->
           <div class="flex items-center justify-between gap-2 mb-4 lg:hidden">
@@ -125,16 +125,21 @@ defmodule UrielmWeb.LessonLive do
               title="Back to course"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </.link>
             <h1 class="text-lg font-bold text-base-content truncate flex-1">{@lesson.title}</h1>
           </div>
-
-          <!-- Video Title -->
+          
+    <!-- Video Title -->
           <h1 class="text-2xl font-bold text-base-content mb-3 hidden lg:block">{@lesson.title}</h1>
-
-          <!-- Dock Content Sections -->
+          
+    <!-- Dock Content Sections -->
           <div class="space-y-4 pb-24 lg:pb-0">
             <!-- HOME TAB -->
             <div class={["space-y-4", if(@dock_tab != "home", do: "hidden lg:block")]}>
@@ -175,8 +180,8 @@ defmodule UrielmWeb.LessonLive do
                 <p class="text-sm text-base-content/70">{@course.description}</p>
               </div>
             </div>
-
-            <!-- NOTES TAB -->
+            
+    <!-- NOTES TAB -->
             <div class={["space-y-4", if(@dock_tab != "notes", do: "hidden lg:block")]}>
               <h3 class="text-lg font-semibold text-base-content">Lesson notes</h3>
               <div :if={@lesson.body} class="bg-base-200 rounded-xl p-4">
@@ -186,14 +191,16 @@ defmodule UrielmWeb.LessonLive do
                 No notes available for this lesson.
               </div>
             </div>
-
-            <!-- RESOURCES TAB -->
+            
+    <!-- RESOURCES TAB -->
             <div class={["space-y-4", if(@dock_tab != "resources", do: "hidden lg:block")]}>
               <h3 class="text-lg font-semibold text-base-content">Resources</h3>
-              <p class="text-sm text-base-content/70">Coming soon: links, downloads, repo, and more resources.</p>
+              <p class="text-sm text-base-content/70">
+                Coming soon: links, downloads, repo, and more resources.
+              </p>
             </div>
-
-            <!-- TIMESTAMPS TAB -->
+            
+    <!-- TIMESTAMPS TAB -->
             <div class={["space-y-4", if(@dock_tab != "timestamps", do: "hidden lg:block")]}>
               <h3 class="text-lg font-semibold text-base-content">Timestamps</h3>
               <ul class="text-sm text-primary space-y-2">
@@ -209,8 +216,8 @@ defmodule UrielmWeb.LessonLive do
               </ul>
             </div>
           </div>
-
-          <!-- Comments Section -->
+          
+    <!-- Comments Section -->
           <section class="mt-8 space-y-4">
             <h2 class="text-xl font-semibold text-base-content">Comments</h2>
 
@@ -260,8 +267,8 @@ defmodule UrielmWeb.LessonLive do
             </.form>
           </section>
         </div>
-
-        <!-- Mobile Lesson Dock -->
+        
+    <!-- Mobile Lesson Dock -->
         <div class="dock fixed bottom-0 left-0 right-0 z-20 lg:hidden bg-base-200 border-t border-base-300">
           <button
             type="button"
@@ -271,7 +278,12 @@ defmodule UrielmWeb.LessonLive do
             aria-label="Home tab"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
             </svg>
             <span class="dock-label text-xs">Home</span>
           </button>
@@ -284,7 +296,12 @@ defmodule UrielmWeb.LessonLive do
             aria-label="Notes tab"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             <span class="dock-label text-xs">Notes</span>
           </button>
@@ -297,7 +314,12 @@ defmodule UrielmWeb.LessonLive do
             aria-label="Resources tab"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
             <span class="dock-label text-xs">Resources</span>
           </button>
@@ -310,14 +332,19 @@ defmodule UrielmWeb.LessonLive do
             aria-label="Timestamps tab"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span class="dock-label text-xs">Times</span>
           </button>
         </div>
       </div>
-
-      <!-- Drawer Side (Up Next) -->
+      
+    <!-- Drawer Side (Up Next) -->
       <div class="drawer-side">
         <label for="lesson-drawer" class="drawer-overlay"></label>
         <aside class="bg-base-200 w-80 flex flex-col">
@@ -329,7 +356,12 @@ defmodule UrielmWeb.LessonLive do
               </div>
               <label for="lesson-drawer" class="btn btn-ghost btn-sm lg:hidden">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </label>
             </div>

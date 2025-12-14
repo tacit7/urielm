@@ -15,7 +15,7 @@ defmodule UrielmWeb.Plugs.Theme do
 
   @impl true
   def call(conn, _opts) do
-    theme = conn.cookies[@cookie] || "system"
+    theme = conn.cookies[@cookie] || "tokyo-night"
     assign(conn, :theme, theme)
   end
 end

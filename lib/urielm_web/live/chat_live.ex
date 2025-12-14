@@ -110,8 +110,8 @@ defmodule UrielmWeb.ChatLive do
           <button phx-click="toggle_create_modal">close</button>
         </form>
       </div>
-
-      <!-- Sidebar with rooms -->
+      
+    <!-- Sidebar with rooms -->
       <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-300">
         <div class="p-4 border-b border-base-300">
           <h1 class="text-2xl font-bold text-base-content">Chat</h1>
@@ -134,27 +134,31 @@ defmodule UrielmWeb.ChatLive do
               href={~p"/chat?room_id=#{room.id}"}
               class={[
                 "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
-                @selected_room && @selected_room.id == room.id && "bg-primary/10 text-primary border-l-primary font-semibold",
-                @selected_room && @selected_room.id != room.id && "text-base-content hover:bg-base-200/50"
+                @selected_room && @selected_room.id == room.id &&
+                  "bg-primary/10 text-primary border-l-primary font-semibold",
+                @selected_room && @selected_room.id != room.id &&
+                  "text-base-content hover:bg-base-200/50"
               ]}
             >
-              # <%= room.name %>
+              # {room.name}
             </a>
           <% end %>
         </nav>
       </div>
-
-      <!-- Main chat area -->
+      
+    <!-- Main chat area -->
       <div class="flex-1 flex flex-col bg-base-100 h-full">
         <%= if @selected_room do %>
           <.svelte
             name="ChatWindow"
             class="h-full"
-            props={%{
-              room: serialize_room(@selected_room),
-              messages: Enum.map(@messages, &serialize_message/1),
-              userId: to_string(@current_user.id)
-            }}
+            props={
+              %{
+                room: serialize_room(@selected_room),
+                messages: Enum.map(@messages, &serialize_message/1),
+                userId: to_string(@current_user.id)
+              }
+            }
             socket={@socket}
           />
         <% else %>
@@ -178,10 +182,10 @@ defmodule UrielmWeb.ChatLive do
     # Only allow admins to create rooms
     if user.is_admin do
       case Chat.create_room(%{
-        name: name,
-        description: description,
-        created_by_id: user.id
-      }) do
+             name: name,
+             description: description,
+             created_by_id: user.id
+           }) do
         {:ok, room} ->
           Chat.add_member(user.id, room.id)
 
@@ -205,10 +209,10 @@ defmodule UrielmWeb.ChatLive do
     room = socket.assigns[:selected_room]
 
     case Chat.create_message(%{
-      body: body,
-      user_id: user.id,
-      room_id: room.id
-    }) do
+           body: body,
+           user_id: user.id,
+           room_id: room.id
+         }) do
       {:ok, _message} ->
         {:noreply,
          socket

@@ -3,9 +3,9 @@ defmodule Urielm.Chat.Message do
   import Ecto.Changeset
 
   schema "messages" do
-    field :body, :string
-    belongs_to :user, Urielm.Accounts.User
-    belongs_to :room, Urielm.Chat.Room
+    field(:body, :string)
+    belongs_to(:user, Urielm.Accounts.User)
+    belongs_to(:room, Urielm.Chat.Room)
 
     timestamps(type: :utc_datetime)
   end

@@ -3,8 +3,8 @@ defmodule Urielm.Chat.RoomMembership do
   import Ecto.Changeset
 
   schema "room_memberships" do
-    belongs_to :user, Urielm.Accounts.User
-    belongs_to :room, Urielm.Chat.Room
+    belongs_to(:user, Urielm.Accounts.User)
+    belongs_to(:room, Urielm.Chat.Room)
 
     timestamps(type: :utc_datetime)
   end

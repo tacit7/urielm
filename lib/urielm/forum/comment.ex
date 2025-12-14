@@ -26,9 +26,17 @@ defmodule Urielm.Forum.Comment do
     comment
     |> cast(attrs, [:thread_id, :author_id, :parent_id, :body, :is_removed, :removed_by_id])
     |> validate_required([:thread_id, :author_id, :body])
+    |> validate_length(:body, min: 1, max: 5000)
+    |> sanitize_body()
     |> foreign_key_constraint(:thread_id)
     |> foreign_key_constraint(:author_id)
     |> foreign_key_constraint(:parent_id)
     |> foreign_key_constraint(:removed_by_id)
+  end
+
+  defp sanitize_body(changeset) do
+    # For now, just trim whitespace
+    # Full sanitization/XSS prevention can be added later with html_sanitize_ex
+    update_change(changeset, :body, &String.trim/1)
   end
 end

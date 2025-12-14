@@ -3,13 +3,13 @@ defmodule Urielm.Chat.Room do
   import Ecto.Changeset
 
   schema "rooms" do
-    field :name, :string
-    field :description, :string
-    field :created_by_id, :id
+    field(:name, :string)
+    field(:description, :string)
+    field(:created_by_id, :id)
 
-    has_many :memberships, Urielm.Chat.RoomMembership
-    has_many :users, through: [:memberships, :user]
-    has_many :messages, Urielm.Chat.Message
+    has_many(:memberships, Urielm.Chat.RoomMembership)
+    has_many(:users, through: [:memberships, :user])
+    has_many(:messages, Urielm.Chat.Message)
 
     timestamps(type: :utc_datetime)
   end

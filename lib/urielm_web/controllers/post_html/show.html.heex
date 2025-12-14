@@ -1,20 +1,23 @@
 <div class="min-h-screen bg-base-100 flex flex-col">
   <div class="flex-1 mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 lg:py-14 max-w-[70ch]">
     <p class="text-xs sm:text-[13px] text-base-content/50 lg:text-base-content/40 mb-6">
-      <.link navigate={~p"/blog"} class="inline-flex items-center gap-1 hover:text-primary transition-colors">
+      <.link
+        navigate={~p"/blog"}
+        class="inline-flex items-center gap-1 hover:text-primary transition-colors"
+      >
         &larr; Back to blog
       </.link>
     </p>
 
     <header class="mb-12 lg:mb-16">
       <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-base-content mb-4">
-        <%= @post.title %>
+        {@post.title}
       </h1>
 
       <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-base-content/50 lg:text-base-content/35">
         <span>
           <%= if @post.published_at do %>
-            <%= Calendar.strftime(@post.published_at, "%b %d, %Y") %>
+            {Calendar.strftime(@post.published_at, "%b %d, %Y")}
           <% else %>
             Draft
           <% end %>
@@ -41,7 +44,7 @@
     <% end %>
 
     <article class="prose" id="blog-article">
-      <%= markdown_to_html(@post.body) %>
+      {markdown_to_html(@post.body)}
     </article>
 
     <script>

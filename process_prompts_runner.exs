@@ -19,7 +19,7 @@ defmodule PromptProcessor do
   defp process_batch do
     pending = Repo.all(from(p in Prompt, where: p.process_status == "pending", limit: 5))
     IO.puts("Found #{length(pending)} prompts to process")
-    
+
     case pending do
       [] ->
         IO.puts("All pending prompts processed!")
@@ -69,7 +69,10 @@ defmodule PromptProcessor do
     )
 
     tag_names = Enum.map(tag_ids, fn id -> Repo.get!(Tag, id).name end)
-    message = "✓ Processed: #{prompt.title} | Category: #{category} | Tags: #{Enum.join(tag_names, ", ")}"
+
+    message =
+      "✓ Processed: #{prompt.title} | Category: #{category} | Tags: #{Enum.join(tag_names, ", ")}"
+
     IO.puts(message)
   end
 
@@ -101,7 +104,8 @@ defmodule PromptProcessor do
       slug = tag_name |> String.downcase() |> String.replace(" ", "-")
 
       case Repo.get_by(Tag, slug: slug) do
-        %Tag{id: id} -> id
+        %Tag{id: id} ->
+          id
 
         nil ->
           {:ok, tag} = Repo.insert(%Tag{name: tag_name, slug: slug})

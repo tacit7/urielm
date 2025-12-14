@@ -26,8 +26,11 @@
           ]}>
             <div class="flex items-start justify-between gap-4 mb-2">
               <h2 class="text-lg sm:text-xl font-semibold flex-1 leading-tight">
-                <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary transition-colors">
-                  <%= post.title %>
+                <.link
+                  navigate={~p"/blog/#{post.slug}"}
+                  class="hover:text-primary transition-colors"
+                >
+                  {post.title}
                 </.link>
               </h2>
               <%= if index == 0 do %>
@@ -39,20 +42,20 @@
 
             <p class="text-xs text-base-content/50 mb-3">
               <%= if post.published_at do %>
-                <%= Calendar.strftime(post.published_at, "%B %d, %Y") %>
+                {Calendar.strftime(post.published_at, "%B %d, %Y")}
               <% end %>
             </p>
 
             <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed">
-              <%= post.excerpt || String.slice(post.body, 0, 180) <> "…" %>
+              {post.excerpt || String.slice(post.body, 0, 180) <> "…"}
             </p>
           </article>
         <% end %>
       </div>
     <% end %>
   </div>
-
-  <!-- Footer anchor -->
+  
+<!-- Footer anchor -->
   <footer class="border-t border-base-300/30 bg-base-100/50 py-8 px-4 sm:px-6 lg:px-8 mt-auto">
     <div class="max-w-4xl mx-auto">
       <p class="text-xs text-base-content/40 text-center">

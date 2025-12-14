@@ -20,6 +20,9 @@ defmodule Urielm.Accounts.User do
     has_many(:room_memberships, Urielm.Chat.RoomMembership)
     has_many(:rooms, through: [:room_memberships, :room])
     has_many(:messages, Urielm.Chat.Message)
+    has_many(:forum_threads, Urielm.Forum.Thread, foreign_key: :author_id)
+    has_many(:forum_comments, Urielm.Forum.Comment, foreign_key: :author_id)
+    has_many(:forum_votes, Urielm.Forum.Vote, foreign_key: :user_id)
 
     timestamps(type: :utc_datetime)
   end

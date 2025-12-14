@@ -69,11 +69,14 @@ defmodule Mix.Tasks.ProcessPrompts do
           set: [category: category, process_status: "processed"]
         )
 
-        tag_names = Enum.map(tag_ids, fn id ->
-          Repo.get!(Tag, id).name
-        end)
+        tag_names =
+          Enum.map(tag_ids, fn id ->
+            Repo.get!(Tag, id).name
+          end)
 
-        message = "Processed: #{prompt.title} | Category: #{category} | Tags: #{Enum.join(tag_names, ", ")}"
+        message =
+          "Processed: #{prompt.title} | Category: #{category} | Tags: #{Enum.join(tag_names, ", ")}"
+
         send_nats_message(message)
         IO.puts(message)
 
@@ -230,7 +233,8 @@ defmodule Mix.Tasks.ProcessPrompts do
       [json_str] ->
         case Jason.decode(json_str) do
           {:ok, data} ->
-            {:ok, %{"tags" => Map.get(data, "tags", []), "category" => Map.get(data, "category", "")}}
+            {:ok,
+             %{"tags" => Map.get(data, "tags", []), "category" => Map.get(data, "category", "")}}
 
           {:error, _} ->
             {:error, "Failed to parse JSON response"}

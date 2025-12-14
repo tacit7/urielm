@@ -38,8 +38,17 @@ defmodule Urielm.Forum.Thread do
       :removed_by_id
     ])
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
+    |> validate_length(:title, min: 3, max: 300)
+    |> validate_length(:body, min: 10, max: 10000)
+    |> sanitize_body()
     |> foreign_key_constraint(:board_id)
     |> foreign_key_constraint(:author_id)
     |> foreign_key_constraint(:removed_by_id)
+  end
+
+  defp sanitize_body(changeset) do
+    # For now, just trim whitespace
+    # Full sanitization/XSS prevention can be added later with html_sanitize_ex
+    update_change(changeset, :body, &String.trim/1)
   end
 end

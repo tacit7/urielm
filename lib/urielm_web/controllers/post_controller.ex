@@ -5,12 +5,24 @@ defmodule UrielmWeb.PostController do
 
   def index(conn, _params) do
     posts = Content.list_published_posts()
-    render(conn, :index, posts: posts, page_title: "Blog", layout: {UrielmWeb.Layouts, :app}, current_page: "blog")
+
+    render(conn, :index,
+      posts: posts,
+      page_title: "Blog",
+      layout: {UrielmWeb.Layouts, :app},
+      current_page: "blog"
+    )
   end
 
   def show(conn, %{"slug" => slug}) do
     post = Content.get_post_by_slug!(slug)
-    render(conn, :show, post: post, page_title: post.title, layout: {UrielmWeb.Layouts, :app}, current_page: "blog")
+
+    render(conn, :show,
+      post: post,
+      page_title: post.title,
+      layout: {UrielmWeb.Layouts, :app},
+      current_page: "blog"
+    )
   rescue
     Ecto.NoResultsError ->
       conn

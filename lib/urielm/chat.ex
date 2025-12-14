@@ -48,8 +48,9 @@ defmodule Urielm.Chat do
 
   def is_member?(user_id, room_id) do
     Repo.exists?(
-      from m in RoomMembership,
+      from(m in RoomMembership,
         where: m.user_id == ^user_id and m.room_id == ^room_id
+      )
     )
   end
 
@@ -61,8 +62,9 @@ defmodule Urielm.Chat do
 
   def remove_member(user_id, room_id) do
     Repo.delete_all(
-      from m in RoomMembership,
+      from(m in RoomMembership,
         where: m.user_id == ^user_id and m.room_id == ^room_id
+      )
     )
   end
 

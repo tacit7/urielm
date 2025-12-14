@@ -68,7 +68,9 @@ defmodule Urielm.MixProject do
       {:ueberauth_google, "~> 0.12"},
       {:dotenvy, "~> 0.8.0"},
       {:earmark, "~> 1.4"},
-      {:bcrypt_elixir, "~> 3.0"}
+      {:bcrypt_elixir, "~> 3.0"},
+      {:html_sanitize_ex, "~> 1.4"},
+      {:floki, "~> 0.36"}
     ]
   end
 

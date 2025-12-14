@@ -21,9 +21,7 @@ defmodule UrielmWeb.RoomChannel do
         end)
         |> Enum.map(&serialize_message/1)
 
-      {:ok,
-       %{messages: messages},
-       assign(socket, :room_id, room_id_int)}
+      {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
     else
       {:error, %{reason: "unauthorized"}}
     end
@@ -40,10 +38,10 @@ defmodule UrielmWeb.RoomChannel do
     Logger.info("Creating message: user=#{user.id}, room=#{room_id}, body=#{body}")
 
     case Chat.create_message(%{
-      body: body,
-      user_id: user.id,
-      room_id: room_id
-    }) do
+           body: body,
+           user_id: user.id,
+           room_id: room_id
+         }) do
       {:ok, message} ->
         Logger.info("Message created: #{message.id}")
         message = Urielm.Repo.preload(message, :user)
@@ -74,7 +72,8 @@ defmodule UrielmWeb.RoomChannel do
 
   defp serialize_message(message) do
     # Ensure user is loaded
-    user = if is_nil(message.user), do: Urielm.Repo.preload(message, :user).user, else: message.user
+    user =
+      if is_nil(message.user), do: Urielm.Repo.preload(message, :user).user, else: message.user
 
     %{
       id: message.id,

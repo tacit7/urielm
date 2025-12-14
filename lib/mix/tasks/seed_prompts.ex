@@ -36,7 +36,9 @@ defmodule Mix.Tasks.SeedPrompts do
       |> String.split("\n")
       |> List.first()
       |> case do
-        nil -> nil
+        nil ->
+          nil
+
         line ->
           line
           |> String.trim()

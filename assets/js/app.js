@@ -1,11 +1,25 @@
 // Theme management: keep theme in sync with localStorage and custom events
 (() => {
+  const setCookie = (name, value, options = {}) => {
+    const opts = {path: '/', 'max-age': 60*60*24*365, ...options}
+    let cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value)
+    if (opts['max-age'] == 0) {
+      cookie += ' ; Max-Age=0'
+    } else {
+      cookie += ' ; Max-Age=' + opts['max-age']
+    }
+    if (opts.path) cookie += ' ; Path=' + opts.path
+    document.cookie = cookie
+  }
+
   const setTheme = (theme) => {
     if (theme === "system") {
       try { localStorage.removeItem("phx:theme") } catch (_) {}
+      try { setCookie('phx_theme', '', {'max-age': 0}) } catch (_) {}
       document.documentElement.removeAttribute("data-theme")
     } else {
       try { localStorage.setItem("phx:theme", theme) } catch (_) {}
+      try { setCookie('phx_theme', theme) } catch (_) {}
       document.documentElement.setAttribute("data-theme", theme)
     }
   }
@@ -63,6 +77,11 @@ import UserMenu from "../svelte/UserMenu.svelte"
 import GoogleSignInButton from "../svelte/GoogleSignInButton.svelte"
 import YouTubePlayer from "../svelte/lib/youtube/YouTubePlayer.svelte"
 import ChatWindow from "../svelte/ChatWindow.svelte"
+import MarkdownRenderer from "../svelte/MarkdownRenderer.svelte"
+import PromptActions from "../svelte/PromptActions.svelte"
+import ThreadCard from "../svelte/ThreadCard.svelte"
+import VoteButtons from "../svelte/VoteButtons.svelte"
+import CommentTree from "../svelte/CommentTree.svelte"
 
 // Infinite scroll hook
 const InfiniteScroll = {
@@ -92,12 +111,16 @@ const InfiniteScroll = {
 // Copy to clipboard hook
 const CopyToClipboard = {
   mounted() {
-    this.el.addEventListener("phx:copy", () => {
-      const text = this.el.textContent
+    this.el.addEventListener("click", () => {
+      const text = this.el.dataset.text || this.el.textContent
       navigator.clipboard.writeText(text).then(
         () => {
-          // Visual feedback - could add a toast here
-          console.log("Copied to clipboard")
+          // Visual feedback - change button text briefly
+          const originalText = this.el.textContent
+          this.el.textContent = "✓ Copied!"
+          setTimeout(() => {
+            this.el.textContent = originalText
+          }, 2000)
         },
         (err) => {
           console.error("Failed to copy:", err)
@@ -119,7 +142,12 @@ let Hooks = getHooks({
   UserMenu,
   GoogleSignInButton,
   YouTubePlayer,
-  ChatWindow
+  ChatWindow,
+  MarkdownRenderer,
+  PromptActions,
+  ThreadCard,
+  VoteButtons,
+  CommentTree
 })
 
 // Add custom hooks

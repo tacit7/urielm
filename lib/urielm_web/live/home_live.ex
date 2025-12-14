@@ -26,10 +26,13 @@ defmodule UrielmWeb.HomeLive do
 
   defp hero(assigns) do
     ~H"""
-    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+    <section id="hero" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
       <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
         <!-- Badge -->
-        <div class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up">
+        <div
+          id="hero-badge"
+          class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up"
+        >
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75">
             </span>
@@ -39,40 +42,54 @@ defmodule UrielmWeb.HomeLive do
             New Video: Claude 3.5 Opus Workflow
           </span>
         </div>
-
+        
     <!-- Headline -->
-        <h1 class="text-5xl md:text-7xl lg:text-8xl font-semibold text-base-content tracking-tight mb-8 max-w-5xl mx-auto leading-[1.1] animate-fade-in-up delay-100">
+        <h1
+          id="hero-headline"
+          class="text-5xl md:text-7xl lg:text-8xl font-semibold text-base-content tracking-tight mb-8 max-w-5xl mx-auto leading-[1.1] animate-fade-in-up anim-delay-100"
+        >
           Building the future with <span class="text-base-content/50">AI & Automation.</span>
         </h1>
-
+        
     <!-- Subhead -->
-        <p class="text-lg md:text-xl text-base-content/70 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
+        <p
+          id="hero-subhead"
+          class="text-lg md:text-xl text-base-content/70 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up anim-delay-200"
+        >
           I help developers and creators master Claude Code, build n8n workflows, and automate the boring stuff so you can focus on creating.
         </p>
-
+        
     <!-- CTAs -->
-        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in-up delay-300">
-          <button class="btn btn-primary h-12 px-8 rounded-full font-medium flex items-center space-x-2 transition-all transform hover:scale-105">
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in-up anim-delay-300">
+          <.link
+            id="cta-explore-tutorials"
+            navigate={~p"/blog"}
+            class="group btn btn-primary h-12 px-8 rounded-full font-medium flex items-center space-x-2 transition-all transform hover:scale-105"
+          >
             <span>Explore Tutorials</span>
             <.icon
               name="hero-play-solid"
               class="h-4 w-4 group-hover:translate-x-1 transition-transform"
             />
-          </button>
-          <button class="btn btn-outline h-12 px-8 rounded-full font-medium transition-all">
+          </.link>
+          <.link
+            id="cta-consult"
+            navigate={~p"/chat"}
+            class="btn btn-outline h-12 px-8 rounded-full font-medium transition-all"
+          >
             Book Consultation
-          </button>
+          </.link>
         </div>
       </div>
-
+      
     <!-- Floating Elements -->
       <.CodeSnippetCard delay={0} socket={@socket} />
-
+      
     <!-- Background Gradients -->
       <div class="absolute inset-0 -z-10 overflow-hidden">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[800px] rounded-full blur-3xl opacity-100" style="background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 40%, transparent 70%)">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[800px] rounded-full blur-3xl opacity-100 bg-hero-blue">
         </div>
-        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-100" style="background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)">
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-100 bg-hero-purple">
         </div>
       </div>
     </section>
@@ -81,14 +98,20 @@ defmodule UrielmWeb.HomeLive do
 
   defp tech_stack(assigns) do
     ~H"""
-    <section class="py-12 border-y border-base-300 bg-base-200">
+    <section id="tech-stack" class="py-12 border-y border-base-300 bg-base-200">
       <div class="max-w-7xl mx-auto px-6 text-center">
         <p class="text-xs font-semibold uppercase tracking-widest text-base-content/50 mb-8">
           My Stack & Tools
         </p>
-        <div class="flex flex-wrap justify-center gap-12 md:gap-20 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+        <div
+          id="tools-list"
+          class="flex flex-wrap justify-center gap-12 md:gap-20 opacity-50 grayscale hover:grayscale-0 transition-all duration-500"
+        >
           <%= for tool <- ["Claude", "OpenAI", "n8n", "Svelte", "Phoenix"] do %>
-            <div class="flex items-center space-x-2 group cursor-default">
+            <div
+              id={"tool-#{String.downcase(tool)}"}
+              class="flex items-center space-x-2 group cursor-default"
+            >
               <span class="text-xl font-bold font-sans tracking-tight text-base-content/80 group-hover:text-base-content transition-colors">
                 {tool}
               </span>
@@ -115,7 +138,10 @@ defmodule UrielmWeb.HomeLive do
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(300px,auto)]">
           <!-- Large Card - YouTube/Content -->
-          <div class="md:col-span-2 rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+          <div
+            id="card-content"
+            class="md:col-span-2 rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:shadow-2xl transition-all duration-500"
+          >
             <div class="relative z-10 h-full flex flex-col justify-between">
               <div>
                 <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
@@ -133,9 +159,12 @@ defmodule UrielmWeb.HomeLive do
             <div class="absolute right-[-20px] bottom-[-20px] w-64 h-64 bg-gradient-to-tl from-red-500/20 to-transparent rounded-full opacity-0 group-hover:opacity-50 blur-3xl transition-opacity duration-700 ease-out">
             </div>
           </div>
-
+          
     <!-- Tall Card - Automation Services -->
-          <div class="md:row-span-2 rounded-3xl bg-base-300 p-8 text-base-content relative overflow-hidden group">
+          <div
+            id="card-automation"
+            class="md:row-span-2 rounded-3xl bg-base-300 p-8 text-base-content relative overflow-hidden group"
+          >
             <div class="relative z-10 h-full flex flex-col justify-between">
               <div>
                 <div class="w-12 h-12 bg-base-100 rounded-2xl flex items-center justify-center mb-6 border border-base-content/20">
@@ -146,7 +175,7 @@ defmodule UrielmWeb.HomeLive do
                   Custom n8n workflows that run your business while you sleep.
                 </p>
               </div>
-
+              
     <!-- Animated Terminal Visual -->
               <div class="mt-12 bg-base-100 rounded-xl p-4 border border-base-300 font-mono text-xs text-success opacity-80">
                 <div class="mb-2 text-base-content/50 border-b border-base-300 pb-2">
@@ -172,9 +201,12 @@ defmodule UrielmWeb.HomeLive do
               </div>
             </div>
           </div>
-
+          
     <!-- Small Card 1 - Prompt Engineering -->
-          <div class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-primary/10 transition-colors duration-500">
+          <div
+            id="card-prompting"
+            class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-primary/10 transition-colors duration-500"
+          >
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <.icon name="hero-chat-bubble-left-right" class="h-6 w-6 text-primary" />
             </div>
@@ -183,9 +215,12 @@ defmodule UrielmWeb.HomeLive do
               Library of system prompts for coding & writing.
             </p>
           </div>
-
+          
     <!-- Small Card 2 - Code/Consulting -->
-          <div class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-success/10 transition-colors duration-500">
+          <div
+            id="card-code"
+            class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-success/10 transition-colors duration-500"
+          >
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
               <.icon name="hero-code-bracket" class="h-6 w-6 text-success" />
             </div>
@@ -202,7 +237,7 @@ defmodule UrielmWeb.HomeLive do
 
   defp footer(assigns) do
     ~H"""
-    <footer class="bg-base-100 border-t border-base-300 py-16">
+    <footer id="site-footer" class="bg-base-100 border-t border-base-300 py-16">
       <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center md:items-start">
         <div class="mb-8 md:mb-0 text-center md:text-left">
           <div class="text-2xl font-bold tracking-tight text-base-content mb-4">UrielM.dev</div>

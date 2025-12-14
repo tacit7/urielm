@@ -121,13 +121,19 @@ defmodule UrielmWeb.ThemesLive do
                   <div
                     phx-click="select_theme"
                     phx-value-theme={theme}
-                    class={"p-3 rounded-lg cursor-pointer transition-all border-2 #{if @selected_theme == theme, do: "border-primary bg-primary/10", else: "border-transparent hover:bg-base-200"}"}>
+                    class={"p-3 rounded-lg cursor-pointer transition-all border-2 #{if @selected_theme == theme, do: "border-primary bg-primary/10", else: "border-transparent hover:bg-base-200"}"}
+                  >
                     <div class="flex items-center justify-between">
-                      <span class="font-medium text-sm capitalize"><%= String.replace(theme, "-", " ") %></span>
+                      <span class="font-medium text-sm capitalize">
+                        {String.replace(theme, "-", " ")}
+                      </span>
                       <div class="flex gap-1">
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.primary}"}></div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.secondary}"}></div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.accent}"}></div>
+                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.primary}"}>
+                        </div>
+                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.secondary}"}>
+                        </div>
+                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.accent}"}>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -144,13 +150,17 @@ defmodule UrielmWeb.ThemesLive do
                   <div
                     phx-click="select_theme"
                     phx-value-theme={theme}
-                    class={"p-3 rounded-lg cursor-pointer transition-all border-2 #{if @selected_theme == theme, do: "border-primary bg-primary/10", else: "border-transparent hover:bg-base-200"}"}>
+                    class={"p-3 rounded-lg cursor-pointer transition-all border-2 #{if @selected_theme == theme, do: "border-primary bg-primary/10", else: "border-transparent hover:bg-base-200"}"}
+                  >
                     <div class="flex items-center justify-between">
-                      <span class="font-medium text-sm capitalize"><%= theme %></span>
+                      <span class="font-medium text-sm capitalize">{theme}</span>
                       <div class="flex gap-1">
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.primary}"}></div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.secondary}"}></div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.accent}"}></div>
+                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.primary}"}>
+                        </div>
+                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.secondary}"}>
+                        </div>
+                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.accent}"}>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -165,7 +175,10 @@ defmodule UrielmWeb.ThemesLive do
           <div data-theme={@selected_theme} class="card bg-base-100 shadow-xl sticky top-8">
             <div class="card-body">
               <h2 class="card-title text-2xl">
-                <%= String.replace(@selected_theme, "-", " ") |> String.split() |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
+                {String.replace(@selected_theme, "-", " ")
+                |> String.split()
+                |> Enum.map(&String.capitalize/1)
+                |> Enum.join(" ")}
               </h2>
               <p class="text-base-content/70">This is a preview of how the theme looks in action.</p>
 

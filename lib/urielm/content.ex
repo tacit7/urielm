@@ -7,6 +7,9 @@ defmodule Urielm.Content do
   alias Urielm.Repo
   alias Urielm.Content.Prompt
   alias Urielm.Content.Post
+  alias Urielm.Content.Like
+  alias Urielm.Content.Comment
+  alias Urielm.Accounts.SavedPrompt
 
   @doc """
   Returns the list of prompts.
@@ -206,9 +209,18 @@ defmodule Urielm.Content do
 
     base =
       case Map.get(opts, :tag_ids) do
-        nil -> base
-        [] -> base
-        tag_ids -> from(p in base, join: pt in assoc(p, :prompt_tags), where: pt.tag_id in ^tag_ids, distinct: true)
+        nil ->
+          base
+
+        [] ->
+          base
+
+        tag_ids ->
+          from(p in base,
+            join: pt in assoc(p, :prompt_tags),
+            where: pt.tag_id in ^tag_ids,
+            distinct: true
+          )
       end
 
     base
@@ -307,7 +319,7 @@ defmodule Urielm.Content do
 
   """
   def list_all_posts do
-    Repo.all(from p in Post, order_by: [desc: p.inserted_at])
+    Repo.all(from(p in Post, order_by: [desc: p.inserted_at]))
   end
 
   @doc """
@@ -381,5 +393,171 @@ defmodule Urielm.Content do
   """
   def change_post(%Post{} = post, attrs \\ %{}) do
     Post.changeset(post, attrs)
+  end
+
+  # Like functions
+
+  @doc """
+  Creates or deletes a like for a prompt by a user.
+  Returns :ok and updated prompt if successful.
+  """
+  def toggle_like(user_id, prompt_id) do
+    case Repo.get_by(Like, user_id: user_id, prompt_id: prompt_id) do
+      nil ->
+        # Create like
+        with {:ok, _} <- Repo.insert(%Like{user_id: user_id, prompt_id: prompt_id}),
+             {:ok, prompt} <- update_prompt_likes_count(prompt_id) do
+          {:ok, prompt}
+        end
+
+      like ->
+        # Delete like
+        with {:ok, _} <- Repo.delete(like),
+             {:ok, prompt} <- update_prompt_likes_count(prompt_id) do
+          {:ok, prompt}
+        end
+    end
+  end
+
+  @doc """
+  Checks if a user has liked a prompt.
+  """
+  def user_liked_prompt?(user_id, prompt_id) do
+    Repo.exists?(from(l in Like, where: l.user_id == ^user_id and l.prompt_id == ^prompt_id))
+  end
+
+  # Save functions
+
+  @doc """
+  Creates or deletes a saved prompt for a user.
+  Returns :ok and updated prompt if successful.
+  """
+  def toggle_save(user_id, prompt_id) do
+    case Repo.get_by(SavedPrompt, user_id: user_id, prompt_id: prompt_id) do
+      nil ->
+        # Create saved prompt
+        with {:ok, _} <- Repo.insert(%SavedPrompt{user_id: user_id, prompt_id: prompt_id}),
+             {:ok, prompt} <- update_prompt_saves_count(prompt_id) do
+          {:ok, prompt}
+        end
+
+      saved ->
+        # Delete saved prompt
+        with {:ok, _} <- Repo.delete(saved),
+             {:ok, prompt} <- update_prompt_saves_count(prompt_id) do
+          {:ok, prompt}
+        end
+    end
+  end
+
+  @doc """
+  Checks if a user has saved a prompt.
+  """
+  def user_saved_prompt?(user_id, prompt_id) do
+    Repo.exists?(
+      from(sp in SavedPrompt, where: sp.user_id == ^user_id and sp.prompt_id == ^prompt_id)
+    )
+  end
+
+  # Comment functions
+
+  @doc """
+  Creates a comment on a prompt.
+  """
+  def create_comment(attrs \\ %{}) do
+    %Comment{}
+    |> Comment.changeset(attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, comment} ->
+        # Update comment count
+        update_prompt_comments_count(comment.prompt_id)
+        {:ok, comment}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Gets a single comment.
+  """
+  def get_comment!(id), do: Repo.get!(Comment, id)
+
+  @doc """
+  Updates a comment.
+  """
+  def update_comment(%Comment{} = comment, attrs) do
+    comment
+    |> Comment.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a comment (soft delete).
+  """
+  def delete_comment(%Comment{} = comment) do
+    comment
+    |> Comment.changeset(%{deleted_at: DateTime.utc_now()})
+    |> Repo.update()
+    |> case do
+      {:ok, comment} ->
+        update_prompt_comments_count(comment.prompt_id)
+        {:ok, comment}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking comment changes.
+  """
+  def change_comment(%Comment{} = comment, attrs \\ %{}) do
+    Comment.changeset(comment, attrs)
+  end
+
+  @doc """
+  Gets a prompt with its comments for display.
+  """
+  def get_prompt_with_comments(prompt_id) do
+    prompt = Repo.get!(Prompt, prompt_id) |> Repo.preload(:tag_records)
+
+    comments =
+      from(c in Comment,
+        where: c.prompt_id == ^prompt_id and is_nil(c.deleted_at) and is_nil(c.parent_id),
+        order_by: [desc: c.inserted_at],
+        preload: [:user, :replies]
+      )
+      |> Repo.all()
+
+    Map.put(prompt, :comments, comments)
+  end
+
+  # Helper functions
+
+  defp update_prompt_likes_count(prompt_id) do
+    count = Repo.aggregate(from(l in Like, where: l.prompt_id == ^prompt_id), :count)
+
+    prompt = Repo.get!(Prompt, prompt_id)
+    update_prompt(prompt, %{likes_count: count})
+  end
+
+  defp update_prompt_saves_count(prompt_id) do
+    count = Repo.aggregate(from(sp in SavedPrompt, where: sp.prompt_id == ^prompt_id), :count)
+
+    prompt = Repo.get!(Prompt, prompt_id)
+    update_prompt(prompt, %{saves_count: count})
+  end
+
+  defp update_prompt_comments_count(prompt_id) do
+    count =
+      Repo.aggregate(
+        from(c in Comment, where: c.prompt_id == ^prompt_id and is_nil(c.deleted_at)),
+        :count
+      )
+
+    prompt = Repo.get!(Prompt, prompt_id)
+    update_prompt(prompt, %{comments_count: count})
   end
 end
