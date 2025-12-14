@@ -303,6 +303,34 @@ defmodule Urielm.Forum do
     Repo.get_by(Vote, user_id: user_id, target_type: target_type, target_id: target_id)
   end
 
+  # Search
+
+  def search_threads(query, opts \\ []) do
+    board_id = Keyword.get(opts, :board_id)
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    base_query =
+      from(t in Thread)
+      |> where([t], t.is_removed == false)
+      |> preload([:author, :board])
+
+    query_string = String.trim(query)
+
+    if String.length(query_string) > 0 do
+      # Use full-text search with tsquery
+      base_query
+      |> where([t], fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string))
+      |> order_by([t], fragment("ts_rank(?, plainto_tsquery('english', ?)) DESC", t.search_vector, ^query_string))
+      |> then(&(if is_nil(board_id), do: &1, else: where(&1, [t], t.board_id == ^board_id)))
+      |> limit(^limit)
+      |> offset(^offset)
+      |> Repo.all()
+    else
+      []
+    end
+  end
+
   # Helpers
 
   defp update_thread_comment_count(thread_id) do

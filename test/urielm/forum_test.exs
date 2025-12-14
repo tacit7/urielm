@@ -362,4 +362,83 @@ defmodule Urielm.ForumTest do
       assert Enum.at(page1, 0).id != Enum.at(page2, 0).id
     end
   end
+
+  describe "search" do
+    test "search_threads/2 returns empty list for empty query" do
+      board = board_fixture()
+      thread_fixture(%{board_id: board.id, title: "Searchable Thread", body: "Content here"})
+
+      results = Forum.search_threads("")
+
+      assert results == []
+    end
+
+    test "search_threads/2 finds threads by title" do
+      board = board_fixture()
+      thread = thread_fixture(%{board_id: board.id, title: "Phoenix LiveView Guide", body: "How to use LiveView"})
+
+      results = Forum.search_threads("Phoenix")
+
+      assert length(results) >= 1
+      assert Enum.any?(results, &(&1.id == thread.id))
+    end
+
+    test "search_threads/2 finds threads by body" do
+      board = board_fixture()
+      thread = thread_fixture(%{board_id: board.id, title: "A Question", body: "How do I use Ecto queries?"})
+
+      results = Forum.search_threads("Ecto")
+
+      assert length(results) >= 1
+      assert Enum.any?(results, &(&1.id == thread.id))
+    end
+
+    test "search_threads/2 prioritizes title matches over body matches" do
+      board = board_fixture()
+      title_match = thread_fixture(%{board_id: board.id, title: "Elixir Best Practices", body: "This is about coding"})
+      body_match = thread_fixture(%{board_id: board.id, title: "A Question", body: "Elixir tips and tricks"})
+
+      results = Forum.search_threads("Elixir")
+
+      assert length(results) >= 2
+      # Title match should come before body match due to ts_rank weightings
+      assert Enum.find_index(results, &(&1.id == title_match.id)) <= Enum.find_index(results, &(&1.id == body_match.id))
+    end
+
+    test "search_threads/2 respects board_id filter" do
+      board1 = board_fixture()
+      board2 = board_fixture()
+      thread1 = thread_fixture(%{board_id: board1.id, title: "Phoenix topic", body: "Detailed content about Phoenix"})
+      thread2 = thread_fixture(%{board_id: board2.id, title: "Phoenix framework", body: "More detailed content here"})
+
+      results = Forum.search_threads("Phoenix", board_id: board1.id)
+
+      assert length(results) >= 1
+      assert Enum.any?(results, &(&1.id == thread1.id))
+      assert !Enum.any?(results, &(&1.id == thread2.id))
+    end
+
+    test "search_threads/2 excludes removed threads" do
+      board = board_fixture()
+      active = thread_fixture(%{board_id: board.id, title: "Active Thread", body: "This thread is active"})
+      removed = thread_fixture(%{board_id: board.id, title: "Removed Thread", body: "This thread is removed", is_removed: true})
+
+      results = Forum.search_threads("Thread")
+
+      assert Enum.any?(results, &(&1.id == active.id))
+      assert !Enum.any?(results, &(&1.id == removed.id))
+    end
+
+    test "search_threads/2 respects limit and offset" do
+      board = board_fixture()
+      Enum.each(1..5, fn i -> thread_fixture(%{board_id: board.id, title: "Test #{i}", body: "Test content"}) end)
+
+      page1 = Forum.search_threads("Test", limit: 2, offset: 0)
+      page2 = Forum.search_threads("Test", limit: 2, offset: 2)
+
+      assert length(page1) == 2
+      assert length(page2) == 2
+      assert Enum.at(page1, 0).id != Enum.at(page2, 0).id
+    end
+  end
 end
