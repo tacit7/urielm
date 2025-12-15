@@ -2,6 +2,7 @@
   const themes = [
     { value: 'light', label: 'Light', icon: '☀️' },
     { value: 'dark', label: 'Dark', icon: '🌙' },
+    { value: 'tokyo-night', label: 'Tokyo Night', icon: '🗼' },
     { value: 'dracula', label: 'Dracula', icon: '🧛' },
     { value: 'synthwave', label: 'Synthwave', icon: '🌆' },
     { value: 'business', label: 'Business', icon: '💼' },

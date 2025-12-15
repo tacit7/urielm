@@ -43,7 +43,7 @@ defmodule UrielmWeb.Router do
   scope "/", UrielmWeb do
     pipe_through :browser
 
-    live_session :default, layout: {UrielmWeb.Layouts, :app} do
+    live_session :default do
       live "/", HomeLive
       live "/romanov-prompts", ReferencesLive
       live "/prompts/:id", PromptLive
@@ -60,8 +60,7 @@ defmodule UrielmWeb.Router do
     get "/blog/:slug", PostController, :show
 
     live_session :authenticated,
-      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}],
-      layout: {UrielmWeb.Layouts, :app} do
+      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}] do
       live "/profile", ProfileLive
       live "/settings", SettingsLive
       live "/chat", ChatLive
@@ -71,8 +70,7 @@ defmodule UrielmWeb.Router do
     end
 
     live_session :admin,
-      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}],
-      layout: {UrielmWeb.Layouts, :app} do
+      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}] do
       live "/admin/trust-levels", Admin.TrustLevelSettingsLive
       live "/admin/moderation", Admin.ModerationQueueLive
     end

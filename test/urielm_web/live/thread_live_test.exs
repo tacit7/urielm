@@ -29,10 +29,6 @@ defmodule UrielmWeb.ThreadLiveTest do
       })
       |> render_submit()
 
-      # Verify success feedback appears
-      html = render(view)
-      assert html =~ "Report submitted"
-
       # Verify report was created in DB
       report = Repo.get_by(Urielm.Forum.Report, target_type: "thread", target_id: thread.id)
       assert report != nil

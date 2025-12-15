@@ -24,7 +24,7 @@
   themes: all;
 }
 
-/* Custom Tokyo Night Theme (OKLCH) */
+/* Custom Tokyo Night Theme tuned to VS Code background (#1A1B27) */
 @plugin "daisyui/theme" {
   name: "tokyo-night";
   color-scheme: dark;
@@ -34,11 +34,12 @@
   --color-secondary-content: oklch(12.51% 0.01 247.36);
   --color-accent: oklch(76.83% 0.146 168.48);
   --color-accent-content: oklch(12.51% 0.01 247.36);
-  --color-neutral: oklch(28.22% 0.024 262.35);
+  /* Use exact VS Code-like background and sensible surface steps */
+  --color-neutral: #1F2335;
   --color-neutral-content: oklch(80.71% 0.038 265.68);
-  --color-base-100: oklch(28.22% 0.024 262.35);
-  --color-base-200: oklch(16.71% 0.012 253.87);
-  --color-base-300: oklch(12.51% 0.01 247.36);
+  --color-base-100: #1A1B27; /* main app background */
+  --color-base-200: #1F2335; /* elevated surfaces (slightly lighter) */
+  --color-base-300: #2F334D; /* higher elevation (lighter) */
   --color-base-content: oklch(80.71% 0.038 265.68);
   --color-info: oklch(79.68% 0.152 201.73);
   --color-success: oklch(80.95% 0.174 133.4);
@@ -386,4 +387,3 @@
     color-mix(in oklch, var(--color-accent) 25%, transparent) 0%,
     transparent 70%);
 }
-

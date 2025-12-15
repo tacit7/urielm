@@ -588,6 +588,12 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
+  def update_report_notes(%Report{} = report, notes) do
+    report
+    |> Report.changeset(%{resolution_notes: notes})
+    |> Repo.update()
+  end
+
   # Subscriptions
 
   def subscribe_to_thread(user_id, thread_id) do

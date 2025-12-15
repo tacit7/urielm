@@ -99,6 +99,18 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end
   end
 
+  def handle_event("add_notes", %{"report_id" => report_id, "notes" => notes}, socket) do
+    report = Forum.get_report!(report_id)
+
+    case Forum.update_report_notes(report, notes) do
+      {:ok, _} ->
+        {:noreply, put_flash(socket, :info, "Notes saved")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to save notes")}
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -124,7 +136,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
               <div class="card bg-base-200 border border-base-300" data-testid={"report-card-#{report.id}"}>
                 <div class="card-body">
                   <div class="flex justify-between items-start mb-4">
-                    <div>
+                    <div class="flex-1">
                       <div class="flex items-center gap-2 mb-2">
                         <span class="badge badge-sm">
                           {String.capitalize(report.target_type)}
@@ -133,11 +145,11 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                           {String.capitalize(report.reason)}
                         </span>
                       </div>
-                      <h2 class="text-lg font-semibold text-base-content">
-                        Reported by {report.reporter_username}
+                      <h2 class="text-lg font-semibold text-base-content mb-1">
+                        {report.target_title}
                       </h2>
-                      <p class="text-sm text-base-content/60 mt-1">
-                        {format_time(report.inserted_at)}
+                      <p class="text-sm text-base-content/60">
+                        Reported by <span class="font-medium text-base-content">{report.reporter_username}</span> {format_time(report.inserted_at)}
                       </p>
                     </div>
 
@@ -171,15 +183,49 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
 
                   <%= if report.description do %>
                     <div class="bg-base-300 rounded p-3 my-3">
+                      <p class="text-xs text-base-content/60 mb-1">Report reason:</p>
                       <p class="text-sm text-base-content">{report.description}</p>
                     </div>
                   <% end %>
 
+                  <div class="my-4">
+                    <form phx-submit="add_notes" class="flex gap-2">
+                      <input
+                        type="hidden"
+                        name="report_id"
+                        value={report.id}
+                      />
+                      <input
+                        type="text"
+                        name="notes"
+                        placeholder="Add moderation notes..."
+                        class="input input-bordered input-sm flex-1"
+                        maxlength="500"
+                      />
+                      <button type="submit" class="btn btn-sm btn-outline">
+                        Save notes
+                      </button>
+                    </form>
+                  </div>
+
                   <div class="divider my-2"></div>
 
-                  <div class="flex justify-between text-xs text-base-content/60">
-                    <span>Target ID: {String.slice(report.target_id, 0, 8)}</span>
-                    <span>Report ID: {String.slice(report.id, 0, 8)}</span>
+                  <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                      <%= if report.target_type == "thread" do %>
+                        <a
+                          href={"/forum/t/#{report.target_id}"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="link link-primary text-sm"
+                        >
+                          View thread ↗
+                        </a>
+                      <% end %>
+                    </div>
+                    <div class="text-xs text-base-content/60">
+                      <span>Report ID: {String.slice(report.id, 0, 8)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -205,10 +251,30 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     Enum.map(reports, fn report ->
       reporter = Repo.get(Urielm.Accounts.User, report.user_id)
 
+      # Fetch target content (thread or comment) title
+      target_title = case report.target_type do
+        "thread" ->
+          try do
+            thread = Forum.get_thread!(report.target_id)
+            thread.title
+          rescue
+            Ecto.NoResultsError -> "Deleted thread"
+          end
+        "comment" ->
+          try do
+            comment = Forum.get_comment!(report.target_id)
+            String.slice(comment.body, 0, 80) <> "..."
+          rescue
+            Ecto.NoResultsError -> "Deleted comment"
+          end
+        _ -> "Unknown"
+      end
+
       %{
         id: to_string(report.id),
         target_type: report.target_type,
         target_id: to_string(report.target_id),
+        target_title: target_title,
         reason: report.reason,
         description: report.description,
         status: report.status,
