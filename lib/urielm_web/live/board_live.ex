@@ -161,11 +161,12 @@ defmodule UrielmWeb.BoardLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100">
-      <div class="container mx-auto px-4 py-8">
+      <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
         <div class="mb-8">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center justify-between mb-6">
             <div>
-              <h1 class="text-4xl font-bold text-base-content">{@board.name}</h1>
+              <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
               <p class="text-base-content/60 mt-2">{@board.description}</p>
             </div>
             <%= if @current_user do %>
@@ -173,28 +174,29 @@ defmodule UrielmWeb.BoardLive do
                 href={~p"/forum/b/#{@board.slug}/new"}
                 class="btn btn-primary"
               >
-                New Thread
+                New Topic
               </a>
             <% end %>
           </div>
 
-          <div class="flex gap-2 border-b border-base-300">
+          <!-- Sort Tabs -->
+          <div class="flex gap-4 border-b border-base-300 pb-0">
             <a
               href={~p"/forum/b/#{@board.slug}?sort=new"}
               class={[
-                "px-4 py-2 font-medium border-b-2 transition-colors",
+                "px-4 py-3 font-medium border-b-2 transition-colors",
                 if(@sort == "new",
                   do: "border-primary text-primary",
                   else: "border-transparent text-base-content/60 hover:text-base-content"
                 )
               ]}
             >
-              New
+              Latest
             </a>
             <a
               href={~p"/forum/b/#{@board.slug}?sort=top"}
               class={[
-                "px-4 py-2 font-medium border-b-2 transition-colors",
+                "px-4 py-3 font-medium border-b-2 transition-colors",
                 if(@sort == "top",
                   do: "border-primary text-primary",
                   else: "border-transparent text-base-content/60 hover:text-base-content"
@@ -206,16 +208,22 @@ defmodule UrielmWeb.BoardLive do
           </div>
         </div>
 
-        <div id="threads" phx-update="stream" class="space-y-4">
-          <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
-            No threads yet. Be the first to start a discussion!
-          </div>
-          <div :for={{id, thread} <- @streams.threads} id={id}>
-            <.svelte
-              name="ThreadCard"
-              props={thread}
-              socket={@socket}
-            />
+        <!-- Threads Table -->
+        <div class="border border-base-300 rounded-lg overflow-hidden">
+          <div id="threads" phx-update="stream" class="">
+            <div id="empty-state" class="hidden only:flex justify-center py-12">
+              <div class="text-center text-base-content/50">
+                <p class="text-lg font-medium mb-2">No topics yet</p>
+                <p class="text-sm">Be the first to start a discussion!</p>
+              </div>
+            </div>
+            <div :for={{id, thread} <- @streams.threads} id={id} class="border-t border-base-300 first:border-t-0">
+              <.svelte
+                name="ThreadCard"
+                props={thread}
+                socket={@socket}
+              />
+            </div>
           </div>
         </div>
 

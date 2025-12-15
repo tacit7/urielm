@@ -21,33 +21,49 @@ defmodule UrielmWeb.ForumLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100">
-      <div class="container mx-auto px-4 py-12">
-        <div class="mb-12">
-          <h1 class="text-4xl font-bold mb-2 text-base-content">Forum</h1>
-          <p class="text-base-content/60">Community discussions and support</p>
+      <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-base-content">Categories</h1>
         </div>
 
+        <!-- Categories List -->
         <%= for category <- @categories do %>
-          <div class="mb-8">
-            <h2 class="text-2xl font-bold text-base-content mb-4">
-              {category.name}
-            </h2>
+          <div class="mb-12">
+            <!-- Category Title -->
+            <div class="mb-4">
+              <h2 class="text-xl font-semibold text-base-content">{category.name}</h2>
+            </div>
 
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <%= for board <- category.boards do %>
+            <!-- Boards Table -->
+            <div class="border border-base-300 rounded-lg overflow-hidden">
+              <%= for {board, index} <- Enum.with_index(category.boards) do %>
                 <a
                   href={~p"/forum/b/#{board.slug}"}
-                  class="card bg-base-200 border border-base-300 hover:shadow-lg transition-shadow"
+                  class={[
+                    "flex items-center justify-between px-5 py-4 hover:bg-base-200/50 transition-colors",
+                    if(index > 0, do: "border-t border-base-300")
+                  ]}
                 >
-                  <div class="card-body">
-                    <h3 class="card-title text-base-content text-lg">
+                  <!-- Board Info -->
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-base font-semibold text-base-content hover:text-primary transition-colors">
                       {board.name}
                     </h3>
-                    <p class="text-sm text-base-content/60">
+                    <p class="text-sm text-base-content/60 mt-1">
                       {board.description}
                     </p>
-                    <div class="flex gap-4 text-xs text-base-content/50 pt-4 border-t border-base-300">
-                      <span>Threads: {board.thread_count || 0}</span>
+                  </div>
+
+                  <!-- Stats -->
+                  <div class="flex items-center gap-6 ml-4 text-right">
+                    <div class="flex flex-col items-end">
+                      <span class="text-sm font-semibold text-base-content">
+                        {board.thread_count || 0}
+                      </span>
+                      <span class="text-xs text-base-content/50">
+                        {if board.thread_count == 1, do: "Topic", else: "Topics"}
+                      </span>
                     </div>
                   </div>
                 </a>
