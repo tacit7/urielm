@@ -24,18 +24,34 @@ defmodule UrielmWeb.BoardLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    sort = Map.get(params, "sort", "new")
-    %{board: board} = socket.assigns
+    sort = Map.get(params, "sort", "latest")
+    filter = Map.get(params, "filter", "all")
+    %{board: board, current_user: user} = socket.assigns
 
     threads =
-      Forum.list_threads(board.id, sort: String.to_atom(sort), limit: @page_size, offset: 0)
+      case filter do
+        "unread" when not is_nil(user) ->
+          Forum.list_unread_threads(user.id, board.id, limit: @page_size, offset: 0)
+
+        "new" ->
+          Forum.list_new_threads(user && user.id, board.id, limit: @page_size, offset: 0)
+
+        _ ->
+          sort_atom = String.to_atom(sort)
+
+          case sort_atom do
+            :latest -> Forum.list_latest_threads(board.id, limit: @page_size, offset: 0)
+            _ -> Forum.list_threads(board.id, sort: sort_atom, limit: @page_size, offset: 0)
+          end
+      end
 
     {:noreply,
      socket
      |> assign(:sort, sort)
+     |> assign(:filter, filter)
      |> assign(:page, 0)
      |> assign(:has_more, length(threads) == @page_size)
-     |> stream(:threads, serialize_threads(threads, socket.assigns.current_user), reset: true)}
+     |> stream(:threads, serialize_threads(threads, user), reset: true)}
   end
 
   @impl true
@@ -184,13 +200,39 @@ defmodule UrielmWeb.BoardLive do
           <% end %>
         </div>
 
-        <!-- Sort Tabs -->
+        <!-- Filter Tabs -->
         <div class="flex gap-4 border-b border-base-300 pb-0">
+          <%= if @current_user do %>
+            <a
+              href={~p"/forum/b/#{@board.slug}?filter=unread"}
+              class={[
+                "px-4 py-3 font-medium border-b-2 transition-colors",
+                if(@filter == "unread",
+                  do: "border-primary text-primary",
+                  else: "border-transparent text-base-content/60 hover:text-base-content"
+                )
+              ]}
+            >
+              Unread
+            </a>
+          <% end %>
           <a
-            href={~p"/forum/b/#{@board.slug}?sort=new"}
+            href={~p"/forum/b/#{@board.slug}?filter=new"}
             class={[
               "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@sort == "new",
+              if(@filter == "new",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            New
+          </a>
+          <a
+            href={~p"/forum/b/#{@board.slug}"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "all",
                 do: "border-primary text-primary",
                 else: "border-transparent text-base-content/60 hover:text-base-content"
               )
@@ -199,7 +241,7 @@ defmodule UrielmWeb.BoardLive do
             Latest
           </a>
           <a
-            href={~p"/forum/b/#{@board.slug}?sort=top"}
+            href={~p"/forum/b/#{@board.slug}?sort=top&filter=all"}
             class={[
               "px-4 py-3 font-medium border-b-2 transition-colors",
               if(@sort == "top",
@@ -264,6 +306,7 @@ defmodule UrielmWeb.BoardLive do
   defp serialize_thread(thread, current_user) do
     is_saved = current_user && Forum.is_thread_saved?(current_user.id, thread.id)
     is_subscribed = current_user && Forum.is_subscribed?(current_user.id, thread.id)
+    is_unread = current_user && Forum.is_thread_unread?(current_user.id, thread.id)
 
     %{
       id: to_string(thread.id),
@@ -278,7 +321,8 @@ defmodule UrielmWeb.BoardLive do
       created_at: thread.inserted_at,
       user_vote: get_user_vote(current_user, "thread", thread.id),
       is_saved: is_saved,
-      is_subscribed: is_subscribed
+      is_subscribed: is_subscribed,
+      is_unread: is_unread
     }
   end
 

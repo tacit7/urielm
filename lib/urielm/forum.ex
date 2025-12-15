@@ -11,7 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification, TopicRead}
 
   @max_comment_depth 8
 
@@ -678,6 +678,66 @@ defmodule Urielm.Forum do
     else
       []
     end
+  end
+
+  # Topic Reads - Track which topics users have read
+
+  def mark_thread_read(user_id, thread_id) do
+    %TopicRead{}
+    |> TopicRead.changeset(%{user_id: user_id, thread_id: thread_id, last_read_at: DateTime.utc_now()})
+    |> Repo.insert(on_conflict: {:replace, [:last_read_at]}, conflict_target: [:user_id, :thread_id])
+  end
+
+  def is_thread_unread?(user_id, thread_id) do
+    read = Repo.get_by(TopicRead, user_id: user_id, thread_id: thread_id)
+    read == nil
+  end
+
+  def list_unread_threads(user_id, board_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread,
+      left_join: tr in TopicRead, on: tr.user_id == ^user_id and tr.thread_id == t.id,
+      where: t.board_id == ^board_id and t.is_removed == false,
+      where: is_nil(tr.id),
+      preload: [:author, :board],
+      order_by: [desc: t.inserted_at],
+      limit: ^limit,
+      offset: ^offset
+    )
+    |> Repo.all()
+  end
+
+  def list_new_threads(user_id, board_id, opts \\ []) do
+    days = Keyword.get(opts, :days, 1)
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    cutoff = DateTime.utc_now() |> DateTime.add(-days * 86400, :second)
+
+    from(t in Thread,
+      where: t.board_id == ^board_id and t.is_removed == false and t.inserted_at > ^cutoff,
+      preload: [:author, :board],
+      order_by: [desc: t.inserted_at],
+      limit: ^limit,
+      offset: ^offset
+    )
+    |> Repo.all()
+  end
+
+  def list_latest_threads(board_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread,
+      where: t.board_id == ^board_id and t.is_removed == false,
+      preload: [:author, :board],
+      order_by: [desc: t.updated_at],
+      limit: ^limit,
+      offset: ^offset
+    )
+    |> Repo.all()
   end
 
   # Helpers

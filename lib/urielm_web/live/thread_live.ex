@@ -10,6 +10,11 @@ defmodule UrielmWeb.ThreadLive do
     thread = Forum.get_thread!(id)
     comment_tree = build_comment_tree(thread.comments)
 
+    # Mark thread as read
+    if socket.assigns.current_user do
+      Forum.mark_thread_read(socket.assigns.current_user.id, thread.id)
+    end
+
     is_saved =
       if socket.assigns.current_user,
         do: Forum.is_thread_saved?(socket.assigns.current_user.id, thread.id),
