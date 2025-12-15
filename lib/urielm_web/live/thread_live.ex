@@ -457,7 +457,7 @@ defmodule UrielmWeb.ThreadLive do
 
       <!-- Report Modal -->
       <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
-        <div class="modal-box">
+        <div class="modal-box bg-base-300">
           <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
           </form>
