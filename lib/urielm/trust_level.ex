@@ -106,7 +106,8 @@ defmodule Urielm.TrustLevel do
   end
 
   def get_config(level) do
-    Repo.get_by(TrustLevelConfig, level: level) || get_or_create_defaults() |> Enum.find(&(&1.level == level))
+    Repo.get_by(TrustLevelConfig, level: level) ||
+      get_or_create_defaults() |> Enum.find(&(&1.level == level))
   end
 
   def list_configs do
@@ -122,7 +123,8 @@ defmodule Urielm.TrustLevel do
   # Check if user can perform action based on trust level
   def can_post_topic?(user) do
     config = get_config(user.trust_level)
-    config && !config.can_moderate  # All levels can post except in special cases
+    # All levels can post except in special cases
+    config && !config.can_moderate
   end
 
   def can_pin_topics?(user) do

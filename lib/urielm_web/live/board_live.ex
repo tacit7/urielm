@@ -195,8 +195,8 @@ defmodule UrielmWeb.BoardLive do
             </a>
           <% end %>
         </div>
-
-        <!-- Filter Tabs -->
+        
+    <!-- Filter Tabs -->
         <div class="flex gap-4 border-b border-base-300 pb-0">
           <%= if @current_user do %>
             <a
@@ -250,8 +250,8 @@ defmodule UrielmWeb.BoardLive do
           </a>
         </div>
       </div>
-
-      <!-- Threads Table -->
+      
+    <!-- Threads Table -->
       <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
         <!-- Table Header -->
         <div class="grid grid-cols-12 gap-4 px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
@@ -259,8 +259,8 @@ defmodule UrielmWeb.BoardLive do
           <div class="col-span-2 text-right">Replies</div>
           <div class="col-span-3 text-right">Activity</div>
         </div>
-
-        <!-- Threads List -->
+        
+    <!-- Threads List -->
         <div id="threads" phx-update="stream" class="">
           <div id="empty-state" class="hidden only:flex justify-center py-12">
             <div class="text-center text-base-content/50">
@@ -268,7 +268,11 @@ defmodule UrielmWeb.BoardLive do
               <p class="text-sm">Be the first to start a discussion!</p>
             </div>
           </div>
-          <div :for={{id, thread} <- @streams.threads} id={id} class="border-t border-base-300 first:border-t-0">
+          <div
+            :for={{id, thread} <- @streams.threads}
+            id={id}
+            class="border-t border-base-300 first:border-t-0"
+          >
             <.svelte
               name="ThreadCard"
               props={thread}

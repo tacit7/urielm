@@ -23,7 +23,17 @@ defmodule Urielm.Forum.Report do
   @doc false
   def changeset(report, attrs) do
     report
-    |> cast(attrs, [:user_id, :target_type, :target_id, :reason, :description, :status, :reviewed_by_id, :resolved_at, :resolution_notes])
+    |> cast(attrs, [
+      :user_id,
+      :target_type,
+      :target_id,
+      :reason,
+      :description,
+      :status,
+      :reviewed_by_id,
+      :resolved_at,
+      :resolution_notes
+    ])
     |> validate_required([:user_id, :target_type, :target_id, :reason])
     |> validate_inclusion(:target_type, ["thread", "comment"])
     |> validate_inclusion(:reason, ["spam", "abuse", "offensive", "other"])

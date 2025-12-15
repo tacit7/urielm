@@ -21,7 +21,15 @@ defmodule Urielm.Forum.Notification do
   @doc false
   def changeset(notification, attrs) do
     notification
-    |> cast(attrs, [:user_id, :actor_id, :subject_type, :subject_id, :thread_id, :message, :read_at])
+    |> cast(attrs, [
+      :user_id,
+      :actor_id,
+      :subject_type,
+      :subject_id,
+      :thread_id,
+      :message,
+      :read_at
+    ])
     |> validate_required([:user_id, :subject_type, :subject_id])
     |> validate_inclusion(:subject_type, ["comment", "reply", "thread_update"])
     |> validate_length(:message, max: 500)

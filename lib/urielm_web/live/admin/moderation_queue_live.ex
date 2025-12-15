@@ -107,8 +107,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-base-content">Moderation Queue</h1>
           <p class="text-base-content/60 mt-2">
-            <span class="badge badge-lg badge-error">{@pending_count}</span>
-            pending reports
+            <span class="badge badge-lg badge-error">{@pending_count}</span> pending reports
           </p>
         </div>
 
@@ -128,10 +127,10 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                     <div>
                       <div class="flex items-center gap-2 mb-2">
                         <span class="badge badge-sm">
-                          <%= String.capitalize(report.target_type) %>
+                          {String.capitalize(report.target_type)}
                         </span>
                         <span class="badge badge-sm badge-warning">
-                          <%= String.capitalize(report.reason) %>
+                          {String.capitalize(report.reason)}
                         </span>
                       </div>
                       <h2 class="text-lg font-semibold text-base-content">

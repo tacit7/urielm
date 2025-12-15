@@ -27,16 +27,16 @@ defmodule UrielmWeb.ForumLive do
         <h1 class="text-3xl font-bold text-base-content mb-2">Categories</h1>
         <p class="text-base-content/60">Browse all discussion categories</p>
       </div>
-
-      <!-- Categories List -->
+      
+    <!-- Categories List -->
       <%= for category <- @categories do %>
         <div class="mb-10">
           <!-- Category Title -->
           <div class="mb-4 px-1">
             <h2 class="text-lg font-semibold text-base-content">{category.name}</h2>
           </div>
-
-          <!-- Boards Table -->
+          
+    <!-- Boards Table -->
           <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
             <%= for {board, index} <- Enum.with_index(category.boards) do %>
               <a
@@ -55,8 +55,8 @@ defmodule UrielmWeb.ForumLive do
                     {board.description}
                   </p>
                 </div>
-
-                <!-- Stats -->
+                
+    <!-- Stats -->
                 <div class="flex items-center gap-8 ml-4 text-right flex-shrink-0">
                   <div class="flex flex-col items-end">
                     <span class="text-sm font-semibold text-base-content">

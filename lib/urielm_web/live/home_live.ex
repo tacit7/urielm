@@ -86,7 +86,10 @@ defmodule UrielmWeb.HomeLive do
       <.CodeSnippetCard delay={0} socket={@socket} />
       
     <!-- Background Gradients -->
-      <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+      <div
+        class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none"
+        aria-hidden="true"
+      >
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] sm:w-[900px] sm:h-[600px] lg:w-[1200px] lg:h-[800px] rounded-full blur-3xl opacity-100 bg-hero-primary">
         </div>
         <div class="absolute top-0 right-0 w-[400px] h-[400px] sm:w-[500px] sm:h-[500px] lg:w-[600px] lg:h-[600px] rounded-full blur-3xl opacity-100 bg-hero-secondary">
@@ -156,7 +159,10 @@ defmodule UrielmWeb.HomeLive do
                 <span>Watch Now</span> <.icon name="hero-chevron-right" class="h-4 w-4" />
               </div>
             </div>
-            <div class="absolute right-[-20px] bottom-[-20px] w-64 h-64 bg-card-glow rounded-full opacity-0 group-hover:opacity-50 blur-3xl transition-opacity duration-700 ease-out" aria-hidden="true">
+            <div
+              class="absolute right-[-20px] bottom-[-20px] w-64 h-64 bg-card-glow rounded-full opacity-0 group-hover:opacity-50 blur-3xl transition-opacity duration-700 ease-out"
+              aria-hidden="true"
+            >
             </div>
           </div>
           

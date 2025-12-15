@@ -221,9 +221,9 @@ defmodule UrielmWeb.ThreadLive do
 
       user ->
         case Forum.create_report(user.id, "thread", thread_data.id, %{
-          reason: reason,
-          description: description
-        }) do
+               reason: reason,
+               description: description
+             }) do
           {:ok, _} ->
             {:noreply, put_flash(socket, :info, "Report submitted successfully")}
 
@@ -236,7 +236,11 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
-  def handle_event("report_comment", %{"comment_id" => comment_id, "reason" => reason, "description" => description}, socket) do
+  def handle_event(
+        "report_comment",
+        %{"comment_id" => comment_id, "reason" => reason, "description" => description},
+        socket
+      ) do
     %{current_user: user} = socket.assigns
 
     case user do
@@ -245,9 +249,9 @@ defmodule UrielmWeb.ThreadLive do
 
       user ->
         case Forum.create_report(user.id, "comment", comment_id, %{
-          reason: reason,
-          description: description
-        }) do
+               reason: reason,
+               description: description
+             }) do
           {:ok, _} ->
             {:noreply, put_flash(socket, :info, "Report submitted successfully")}
 
@@ -281,6 +285,7 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -301,15 +306,70 @@ defmodule UrielmWeb.ThreadLive do
                 </div>
               </div>
 
-              <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
-                <button
-                  phx-click="delete_thread"
-                  class="btn btn-xs btn-ghost text-error"
-                  data-confirm="Delete this thread?"
-                >
-                  Delete
-                </button>
-              <% end %>
+              <div class="flex gap-2 items-start">
+                <%= if @current_user do %>
+                  <div class="dropdown dropdown-end">
+                    <button class="btn btn-xs btn-ghost" title="Notification settings">
+                      🔔
+                    </button>
+                    <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                      <li>
+                        <a
+                          phx-click="set_notification_level"
+                          phx-value-level="watching"
+                          class={@notification_level == "watching" && "active" || ""}
+                        >
+                          Watching
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          phx-click="set_notification_level"
+                          phx-value-level="tracking"
+                          class={@notification_level == "tracking" && "active" || ""}
+                        >
+                          Tracking
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          phx-click="set_notification_level"
+                          phx-value-level="muted"
+                          class={@notification_level == "muted" && "active" || ""}
+                        >
+                          Muted
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <button
+                    class="btn btn-xs btn-ghost"
+                    phx-click="save_thread"
+                    title="Save this thread"
+                  >
+                    <%= if @thread_is_saved, do: "★", else: "☆" %>
+                  </button>
+
+                  <button
+                    class="btn btn-xs btn-ghost text-warning"
+                    onclick="document.getElementById('reportModal').showModal()"
+                    title="Report this thread"
+                  >
+                    ⚠️
+                  </button>
+                <% end %>
+
+                <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
+                  <button
+                    phx-click="delete_thread"
+                    class="btn btn-xs btn-ghost text-error"
+                    data-confirm="Delete this thread?"
+                  >
+                    Delete
+                  </button>
+                <% end %>
+              </div>
             </div>
 
             <div class="bg-base-300 rounded-lg p-4 my-4">
@@ -380,6 +440,58 @@ defmodule UrielmWeb.ThreadLive do
           />
         </div>
       </div>
+
+      <!-- Report Modal -->
+      <dialog id="reportModal" class="modal">
+        <div class="modal-box">
+          <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+          </form>
+          <h3 class="font-bold text-lg">Report this thread</h3>
+          <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
+
+          <form phx-submit="report_thread" class="space-y-4">
+            <div>
+              <label class="label">
+                <span class="label-text">Reason</span>
+              </label>
+              <select
+                name="reason"
+                required
+                class="select select-bordered w-full"
+              >
+                <option disabled selected>Choose a reason</option>
+                <option value="spam">Spam</option>
+                <option value="abuse">Abuse</option>
+                <option value="offensive">Offensive Content</option>
+                <option value="misinformation">Misinformation</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">Description (optional)</span>
+              </label>
+              <textarea
+                name="description"
+                placeholder="Provide details to help moderators..."
+                class="textarea textarea-bordered w-full h-24"
+              ></textarea>
+            </div>
+
+            <div class="modal-action">
+              <form method="dialog">
+                <button class="btn">Cancel</button>
+              </form>
+              <button type="submit" class="btn btn-error">Submit Report</button>
+            </div>
+          </form>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
     """
   end

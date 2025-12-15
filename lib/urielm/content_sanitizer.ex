@@ -22,10 +22,15 @@ defmodule Urielm.ContentSanitizer do
   """
   def validate_content_length(text, max_length \\ 10000) do
     case text do
-      nil -> {:error, "Content cannot be empty"}
-      "" -> {:error, "Content cannot be empty"}
+      nil ->
+        {:error, "Content cannot be empty"}
+
+      "" ->
+        {:error, "Content cannot be empty"}
+
       text ->
         trimmed = String.trim(text)
+
         if String.length(trimmed) > max_length do
           {:error, "Content exceeds maximum length of #{max_length} characters"}
         else

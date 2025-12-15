@@ -38,6 +38,20 @@
     return current_user_id === authorId || current_user_is_admin
   }
 
+  function handleReport(commentId) {
+    const reason = prompt('Report reason (spam/abuse/offensive/misinformation/other):')
+    if (!reason) return
+
+    const description = prompt('Description (optional):')
+    if (live) {
+      live.pushEvent('report_comment', {
+        comment_id: commentId,
+        reason: reason,
+        description: description || ''
+      })
+    }
+  }
+
   function startReply(commentId) {
     replyingTo = commentId
     replyText = ""
@@ -99,17 +113,28 @@
                     Reply
                   </button>
                 {/if}
+                {#if current_user_id}
+                  <button
+                    on:click={() => handleReport(comment.id)}
+                    class="text-sm link link-warning"
+                    title="Report this comment"
+                  >
+                    Report
+                  </button>
+                {/if}
               </div>
             </div>
 
-            {#if canDelete(comment.author?.id)}
-              <button
-                on:click={() => handleDelete(comment.id)}
-                class="btn btn-xs btn-ghost text-error"
-              >
-                Delete
-              </button>
-            {/if}
+            <div class="flex gap-2">
+              {#if canDelete(comment.author?.id)}
+                <button
+                  on:click={() => handleDelete(comment.id)}
+                  class="btn btn-xs btn-ghost text-error"
+                >
+                  Delete
+                </button>
+              {/if}
+            </div>
           </div>
 
           <!-- Reply form -->

@@ -375,7 +375,13 @@ defmodule Urielm.ForumTest do
 
     test "search_threads/2 finds threads by title" do
       board = board_fixture()
-      thread = thread_fixture(%{board_id: board.id, title: "Phoenix LiveView Guide", body: "How to use LiveView"})
+
+      thread =
+        thread_fixture(%{
+          board_id: board.id,
+          title: "Phoenix LiveView Guide",
+          body: "How to use LiveView"
+        })
 
       results = Forum.search_threads("Phoenix")
 
@@ -385,7 +391,13 @@ defmodule Urielm.ForumTest do
 
     test "search_threads/2 finds threads by body" do
       board = board_fixture()
-      thread = thread_fixture(%{board_id: board.id, title: "A Question", body: "How do I use Ecto queries?"})
+
+      thread =
+        thread_fixture(%{
+          board_id: board.id,
+          title: "A Question",
+          body: "How do I use Ecto queries?"
+        })
 
       results = Forum.search_threads("Ecto")
 
@@ -395,21 +407,42 @@ defmodule Urielm.ForumTest do
 
     test "search_threads/2 prioritizes title matches over body matches" do
       board = board_fixture()
-      title_match = thread_fixture(%{board_id: board.id, title: "Elixir Best Practices", body: "This is about coding"})
-      body_match = thread_fixture(%{board_id: board.id, title: "A Question", body: "Elixir tips and tricks"})
+
+      title_match =
+        thread_fixture(%{
+          board_id: board.id,
+          title: "Elixir Best Practices",
+          body: "This is about coding"
+        })
+
+      body_match =
+        thread_fixture(%{board_id: board.id, title: "A Question", body: "Elixir tips and tricks"})
 
       results = Forum.search_threads("Elixir")
 
       assert length(results) >= 2
       # Title match should come before body match due to ts_rank weightings
-      assert Enum.find_index(results, &(&1.id == title_match.id)) <= Enum.find_index(results, &(&1.id == body_match.id))
+      assert Enum.find_index(results, &(&1.id == title_match.id)) <=
+               Enum.find_index(results, &(&1.id == body_match.id))
     end
 
     test "search_threads/2 respects board_id filter" do
       board1 = board_fixture()
       board2 = board_fixture()
-      thread1 = thread_fixture(%{board_id: board1.id, title: "Phoenix topic", body: "Detailed content about Phoenix"})
-      thread2 = thread_fixture(%{board_id: board2.id, title: "Phoenix framework", body: "More detailed content here"})
+
+      thread1 =
+        thread_fixture(%{
+          board_id: board1.id,
+          title: "Phoenix topic",
+          body: "Detailed content about Phoenix"
+        })
+
+      thread2 =
+        thread_fixture(%{
+          board_id: board2.id,
+          title: "Phoenix framework",
+          body: "More detailed content here"
+        })
 
       results = Forum.search_threads("Phoenix", board_id: board1.id)
 
@@ -420,8 +453,21 @@ defmodule Urielm.ForumTest do
 
     test "search_threads/2 excludes removed threads" do
       board = board_fixture()
-      active = thread_fixture(%{board_id: board.id, title: "Active Thread", body: "This thread is active"})
-      removed = thread_fixture(%{board_id: board.id, title: "Removed Thread", body: "This thread is removed", is_removed: true})
+
+      active =
+        thread_fixture(%{
+          board_id: board.id,
+          title: "Active Thread",
+          body: "This thread is active"
+        })
+
+      removed =
+        thread_fixture(%{
+          board_id: board.id,
+          title: "Removed Thread",
+          body: "This thread is removed",
+          is_removed: true
+        })
 
       results = Forum.search_threads("Thread")
 
@@ -431,7 +477,10 @@ defmodule Urielm.ForumTest do
 
     test "search_threads/2 respects limit and offset" do
       board = board_fixture()
-      Enum.each(1..5, fn i -> thread_fixture(%{board_id: board.id, title: "Test #{i}", body: "Test content"}) end)
+
+      Enum.each(1..5, fn i ->
+        thread_fixture(%{board_id: board.id, title: "Test #{i}", body: "Test content"})
+      end)
 
       page1 = Forum.search_threads("Test", limit: 2, offset: 0)
       page2 = Forum.search_threads("Test", limit: 2, offset: 2)
@@ -570,6 +619,7 @@ defmodule Urielm.ForumTest do
 
     test "list_saved_threads/2 respects limit and offset" do
       user = user_fixture()
+
       Enum.each(1..5, fn _ ->
         thread = thread_fixture()
         Forum.save_thread(user.id, thread.id)
@@ -714,10 +764,11 @@ defmodule Urielm.ForumTest do
       user = user_fixture()
       thread = thread_fixture()
 
-      {:ok, report} = Forum.create_report(user.id, "thread", thread.id, %{
-        reason: "spam",
-        description: "This is spam content"
-      })
+      {:ok, report} =
+        Forum.create_report(user.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "This is spam content"
+        })
 
       assert report.user_id == user.id
       assert report.target_type == "thread"
@@ -731,9 +782,10 @@ defmodule Urielm.ForumTest do
       thread = thread_fixture()
       comment = comment_fixture(thread)
 
-      {:ok, report} = Forum.create_report(user.id, "comment", comment.id, %{
-        reason: "abuse"
-      })
+      {:ok, report} =
+        Forum.create_report(user.id, "comment", comment.id, %{
+          reason: "abuse"
+        })
 
       assert report.target_type == "comment"
       assert report.target_id == comment.id
@@ -914,11 +966,12 @@ defmodule Urielm.ForumTest do
       actor = user_fixture()
       thread = thread_fixture()
 
-      {:ok, notification} = Forum.create_notification(user.id, "comment", thread.id, %{
-        actor_id: actor.id,
-        thread_id: thread.id,
-        message: "Someone replied to your comment"
-      })
+      {:ok, notification} =
+        Forum.create_notification(user.id, "comment", thread.id, %{
+          actor_id: actor.id,
+          thread_id: thread.id,
+          message: "Someone replied to your comment"
+        })
 
       assert notification.user_id == user.id
       assert notification.subject_type == "comment"
@@ -931,8 +984,11 @@ defmodule Urielm.ForumTest do
       actor = user_fixture()
       thread = thread_fixture()
 
-      {:ok, notif1} = Forum.create_notification(user.id, "comment", thread.id, %{actor_id: actor.id})
-      {:ok, notif2} = Forum.create_notification(user.id, "reply", thread.id, %{actor_id: actor.id})
+      {:ok, notif1} =
+        Forum.create_notification(user.id, "comment", thread.id, %{actor_id: actor.id})
+
+      {:ok, notif2} =
+        Forum.create_notification(user.id, "reply", thread.id, %{actor_id: actor.id})
 
       notifications = Forum.list_notifications(user.id)
 
@@ -946,8 +1002,11 @@ defmodule Urielm.ForumTest do
       actor = user_fixture()
       thread = thread_fixture()
 
-      {:ok, notif1} = Forum.create_notification(user.id, "comment", thread.id, %{actor_id: actor.id})
-      {:ok, notif2} = Forum.create_notification(user.id, "reply", thread.id, %{actor_id: actor.id})
+      {:ok, notif1} =
+        Forum.create_notification(user.id, "comment", thread.id, %{actor_id: actor.id})
+
+      {:ok, notif2} =
+        Forum.create_notification(user.id, "reply", thread.id, %{actor_id: actor.id})
 
       Forum.mark_notification_as_read(notif1.id)
 
@@ -1009,7 +1068,8 @@ defmodule Urielm.ForumTest do
       {:ok, _} = Forum.subscribe_to_thread(subscriber1.id, thread.id)
       {:ok, _} = Forum.subscribe_to_thread(subscriber2.id, thread.id)
 
-      {:ok, count} = Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
+      {:ok, count} =
+        Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
 
       assert count == 2
 
@@ -1029,7 +1089,8 @@ defmodule Urielm.ForumTest do
       {:ok, _} = Forum.subscribe_to_thread(subscriber.id, thread.id)
       {:ok, _} = Forum.subscribe_to_thread(actor.id, thread.id)
 
-      {:ok, count} = Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
+      {:ok, count} =
+        Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
 
       assert count == 1
 

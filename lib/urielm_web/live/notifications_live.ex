@@ -174,7 +174,10 @@ defmodule UrielmWeb.NotificationsLive do
           <div :for={{id, notif} <- @streams.notifications} id={id}>
             <div class={[
               "card border",
-              if(notif.read_at, do: "bg-base-200 border-base-300", else: "bg-primary/5 border-primary/20")
+              if(notif.read_at,
+                do: "bg-base-200 border-base-300",
+                else: "bg-primary/5 border-primary/20"
+              )
             ]}>
               <div class="card-body">
                 <div class="flex items-start justify-between">
@@ -241,10 +244,12 @@ defmodule UrielmWeb.NotificationsLive do
         message: notif.message,
         read_at: notif.read_at,
         thread_id: notif.thread_id && to_string(notif.thread_id),
-        actor: notif.actor && %{
-          id: notif.actor.id,
-          username: notif.actor.username
-        },
+        actor:
+          notif.actor &&
+            %{
+              id: notif.actor.id,
+              username: notif.actor.username
+            },
         inserted_at: notif.inserted_at
       }
     end)
@@ -267,7 +272,7 @@ defmodule UrielmWeb.NotificationsLive do
       diff < 60 -> "just now"
       diff < 3600 -> "#{div(diff, 60)} minutes ago"
       diff < 86400 -> "#{div(diff, 3600)} hours ago"
-      diff < 604800 -> "#{div(diff, 86400)} days ago"
+      diff < 604_800 -> "#{div(diff, 86400)} days ago"
       true -> Calendar.strftime(datetime, "%B %d, %Y")
     end
   end

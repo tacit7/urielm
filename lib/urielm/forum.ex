@@ -12,7 +12,23 @@ defmodule Urielm.Forum do
   import Ecto.Query, warn: false
   alias Urielm.Repo
   alias Urielm.TrustLevel
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification, TopicRead, TopicNotificationSetting}
+
+  alias Urielm.Forum.{
+    Category,
+    Board,
+    Thread,
+    Comment,
+    Vote,
+    ThreadLink,
+    SavedThread,
+    Tag,
+    ThreadTag,
+    Report,
+    Subscription,
+    Notification,
+    TopicRead,
+    TopicNotificationSetting
+  }
 
   @max_comment_depth 8
 
@@ -111,7 +127,10 @@ defmodule Urielm.Forum do
     if max_topics_per_day == -1 do
       insert_thread(board_id, author_id, attrs)
     else
-      case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_thread", max_requests: max_topics_per_day, window_seconds: 86400) do
+      case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_thread",
+             max_requests: max_topics_per_day,
+             window_seconds: 86400
+           ) do
         {:error, :rate_limited} ->
           {:error, :rate_limited}
 
@@ -195,7 +214,10 @@ defmodule Urielm.Forum do
   defp check_comment_rate_limit(_author_id, -1), do: :ok
 
   defp check_comment_rate_limit(author_id, max_posts_per_minute) do
-    case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_comment", max_requests: max_posts_per_minute, window_seconds: 60) do
+    case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_comment",
+           max_requests: max_posts_per_minute,
+           window_seconds: 60
+         ) do
       {:ok, _remaining} -> :ok
       {:error, :rate_limited} -> {:error, :rate_limited}
     end
@@ -408,7 +430,9 @@ defmodule Urielm.Forum do
   end
 
   def is_thread_saved?(user_id, thread_id) do
-    Repo.exists?(from(st in SavedThread, where: st.user_id == ^user_id and st.thread_id == ^thread_id))
+    Repo.exists?(
+      from(st in SavedThread, where: st.user_id == ^user_id and st.thread_id == ^thread_id)
+    )
   end
 
   def toggle_save_thread(user_id, thread_id) do
@@ -424,7 +448,8 @@ defmodule Urielm.Forum do
     offset = Keyword.get(opts, :offset, 0)
 
     from(t in Thread,
-      join: st in SavedThread, on: st.thread_id == t.id,
+      join: st in SavedThread,
+      on: st.thread_id == t.id,
       where: st.user_id == ^user_id,
       where: t.is_removed == false,
       limit: ^limit,
@@ -483,7 +508,8 @@ defmodule Urielm.Forum do
   def list_thread_tags(thread_id) do
     from(tt in ThreadTag,
       where: tt.thread_id == ^thread_id,
-      join: t in Tag, on: tt.tag_id == t.id,
+      join: t in Tag,
+      on: tt.tag_id == t.id,
       select: t
     )
     |> Repo.all()
@@ -494,7 +520,8 @@ defmodule Urielm.Forum do
     offset = Keyword.get(opts, :offset, 0)
 
     from(t in Thread,
-      join: tt in ThreadTag, on: tt.thread_id == t.id,
+      join: tt in ThreadTag,
+      on: tt.thread_id == t.id,
       where: tt.tag_id == ^tag_id,
       where: t.is_removed == false,
       limit: ^limit,
@@ -509,7 +536,9 @@ defmodule Urielm.Forum do
 
   def create_report(user_id, target_type, target_id, attrs \\ %{}) do
     %Report{}
-    |> Report.changeset(Map.merge(attrs, %{user_id: user_id, target_type: target_type, target_id: target_id}))
+    |> Report.changeset(
+      Map.merge(attrs, %{user_id: user_id, target_type: target_type, target_id: target_id})
+    )
     |> Repo.insert()
   end
 
@@ -521,7 +550,7 @@ defmodule Urielm.Forum do
     from(r in Report)
     |> where([r], r.status == ^status)
     |> preload(:user)
-    |> order_by([r], [desc: r.inserted_at])
+    |> order_by([r], desc: r.inserted_at)
     |> limit(^limit)
     |> offset(^offset)
     |> Repo.all()
@@ -573,7 +602,9 @@ defmodule Urielm.Forum do
   end
 
   def is_subscribed?(user_id, thread_id) do
-    Repo.exists?(from(s in Subscription, where: s.user_id == ^user_id and s.thread_id == ^thread_id))
+    Repo.exists?(
+      from(s in Subscription, where: s.user_id == ^user_id and s.thread_id == ^thread_id)
+    )
   end
 
   def list_subscriptions(user_id, opts \\ []) do
@@ -581,7 +612,8 @@ defmodule Urielm.Forum do
     offset = Keyword.get(opts, :offset, 0)
 
     from(t in Thread,
-      join: s in Subscription, on: s.thread_id == t.id,
+      join: s in Subscription,
+      on: s.thread_id == t.id,
       where: s.user_id == ^user_id,
       where: t.is_removed == false,
       limit: ^limit,
@@ -600,11 +632,12 @@ defmodule Urielm.Forum do
   # Notifications
 
   def create_notification(user_id, subject_type, subject_id, opts \\ %{}) do
-    attrs = Map.merge(opts, %{
-      user_id: user_id,
-      subject_type: subject_type,
-      subject_id: subject_id
-    })
+    attrs =
+      Map.merge(opts, %{
+        user_id: user_id,
+        subject_type: subject_type,
+        subject_id: subject_id
+      })
 
     %Notification{}
     |> Notification.changeset(attrs)
@@ -697,9 +730,15 @@ defmodule Urielm.Forum do
     if String.length(query_string) > 0 do
       # Use full-text search with tsquery
       base_query
-      |> where([t], fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string))
-      |> order_by([t], fragment("ts_rank(?, plainto_tsquery('english', ?)) DESC", t.search_vector, ^query_string))
-      |> then(&(if is_nil(board_id), do: &1, else: where(&1, [t], t.board_id == ^board_id)))
+      |> where(
+        [t],
+        fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string)
+      )
+      |> order_by(
+        [t],
+        fragment("ts_rank(?, plainto_tsquery('english', ?)) DESC", t.search_vector, ^query_string)
+      )
+      |> then(&if is_nil(board_id), do: &1, else: where(&1, [t], t.board_id == ^board_id))
       |> limit(^limit)
       |> offset(^offset)
       |> Repo.all()
@@ -712,8 +751,15 @@ defmodule Urielm.Forum do
 
   def mark_thread_read(user_id, thread_id) do
     %TopicRead{}
-    |> TopicRead.changeset(%{user_id: user_id, thread_id: thread_id, last_read_at: DateTime.utc_now()})
-    |> Repo.insert(on_conflict: {:replace, [:last_read_at]}, conflict_target: [:user_id, :thread_id])
+    |> TopicRead.changeset(%{
+      user_id: user_id,
+      thread_id: thread_id,
+      last_read_at: DateTime.utc_now()
+    })
+    |> Repo.insert(
+      on_conflict: {:replace, [:last_read_at]},
+      conflict_target: [:user_id, :thread_id]
+    )
   end
 
   def is_thread_unread?(user_id, thread_id) do
@@ -726,7 +772,8 @@ defmodule Urielm.Forum do
     offset = Keyword.get(opts, :offset, 0)
 
     from(t in Thread,
-      left_join: tr in TopicRead, on: tr.user_id == ^user_id and tr.thread_id == t.id,
+      left_join: tr in TopicRead,
+      on: tr.user_id == ^user_id and tr.thread_id == t.id,
       where: t.board_id == ^board_id and t.is_removed == false,
       where: is_nil(tr.id),
       preload: [:author, :board],
@@ -772,8 +819,15 @@ defmodule Urielm.Forum do
 
   def set_notification_level(user_id, thread_id, level) do
     %TopicNotificationSetting{}
-    |> TopicNotificationSetting.changeset(%{user_id: user_id, thread_id: thread_id, notification_level: level})
-    |> Repo.insert(on_conflict: {:replace, [:notification_level]}, conflict_target: [:user_id, :thread_id])
+    |> TopicNotificationSetting.changeset(%{
+      user_id: user_id,
+      thread_id: thread_id,
+      notification_level: level
+    })
+    |> Repo.insert(
+      on_conflict: {:replace, [:notification_level]},
+      conflict_target: [:user_id, :thread_id]
+    )
   end
 
   def get_notification_level(user_id, thread_id) do
