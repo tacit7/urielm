@@ -51,12 +51,13 @@ defmodule Urielm.Fixtures do
   end
 
   def board_fixture(attrs \\ %{}) do
-    category = category_fixture()
+    {category_id, attrs} = Map.pop(attrs, :category_id)
+    category_id = category_id || category_fixture().id
 
     {:ok, board} =
       attrs
       |> Enum.into(%{
-        category_id: category.id,
+        category_id: category_id,
         name: "Test Board",
         slug: "test-board-#{System.unique_integer([:positive])}",
         description: "A test board"

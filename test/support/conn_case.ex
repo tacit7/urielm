@@ -34,4 +34,13 @@ defmodule UrielmWeb.ConnCase do
   setup _tags do
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Log in a user for connection-based tests.
+  """
+  def log_in_user(conn, user) do
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{})
+    |> Plug.Conn.put_session(:user_id, user.id)
+  end
 end
