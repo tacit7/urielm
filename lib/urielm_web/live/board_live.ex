@@ -10,11 +10,13 @@ defmodule UrielmWeb.BoardLive do
   @impl true
   def mount(%{"board_slug" => slug}, _session, socket) do
     board = Forum.get_board!(slug)
+    categories = Forum.list_categories() |> Repo.preload(:boards)
 
     {:ok,
      socket
      |> assign(:page_title, board.name)
      |> assign(:board, board)
+     |> assign(:all_categories, categories)
      |> assign(:sort, "new")
      |> assign(:page, 0)
      |> assign(:has_more, true)}
@@ -159,85 +161,95 @@ defmodule UrielmWeb.BoardLive do
 
   @impl true
   def render(assigns) do
+    categories = Enum.map(assigns.all_categories || [], fn cat ->
+      %{id: cat.id, name: cat.name, slug: cat.slug}
+    end)
+
     ~H"""
-    <div class="min-h-screen bg-base-100">
-      <div class="max-w-6xl mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
-              <p class="text-base-content/60 mt-2">{@board.description}</p>
-            </div>
-            <%= if @current_user do %>
-              <a
-                href={~p"/forum/b/#{@board.slug}/new"}
-                class="btn btn-primary"
-              >
-                New Topic
-              </a>
-            <% end %>
+    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
+            <p class="text-base-content/60 mt-2">{@board.description}</p>
           </div>
-
-          <!-- Sort Tabs -->
-          <div class="flex gap-4 border-b border-base-300 pb-0">
+          <%= if @current_user do %>
             <a
-              href={~p"/forum/b/#{@board.slug}?sort=new"}
-              class={[
-                "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@sort == "new",
-                  do: "border-primary text-primary",
-                  else: "border-transparent text-base-content/60 hover:text-base-content"
-                )
-              ]}
+              href={~p"/forum/b/#{@board.slug}/new"}
+              class="btn btn-primary"
             >
-              Latest
+              New Topic
             </a>
-            <a
-              href={~p"/forum/b/#{@board.slug}?sort=top"}
-              class={[
-                "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@sort == "top",
-                  do: "border-primary text-primary",
-                  else: "border-transparent text-base-content/60 hover:text-base-content"
-                )
-              ]}
-            >
-              Top
-            </a>
-          </div>
+          <% end %>
         </div>
 
-        <!-- Threads Table -->
-        <div class="border border-base-300 rounded-lg overflow-hidden">
-          <div id="threads" phx-update="stream" class="">
-            <div id="empty-state" class="hidden only:flex justify-center py-12">
-              <div class="text-center text-base-content/50">
-                <p class="text-lg font-medium mb-2">No topics yet</p>
-                <p class="text-sm">Be the first to start a discussion!</p>
-              </div>
-            </div>
-            <div :for={{id, thread} <- @streams.threads} id={id} class="border-t border-base-300 first:border-t-0">
-              <.svelte
-                name="ThreadCard"
-                props={thread}
-                socket={@socket}
-              />
-            </div>
-          </div>
-        </div>
-
-        <%= if @has_more do %>
-          <div
-            id="infinite-scroll-marker"
-            phx-hook="InfiniteScroll"
-            class="h-20 flex items-center justify-center mt-8"
+        <!-- Sort Tabs -->
+        <div class="flex gap-4 border-b border-base-300 pb-0">
+          <a
+            href={~p"/forum/b/#{@board.slug}?sort=new"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@sort == "new",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
           >
-            <div class="text-base-content/40 text-sm">Loading more...</div>
-          </div>
-        <% end %>
+            Latest
+          </a>
+          <a
+            href={~p"/forum/b/#{@board.slug}?sort=top"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@sort == "top",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Top
+          </a>
+        </div>
       </div>
-    </div>
+
+      <!-- Threads Table -->
+      <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
+        <!-- Table Header -->
+        <div class="grid grid-cols-12 gap-4 px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
+          <div class="col-span-7">Topic</div>
+          <div class="col-span-2 text-right">Replies</div>
+          <div class="col-span-3 text-right">Activity</div>
+        </div>
+
+        <!-- Threads List -->
+        <div id="threads" phx-update="stream" class="">
+          <div id="empty-state" class="hidden only:flex justify-center py-12">
+            <div class="text-center text-base-content/50">
+              <p class="text-lg font-medium mb-2">No topics yet</p>
+              <p class="text-sm">Be the first to start a discussion!</p>
+            </div>
+          </div>
+          <div :for={{id, thread} <- @streams.threads} id={id} class="border-t border-base-300 first:border-t-0">
+            <.svelte
+              name="ThreadCard"
+              props={thread}
+              socket={@socket}
+            />
+          </div>
+        </div>
+      </div>
+
+      <%= if @has_more do %>
+        <div
+          id="infinite-scroll-marker"
+          phx-hook="InfiniteScroll"
+          class="h-20 flex items-center justify-center mt-8"
+        >
+          <div class="text-base-content/40 text-sm">Loading more...</div>
+        </div>
+      <% end %>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end
 

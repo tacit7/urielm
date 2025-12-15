@@ -14,71 +14,71 @@ defmodule UrielmWeb.ForumLive do
     {:ok,
      socket
      |> assign(:page_title, "Forum")
+     |> assign(:all_categories, categories)
      |> assign(:categories, serialize_categories(categories))}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100">
-      <div class="max-w-6xl mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-base-content">Categories</h1>
-        </div>
-
-        <!-- Categories List -->
-        <%= for category <- @categories do %>
-          <div class="mb-12">
-            <!-- Category Title -->
-            <div class="mb-4">
-              <h2 class="text-xl font-semibold text-base-content">{category.name}</h2>
-            </div>
-
-            <!-- Boards Table -->
-            <div class="border border-base-300 rounded-lg overflow-hidden">
-              <%= for {board, index} <- Enum.with_index(category.boards) do %>
-                <a
-                  href={~p"/forum/b/#{board.slug}"}
-                  class={[
-                    "flex items-center justify-between px-5 py-4 hover:bg-base-200/50 transition-colors",
-                    if(index > 0, do: "border-t border-base-300")
-                  ]}
-                >
-                  <!-- Board Info -->
-                  <div class="flex-1 min-w-0">
-                    <h3 class="text-base font-semibold text-base-content hover:text-primary transition-colors">
-                      {board.name}
-                    </h3>
-                    <p class="text-sm text-base-content/60 mt-1">
-                      {board.description}
-                    </p>
-                  </div>
-
-                  <!-- Stats -->
-                  <div class="flex items-center gap-6 ml-4 text-right">
-                    <div class="flex flex-col items-end">
-                      <span class="text-sm font-semibold text-base-content">
-                        {board.thread_count || 0}
-                      </span>
-                      <span class="text-xs text-base-content/50">
-                        {if board.thread_count == 1, do: "Topic", else: "Topics"}
-                      </span>
-                    </div>
-                  </div>
-                </a>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-
-        <%= if length(@categories) == 0 do %>
-          <div class="text-center py-12 text-base-content/50">
-            <p>No forum categories available yet.</p>
-          </div>
-        <% end %>
+    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories}>
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-base-content mb-2">Categories</h1>
+        <p class="text-base-content/60">Browse all discussion categories</p>
       </div>
-    </div>
+
+      <!-- Categories List -->
+      <%= for category <- @categories do %>
+        <div class="mb-10">
+          <!-- Category Title -->
+          <div class="mb-4 px-1">
+            <h2 class="text-lg font-semibold text-base-content">{category.name}</h2>
+          </div>
+
+          <!-- Boards Table -->
+          <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
+            <%= for {board, index} <- Enum.with_index(category.boards) do %>
+              <a
+                href={~p"/forum/b/#{board.slug}"}
+                class={[
+                  "flex items-center justify-between px-5 py-4 hover:bg-base-200/50 transition-colors",
+                  if(index > 0, do: "border-t border-base-300")
+                ]}
+              >
+                <!-- Board Info -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-base font-semibold text-base-content hover:text-primary transition-colors">
+                    {board.name}
+                  </h3>
+                  <p class="text-sm text-base-content/60 mt-1">
+                    {board.description}
+                  </p>
+                </div>
+
+                <!-- Stats -->
+                <div class="flex items-center gap-8 ml-4 text-right flex-shrink-0">
+                  <div class="flex flex-col items-end">
+                    <span class="text-sm font-semibold text-base-content">
+                      {board.thread_count || 0}
+                    </span>
+                    <span class="text-xs text-base-content/50">
+                      {if board.thread_count == 1, do: "Topic", else: "Topics"}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%= if length(@categories) == 0 do %>
+        <div class="text-center py-12 text-base-content/50">
+          <p>No forum categories available yet.</p>
+        </div>
+      <% end %>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end
 

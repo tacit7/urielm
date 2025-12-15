@@ -56,9 +56,9 @@
   }
 </script>
 
-<div class="flex items-center justify-between px-5 py-4 hover:bg-base-200/30 transition-colors">
-  <!-- Left: Thread Info -->
-  <div class="flex-1 min-w-0">
+<div class="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-base-200/30 transition-colors">
+  <!-- Topic Column (7 cols) -->
+  <div class="col-span-7">
     <a href="/forum/t/{id}" class="block group">
       <h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors">
         {title}
@@ -74,63 +74,67 @@
     </a>
   </div>
 
-  <!-- Right: Stats -->
-  <div class="flex items-center gap-6 ml-6 text-right flex-shrink-0">
-    <!-- Replies Count -->
+  <!-- Replies Column (2 cols) -->
+  <div class="col-span-2 text-right">
     <div class="flex flex-col items-end">
       <span class="text-sm font-semibold text-base-content">
         {comment_count}
       </span>
       <span class="text-xs text-base-content/50">
-        {comment_count === 1 ? "Reply" : "Replies"}
+        {comment_count === 1 ? "reply" : "replies"}
       </span>
     </div>
+  </div>
 
-    <!-- Vote Score -->
-    <div class="flex flex-col items-center gap-1 min-w-12">
-      <button
-        on:click|preventDefault={() => handleVote(1)}
-        class="text-base-content/50 hover:text-primary transition-colors"
-        class:text-primary={user_vote === 1}
-        title="Upvote"
-      >
-        ▲
-      </button>
-      <span class="text-sm font-semibold text-base-content">
-        {score}
-      </span>
-      <button
-        on:click|preventDefault={() => handleVote(-1)}
-        class="text-base-content/50 hover:text-error transition-colors"
-        class:text-error={user_vote === -1}
-        title="Downvote"
-      >
-        ▼
-      </button>
-    </div>
+  <!-- Activity Column (3 cols) -->
+  <div class="col-span-3 text-right">
+    <div class="flex items-center justify-end gap-3">
+      <!-- Vote Score -->
+      <div class="flex flex-col items-center gap-1 min-w-12">
+        <button
+          on:click|preventDefault={() => handleVote(1)}
+          class="text-base-content/50 hover:text-primary transition-colors text-sm"
+          class:text-primary={user_vote === 1}
+          title="Upvote"
+        >
+          ▲
+        </button>
+        <span class="text-sm font-semibold text-base-content min-w-6 text-center">
+          {score}
+        </span>
+        <button
+          on:click|preventDefault={() => handleVote(-1)}
+          class="text-base-content/50 hover:text-error transition-colors text-sm"
+          class:text-error={user_vote === -1}
+          title="Downvote"
+        >
+          ▼
+        </button>
+      </div>
 
-    <!-- Action Buttons -->
-    <div class="flex items-center gap-2">
-      <button
-        on:click|preventDefault={handleSubscribe}
-        class="btn btn-ghost btn-sm px-2"
-        class:btn-primary={is_subscribed}
-        title={is_subscribed ? "Unsubscribe" : "Subscribe"}
-      >
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M15 5H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 4l-7 4.5L3 9V7l7 4.5L15 7v2z" />
-        </svg>
-      </button>
-      <button
-        on:click|preventDefault={handleSave}
-        class="btn btn-ghost btn-sm px-2"
-        class:btn-primary={is_saved}
-        title={is_saved ? "Unsave" : "Save"}
-      >
-        <svg class="w-4 h-4" fill={is_saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-          <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v16l-8-4-8 4V5z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
-        </svg>
-      </button>
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button
+          on:click|preventDefault={handleSubscribe}
+          class="btn btn-ghost btn-sm px-2 rounded"
+          class:btn-primary={is_subscribed}
+          title={is_subscribed ? "Unsubscribe" : "Subscribe"}
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M15 5H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 4l-7 4.5L3 9V7l7 4.5L15 7v2z" />
+          </svg>
+        </button>
+        <button
+          on:click|preventDefault={handleSave}
+          class="btn btn-ghost btn-sm px-2 rounded"
+          class:btn-primary={is_saved}
+          title={is_saved ? "Unsave" : "Save"}
+        >
+          <svg class="w-4 h-4" fill={is_saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v16l-8-4-8 4V5z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </div>
