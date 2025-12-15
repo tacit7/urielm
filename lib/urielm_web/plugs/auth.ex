@@ -17,6 +17,10 @@ defmodule UrielmWeb.Plugs.Auth do
     require_authenticated_user(conn)
   end
 
+  def call(conn, :require_admin) do
+    require_admin(conn)
+  end
+
   defp fetch_current_user(conn) do
     user_id = get_session(conn, :user_id)
 
@@ -35,6 +39,17 @@ defmodule UrielmWeb.Plugs.Auth do
     else
       conn
       |> put_flash(:error, "You must be signed in to access this page.")
+      |> redirect(to: "/")
+      |> halt()
+    end
+  end
+
+  defp require_admin(conn) do
+    if conn.assigns[:current_user] && conn.assigns[:current_user].is_admin do
+      conn
+    else
+      conn
+      |> put_flash(:error, "You must be an admin to access this page.")
       |> redirect(to: "/")
       |> halt()
     end

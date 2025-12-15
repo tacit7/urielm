@@ -7,7 +7,6 @@ defmodule Urielm.TrustLevel do
   import Ecto.Query, warn: false
   alias Urielm.Repo
   alias Urielm.TrustLevelConfig
-  alias Urielm.Accounts.User
 
   # Get or create default trust level configurations
   def get_or_create_defaults do

@@ -11,6 +11,7 @@ defmodule Urielm.Forum do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
+  alias Urielm.TrustLevel
   alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification, TopicRead}
 
   @max_comment_depth 8
@@ -74,6 +75,8 @@ defmodule Urielm.Forum do
       case sort do
         :new -> order_by(query, [t], desc: t.inserted_at)
         :top -> order_by(query, [t], desc: t.score)
+        :latest -> order_by(query, [t], desc: t.updated_at)
+        _ -> order_by(query, [t], desc: t.updated_at)
       end
 
     query
@@ -100,16 +103,28 @@ defmodule Urielm.Forum do
   end
 
   def create_thread(board_id, author_id, attrs \\ %{}) do
-    # Rate limit: 5 threads per minute per user
-    case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_thread", max_requests: 5, window_seconds: 60) do
-      {:error, :rate_limited} ->
-        {:error, :rate_limited}
+    user = Repo.get!(Urielm.Accounts.User, author_id)
+    config = TrustLevel.get_config(user.trust_level)
+    max_topics_per_day = config.max_new_topics_per_day
 
-      {:ok, _remaining} ->
-        %Thread{}
-        |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
-        |> Repo.insert()
+    # -1 means unlimited
+    if max_topics_per_day == -1 do
+      insert_thread(board_id, author_id, attrs)
+    else
+      case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_thread", max_requests: max_topics_per_day, window_seconds: 86400) do
+        {:error, :rate_limited} ->
+          {:error, :rate_limited}
+
+        {:ok, _remaining} ->
+          insert_thread(board_id, author_id, attrs)
+      end
     end
+  end
+
+  defp insert_thread(board_id, author_id, attrs) do
+    %Thread{}
+    |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
+    |> Repo.insert()
   end
 
   def update_thread(%Thread{} = thread, attrs) do
@@ -147,10 +162,14 @@ defmodule Urielm.Forum do
   end
 
   def create_comment(thread_id, author_id, attrs \\ %{}) do
-    # Rate limit: 20 comments per minute per user
-    with {:ok, _remaining} <- Urielm.RateLimiter.check_limit("user:#{author_id}", "create_comment", max_requests: 20, window_seconds: 60),
-         parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id),
-         :ok <- validate_comment_depth(parent_id) do
+    user = Repo.get!(Urielm.Accounts.User, author_id)
+    config = TrustLevel.get_config(user.trust_level)
+    max_posts_per_minute = config.max_posts_per_minute
+
+    parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
+
+    with :ok <- validate_comment_depth(parent_id),
+         :ok <- check_comment_rate_limit(author_id, max_posts_per_minute) do
       %Comment{}
       |> Comment.changeset(
         Map.merge(attrs, %{"thread_id" => thread_id, "author_id" => author_id})
@@ -170,6 +189,15 @@ defmodule Urielm.Forum do
 
       {:error, :max_depth_exceeded} ->
         {:error, :max_depth_exceeded}
+    end
+  end
+
+  defp check_comment_rate_limit(_author_id, -1), do: :ok
+
+  defp check_comment_rate_limit(author_id, max_posts_per_minute) do
+    case Urielm.RateLimiter.check_limit("user:#{author_id}", "create_comment", max_requests: max_posts_per_minute, window_seconds: 60) do
+      {:ok, _remaining} -> :ok
+      {:error, :rate_limited} -> {:error, :rate_limited}
     end
   end
 
@@ -709,7 +737,7 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
-  def list_new_threads(user_id, board_id, opts \\ []) do
+  def list_new_threads(_user_id, board_id, opts \\ []) do
     days = Keyword.get(opts, :days, 1)
     limit = Keyword.get(opts, :limit, 20)
     offset = Keyword.get(opts, :offset, 0)

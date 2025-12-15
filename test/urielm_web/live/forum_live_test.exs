@@ -93,13 +93,13 @@ defmodule UrielmWeb.ForumLiveTest do
     test "shows new thread button for authenticated users", %{board: board, user: user} do
       {:ok, _live, html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}")
 
-      assert html =~ "New Thread"
+      assert html =~ "New Topic"
     end
 
     test "hides new thread button for anonymous users", %{board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
 
-      refute html =~ "New Thread"
+      refute html =~ "New Topic"
     end
 
     test "handles vote event for authenticated user", %{board: board, thread: thread, user: user} do

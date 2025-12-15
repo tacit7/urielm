@@ -18,6 +18,8 @@ defmodule Urielm.Fixtures do
       |> Urielm.Accounts.register_user()
 
     user
+    |> Ecto.Changeset.change(%{trust_level: 0})
+    |> Repo.update!()
   end
 
   def admin_fixture(attrs \\ %{}) do
@@ -32,7 +34,7 @@ defmodule Urielm.Fixtures do
       |> Urielm.Accounts.register_user()
 
     admin
-    |> Ecto.Changeset.change(%{is_admin: true})
+    |> Ecto.Changeset.change(%{is_admin: true, trust_level: 4})
     |> Repo.update!()
   end
 

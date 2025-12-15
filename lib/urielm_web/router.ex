@@ -17,6 +17,11 @@ defmodule UrielmWeb.Router do
     plug UrielmWeb.Plugs.Auth, :require_authenticated_user
   end
 
+  pipeline :require_admin do
+    plug UrielmWeb.Plugs.Auth, :require_authenticated_user
+    plug UrielmWeb.Plugs.Auth, :require_admin
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -63,6 +68,12 @@ defmodule UrielmWeb.Router do
       live "/forum/b/:board_slug/new", NewThreadLive
       live "/saved", SavedThreadsLive
       live "/notifications", NotificationsLive
+    end
+
+    live_session :admin,
+      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}],
+      layout: {UrielmWeb.Layouts, :app} do
+      live "/admin/trust-levels", Admin.TrustLevelSettingsLive
     end
   end
 

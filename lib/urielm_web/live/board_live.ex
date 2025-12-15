@@ -177,10 +177,6 @@ defmodule UrielmWeb.BoardLive do
 
   @impl true
   def render(assigns) do
-    categories = Enum.map(assigns.all_categories || [], fn cat ->
-      %{id: cat.id, name: cat.name, slug: cat.slug}
-    end)
-
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
       <!-- Header -->

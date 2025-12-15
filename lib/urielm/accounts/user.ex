@@ -12,6 +12,8 @@ defmodule Urielm.Accounts.User do
     field(:is_admin, :boolean, default: false)
     field(:password_hash, :string)
     field(:password, :string, virtual: true)
+    field(:trust_level, :integer, default: 0)
+    field(:trust_level_locked, :boolean, default: false)
 
     has_many(:oauth_identities, Urielm.Accounts.OAuthIdentity)
     has_many(:saved_prompts, Urielm.Accounts.SavedPrompt)
