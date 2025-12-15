@@ -222,6 +222,16 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                           View thread ↗
                         </a>
                       <% end %>
+                      <%= if report.target_type == "comment" && report.thread_id do %>
+                        <a
+                          href={"/forum/t/#{report.thread_id}#comment-#{report.target_id}"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="link link-primary text-sm"
+                        >
+                          View in thread ↗
+                        </a>
+                      <% end %>
                     </div>
                     <div class="text-xs text-base-content/60">
                       <span>Report ID: {String.slice(report.id, 0, 8)}</span>
@@ -270,10 +280,24 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
         _ -> "Unknown"
       end
 
+      # For comments, we need to fetch the thread to create a proper link
+      thread_id = case report.target_type do
+        "thread" -> to_string(report.target_id)
+        "comment" ->
+          try do
+            comment = Forum.get_comment!(report.target_id)
+            to_string(comment.thread_id)
+          rescue
+            Ecto.NoResultsError -> nil
+          end
+        _ -> nil
+      end
+
       %{
         id: to_string(report.id),
         target_type: report.target_type,
         target_id: to_string(report.target_id),
+        thread_id: thread_id,
         target_title: target_title,
         reason: report.reason,
         description: report.description,
