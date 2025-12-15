@@ -141,12 +141,14 @@ defmodule Urielm.Forum do
   end
 
   defp insert_thread(board_id, author_id, attrs) do
+    attrs = Urielm.Params.normalize(attrs)
     %Thread{}
     |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
     |> Repo.insert()
   end
 
   def update_thread(%Thread{} = thread, attrs) do
+    attrs = Urielm.Params.normalize(attrs)
     thread
     |> Thread.changeset(attrs)
     |> Repo.update()
@@ -191,7 +193,7 @@ defmodule Urielm.Forum do
          :ok <- check_comment_rate_limit(author_id, max_posts_per_minute) do
       %Comment{}
       |> Comment.changeset(
-        Map.merge(attrs, %{"thread_id" => thread_id, "author_id" => author_id})
+        Map.merge(Urielm.Params.normalize(attrs), %{"thread_id" => thread_id, "author_id" => author_id})
       )
       |> Repo.insert()
       |> case do
@@ -729,10 +731,14 @@ defmodule Urielm.Forum do
 
     if String.length(query_string) > 0 do
       # Use full-text search with tsquery
+      query_pattern = "%#{query_string}%"
+
       base_query
       |> where(
         [t],
-        fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string)
+        fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string) or
+          ilike(t.title, ^query_pattern) or
+          ilike(t.body, ^query_pattern)
       )
       |> order_by(
         [t],
