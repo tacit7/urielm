@@ -112,7 +112,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
         </div>
 
         <%= if length(@reports) == 0 do %>
-          <div class="card bg-base-200 border border-base-300">
+          <div id="reports-empty" class="card bg-base-200 border border-base-300">
             <div class="card-body text-center py-12">
               <p class="text-lg font-medium text-base-content">All caught up!</p>
               <p class="text-sm text-base-content/60">No pending reports at this time.</p>
@@ -121,7 +121,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
         <% else %>
           <div class="space-y-4">
             <%= for report <- @reports do %>
-              <div class="card bg-base-200 border border-base-300">
+              <div class="card bg-base-200 border border-base-300" data-testid={"report-card-#{report.id}"}>
                 <div class="card-body">
                   <div class="flex justify-between items-start mb-4">
                     <div>
@@ -146,6 +146,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                         phx-click="approve"
                         phx-value-report_id={report.id}
                         class="btn btn-sm btn-success"
+                        data-testid="approve-button"
                       >
                         Approve
                       </button>
@@ -153,6 +154,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                         phx-click="resolve"
                         phx-value-report_id={report.id}
                         class="btn btn-sm btn-primary"
+                        data-testid="resolve-button"
                       >
                         Resolve
                       </button>
@@ -160,6 +162,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                         phx-click="dismiss"
                         phx-value-report_id={report.id}
                         class="btn btn-sm btn-ghost"
+                        data-testid="dismiss-button"
                       >
                         Dismiss
                       </button>

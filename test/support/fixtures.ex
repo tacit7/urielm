@@ -7,11 +7,13 @@ defmodule Urielm.Fixtures do
   alias Urielm.Forum.Vote
 
   def user_fixture(attrs \\ %{}) do
+    unique_suffix = random_string()
+
     {:ok, user} =
       attrs
       |> Enum.into(%{
-        email: "user#{System.unique_integer([:positive])}@example.com",
-        username: "user#{System.unique_integer([:positive])}",
+        email: "user#{unique_suffix}@example.com",
+        username: "user#{unique_suffix}",
         name: "Test User",
         password: "password123"
       })
@@ -23,11 +25,13 @@ defmodule Urielm.Fixtures do
   end
 
   def admin_fixture(attrs \\ %{}) do
+    unique_suffix = random_string()
+
     {:ok, admin} =
       attrs
       |> Enum.into(%{
-        email: "admin#{System.unique_integer([:positive])}@example.com",
-        username: "admin#{System.unique_integer([:positive])}",
+        email: "admin#{unique_suffix}@example.com",
+        username: "admin#{unique_suffix}",
         name: "Admin User",
         password: "password123"
       })
@@ -39,11 +43,13 @@ defmodule Urielm.Fixtures do
   end
 
   def category_fixture(attrs \\ %{}) do
+    unique_suffix = random_string()
+
     {:ok, category} =
       attrs
       |> Enum.into(%{
         name: "Test Category",
-        slug: "test-category-#{System.unique_integer([:positive])}"
+        slug: "test-category-#{unique_suffix}"
       })
       |> Urielm.Forum.create_category()
 
@@ -53,13 +59,14 @@ defmodule Urielm.Fixtures do
   def board_fixture(attrs \\ %{}) do
     {category_id, attrs} = Map.pop(attrs, :category_id)
     category_id = category_id || category_fixture().id
+    unique_suffix = random_string()
 
     {:ok, board} =
       attrs
       |> Enum.into(%{
         category_id: category_id,
         name: "Test Board",
-        slug: "test-board-#{System.unique_integer([:positive])}",
+        slug: "test-board-#{unique_suffix}",
         description: "A test board"
       })
       |> Urielm.Forum.create_board()
@@ -73,10 +80,11 @@ defmodule Urielm.Fixtures do
 
     board_id = board_id || board_fixture().id
     author_id = author_id || user_fixture().id
+    unique_suffix = random_string()
 
     thread_attrs = %{
       "title" => "Test Thread",
-      "slug" => "test-thread-#{System.unique_integer([:positive])}",
+      "slug" => "test-thread-#{unique_suffix}",
       "body" => "This is a test thread body"
     }
 
@@ -109,5 +117,12 @@ defmodule Urielm.Fixtures do
     {:ok, _} = Urielm.Forum.cast_vote(user.id, target_type, target_id, value)
     # Return the created vote
     Repo.get_by(Vote, user_id: user.id, target_type: target_type, target_id: target_id)
+  end
+
+  # Generate cryptographically random string for guaranteed uniqueness
+  defp random_string(length \\ 12) do
+    :crypto.strong_rand_bytes(length)
+    |> Base.encode16(case: :lower)
+    |> String.slice(0, length)
   end
 end

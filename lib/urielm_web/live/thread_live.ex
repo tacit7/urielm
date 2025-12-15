@@ -309,12 +309,13 @@ defmodule UrielmWeb.ThreadLive do
               <div class="flex gap-2 items-start">
                 <%= if @current_user do %>
                   <div class="dropdown dropdown-end">
-                    <button class="btn btn-xs btn-ghost" title="Notification settings">
+                    <button data-testid="notification-button" class="btn btn-xs btn-ghost" title="Notification settings">
                       🔔
                     </button>
                     <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                       <li>
                         <a
+                          data-testid="notification-watching"
                           phx-click="set_notification_level"
                           phx-value-level="watching"
                           class={@notification_level == "watching" && "active" || ""}
@@ -324,6 +325,7 @@ defmodule UrielmWeb.ThreadLive do
                       </li>
                       <li>
                         <a
+                          data-testid="notification-tracking"
                           phx-click="set_notification_level"
                           phx-value-level="tracking"
                           class={@notification_level == "tracking" && "active" || ""}
@@ -333,6 +335,7 @@ defmodule UrielmWeb.ThreadLive do
                       </li>
                       <li>
                         <a
+                          data-testid="notification-muted"
                           phx-click="set_notification_level"
                           phx-value-level="muted"
                           class={@notification_level == "muted" && "active" || ""}
@@ -352,6 +355,7 @@ defmodule UrielmWeb.ThreadLive do
                   </button>
 
                   <button
+                    data-testid="report-button"
                     class="btn btn-xs btn-ghost text-warning"
                     onclick="document.getElementById('reportModal').showModal()"
                     title="Report this thread"
@@ -442,7 +446,7 @@ defmodule UrielmWeb.ThreadLive do
       </div>
 
       <!-- Report Modal -->
-      <dialog id="reportModal" class="modal">
+      <dialog id="reportModal" data-testid="report-modal" class="modal">
         <div class="modal-box">
           <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
@@ -450,7 +454,7 @@ defmodule UrielmWeb.ThreadLive do
           <h3 class="font-bold text-lg">Report this thread</h3>
           <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
 
-          <form phx-submit="report_thread" class="space-y-4">
+          <form phx-submit="report_thread" data-testid="report-form" class="space-y-4">
             <div>
               <label class="label">
                 <span class="label-text">Reason</span>
@@ -458,6 +462,7 @@ defmodule UrielmWeb.ThreadLive do
               <select
                 name="reason"
                 required
+                data-testid="report-reason"
                 class="select select-bordered w-full"
               >
                 <option disabled selected>Choose a reason</option>
@@ -476,6 +481,7 @@ defmodule UrielmWeb.ThreadLive do
               <textarea
                 name="description"
                 placeholder="Provide details to help moderators..."
+                data-testid="report-description"
                 class="textarea textarea-bordered w-full h-24"
               ></textarea>
             </div>
@@ -484,7 +490,7 @@ defmodule UrielmWeb.ThreadLive do
               <form method="dialog">
                 <button class="btn">Cancel</button>
               </form>
-              <button type="submit" class="btn btn-error">Submit Report</button>
+              <button type="submit" data-testid="report-submit" class="btn btn-error">Submit Report</button>
             </div>
           </form>
         </div>
