@@ -74,6 +74,7 @@ defmodule UrielmWeb.Router do
       on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}],
       layout: {UrielmWeb.Layouts, :app} do
       live "/admin/trust-levels", Admin.TrustLevelSettingsLive
+      live "/admin/moderation", Admin.ModerationQueueLive
     end
   end
 

@@ -25,13 +25,19 @@ defmodule UrielmWeb.ThreadLive do
         do: Forum.is_subscribed?(socket.assigns.current_user.id, thread.id),
         else: false
 
+    notification_level =
+      if socket.assigns.current_user,
+        do: Forum.get_notification_level(socket.assigns.current_user.id, thread.id),
+        else: "watching"
+
     {:ok,
      socket
      |> assign(:page_title, thread.title)
      |> assign(:thread, serialize_thread(thread, socket.assigns.current_user))
      |> assign(:comment_tree, comment_tree)
      |> assign(:thread_is_saved, is_saved)
-     |> assign(:thread_is_subscribed, is_subscribed)}
+     |> assign(:thread_is_subscribed, is_subscribed)
+     |> assign(:notification_level, notification_level)}
   end
 
   @impl true
@@ -202,6 +208,75 @@ defmodule UrielmWeb.ThreadLive do
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+        end
+    end
+  end
+
+  def handle_event("report_thread", %{"reason" => reason, "description" => description}, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to report")}
+
+      user ->
+        case Forum.create_report(user.id, "thread", thread_data.id, %{
+          reason: reason,
+          description: description
+        }) do
+          {:ok, _} ->
+            {:noreply, put_flash(socket, :info, "Report submitted successfully")}
+
+          {:error, :unique_constraint} ->
+            {:noreply, put_flash(socket, :error, "You've already reported this")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to submit report")}
+        end
+    end
+  end
+
+  def handle_event("report_comment", %{"comment_id" => comment_id, "reason" => reason, "description" => description}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to report")}
+
+      user ->
+        case Forum.create_report(user.id, "comment", comment_id, %{
+          reason: reason,
+          description: description
+        }) do
+          {:ok, _} ->
+            {:noreply, put_flash(socket, :info, "Report submitted successfully")}
+
+          {:error, :unique_constraint} ->
+            {:noreply, put_flash(socket, :error, "You've already reported this")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to submit report")}
+        end
+    end
+  end
+
+  def handle_event("set_notification_level", %{"level" => level}, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to change notification settings")}
+
+      user ->
+        case Forum.set_notification_level(user.id, thread_data.id, level) do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> assign(:notification_level, level)
+             |> put_flash(:info, "Notification setting updated")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to update notification setting")}
         end
     end
   end

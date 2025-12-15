@@ -12,7 +12,7 @@ defmodule Urielm.Forum do
   import Ecto.Query, warn: false
   alias Urielm.Repo
   alias Urielm.TrustLevel
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification, TopicRead}
+  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote, ThreadLink, SavedThread, Tag, ThreadTag, Report, Subscription, Notification, TopicRead, TopicNotificationSetting}
 
   @max_comment_depth 8
 
@@ -766,6 +766,33 @@ defmodule Urielm.Forum do
       offset: ^offset
     )
     |> Repo.all()
+  end
+
+  # Notification Settings
+
+  def set_notification_level(user_id, thread_id, level) do
+    %TopicNotificationSetting{}
+    |> TopicNotificationSetting.changeset(%{user_id: user_id, thread_id: thread_id, notification_level: level})
+    |> Repo.insert(on_conflict: {:replace, [:notification_level]}, conflict_target: [:user_id, :thread_id])
+  end
+
+  def get_notification_level(user_id, thread_id) do
+    case Repo.get_by(TopicNotificationSetting, user_id: user_id, thread_id: thread_id) do
+      nil -> "watching"
+      setting -> setting.notification_level
+    end
+  end
+
+  def is_watching?(user_id, thread_id) do
+    get_notification_level(user_id, thread_id) == "watching"
+  end
+
+  def is_tracking?(user_id, thread_id) do
+    get_notification_level(user_id, thread_id) == "tracking"
+  end
+
+  def is_muted?(user_id, thread_id) do
+    get_notification_level(user_id, thread_id) == "muted"
   end
 
   # Helpers
