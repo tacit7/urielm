@@ -9,11 +9,6 @@
   let showAuthModal = $state(false)
   let dropdownRef
 
-  function resetTheme() {
-    try {
-      window.dispatchEvent(new CustomEvent('phx:set-theme', { detail: { theme: 'tokyo-night' } }))
-    } catch (_) {}
-  }
 
   function handleScroll() {
     isScrolled = window.scrollY > 20
@@ -137,15 +132,6 @@
 
   <!-- CTA Button - Right -->
   <div class="navbar-end gap-2">
-    <button
-      id="btn-theme-reset"
-      onclick={resetTheme}
-      class="btn btn-ghost btn-sm"
-      aria-label="Reset theme to Tokyo Night"
-      title="Reset theme to Tokyo Night"
-    >
-      Tokyo Night
-    </button>
     {#if currentUser}
       <UserMenu {currentUser} />
     {:else}

@@ -194,6 +194,21 @@
 .anim-delay-200 { animation-delay: 200ms; }
 .anim-delay-300 { animation-delay: 300ms; }
 
+/* Theme-aware hero background gradients using DaisyUI tokens */
+.bg-hero-primary {
+  background: radial-gradient(circle,
+    color-mix(in oklch, var(--color-primary) 40%, transparent) 0%,
+    color-mix(in oklch, var(--color-primary) 10%, transparent) 40%,
+    transparent 70%);
+}
+
+.bg-hero-secondary {
+  background: radial-gradient(circle,
+    color-mix(in oklch, var(--color-secondary) 30%, transparent) 0%,
+    transparent 70%);
+}
+
+
 /* Hero background radial gradients (no @apply) */
 .bg-hero-blue {
   background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 40%, transparent 70%);

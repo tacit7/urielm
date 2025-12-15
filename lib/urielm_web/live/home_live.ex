@@ -86,10 +86,10 @@ defmodule UrielmWeb.HomeLive do
       <.CodeSnippetCard delay={0} socket={@socket} />
       
     <!-- Background Gradients -->
-      <div class="absolute inset-0 -z-10 overflow-hidden">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[800px] rounded-full blur-3xl opacity-100 bg-hero-blue">
+      <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[800px] rounded-full blur-3xl opacity-100 bg-hero-primary">
         </div>
-        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-100 bg-hero-purple">
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl opacity-100 bg-hero-secondary">
         </div>
       </div>
     </section>
