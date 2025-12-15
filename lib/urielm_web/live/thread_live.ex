@@ -367,7 +367,7 @@ defmodule UrielmWeb.ThreadLive do
                   <button
                     data-testid="report-button"
                     class="btn btn-xs btn-ghost text-warning"
-                    onclick="document.getElementById('reportModal').showModal()"
+                    onclick="document.getElementById('report_thread_modal').showModal()"
                     title="Report this thread"
                   >
                     ⚠️

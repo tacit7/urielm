@@ -135,6 +135,7 @@ window.addEventListener("phx:close_modal", (e) => {
   const modalId = e.detail.id
   const modal = document.getElementById(modalId)
   if (modal && modal.tagName === "DIALOG") {
+    modal.classList.remove("modal-open")
     modal.close()
   }
 })
