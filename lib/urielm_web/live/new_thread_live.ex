@@ -3,6 +3,7 @@ defmodule UrielmWeb.NewThreadLive do
   use LiveSvelte.Components
 
   alias Urielm.Forum
+  alias UrielmWeb.Params
   alias Urielm.Forum.Thread
 
   @impl true
@@ -17,10 +18,10 @@ defmodule UrielmWeb.NewThreadLive do
   end
 
   @impl true
-  def handle_event("validate", %{"thread" => thread_params}, socket) do
+  def handle_event("validate", %{"thread" => thread_params0}, socket) do
     changeset =
       %Thread{}
-      |> Thread.changeset(thread_params)
+      |> Thread.changeset(Params.normalize(thread_params0))
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :thread_form, to_form(changeset))}
@@ -31,10 +32,10 @@ defmodule UrielmWeb.NewThreadLive do
   end
 
   @impl true
-  def handle_event("save", %{"thread" => thread_params}, socket) do
+  def handle_event("save", %{"thread" => thread_params0}, socket) do
     %{board: board, current_user: user} = socket.assigns
 
-    case Forum.create_thread(board.id, user.id, thread_params) do
+    case Forum.create_thread(board.id, user.id, Params.normalize(thread_params0)) do
       {:ok, thread} ->
         {:noreply,
          socket

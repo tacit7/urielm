@@ -265,7 +265,7 @@ defmodule UrielmWeb.ReferencesLive do
             </div>
 
             <div id="prompts" phx-update="stream" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div class="hidden only:block col-span-full text-center py-12 text-base-content/50">
+              <div id="empty-state" class="hidden only:block col-span-full text-center py-12 text-base-content/50">
                 No prompts found.
               </div>
               <div

@@ -225,13 +225,18 @@ defmodule UrielmWeb.ThreadLive do
                description: description
              }) do
           {:ok, _} ->
-            {:noreply, put_flash(socket, :info, "Report submitted successfully")}
+            {:noreply,
+             socket
+             |> put_flash(:info, "Report submitted successfully")
+             |> push_event("close_modal", %{"id" => "report_thread_modal"})}
 
           {:error, :unique_constraint} ->
             {:noreply, put_flash(socket, :error, "You've already reported this")}
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to submit report")}
+          {:error, changeset} ->
+            # Extract validation errors
+            errors = format_errors(changeset)
+            {:noreply, put_flash(socket, :error, errors)}
         end
     end
   end
@@ -253,13 +258,18 @@ defmodule UrielmWeb.ThreadLive do
                description: description
              }) do
           {:ok, _} ->
-            {:noreply, put_flash(socket, :info, "Report submitted successfully")}
+            {:noreply,
+             socket
+             |> put_flash(:info, "Report submitted successfully")
+             |> push_event("close_modal", %{"id" => "report_comment_modal_#{comment_id}"})}
 
           {:error, :unique_constraint} ->
             {:noreply, put_flash(socket, :error, "You've already reported this")}
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to submit report")}
+          {:error, changeset} ->
+            # Extract validation errors
+            errors = format_errors(changeset)
+            {:noreply, put_flash(socket, :error, errors)}
         end
     end
   end
@@ -446,7 +456,7 @@ defmodule UrielmWeb.ThreadLive do
       </div>
 
       <!-- Report Modal -->
-      <dialog id="reportModal" data-testid="report-modal" class="modal">
+      <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
         <div class="modal-box">
           <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
@@ -469,21 +479,24 @@ defmodule UrielmWeb.ThreadLive do
                 <option value="spam">Spam</option>
                 <option value="abuse">Abuse</option>
                 <option value="offensive">Offensive Content</option>
-                <option value="misinformation">Misinformation</option>
                 <option value="other">Other</option>
               </select>
             </div>
 
             <div>
               <label class="label">
-                <span class="label-text">Description (optional)</span>
+                <span class="label-text">Description (required)</span>
               </label>
               <textarea
                 name="description"
-                placeholder="Provide details to help moderators..."
+                required
+                minlength="10"
+                maxlength="5000"
+                placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
                 data-testid="report-description"
                 class="textarea textarea-bordered w-full h-24"
               ></textarea>
+              <p class="text-xs text-base-content/50 mt-1">Minimum 10 characters • Maximum 5000 characters</p>
             </div>
 
             <div class="modal-action">
@@ -560,6 +573,21 @@ defmodule UrielmWeb.ThreadLive do
       "1 #{singular}"
     else
       "#{count} #{singular}s"
+    end
+  end
+
+  defp format_errors(changeset) do
+    errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Enum.reduce(opts, msg, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
+
+    case errors do
+      %{description: msgs} when is_list(msgs) ->
+        "Description #{Enum.join(msgs, "; ")}"
+      _ ->
+        "Failed to submit report. Please check your input."
     end
   end
 end

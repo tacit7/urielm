@@ -1,6 +1,7 @@
 defmodule UrielmWeb.LessonLive do
   use UrielmWeb, :live_view
   alias Urielm.Learning
+  alias UrielmWeb.Params
   alias Urielm.Learning.LessonComment
 
   @impl true
@@ -57,7 +58,7 @@ defmodule UrielmWeb.LessonLive do
   end
 
   @impl true
-  def handle_event("save_comment", %{"comment" => params}, socket) do
+  def handle_event("save_comment", %{"comment" => params0}, socket) do
     user = socket.assigns[:current_user]
 
     if !user do
@@ -68,7 +69,7 @@ defmodule UrielmWeb.LessonLive do
       lesson = socket.assigns.lesson
 
       attrs =
-        params
+        Params.normalize(params0)
         |> Map.put("lesson_id", lesson.id)
         |> Map.put("user_id", user.id)
 

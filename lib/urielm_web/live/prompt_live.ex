@@ -3,6 +3,7 @@ defmodule UrielmWeb.PromptLive do
   use LiveSvelte.Components
 
   alias Urielm.Content
+  alias UrielmWeb.Params
   alias Urielm.Content.Comment
 
   @impl true
@@ -31,7 +32,7 @@ defmodule UrielmWeb.PromptLive do
   end
 
   @impl true
-  def handle_event("save_comment", %{"comment" => comment_params}, socket) do
+  def handle_event("save_comment", %{"comment" => comment_params0}, socket) do
     %{current_user: user, prompt: prompt} = socket.assigns
 
     case user do
@@ -40,7 +41,7 @@ defmodule UrielmWeb.PromptLive do
 
       user ->
         comment_data =
-          Map.merge(comment_params, %{"user_id" => user.id, "prompt_id" => prompt.id})
+          Map.merge(Params.normalize(comment_params0), %{"user_id" => user.id, "prompt_id" => prompt.id})
 
         case Content.create_comment(comment_data) do
           {:ok, _comment} ->

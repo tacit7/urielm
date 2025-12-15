@@ -34,11 +34,11 @@ defmodule Urielm.Forum.Report do
       :resolved_at,
       :resolution_notes
     ])
-    |> validate_required([:user_id, :target_type, :target_id, :reason])
+    |> validate_required([:user_id, :target_type, :target_id, :reason, :description])
     |> validate_inclusion(:target_type, ["thread", "comment"])
     |> validate_inclusion(:reason, ["spam", "abuse", "offensive", "other"])
     |> validate_inclusion(:status, ["pending", "reviewed", "resolved", "dismissed"])
-    |> validate_length(:description, max: 5000)
+    |> validate_length(:description, min: 10, max: 5000)
     |> validate_length(:resolution_notes, max: 5000)
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:reviewed_by_id)

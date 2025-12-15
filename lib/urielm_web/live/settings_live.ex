@@ -1,6 +1,7 @@
 defmodule UrielmWeb.SettingsLive do
   use UrielmWeb, :live_view
   alias Urielm.Accounts
+  alias UrielmWeb.Params
 
   def mount(_params, _session, socket) do
     user = socket.assigns.current_user
@@ -16,8 +17,8 @@ defmodule UrielmWeb.SettingsLive do
      )}
   end
 
-  def handle_event("update_profile", %{"user" => user_params}, socket) do
-    case Accounts.update_user(socket.assigns.current_user, user_params) do
+  def handle_event("update_profile", %{"user" => user_params0}, socket) do
+    case Accounts.update_user(socket.assigns.current_user, Params.normalize(user_params0)) do
       {:ok, user} ->
         {:noreply,
          socket
@@ -31,12 +32,12 @@ defmodule UrielmWeb.SettingsLive do
     end
   end
 
-  def handle_event("change_password", %{"password" => password_params}, socket) do
+  def handle_event("change_password", %{"password" => password_params0}, socket) do
     %{
       "current_password" => current_password,
       "new_password" => new_password,
       "confirm_password" => confirm_password
-    } = password_params
+    } = Params.normalize(password_params0)
 
     cond do
       new_password != confirm_password ->

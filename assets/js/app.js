@@ -130,6 +130,15 @@ const CopyToClipboard = {
   }
 }
 
+// Close modal hook
+window.addEventListener("phx:close_modal", (e) => {
+  const modalId = e.detail.id
+  const modal = document.getElementById(modalId)
+  if (modal && modal.tagName === "DIALOG") {
+    modal.close()
+  }
+})
+
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,

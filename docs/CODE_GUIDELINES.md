@@ -282,3 +282,22 @@ end
 - Semicolons required
 - Keep components small and focused; prefer props/events over global state.
 - No inline scripts in HEEx; import via `assets/js/app.js`.
+
+
+---
+
+## Controllers & Params
+- Prefer normalizing params in contexts or LiveViews; controllers should not bypass changesets.
+- If a controller builds its own map to pass to a changeset, ensure keys are strings or normalize once:
+
+```elixir
+# Controller action (example)
+attrs = Urielm.Params.normalize(conn.params["widget"] || %{})
+case MyContext.create_widget(attrs) do
+  {:ok, widget} -> redirect(conn, to: ~p"/widgets/#{widget.id}")
+  {:error, changeset} -> render(conn, :new, changeset: changeset)
+end
+```
+
+- Do not mass-assign; always use Ecto changesets (cast/validate) to whitelist fields.
+- For nested payloads, use `cast_assoc/3` or `cast_embed/3` in changesets.

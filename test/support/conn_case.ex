@@ -31,7 +31,10 @@ defmodule UrielmWeb.ConnCase do
     end
   end
 
-  setup _tags do
+  setup tags do
+    # Start SQL sandbox owner for connection-based tests, mirroring DataCase
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Urielm.Repo, shared: not tags[:async])
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 
