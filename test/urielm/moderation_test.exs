@@ -12,10 +12,11 @@ defmodule Urielm.ModerationTest do
       board = Fixtures.board_fixture(%{category_id: category.id})
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      {:ok, report} = Forum.create_report(reporter.id, "thread", thread.id, %{
-        reason: "spam",
-        description: "This is spam"
-      })
+      {:ok, report} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "This is spam"
+        })
 
       assert report.reason == "spam"
       assert report.status == "pending"
@@ -30,7 +31,9 @@ defmodule Urielm.ModerationTest do
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
       {:ok, _report} = Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam"})
-      {:error, changeset} = Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam"})
+
+      {:error, changeset} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam"})
 
       assert changeset.errors[:user_id]
     end
@@ -43,10 +46,11 @@ defmodule Urielm.ModerationTest do
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
       comment = Fixtures.comment_fixture(thread, accused, %{body: "Abusive comment"})
 
-      {:ok, report} = Forum.create_report(reporter.id, "comment", comment.id, %{
-        reason: "abuse",
-        description: "Abusive content"
-      })
+      {:ok, report} =
+        Forum.create_report(reporter.id, "comment", comment.id, %{
+          reason: "abuse",
+          description: "Abusive content"
+        })
 
       assert report.reason == "abuse"
       assert report.target_type == "comment"
@@ -204,6 +208,18 @@ defmodule Urielm.ModerationTest do
   end
 
   describe "Trust Level Rate Limiting" do
+    setup do
+      # Disable rate limit bypass for these tests
+      old_value = Application.get_env(:urielm, :rate_limit_bypass)
+      Application.put_env(:urielm, :rate_limit_bypass, false)
+
+      on_exit(fn ->
+        if old_value, do: Application.put_env(:urielm, :rate_limit_bypass, old_value)
+      end)
+
+      :ok
+    end
+
     test "new user (trust level 0) is rate limited to 3 topics per day" do
       user = Fixtures.user_fixture()
       category = Fixtures.category_fixture()
@@ -213,12 +229,34 @@ defmodule Urielm.ModerationTest do
       assert config.max_new_topics_per_day == 3
 
       # Create 3 threads
-      {:ok, _t1} = Forum.create_thread(board.id, user.id, %{"title" => "T1", "body" => "Body here is long enough"})
-      {:ok, _t2} = Forum.create_thread(board.id, user.id, %{"title" => "T2", "body" => "Body here is long enough"})
-      {:ok, _t3} = Forum.create_thread(board.id, user.id, %{"title" => "T3", "body" => "Body here is long enough"})
+      {:ok, _t1} =
+        Forum.create_thread(board.id, user.id, %{
+          "title" => "Topic One",
+          "slug" => "topic-one-#{System.unique_integer([:positive])}",
+          "body" => "Body here is long enough"
+        })
+
+      {:ok, _t2} =
+        Forum.create_thread(board.id, user.id, %{
+          "title" => "Topic Two",
+          "slug" => "topic-two-#{System.unique_integer([:positive])}",
+          "body" => "Body here is long enough"
+        })
+
+      {:ok, _t3} =
+        Forum.create_thread(board.id, user.id, %{
+          "title" => "Topic Three",
+          "slug" => "topic-three-#{System.unique_integer([:positive])}",
+          "body" => "Body here is long enough"
+        })
 
       # 4th should fail
-      {:error, :rate_limited} = Forum.create_thread(board.id, user.id, %{"title" => "T4", "body" => "Body here is long enough"})
+      {:error, :rate_limited} =
+        Forum.create_thread(board.id, user.id, %{
+          "title" => "Topic Four",
+          "slug" => "topic-four-#{System.unique_integer([:positive])}",
+          "body" => "Body here is long enough"
+        })
     end
 
     test "new user (trust level 0) is rate limited to 1 post per minute" do
@@ -234,7 +272,8 @@ defmodule Urielm.ModerationTest do
       {:ok, _c1} = Forum.create_comment(thread.id, user.id, %{"body" => "First comment"})
 
       # 2nd should fail
-      {:error, :rate_limited} = Forum.create_comment(thread.id, user.id, %{"body" => "Second comment"})
+      {:error, :rate_limited} =
+        Forum.create_comment(thread.id, user.id, %{"body" => "Second comment"})
     end
 
     test "admin (trust level 4) has no rate limits" do
@@ -249,7 +288,12 @@ defmodule Urielm.ModerationTest do
 
       # Create many threads - should all succeed
       for i <- 1..5 do
-        {:ok, _t} = Forum.create_thread(board.id, admin.id, %{"title" => "T#{i}", "body" => "Body here is long enough"})
+        {:ok, _t} =
+          Forum.create_thread(board.id, admin.id, %{
+            "title" => "Thread #{i}",
+            "slug" => "thread-#{i}-#{System.unique_integer([:positive])}",
+            "body" => "Body here is long enough"
+          })
       end
 
       # Create many comments - should all succeed
