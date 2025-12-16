@@ -212,6 +212,25 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  def handle_event("toggle_like", %{"target_type" => _target_type, "target_id" => _target_id}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to like")}
+
+      _user ->
+        # For now, just acknowledge the event. Like functionality can be expanded later.
+        # This handler prevents errors when PostActions tries to toggle likes
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("reply_to_comment", %{"comment_id" => _comment_id}, socket) do
+    # This just acknowledges the event. The actual reply UI is managed by the CommentTree component
+    {:noreply, socket}
+  end
+
   def handle_event("report_thread", %{"reason" => reason, "description" => description}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 

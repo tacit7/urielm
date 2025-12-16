@@ -1,5 +1,6 @@
 <script>
   import VoteButtons from "./VoteButtons.svelte"
+  import PostActions from "./PostActions.svelte"
 
   export let comments = []
   export let current_user_id = null
@@ -98,33 +99,36 @@
                   user_vote={comment.user_vote}
                   {live}
                 />
-                {#if current_user_id && depth < MAX_DEPTH}
-                  <button
-                    on:click={() => startReply(comment.id)}
-                    class="text-sm link link-primary"
-                  >
-                    Reply
-                  </button>
-                {/if}
-                {#if current_user_id}
-                  <button
-                    on:click={() => handleReport(comment.id)}
-                    class="text-sm link link-warning"
-                    title="Report this comment"
-                  >
-                    Report
-                  </button>
-                {/if}
               </div>
             </div>
 
-            <div class="flex gap-2">
+            <!-- Post Actions (reply, like, copy link) -->
+            {#if current_user_id}
+              <PostActions
+                postId={comment.id}
+                liked={false}
+                likeCount={0}
+                canReply={depth < MAX_DEPTH}
+                {live}
+              />
+            {/if}
+
+            <div class="flex gap-2 mt-2">
               {#if canDelete(comment.author?.id)}
                 <button
                   on:click={() => handleDelete(comment.id)}
                   class="btn btn-xs btn-ghost text-error"
                 >
                   Delete
+                </button>
+              {/if}
+              {#if current_user_id}
+                <button
+                  on:click={() => handleReport(comment.id)}
+                  class="btn btn-xs btn-ghost text-warning"
+                  title="Report this comment"
+                >
+                  Report
                 </button>
               {/if}
             </div>
