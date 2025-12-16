@@ -511,6 +511,59 @@ defmodule UrielmWeb.ThreadLive do
           <button>close</button>
         </form>
       </dialog>
+
+      <!-- Comment Report Modals -->
+      <%= for comment <- flatten_comments(@comment_tree) do %>
+        <dialog id={"report_comment_modal_#{comment.id}"} data-testid="comment-report-modal" class="modal">
+          <div class="modal-box bg-base-300">
+            <form method="dialog">
+              <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 class="font-bold text-lg mb-4">Report Comment</h3>
+            <form phx-submit="report_comment" class="space-y-4">
+              <input type="hidden" name="comment_id" value={comment.id} />
+
+              <div>
+                <label class="label">
+                  <span class="label-text">Reason</span>
+                </label>
+                <select name="reason" class="select select-bordered w-full" required>
+                  <option value="">Select a reason</option>
+                  <option value="spam">Spam</option>
+                  <option value="abuse">Abuse</option>
+                  <option value="offensive">Offensive</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="label">
+                  <span class="label-text">Description (required)</span>
+                </label>
+                <textarea
+                  name="description"
+                  placeholder="Explain why you're reporting this comment..."
+                  class="textarea textarea-bordered w-full min-h-24"
+                  required
+                  minlength="10"
+                  maxlength="5000"
+                ></textarea>
+                <p class="text-xs text-base-content/60 mt-1">Minimum 10 characters • Maximum 5000 characters</p>
+              </div>
+
+              <div class="modal-action">
+                <form method="dialog">
+                  <button class="btn btn-ghost">Cancel</button>
+                </form>
+                <button type="submit" class="btn btn-warning">Submit Report</button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
+      <% end %>
     </div>
     """
   end
@@ -567,6 +620,16 @@ defmodule UrielmWeb.ThreadLive do
       replies: Enum.map(children, &build_node(&1, grouped))
     }
   end
+
+  defp flatten_comments(tree) when is_list(tree) do
+    Enum.flat_map(tree, &flatten_comments/1)
+  end
+
+  defp flatten_comments(%{replies: replies} = comment) do
+    [comment | flatten_comments(replies)]
+  end
+
+  defp flatten_comments(nil), do: []
 
   defp pluralize(count, singular) do
     if count == 1 do

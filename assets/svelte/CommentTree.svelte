@@ -39,16 +39,9 @@
   }
 
   function handleReport(commentId) {
-    const reason = prompt('Report reason (spam/abuse/offensive/misinformation/other):')
-    if (!reason) return
-
-    const description = prompt('Description (optional):')
-    if (live) {
-      live.pushEvent('report_comment', {
-        comment_id: commentId,
-        reason: reason,
-        description: description || ''
-      })
+    const modal = document.getElementById(`report_comment_modal_${commentId}`)
+    if (modal) {
+      modal.showModal()
     }
   }
 
