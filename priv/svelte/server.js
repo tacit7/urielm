@@ -85785,7 +85785,7 @@ var import_easymde = __toESM(require_easymde());
 MarkdownInput[FILENAME] = "svelte/MarkdownInput.svelte";
 var $$css2 = {
   hash: "svelte-j8kg6b",
-  code: "\n  .CodeMirror {\n    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n    font-size: 14px;\n  }\n\n  .editor-preview {\n    background-color: var(--base-100);\n    color: var(--base-content);\n  }\n\n  .editor-toolbar {\n    background-color: var(--base-200);\n    border-color: var(--base-300);\n  }\n\n  .editor-toolbar button {\n    color: var(--base-content);\n  }\n\n  .editor-toolbar button:hover {\n    background-color: var(--base-300);\n  }\n\n  .editor-preview-side {\n    border-left-color: var(--base-300);\n  }\n\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiTWFya2Rvd25JbnB1dC5zdmVsdGUiLCJzb3VyY2VzIjpbIk1hcmtkb3duSW5wdXQuc3ZlbHRlIl0sInNvdXJjZXNDb250ZW50IjpbIjxzY3JpcHQ+XG4gIGltcG9ydCB7IG9uTW91bnQgfSBmcm9tICdzdmVsdGUnXG4gIGltcG9ydCBFYXN5TURFIGZyb20gJ2Vhc3ltZGUnXG5cbiAgZXhwb3J0IGxldCB2YWx1ZSA9IFwiXCJcbiAgZXhwb3J0IGxldCBwbGFjZWhvbGRlciA9IFwiV3JpdGUgeW91ciBtZXNzYWdlLi4uXCJcbiAgZXhwb3J0IGxldCBtaW5IZWlnaHQgPSBcIjIwMHB4XCJcblxuICBsZXQgZWRpdG9yRWxlbWVudFxuICBsZXQgZWRpdG9yXG5cbiAgb25Nb3VudCgoKSA9PiB7XG4gICAgZWRpdG9yID0gbmV3IEVhc3lNREUoe1xuICAgICAgZWxlbWVudDogZWRpdG9yRWxlbWVudCxcbiAgICAgIGluaXRpYWxWYWx1ZTogdmFsdWUsXG4gICAgICBwbGFjZWhvbGRlcjogcGxhY2Vob2xkZXIsXG4gICAgICBzcGVsbENoZWNrZXI6IGZhbHNlLFxuICAgICAgYXV0b0Rvd25sb2FkRm9udEF3ZXNvbWU6IGZhbHNlLFxuICAgICAgbWluSGVpZ2h0OiBtaW5IZWlnaHQsXG4gICAgICB0b29sYmFyOiBbXG4gICAgICAgICdib2xkJyxcbiAgICAgICAgJ2l0YWxpYycsXG4gICAgICAgICdoZWFkaW5nJyxcbiAgICAgICAgJ3wnLFxuICAgICAgICAncXVvdGUnLFxuICAgICAgICAndW5vcmRlcmVkLWxpc3QnLFxuICAgICAgICAnb3JkZXJlZC1saXN0JyxcbiAgICAgICAgJ3wnLFxuICAgICAgICAnbGluaycsXG4gICAgICAgICdpbWFnZScsXG4gICAgICAgICdjb2RlJyxcbiAgICAgICAgJ3wnLFxuICAgICAgICAncHJldmlldycsXG4gICAgICAgICdzaWRlLWJ5LXNpZGUnLFxuICAgICAgICAnZnVsbHNjcmVlbicsXG4gICAgICAgICd8JyxcbiAgICAgICAgJ2d1aWRlJ1xuICAgICAgXSxcbiAgICAgIHNob3J0Y3V0czoge1xuICAgICAgICB0b2dnbGVCb2xkOiAnQ3RybC1CJyxcbiAgICAgICAgdG9nZ2xlSXRhbGljOiAnQ3RybC1JJyxcbiAgICAgICAgdG9nZ2xlQ29kZUJsb2NrOiAnQ3RybC1BbHQtQycsXG4gICAgICAgIGRyYXdMaW5rOiAnQ3RybC1LJyxcbiAgICAgICAgZHJhd0ltYWdlOiAnQ3RybC1BbHQtSScsXG4gICAgICAgIGRyYXdIb3Jpem9udGFsUnVsZTogJ0N0cmwtSCcsXG4gICAgICAgIHVuZG86ICdDdHJsLVonLFxuICAgICAgICByZWRvOiAnQ3RybC1ZJyxcbiAgICAgICAgdG9nZ2xlVW5vcmRlcmVkTGlzdDogJ0N0cmwtQWx0LUwnLFxuICAgICAgICB0b2dnbGVPcmRlcmVkTGlzdDogJ0N0cmwtQWx0LU8nLFxuICAgICAgICB0b2dnbGVQcmV2aWV3OiAnQ3RybC1QJyxcbiAgICAgICAgdG9nZ2xlU2lkZUJ5U2lkZTogJ0N0cmwtQWx0LVAnLFxuICAgICAgICB0b2dnbGVGdWxsU2NyZWVuOiAnRjExJ1xuICAgICAgfVxuICAgIH0pXG5cbiAgICAvLyBVcGRhdGUgcGFyZW50IHZhbHVlIG9uIGNoYW5nZVxuICAgIGVkaXRvci5jb2RlbWlycm9yLm9uKCdjaGFuZ2UnLCAoKSA9PiB7XG4gICAgICB2YWx1ZSA9IGVkaXRvci52YWx1ZSgpXG4gICAgfSlcbiAgfSlcblxuICAvLyBFeHBvc2UgZ2V0dGVyIHRvIHBhcmVudFxuICBleHBvcnQgZnVuY3Rpb24gZ2V0Q29udGVudCgpIHtcbiAgICByZXR1cm4gZWRpdG9yID8gZWRpdG9yLnZhbHVlKCkgOiB2YWx1ZVxuICB9XG5cbiAgLy8gVXBkYXRlIGVkaXRvciB3aGVuIHZhbHVlIHByb3AgY2hhbmdlcyAoZm9yIGVkaXQgbW9kZSlcbiAgJDogaWYgKGVkaXRvciAmJiB2YWx1ZSAhPT0gZWRpdG9yLnZhbHVlKCkpIHtcbiAgICBlZGl0b3IudmFsdWUodmFsdWUpXG4gIH1cbjwvc2NyaXB0PlxuXG48ZGl2IGNsYXNzPVwibWFya2Rvd24tZWRpdG9yXCI+XG4gIDx0ZXh0YXJlYSBiaW5kOnRoaXM9e2VkaXRvckVsZW1lbnR9PjwvdGV4dGFyZWE+XG48L2Rpdj5cblxuPHN0eWxlPlxuICA6Z2xvYmFsKC5Db2RlTWlycm9yKSB7XG4gICAgZm9udC1mYW1pbHk6ICdNb25hY28nLCAnTWVubG8nLCAnVWJ1bnR1IE1vbm8nLCBtb25vc3BhY2U7XG4gICAgZm9udC1zaXplOiAxNHB4O1xuICB9XG5cbiAgOmdsb2JhbCguZWRpdG9yLXByZXZpZXcpIHtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1iYXNlLTEwMCk7XG4gICAgY29sb3I6IHZhcigtLWJhc2UtY29udGVudCk7XG4gIH1cblxuICA6Z2xvYmFsKC5lZGl0b3ItdG9vbGJhcikge1xuICAgIGJhY2tncm91bmQtY29sb3I6IHZhcigtLWJhc2UtMjAwKTtcbiAgICBib3JkZXItY29sb3I6IHZhcigtLWJhc2UtMzAwKTtcbiAgfVxuXG4gIDpnbG9iYWwoLmVkaXRvci10b29sYmFyIGJ1dHRvbikge1xuICAgIGNvbG9yOiB2YXIoLS1iYXNlLWNvbnRlbnQpO1xuICB9XG5cbiAgOmdsb2JhbCguZWRpdG9yLXRvb2xiYXIgYnV0dG9uOmhvdmVyKSB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tYmFzZS0zMDApO1xuICB9XG5cbiAgOmdsb2JhbCguZWRpdG9yLXByZXZpZXctc2lkZSkge1xuICAgIGJvcmRlci1sZWZ0LWNvbG9yOiB2YXIoLS1iYXNlLTMwMCk7XG4gIH1cbjwvc3R5bGU+XG4iXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IjtBQTZFQSxFQUFVLFdBQVksQ0FBQztBQUN2QixJQUFJLHdEQUF3RDtBQUM1RCxJQUFJLGVBQWU7QUFDbkI7O0FBRUEsRUFBVSxlQUFnQixDQUFDO0FBQzNCLElBQUksaUNBQWlDO0FBQ3JDLElBQUksMEJBQTBCO0FBQzlCOztBQUVBLEVBQVUsZUFBZ0IsQ0FBQztBQUMzQixJQUFJLGlDQUFpQztBQUNyQyxJQUFJLDZCQUE2QjtBQUNqQzs7QUFFQSxFQUFVLHNCQUF1QixDQUFDO0FBQ2xDLElBQUksMEJBQTBCO0FBQzlCOztBQUVBLEVBQVUsNEJBQTZCLENBQUM7QUFDeEMsSUFBSSxpQ0FBaUM7QUFDckM7O0FBRUEsRUFBVSxvQkFBcUIsQ0FBQztBQUNoQyxJQUFJLGtDQUFrQztBQUN0QyIsImlnbm9yZUxpc3QiOltdfQ== */"
+  code: "\n  .CodeMirror {\n    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;\n    font-size: 14px;\n  }\n\n  .editor-preview {\n    background-color: var(--base-100);\n    color: var(--base-content);\n  }\n\n  .editor-toolbar {\n    background-color: var(--base-200);\n    border-color: var(--base-300);\n  }\n\n  .editor-toolbar button {\n    color: var(--base-content);\n  }\n\n  .editor-toolbar button:hover {\n    background-color: var(--base-300);\n  }\n\n  .editor-preview-side {\n    border-left-color: var(--base-300);\n  }\n\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiTWFya2Rvd25JbnB1dC5zdmVsdGUiLCJzb3VyY2VzIjpbIk1hcmtkb3duSW5wdXQuc3ZlbHRlIl0sInNvdXJjZXNDb250ZW50IjpbIjxzY3JpcHQ+XG4gIGltcG9ydCB7IG9uTW91bnQsIG9uRGVzdHJveSB9IGZyb20gJ3N2ZWx0ZSdcbiAgaW1wb3J0IEVhc3lNREUgZnJvbSAnZWFzeW1kZSdcblxuICBleHBvcnQgbGV0IHZhbHVlID0gXCJcIlxuICBleHBvcnQgbGV0IHBsYWNlaG9sZGVyID0gXCJXcml0ZSB5b3VyIG1lc3NhZ2UuLi5cIlxuICBleHBvcnQgbGV0IG1pbkhlaWdodCA9IFwiMjAwcHhcIlxuICBleHBvcnQgbGV0IGRyYWZ0S2V5ID0gbnVsbFxuXG4gIGxldCBlZGl0b3JFbGVtZW50XG4gIGxldCBlZGl0b3JcbiAgbGV0IGF1dG9TYXZlSW50ZXJ2YWwgPSBudWxsXG5cbiAgb25Nb3VudCgoKSA9PiB7XG4gICAgLy8gUmVzdG9yZSBkcmFmdCBmcm9tIGxvY2FsU3RvcmFnZSBpZiBhdmFpbGFibGVcbiAgICBsZXQgaW5pdGlhbFZhbHVlID0gdmFsdWVcbiAgICBpZiAoZHJhZnRLZXkpIHtcbiAgICAgIHRyeSB7XG4gICAgICAgIGNvbnN0IGRyYWZ0ID0gbG9jYWxTdG9yYWdlLmdldEl0ZW0oZHJhZnRLZXkpXG4gICAgICAgIGlmIChkcmFmdCkge1xuICAgICAgICAgIGluaXRpYWxWYWx1ZSA9IGRyYWZ0XG4gICAgICAgIH1cbiAgICAgIH0gY2F0Y2ggKGUpIHtcbiAgICAgICAgY29uc29sZS53YXJuKCdGYWlsZWQgdG8gcmVhZCBkcmFmdCBmcm9tIGxvY2FsU3RvcmFnZTonLCBlKVxuICAgICAgfVxuICAgIH1cblxuICAgIGVkaXRvciA9IG5ldyBFYXN5TURFKHtcbiAgICAgIGVsZW1lbnQ6IGVkaXRvckVsZW1lbnQsXG4gICAgICBpbml0aWFsVmFsdWU6IGluaXRpYWxWYWx1ZSxcbiAgICAgIHBsYWNlaG9sZGVyOiBwbGFjZWhvbGRlcixcbiAgICAgIHNwZWxsQ2hlY2tlcjogZmFsc2UsXG4gICAgICBhdXRvRG93bmxvYWRGb250QXdlc29tZTogZmFsc2UsXG4gICAgICBtaW5IZWlnaHQ6IG1pbkhlaWdodCxcbiAgICAgIHRvb2xiYXI6IFtcbiAgICAgICAgJ2JvbGQnLFxuICAgICAgICAnaXRhbGljJyxcbiAgICAgICAgJ2hlYWRpbmcnLFxuICAgICAgICAnfCcsXG4gICAgICAgICdxdW90ZScsXG4gICAgICAgICd1bm9yZGVyZWQtbGlzdCcsXG4gICAgICAgICdvcmRlcmVkLWxpc3QnLFxuICAgICAgICAnfCcsXG4gICAgICAgICdsaW5rJyxcbiAgICAgICAgJ2ltYWdlJyxcbiAgICAgICAgJ2NvZGUnLFxuICAgICAgICAnfCcsXG4gICAgICAgICdwcmV2aWV3JyxcbiAgICAgICAgJ3NpZGUtYnktc2lkZScsXG4gICAgICAgICdmdWxsc2NyZWVuJyxcbiAgICAgICAgJ3wnLFxuICAgICAgICAnZ3VpZGUnXG4gICAgICBdLFxuICAgICAgc2hvcnRjdXRzOiB7XG4gICAgICAgIHRvZ2dsZUJvbGQ6ICdDdHJsLUInLFxuICAgICAgICB0b2dnbGVJdGFsaWM6ICdDdHJsLUknLFxuICAgICAgICB0b2dnbGVDb2RlQmxvY2s6ICdDdHJsLUFsdC1DJyxcbiAgICAgICAgZHJhd0xpbms6ICdDdHJsLUsnLFxuICAgICAgICBkcmF3SW1hZ2U6ICdDdHJsLUFsdC1JJyxcbiAgICAgICAgZHJhd0hvcml6b250YWxSdWxlOiAnQ3RybC1IJyxcbiAgICAgICAgdW5kbzogJ0N0cmwtWicsXG4gICAgICAgIHJlZG86ICdDdHJsLVknLFxuICAgICAgICB0b2dnbGVVbm9yZGVyZWRMaXN0OiAnQ3RybC1BbHQtTCcsXG4gICAgICAgIHRvZ2dsZU9yZGVyZWRMaXN0OiAnQ3RybC1BbHQtTycsXG4gICAgICAgIHRvZ2dsZVByZXZpZXc6ICdDdHJsLVAnLFxuICAgICAgICB0b2dnbGVTaWRlQnlTaWRlOiAnQ3RybC1BbHQtUCcsXG4gICAgICAgIHRvZ2dsZUZ1bGxTY3JlZW46ICdGMTEnXG4gICAgICB9XG4gICAgfSlcblxuICAgIC8vIFVwZGF0ZSBwYXJlbnQgdmFsdWUgb24gY2hhbmdlXG4gICAgZWRpdG9yLmNvZGVtaXJyb3Iub24oJ2NoYW5nZScsICgpID0+IHtcbiAgICAgIHZhbHVlID0gZWRpdG9yLnZhbHVlKClcbiAgICB9KVxuXG4gICAgLy8gQXV0by1zYXZlIGRyYWZ0IGV2ZXJ5IDEgc2Vjb25kIGlmIGRyYWZ0S2V5IGlzIHByb3ZpZGVkXG4gICAgaWYgKGRyYWZ0S2V5KSB7XG4gICAgICBhdXRvU2F2ZUludGVydmFsID0gc2V0SW50ZXJ2YWwoKCkgPT4ge1xuICAgICAgICBzYXZlRHJhZnQoKVxuICAgICAgfSwgMTAwMClcbiAgICB9XG4gIH0pXG5cbiAgb25EZXN0cm95KCgpID0+IHtcbiAgICBpZiAoYXV0b1NhdmVJbnRlcnZhbCkge1xuICAgICAgY2xlYXJJbnRlcnZhbChhdXRvU2F2ZUludGVydmFsKVxuICAgIH1cbiAgfSlcblxuICBmdW5jdGlvbiBzYXZlRHJhZnQoKSB7XG4gICAgaWYgKGRyYWZ0S2V5ICYmIGVkaXRvcikge1xuICAgICAgdHJ5IHtcbiAgICAgICAgY29uc3QgY29udGVudCA9IGVkaXRvci52YWx1ZSgpXG4gICAgICAgIGlmIChjb250ZW50LnRyaW0oKSkge1xuICAgICAgICAgIGxvY2FsU3RvcmFnZS5zZXRJdGVtKGRyYWZ0S2V5LCBjb250ZW50KVxuICAgICAgICB9XG4gICAgICB9IGNhdGNoIChlKSB7XG4gICAgICAgIGNvbnNvbGUud2FybignRmFpbGVkIHRvIHNhdmUgZHJhZnQgdG8gbG9jYWxTdG9yYWdlOicsIGUpXG4gICAgICB9XG4gICAgfVxuICB9XG5cbiAgLy8gRXhwb3NlIG1ldGhvZHMgdG8gcGFyZW50XG4gIGV4cG9ydCBmdW5jdGlvbiBnZXRDb250ZW50KCkge1xuICAgIHJldHVybiBlZGl0b3IgPyBlZGl0b3IudmFsdWUoKSA6IHZhbHVlXG4gIH1cblxuICBleHBvcnQgZnVuY3Rpb24gY2xlYXJEcmFmdCgpIHtcbiAgICBpZiAoZHJhZnRLZXkpIHtcbiAgICAgIHRyeSB7XG4gICAgICAgIGxvY2FsU3RvcmFnZS5yZW1vdmVJdGVtKGRyYWZ0S2V5KVxuICAgICAgfSBjYXRjaCAoZSkge1xuICAgICAgICBjb25zb2xlLndhcm4oJ0ZhaWxlZCB0byBjbGVhciBkcmFmdDonLCBlKVxuICAgICAgfVxuICAgIH1cbiAgfVxuXG4gIC8vIFVwZGF0ZSBlZGl0b3Igd2hlbiB2YWx1ZSBwcm9wIGNoYW5nZXMgKGZvciBlZGl0IG1vZGUpXG4gICQ6IGlmIChlZGl0b3IgJiYgdmFsdWUgIT09IGVkaXRvci52YWx1ZSgpKSB7XG4gICAgZWRpdG9yLnZhbHVlKHZhbHVlKVxuICB9XG48L3NjcmlwdD5cblxuPGRpdiBjbGFzcz1cIm1hcmtkb3duLWVkaXRvclwiPlxuICA8dGV4dGFyZWEgYmluZDp0aGlzPXtlZGl0b3JFbGVtZW50fT48L3RleHRhcmVhPlxuPC9kaXY+XG5cbjxzdHlsZT5cbiAgOmdsb2JhbCguQ29kZU1pcnJvcikge1xuICAgIGZvbnQtZmFtaWx5OiAnTW9uYWNvJywgJ01lbmxvJywgJ1VidW50dSBNb25vJywgbW9ub3NwYWNlO1xuICAgIGZvbnQtc2l6ZTogMTRweDtcbiAgfVxuXG4gIDpnbG9iYWwoLmVkaXRvci1wcmV2aWV3KSB7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tYmFzZS0xMDApO1xuICAgIGNvbG9yOiB2YXIoLS1iYXNlLWNvbnRlbnQpO1xuICB9XG5cbiAgOmdsb2JhbCguZWRpdG9yLXRvb2xiYXIpIHtcbiAgICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1iYXNlLTIwMCk7XG4gICAgYm9yZGVyLWNvbG9yOiB2YXIoLS1iYXNlLTMwMCk7XG4gIH1cblxuICA6Z2xvYmFsKC5lZGl0b3ItdG9vbGJhciBidXR0b24pIHtcbiAgICBjb2xvcjogdmFyKC0tYmFzZS1jb250ZW50KTtcbiAgfVxuXG4gIDpnbG9iYWwoLmVkaXRvci10b29sYmFyIGJ1dHRvbjpob3Zlcikge1xuICAgIGJhY2tncm91bmQtY29sb3I6IHZhcigtLWJhc2UtMzAwKTtcbiAgfVxuXG4gIDpnbG9iYWwoLmVkaXRvci1wcmV2aWV3LXNpZGUpIHtcbiAgICBib3JkZXItbGVmdC1jb2xvcjogdmFyKC0tYmFzZS0zMDApO1xuICB9XG48L3N0eWxlPlxuIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7QUFnSUEsRUFBVSxXQUFZLENBQUM7QUFDdkIsSUFBSSx3REFBd0Q7QUFDNUQsSUFBSSxlQUFlO0FBQ25COztBQUVBLEVBQVUsZUFBZ0IsQ0FBQztBQUMzQixJQUFJLGlDQUFpQztBQUNyQyxJQUFJLDBCQUEwQjtBQUM5Qjs7QUFFQSxFQUFVLGVBQWdCLENBQUM7QUFDM0IsSUFBSSxpQ0FBaUM7QUFDckMsSUFBSSw2QkFBNkI7QUFDakM7O0FBRUEsRUFBVSxzQkFBdUIsQ0FBQztBQUNsQyxJQUFJLDBCQUEwQjtBQUM5Qjs7QUFFQSxFQUFVLDRCQUE2QixDQUFDO0FBQ3hDLElBQUksaUNBQWlDO0FBQ3JDOztBQUVBLEVBQVUsb0JBQXFCLENBQUM7QUFDaEMsSUFBSSxrQ0FBa0M7QUFDdEMiLCJpZ25vcmVMaXN0IjpbXX0= */"
 };
 function MarkdownInput($$renderer, $$props) {
   $$renderer.global.css.add($$css2);
@@ -85794,12 +85794,25 @@ function MarkdownInput($$renderer, $$props) {
       let value = fallback($$props["value"], "");
       let placeholder = fallback($$props["placeholder"], "Write your message...");
       let minHeight = fallback($$props["minHeight"], "200px");
+      let draftKey = fallback($$props["draftKey"], null);
       let editorElement;
       let editor;
+      let autoSaveInterval = null;
       noop(() => {
+        let initialValue = value;
+        if (draftKey) {
+          try {
+            const draft = localStorage.getItem(draftKey);
+            if (draft) {
+              initialValue = draft;
+            }
+          } catch (e) {
+            console.warn("Failed to read draft from localStorage:", e);
+          }
+        }
         editor = new import_easymde.default({
           element: editorElement,
-          initialValue: value,
+          initialValue,
           placeholder,
           spellChecker: false,
           autoDownloadFontAwesome: false,
@@ -85842,23 +85855,64 @@ function MarkdownInput($$renderer, $$props) {
         editor.codemirror.on("change", () => {
           value = editor.value();
         });
+        if (draftKey) {
+          autoSaveInterval = setInterval(
+            () => {
+              saveDraft();
+            },
+            1e3
+          );
+        }
       });
+      onDestroy(() => {
+        if (autoSaveInterval) {
+          clearInterval(autoSaveInterval);
+        }
+      });
+      function saveDraft() {
+        if (draftKey && editor) {
+          try {
+            const content = editor.value();
+            if (content.trim()) {
+              localStorage.setItem(draftKey, content);
+            }
+          } catch (e) {
+            console.warn("Failed to save draft to localStorage:", e);
+          }
+        }
+      }
       function getContent() {
         return editor ? editor.value() : value;
+      }
+      function clearDraft() {
+        if (draftKey) {
+          try {
+            localStorage.removeItem(draftKey);
+          } catch (e) {
+            console.warn("Failed to clear draft:", e);
+          }
+        }
       }
       $:
         if (editor && value !== editor.value()) {
           editor.value(value);
         }
       $$renderer2.push(`<div class="markdown-editor">`);
-      push_element($$renderer2, "div", 73, 0);
+      push_element($$renderer2, "div", 124, 0);
       $$renderer2.push(`<textarea>`);
-      push_element($$renderer2, "textarea", 74, 2);
+      push_element($$renderer2, "textarea", 125, 2);
       $$renderer2.push(`</textarea>`);
       pop_element();
       $$renderer2.push(`</div>`);
       pop_element();
-      bind_props($$props, { value, placeholder, minHeight, getContent });
+      bind_props($$props, {
+        value,
+        placeholder,
+        minHeight,
+        draftKey,
+        getContent,
+        clearDraft
+      });
     },
     MarkdownInput
   );
@@ -85883,6 +85937,8 @@ function CommentTree($$renderer, $$props) {
       let replyText = "";
       let editingId = null;
       let editText = "";
+      let replyEditorRef = null;
+      let editEditorRef = null;
       function formatDate(date) {
         if (!date) return "";
         const d = new Date(date);
@@ -85924,6 +85980,9 @@ function CommentTree($$renderer, $$props) {
         if (live) {
           live.pushEvent("create_comment", { body: replyText, parent_id: parentId });
         }
+        if (replyEditorRef?.clearDraft) {
+          replyEditorRef.clearDraft();
+        }
         replyText = "";
         replyingTo = null;
       }
@@ -85940,6 +85999,9 @@ function CommentTree($$renderer, $$props) {
         if (live) {
           live.pushEvent("edit_comment", { id: commentId, body: editText });
         }
+        if (editEditorRef?.clearDraft) {
+          editEditorRef.clearDraft();
+        }
         editingId = null;
         editText = "";
       }
@@ -85951,7 +86013,7 @@ function CommentTree($$renderer, $$props) {
       let $$inner_renderer;
       function $$render_inner($$renderer3) {
         $$renderer3.push(`<div class="space-y-3">`);
-        push_element($$renderer3, "div", 106, 0);
+        push_element($$renderer3, "div", 118, 0);
         if (comments && comments.length > 0) {
           $$renderer3.push("<!--[-->");
           $$renderer3.push(`<!--[-->`);
@@ -85959,35 +86021,35 @@ function CommentTree($$renderer, $$props) {
           for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
             let comment3 = each_array[$$index];
             $$renderer3.push(`<div class="p-4">`);
-            push_element($$renderer3, "div", 109, 6);
+            push_element($$renderer3, "div", 121, 6);
             $$renderer3.push(`<div>`);
-            push_element($$renderer3, "div", 110, 8);
+            push_element($$renderer3, "div", 122, 8);
             $$renderer3.push(`<div class="flex justify-between items-start gap-4">`);
-            push_element($$renderer3, "div", 111, 10);
+            push_element($$renderer3, "div", 123, 10);
             $$renderer3.push(`<div class="flex-1">`);
-            push_element($$renderer3, "div", 112, 12);
+            push_element($$renderer3, "div", 124, 12);
             $$renderer3.push(`<div class="flex items-center gap-3 mb-2">`);
-            push_element($$renderer3, "div", 113, 14);
+            push_element($$renderer3, "div", 125, 14);
             if (comment3.author?.avatar_url) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<img${attr("src", comment3.author.avatar_url)}${attr("alt", comment3.author?.username || "User")} class="w-8 h-8 rounded-full object-cover"/>`);
-              push_element($$renderer3, "img", 115, 18);
+              push_element($$renderer3, "img", 127, 18);
               pop_element();
             } else {
               $$renderer3.push("<!--[!-->");
               $$renderer3.push(`<div class="w-8 h-8 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">`);
-              push_element($$renderer3, "div", 121, 18);
+              push_element($$renderer3, "div", 133, 18);
               $$renderer3.push(`${escape_html((comment3.author?.username || "U")[0].toUpperCase())}</div>`);
               pop_element();
             }
             $$renderer3.push(`<!--]--> <div>`);
-            push_element($$renderer3, "div", 125, 16);
+            push_element($$renderer3, "div", 137, 16);
             $$renderer3.push(`<p class="font-semibold text-base-content text-sm">`);
-            push_element($$renderer3, "p", 126, 18);
+            push_element($$renderer3, "p", 138, 18);
             $$renderer3.push(`${escape_html(comment3.author?.username || "Unknown")}</p>`);
             pop_element();
             $$renderer3.push(` <span class="text-xs text-base-content/50">`);
-            push_element($$renderer3, "span", 129, 18);
+            push_element($$renderer3, "span", 141, 18);
             $$renderer3.push(`${escape_html(formatDate(comment3.inserted_at))}</span>`);
             pop_element();
             $$renderer3.push(`</div>`);
@@ -85998,10 +86060,11 @@ function CommentTree($$renderer, $$props) {
             if (editingId === comment3.id) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<div class="mb-3 space-y-2">`);
-              push_element($$renderer3, "div", 136, 16);
+              push_element($$renderer3, "div", 148, 16);
               MarkdownInput_default($$renderer3, {
                 placeholder: "Edit your comment...",
                 minHeight: "150px",
+                draftKey: `draft_comment_edit_${comment3.id}`,
                 get value() {
                   return editText;
                 },
@@ -86011,13 +86074,13 @@ function CommentTree($$renderer, $$props) {
                 }
               });
               $$renderer3.push(`<!----> <div class="flex gap-2 justify-end">`);
-              push_element($$renderer3, "div", 142, 18);
+              push_element($$renderer3, "div", 156, 18);
               $$renderer3.push(`<button class="btn btn-sm btn-ghost">`);
-              push_element($$renderer3, "button", 143, 20);
+              push_element($$renderer3, "button", 157, 20);
               $$renderer3.push(`Cancel</button>`);
               pop_element();
               $$renderer3.push(` <button${attr("disabled", !editText.trim(), true)} class="btn btn-sm btn-primary">`);
-              push_element($$renderer3, "button", 149, 20);
+              push_element($$renderer3, "button", 163, 20);
               $$renderer3.push(`Save</button>`);
               pop_element();
               $$renderer3.push(`</div>`);
@@ -86027,12 +86090,12 @@ function CommentTree($$renderer, $$props) {
             } else {
               $$renderer3.push("<!--[!-->");
               $$renderer3.push(`<p class="text-base-content mb-3">`);
-              push_element($$renderer3, "p", 159, 16);
+              push_element($$renderer3, "p", 173, 16);
               $$renderer3.push(`${escape_html(comment3.body)} `);
               if (comment3.edited_at) {
                 $$renderer3.push("<!--[-->");
                 $$renderer3.push(`<span class="text-xs text-base-content/50 ml-2">`);
-                push_element($$renderer3, "span", 162, 20);
+                push_element($$renderer3, "span", 176, 20);
                 $$renderer3.push(`(edited)</span>`);
                 pop_element();
               } else {
@@ -86042,7 +86105,7 @@ function CommentTree($$renderer, $$props) {
               pop_element();
             }
             $$renderer3.push(`<!--]--> <div class="flex items-center gap-4">`);
-            push_element($$renderer3, "div", 167, 14);
+            push_element($$renderer3, "div", 181, 14);
             VoteButtons_default($$renderer3, {
               target_type: "comment",
               target_id: comment3.id,
@@ -86055,11 +86118,11 @@ function CommentTree($$renderer, $$props) {
             $$renderer3.push(`</div>`);
             pop_element();
             $$renderer3.push(` <div class="flex gap-2">`);
-            push_element($$renderer3, "div", 178, 12);
+            push_element($$renderer3, "div", 192, 12);
             if (canEdit(comment3.author?.id) && editingId !== comment3.id) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<button class="btn btn-xs btn-ghost text-info">`);
-              push_element($$renderer3, "button", 180, 16);
+              push_element($$renderer3, "button", 194, 16);
               $$renderer3.push(`Edit</button>`);
               pop_element();
             } else {
@@ -86069,7 +86132,7 @@ function CommentTree($$renderer, $$props) {
             if (canDelete(comment3.author?.id)) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<button class="btn btn-xs btn-ghost text-error">`);
-              push_element($$renderer3, "button", 188, 16);
+              push_element($$renderer3, "button", 202, 16);
               $$renderer3.push(`Delete</button>`);
               pop_element();
             } else {
@@ -86079,7 +86142,7 @@ function CommentTree($$renderer, $$props) {
             if (current_user_id) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<button class="btn btn-xs btn-ghost text-warning" title="Report this comment">`);
-              push_element($$renderer3, "button", 196, 16);
+              push_element($$renderer3, "button", 210, 16);
               $$renderer3.push(`Report</button>`);
               pop_element();
             } else {
@@ -86106,12 +86169,13 @@ function CommentTree($$renderer, $$props) {
             if (replyingTo === comment3.id) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<div class="mt-4 pt-4 border-t border-base-300">`);
-              push_element($$renderer3, "div", 220, 12);
+              push_element($$renderer3, "div", 234, 12);
               $$renderer3.push(`<div class="space-y-2">`);
-              push_element($$renderer3, "div", 221, 14);
+              push_element($$renderer3, "div", 235, 14);
               MarkdownInput_default($$renderer3, {
                 placeholder: "Write a reply...",
                 minHeight: "150px",
+                draftKey: `draft_comment_reply_${comment3.id}`,
                 get value() {
                   return replyText;
                 },
@@ -86121,13 +86185,13 @@ function CommentTree($$renderer, $$props) {
                 }
               });
               $$renderer3.push(`<!----> <div class="flex gap-2 justify-end">`);
-              push_element($$renderer3, "div", 227, 16);
+              push_element($$renderer3, "div", 243, 16);
               $$renderer3.push(`<button class="btn btn-sm btn-ghost">`);
-              push_element($$renderer3, "button", 228, 18);
+              push_element($$renderer3, "button", 244, 18);
               $$renderer3.push(`Cancel</button>`);
               pop_element();
               $$renderer3.push(` <button${attr("disabled", !replyText.trim(), true)} class="btn btn-sm btn-primary">`);
-              push_element($$renderer3, "button", 234, 18);
+              push_element($$renderer3, "button", 250, 18);
               $$renderer3.push(`Reply</button>`);
               pop_element();
               $$renderer3.push(`</div>`);
@@ -86143,7 +86207,7 @@ function CommentTree($$renderer, $$props) {
             if (comment3.replies && comment3.replies.length > 0 && depth < MAX_DEPTH) {
               $$renderer3.push("<!--[-->");
               $$renderer3.push(`<div class="mt-4 ml-4 border-l-2 border-base-300 pl-4">`);
-              push_element($$renderer3, "div", 248, 12);
+              push_element($$renderer3, "div", 264, 12);
               CommentTree($$renderer3, {
                 comments: comment3.replies,
                 current_user_id,
@@ -86165,7 +86229,7 @@ function CommentTree($$renderer, $$props) {
         } else {
           $$renderer3.push("<!--[!-->");
           $$renderer3.push(`<p class="text-center text-base-content/50 py-8">`);
-          push_element($$renderer3, "p", 262, 4);
+          push_element($$renderer3, "p", 278, 4);
           $$renderer3.push(`No comments yet. Be the first to reply!</p>`);
           pop_element();
         }

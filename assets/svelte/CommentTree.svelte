@@ -16,6 +16,8 @@
   let replyText = ""
   let editingId = null
   let editText = ""
+  let replyEditorRef = null
+  let editEditorRef = null
 
   function formatDate(date) {
     if (!date) return ""
@@ -69,6 +71,11 @@
       })
     }
 
+    // Clear draft after successful submission
+    if (replyEditorRef?.clearDraft) {
+      replyEditorRef.clearDraft()
+    }
+
     replyText = ""
     replyingTo = null
   }
@@ -91,6 +98,11 @@
         id: commentId,
         body: editText
       })
+    }
+
+    // Clear draft after successful submission
+    if (editEditorRef?.clearDraft) {
+      editEditorRef.clearDraft()
     }
 
     editingId = null
@@ -136,8 +148,10 @@
                 <div class="mb-3 space-y-2">
                   <MarkdownInput
                     bind:value={editText}
+                    bind:this={editEditorRef}
                     placeholder="Edit your comment..."
                     minHeight="150px"
+                    draftKey={`draft_comment_edit_${comment.id}`}
                   />
                   <div class="flex gap-2 justify-end">
                     <button
@@ -221,8 +235,10 @@
               <div class="space-y-2">
                 <MarkdownInput
                   bind:value={replyText}
+                  bind:this={replyEditorRef}
                   placeholder="Write a reply..."
                   minHeight="150px"
+                  draftKey={`draft_comment_reply_${comment.id}`}
                 />
                 <div class="flex gap-2 justify-end">
                   <button
