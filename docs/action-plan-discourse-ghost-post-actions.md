@@ -1,13 +1,147 @@
-# Action Plan: Implement Discourse-Style “Ghost” Post Action Buttons
+# Discourse-Style "Ghost" Post Action Buttons - Implementation Complete
 
-Owner: Junior dev  
-Goal: Add a Discourse-like post action bar with low-visual-noise (“ghost”) icon buttons and one primary action.
+Owner: Junior dev
+Status: **✅ COMPLETED**
 
-This is **not** “random icons slapped under posts.” It is a consistent, reusable component with clear hierarchy, accessibility, and good hover/focus behavior.
+Implemented a Discourse-like post action bar with low-visual-noise ("ghost") icon buttons for forum comments and threads. Uses hero icons with clean, minimal styling and no hover background changes.
 
 ---
 
-## 1) Requirements (what we are building)
+## Completed Implementation Summary
+
+**Features Implemented:**
+- ✅ Ghost action buttons (Reply, Like, Copy link) with hero icons
+- ✅ Avatar cards for thread authors and commenters with fallback initials
+- ✅ Minimal card styling (removed backgrounds, kept vertical nesting lines)
+- ✅ Icon-only reply button (arrow-uturn-left)
+- ✅ Thumbs-up upvote only (removed downvote)
+- ✅ Wider reading area (max-w-6xl for better content display)
+- ✅ Color-matched thread/comment styling
+- ✅ Optimistic UI updates for likes
+- ✅ Copy link to clipboard with toast notifications
+- ✅ Reply functionality (triggers reply form)
+- ✅ Full keyboard accessibility with focus rings
+- ✅ All tests passing (142 total)
+
+---
+
+## Implementation Details
+
+### Files Modified/Created
+
+**New Files:**
+- `assets/svelte/PostActions.svelte` - Main action buttons component
+- Added ghost button CSS to `assets/css/app.css`
+
+**Modified Files:**
+- `lib/urielm_web/live/thread_live.ex` - Added avatar_url serialization, wider layout (max-w-6xl), thread body styling
+- `assets/svelte/CommentTree.svelte` - Integrated PostActions, added avatar displays with fallbacks
+- `assets/js/app.js` - Registered PostActions component, added toast event handler
+- `assets/css/app.css` - Added ghost button styles
+
+### Component Specifications
+
+**PostActions.svelte**
+```svelte
+export let postId          // Comment/thread ID
+export let liked           // Boolean: user has liked (default false)
+export let likeCount       // Integer: total likes (default 0)
+export let canReply        // Boolean: depth < MAX_DEPTH (default true)
+export let live            // LiveView socket (auto-injected)
+```
+
+Actions:
+- Reply (icon-only, arrow-uturn-left) - calls `reply_to_comment` event
+- Like (hero-heart / hero-heart-solid) - calls `toggle_like` event, shows count
+- Copy link (hero-link) - copies permalink, dispatches custom `show-toast` event
+
+**Ghost Button Styling**
+- `.btn-ghost-text` - Reply text button (removed, now icon-only)
+- `.btn-ghost-icon` - Icon button (Reply, Like, Copy)
+- Transparent background at rest
+- Text color changes on hover (base-content/60 → base-content)
+- Focus visible with primary ring
+- No background color change on hover (minimal Discourse style)
+
+**Avatar Cards**
+- Comment level: 8x8 rounded image or initial in box
+- Thread level: 6x6 rounded image or initial in box
+- Fallback: First letter of username in bg-base-300 rounded square
+- Uses `object-cover` for consistent image fitting
+
+### CSS Specifications
+
+```css
+.btn-ghost-text {
+  @apply bg-transparent text-base-content/60 transition-colors duration-200;
+  @apply hover:text-base-content;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary;
+  @apply px-2 h-9 rounded-md;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-ghost-icon {
+  @apply bg-transparent text-base-content/60 transition-colors duration-200;
+  @apply hover:text-base-content;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary;
+  @apply h-9 w-9 rounded-md flex items-center justify-center;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.ghost-actions-bar {
+  @apply flex items-center justify-between gap-1 mt-3 pt-2 border-t border-base-300/30;
+}
+```
+
+### Layout Changes
+
+**Thread Display:**
+- Container width: `max-w-3xl` → `max-w-6xl` (768px → 1152px)
+- Thread body: `bg-base-300 rounded-lg` → plain text (matches comments)
+- Added avatar to thread header
+
+**Comment Cards:**
+- Removed: `.card bg-base-200 border border-base-300`
+- Kept: `p-4` padding, vertical nesting line (border-l-2)
+- Added: Avatar with username/timestamp inline
+
+**Vote System:**
+- Changed from up/down arrows to thumbs-up icon only
+- Removed background container (was `bg-base-300`)
+- Simplified to: thumbs-up button + score display
+
+### Data Flow
+
+**Comment Serialization** (thread_live.ex - build_node):
+```elixir
+%{
+  id: to_string(comment.id),
+  body: comment.body,
+  author: %{
+    id: comment.author.id,
+    username: comment.author.username,
+    avatar_url: comment.author.avatar_url  # NEW
+  },
+  score: comment.score,
+  inserted_at: comment.inserted_at,
+  user_vote: nil,
+  replies: [...]
+}
+```
+
+**Thread Serialization** (serialize_thread):
+```elixir
+%{
+  ...
+  author_username: thread.author.username,
+  author_avatar_url: thread.author.avatar_url,  # NEW
+  ...
+}
+```
+
+---
+
+## Original Requirements (Reference)
 
 ### 1.1 UI structure
 For each post (comment) card, render a bottom action bar:

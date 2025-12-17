@@ -1,12 +1,14 @@
 <script>
+  import UMIcon from "./UMIcon.svelte"
+
   const themes = [
-    { value: 'light', label: 'Light', icon: '☀️' },
-    { value: 'dark', label: 'Dark', icon: '🌙' },
-    { value: 'tokyo-night', label: 'Tokyo Night', icon: '🗼' },
-    { value: 'dracula', label: 'Dracula', icon: '🧛' },
-    { value: 'synthwave', label: 'Synthwave', icon: '🌆' },
-    { value: 'business', label: 'Business', icon: '💼' },
-    { value: 'dim', label: 'Dim', icon: '🌑' }
+    { value: 'light', label: 'Light', icon: 'sun' },
+    { value: 'dark', label: 'Dark', icon: 'moon' },
+    { value: 'tokyo-night', label: 'Tokyo Night', icon: 'building' },
+    { value: 'dracula', label: 'Dracula', icon: 'sparkles' },
+    { value: 'synthwave', label: 'Synthwave', icon: 'bolt' },
+    { value: 'business', label: 'Business', icon: 'briefcase' },
+    { value: 'dim', label: 'Dim', icon: 'adjustments_vertical' }
   ]
 
   let currentTheme = $state('dark')
@@ -80,7 +82,7 @@
     class="btn btn-ghost btn-sm gap-2"
     aria-label="Select theme"
   >
-    <span class="text-lg">{themes.find(t => t.value === currentTheme)?.icon || '🌙'}</span>
+    <UMIcon name={themes.find(t => t.value === currentTheme)?.icon || 'moon'} className="w-4 h-4" />
     <span class="hidden md:inline">Theme</span>
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +104,7 @@
               onclick={() => selectTheme(theme.value)}
               class="flex items-center gap-3 {currentTheme === theme.value ? 'active bg-primary text-primary-content' : ''}"
             >
-              <span class="text-lg">{theme.icon}</span>
+              <UMIcon name={theme.icon} className="w-4 h-4" />
               <span>{theme.label}</span>
               {#if currentTheme === theme.value}
                 <svg

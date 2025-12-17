@@ -178,6 +178,7 @@ defmodule UrielmWeb.BoardLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
     <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
       <!-- Header -->
       <div class="mb-8">
@@ -292,6 +293,7 @@ defmodule UrielmWeb.BoardLive do
         </div>
       <% end %>
     </UrielmWeb.Components.ForumLayout.forum_layout>
+    </Layouts.app>
     """
   end
 

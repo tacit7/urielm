@@ -13,6 +13,7 @@ defmodule Urielm.Forum.Thread do
     field(:comment_count, :integer, default: 0)
     field(:is_locked, :boolean, default: false)
     field(:is_removed, :boolean, default: false)
+    field(:edited_at, :utc_datetime_usec)
 
     belongs_to(:board, Urielm.Forum.Board)
     belongs_to(:author, Urielm.Accounts.User, type: :id)
@@ -35,7 +36,8 @@ defmodule Urielm.Forum.Thread do
       :body,
       :is_locked,
       :is_removed,
-      :removed_by_id
+      :removed_by_id,
+      :edited_at
     ])
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
     |> validate_length(:title, min: 3, max: 300)

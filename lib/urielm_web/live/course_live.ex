@@ -26,6 +26,7 @@ defmodule UrielmWeb.CourseLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="courses" socket={@socket}>
     <div class="max-w-7xl mx-auto px-4 py-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Playlist Header (YouTube-style) -->
@@ -144,6 +145,7 @@ defmodule UrielmWeb.CourseLive do
         </div>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 end

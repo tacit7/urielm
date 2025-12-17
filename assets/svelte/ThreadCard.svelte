@@ -35,6 +35,8 @@
     })
   }
 
+  import UMIcon from "./UMIcon.svelte"
+
   function handleVote(value) {
     live.pushEvent("vote", {
       target_type: "thread",
@@ -97,7 +99,7 @@
           class:text-primary={user_vote === 1}
           title="Upvote"
         >
-          ▲
+          <UMIcon name="chevron_up" className="w-3 h-3" />
         </button>
         <span class="text-sm font-semibold text-base-content min-w-6 text-center">
           {score}
@@ -108,7 +110,7 @@
           class:text-error={user_vote === -1}
           title="Downvote"
         >
-          ▼
+          <UMIcon name="chevron_down" className="w-3 h-3" />
         </button>
       </div>
 

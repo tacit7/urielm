@@ -154,6 +154,16 @@ defmodule Urielm.Forum do
     |> Repo.update()
   end
 
+  def edit_thread(%Thread{} = thread, body, %{id: user_id, is_admin: is_admin} = _user) do
+    cond do
+      is_admin or thread.author_id == user_id ->
+        update_thread(thread, %{body: body, edited_at: DateTime.utc_now()})
+
+      true ->
+        {:error, :unauthorized}
+    end
+  end
+
   def remove_thread(%Thread{} = thread, %{id: user_id, is_admin: is_admin} = _user) do
     cond do
       is_admin ->
@@ -250,6 +260,16 @@ defmodule Urielm.Forum do
     comment
     |> Comment.changeset(attrs)
     |> Repo.update()
+  end
+
+  def edit_comment(%Comment{} = comment, body, %{id: user_id, is_admin: is_admin} = _user) do
+    cond do
+      is_admin or comment.author_id == user_id ->
+        update_comment(comment, %{body: body, edited_at: DateTime.utc_now()})
+
+      true ->
+        {:error, :unauthorized}
+    end
   end
 
   def remove_comment(%Comment{} = comment, %{id: user_id, is_admin: is_admin} = _user) do

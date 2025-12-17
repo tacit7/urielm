@@ -141,6 +141,13 @@ window.addEventListener("phx:close_modal", (e) => {
   }
 })
 
+// Toast notification handler
+window.addEventListener("show-toast", (e) => {
+  const {message, type = 'info'} = e.detail
+  // For now, just log to console. Can be enhanced with a toast UI component later
+  console.log(`[${type.toUpperCase()}] ${message}`)
+})
+
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,

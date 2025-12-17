@@ -64,11 +64,10 @@
   <button
     on:click={handleReply}
     disabled={!canReply || isLoading}
-    class="btn-ghost-text text-sm font-medium"
+    class="btn-ghost-icon"
     title="Reply to this comment"
   >
-    <span class="hero hero-arrow-uturn-left mr-1" />
-    Reply
+    <span class="hero hero-arrow-uturn-left"></span>
   </button>
 
   <!-- Right: Like and Copy buttons (icons with counts) -->
@@ -81,9 +80,9 @@
       title={currentLiked ? 'Unlike' : 'Like'}
     >
       {#if currentLiked}
-        <span class="hero hero-heart-solid text-error" />
+        <span class="hero hero-heart-solid text-error"></span>
       {:else}
-        <span class="hero hero-heart" />
+        <span class="hero hero-heart"></span>
       {/if}
     </button>
     {#if currentCount > 0}
@@ -99,7 +98,7 @@
       class="btn-ghost-icon"
       title="Copy link to this comment"
     >
-      <span class="hero hero-link" />
+      <span class="hero hero-link"></span>
     </button>
   </div>
 </div>

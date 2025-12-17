@@ -108,6 +108,7 @@ defmodule UrielmWeb.NotificationsLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
     <div class="min-h-screen bg-base-100">
       <div class="container mx-auto px-4 py-8 max-w-3xl">
         <div class="mb-8">
@@ -230,6 +231,7 @@ defmodule UrielmWeb.NotificationsLive do
         <% end %>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 

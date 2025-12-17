@@ -82,6 +82,7 @@ defmodule UrielmWeb.SettingsLive do
 
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="settings" socket={@socket}>
     <div class="container mx-auto px-4 py-8 max-w-4xl">
       <div class="mb-8">
         <h1 class="text-3xl font-bold">Settings</h1>
@@ -325,6 +326,7 @@ defmodule UrielmWeb.SettingsLive do
         <button>close</button>
       </form>
     </dialog>
+    </Layouts.app>
     """
   end
 

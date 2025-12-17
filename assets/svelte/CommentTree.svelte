@@ -13,6 +13,8 @@
   const MAX_DEPTH = 8
   let replyingTo = null
   let replyText = ""
+  let editingId = null
+  let editText = ""
 
   function formatDate(date) {
     if (!date) return ""
@@ -69,27 +71,96 @@
     replyText = ""
     replyingTo = null
   }
+
+  function startEdit(commentId, body) {
+    editingId = commentId
+    editText = body
+  }
+
+  function cancelEdit() {
+    editingId = null
+    editText = ""
+  }
+
+  function submitEdit(commentId) {
+    if (!editText.trim()) return
+
+    if (live) {
+      live.pushEvent("edit_comment", {
+        id: commentId,
+        body: editText
+      })
+    }
+
+    editingId = null
+    editText = ""
+  }
+
+  function canEdit(authorId) {
+    if (!current_user_id) return false
+    return current_user_id === authorId || current_user_is_admin
+  }
 </script>
 
 <div class="space-y-3">
   {#if comments && comments.length > 0}
     {#each comments as comment (comment.id)}
-      <div class="card bg-base-200 border border-base-300">
-        <div class="card-body p-4">
+      <div class="p-4">
+        <div>
           <div class="flex justify-between items-start gap-4">
             <div class="flex-1">
-              <div class="flex items-center gap-2 mb-2">
-                <p class="font-semibold text-base-content">
-                  {comment.author?.username || "Unknown"}
-                </p>
-                <span class="text-xs text-base-content/50">
-                  {formatDate(comment.inserted_at)}
-                </span>
+              <div class="flex items-center gap-3 mb-2">
+                {#if comment.author?.avatar_url}
+                  <img
+                    src={comment.author.avatar_url}
+                    alt={comment.author?.username || "User"}
+                    class="w-8 h-8 rounded-full object-cover"
+                  />
+                {:else}
+                  <div class="w-8 h-8 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
+                    {(comment.author?.username || "U")[0].toUpperCase()}
+                  </div>
+                {/if}
+                <div>
+                  <p class="font-semibold text-base-content text-sm">
+                    {comment.author?.username || "Unknown"}
+                  </p>
+                  <span class="text-xs text-base-content/50">
+                    {formatDate(comment.inserted_at)}
+                  </span>
+                </div>
               </div>
 
-              <p class="text-base-content mb-3">
-                {comment.body}
-              </p>
+              {#if editingId === comment.id}
+                <div class="mb-3 space-y-2">
+                  <textarea
+                    bind:value={editText}
+                    class="textarea textarea-bordered w-full min-h-20 text-sm"
+                  ></textarea>
+                  <div class="flex gap-2 justify-end">
+                    <button
+                      on:click={cancelEdit}
+                      class="btn btn-sm btn-ghost"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      on:click={() => submitEdit(comment.id)}
+                      disabled={!editText.trim()}
+                      class="btn btn-sm btn-primary"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              {:else}
+                <p class="text-base-content mb-3">
+                  {comment.body}
+                  {#if comment.edited_at}
+                    <span class="text-xs text-base-content/50 ml-2">(edited)</span>
+                  {/if}
+                </p>
+              {/if}
 
               <div class="flex items-center gap-4">
                 <VoteButtons
@@ -102,18 +173,15 @@
               </div>
             </div>
 
-            <!-- Post Actions (reply, like, copy link) -->
-            {#if current_user_id}
-              <PostActions
-                postId={comment.id}
-                liked={false}
-                likeCount={0}
-                canReply={depth < MAX_DEPTH}
-                {live}
-              />
-            {/if}
-
-            <div class="flex gap-2 mt-2">
+            <div class="flex gap-2">
+              {#if canEdit(comment.author?.id) && editingId !== comment.id}
+                <button
+                  on:click={() => startEdit(comment.id, comment.body)}
+                  class="btn btn-xs btn-ghost text-info"
+                >
+                  Edit
+                </button>
+              {/if}
               {#if canDelete(comment.author?.id)}
                 <button
                   on:click={() => handleDelete(comment.id)}
@@ -133,6 +201,17 @@
               {/if}
             </div>
           </div>
+
+          <!-- Post Actions (reply, like, copy link) -->
+          {#if current_user_id}
+            <PostActions
+              postId={comment.id}
+              liked={false}
+              likeCount={0}
+              canReply={depth < MAX_DEPTH}
+              {live}
+            />
+          {/if}
 
           <!-- Reply form -->
           {#if replyingTo === comment.id}

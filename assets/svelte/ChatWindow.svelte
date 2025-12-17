@@ -118,7 +118,7 @@
   <div bind:this={messageList} class="messages-container flex-1 overflow-y-auto px-6 py-2 bg-base-100 space-y-0.5">
     {#if messages.length === 0}
       <div class="flex flex-col items-center justify-center h-full gap-3 text-base-content/50">
-        <div class="text-5xl opacity-60">💬</div>
+        <svg class="w-16 h-16 opacity-60" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v9a2 2 0 01-2 2H8l-5 4V5z"/></svg>
         <p class="text-lg font-semibold text-base-content">Welcome to #{room.name}</p>
         <p class="text-sm">Start the conversation</p>
       </div>

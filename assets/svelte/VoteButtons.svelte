@@ -16,24 +16,16 @@
   }
 </script>
 
-<div class="flex items-center gap-2 bg-base-300 rounded-lg p-2">
+<div class="flex items-center gap-2">
   <button
     on:click={() => handleVote(1)}
     class="btn btn-xs btn-ghost text-base-content/60 hover:text-primary transition-colors"
     class:text-primary={user_vote === 1}
     title="Upvote"
   >
-    ▲
+    <span class="hero hero-hand-thumb-up text-lg"></span>
   </button>
-  <span class="text-sm font-medium text-base-content min-w-8 text-center">
+  <span class="text-sm font-medium text-base-content min-w-6 text-center">
     {score}
   </span>
-  <button
-    on:click={() => handleVote(-1)}
-    class="btn btn-xs btn-ghost text-base-content/60 hover:text-error transition-colors"
-    class:text-error={user_vote === -1}
-    title="Downvote"
-  >
-    ▼
-  </button>
 </div>

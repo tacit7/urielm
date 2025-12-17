@@ -102,6 +102,7 @@ defmodule UrielmWeb.ThemesLive do
 
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="themes" socket={@socket}>
     <div class="min-h-screen flex flex-col">
       <div class="px-4 py-6 border-b border-base-300">
         <h1 class="text-3xl font-bold">Themes</h1>
@@ -292,6 +293,7 @@ defmodule UrielmWeb.ThemesLive do
         </div>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 end

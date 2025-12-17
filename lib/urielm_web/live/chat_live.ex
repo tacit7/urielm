@@ -60,6 +60,7 @@ defmodule UrielmWeb.ChatLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="chat" socket={@socket}>
     <div class="flex h-[calc(100vh-4rem)] bg-base-200">
       <!-- Create Room Modal -->
       <div class={["modal", @show_create_modal && "modal-open"]}>
@@ -168,6 +169,7 @@ defmodule UrielmWeb.ChatLive do
         <% end %>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 

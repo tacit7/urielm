@@ -315,8 +315,9 @@ defmodule UrielmWeb.ReferencesLive do
               <button
                 phx-click="close_prompt_modal"
                 class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                aria-label="Close"
               >
-                ✕
+                <UMIcon.um_icon name="close" class="w-4 h-4" />
               </button>
             </form>
 

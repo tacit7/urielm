@@ -182,6 +182,36 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  def handle_event("edit_comment", %{"id" => comment_id, "body" => body}, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Not authorized")}
+
+      user ->
+        comment = Forum.get_comment!(comment_id)
+
+        case Forum.edit_comment(comment, body, user) do
+          {:ok, _} ->
+            # Reload thread and rebuild tree
+            thread = Forum.get_thread!(thread_data.id)
+            comment_tree = build_comment_tree(thread.comments)
+
+            {:noreply,
+             socket
+             |> assign(:comment_tree, comment_tree)
+             |> put_flash(:info, "Comment updated")}
+
+          {:error, :unauthorized} ->
+            {:noreply, put_flash(socket, :error, "Not authorized")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to update comment")}
+        end
+    end
+  end
+
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
@@ -318,8 +348,9 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
     <div class="min-h-screen bg-base-100">
-      <div class="container mx-auto px-4 py-8 max-w-3xl">
+      <div class="container mx-auto px-4 py-8 max-w-6xl">
         <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
           ← Back to {@thread.board_name}
         </.link>
@@ -329,7 +360,14 @@ defmodule UrielmWeb.ThreadLive do
             <div class="flex justify-between items-start">
               <div>
                 <h1 class="text-3xl font-bold text-base-content mb-2">{@thread.title}</h1>
-                <div class="flex items-center gap-4 text-sm text-base-content/60">
+                <div class="flex items-center gap-3 text-sm text-base-content/60">
+                  <%= if Map.get(@thread, :author_avatar_url) do %>
+                    <img src={Map.get(@thread, :author_avatar_url)} alt={Map.get(@thread, :author_username) || "User"} class="w-6 h-6 rounded-full object-cover" />
+                  <% else %>
+                    <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
+                      <%= String.slice(Map.get(@thread, :author_username) || "U", 0..0) |> String.upcase() %>
+                    </div>
+                  <% end %>
                   <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
                   <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
                 </div>
@@ -339,7 +377,7 @@ defmodule UrielmWeb.ThreadLive do
                 <%= if @current_user do %>
                   <div class="dropdown dropdown-end">
                     <button data-testid="notification-button" class="btn btn-xs btn-ghost" title="Notification settings">
-                      🔔
+                      <UMIcon.um_icon name="bell" class="w-4 h-4" />
                     </button>
                     <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                       <li>
@@ -380,7 +418,7 @@ defmodule UrielmWeb.ThreadLive do
                     phx-click="save_thread"
                     title="Save this thread"
                   >
-                    <%= if @thread_is_saved, do: "★", else: "☆" %>
+                    <UMIcon.um_icon name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"} class="w-4 h-4" />
                   </button>
 
                   <button
@@ -389,7 +427,7 @@ defmodule UrielmWeb.ThreadLive do
                     onclick="document.getElementById('report_thread_modal').showModal()"
                     title="Report this thread"
                   >
-                    ⚠️
+                    <UMIcon.um_icon name="warning" class="w-4 h-4" />
                   </button>
                 <% end %>
 
@@ -405,7 +443,7 @@ defmodule UrielmWeb.ThreadLive do
               </div>
             </div>
 
-            <div class="bg-base-300 rounded-lg p-4 my-4">
+            <div class="p-4 my-4">
               <.svelte
                 name="MarkdownRenderer"
                 props={%{content: @thread.body}}
@@ -465,8 +503,8 @@ defmodule UrielmWeb.ThreadLive do
             props={
               %{
                 comments: @comment_tree,
-                currentUserId: (@current_user && @current_user.id) || nil,
-                currentUserIsAdmin: (@current_user && @current_user.is_admin) || false
+                current_user_id: (@current_user && @current_user.id) || nil,
+                current_user_is_admin: (@current_user && @current_user.is_admin) || false
               }
             }
             socket={@socket}
@@ -478,7 +516,9 @@ defmodule UrielmWeb.ThreadLive do
       <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
         <div class="modal-box bg-base-300">
           <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" aria-label="Close">
+              <UMIcon.um_icon name="close" class="w-4 h-4" />
+            </button>
           </form>
           <h3 class="font-bold text-lg">Report this thread</h3>
           <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
@@ -536,7 +576,9 @@ defmodule UrielmWeb.ThreadLive do
         <dialog id={"report_comment_modal_#{comment.id}"} data-testid="comment-report-modal" class="modal">
           <div class="modal-box bg-base-300">
             <form method="dialog">
-              <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" aria-label="Close">
+              <UMIcon.um_icon name="close" class="w-4 h-4" />
+            </button>
             </form>
             <h3 class="font-bold text-lg mb-4">Report Comment</h3>
             <form phx-submit="report_comment" class="space-y-4">
@@ -584,6 +626,7 @@ defmodule UrielmWeb.ThreadLive do
         </dialog>
       <% end %>
     </div>
+    </Layouts.app>
     """
   end
 
@@ -596,6 +639,7 @@ defmodule UrielmWeb.ThreadLive do
       comment_count: thread.comment_count,
       author_id: thread.author_id,
       author_username: thread.author.username,
+      author_avatar_url: thread.author.avatar_url,
       created_at: thread.inserted_at,
       board_name: thread.board.name,
       board_slug: thread.board.slug,
@@ -631,7 +675,8 @@ defmodule UrielmWeb.ThreadLive do
       body: comment.body,
       author: %{
         id: comment.author.id,
-        username: comment.author.username
+        username: comment.author.username,
+        avatar_url: comment.author.avatar_url
       },
       score: comment.score,
       inserted_at: comment.inserted_at,

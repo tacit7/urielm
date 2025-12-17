@@ -101,6 +101,7 @@ defmodule UrielmWeb.LessonLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="courses" socket={@socket}>
     <div class="drawer drawer-end lg:drawer-open">
       <input id="lesson-drawer" type="checkbox" class="drawer-toggle" />
       
@@ -439,6 +440,7 @@ defmodule UrielmWeb.LessonLive do
         </aside>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 end

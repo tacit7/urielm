@@ -9,6 +9,7 @@ defmodule Urielm.Forum.Comment do
     field(:body, :string)
     field(:score, :integer, default: 0)
     field(:is_removed, :boolean, default: false)
+    field(:edited_at, :utc_datetime_usec)
 
     belongs_to(:thread, Urielm.Forum.Thread)
     belongs_to(:author, Urielm.Accounts.User, type: :id)
@@ -24,7 +25,7 @@ defmodule Urielm.Forum.Comment do
   @doc false
   def changeset(comment, attrs) do
     comment
-    |> cast(attrs, [:thread_id, :author_id, :parent_id, :body, :is_removed, :removed_by_id])
+    |> cast(attrs, [:thread_id, :author_id, :parent_id, :body, :is_removed, :removed_by_id, :edited_at])
     |> validate_required([:thread_id, :author_id, :body])
     |> validate_length(:body, min: 1, max: 5000)
     |> sanitize_body()
