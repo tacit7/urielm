@@ -83,6 +83,7 @@ import ThreadCard from "../svelte/ThreadCard.svelte"
 import VoteButtons from "../svelte/VoteButtons.svelte"
 import CommentTree from "../svelte/CommentTree.svelte"
 import PostActions from "../svelte/PostActions.svelte"
+import MarkdownInput from "../svelte/MarkdownInput.svelte"
 
 // Infinite scroll hook
 const InfiniteScroll = {
@@ -166,7 +167,8 @@ let Hooks = getHooks({
   ThreadCard,
   VoteButtons,
   CommentTree,
-  PostActions
+  PostActions,
+  MarkdownInput
 })
 
 // Add custom hooks

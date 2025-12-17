@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "daisyui": "^5.5.8",
+    "easymde": "^2.20.0",
     "highlight.js": "^11.11.1",
     "live_svelte": "file:../deps/live_svelte",
     "lucide-svelte": "^0.556.0",

@@ -1,6 +1,7 @@
 <script>
   import VoteButtons from "./VoteButtons.svelte"
   import PostActions from "./PostActions.svelte"
+  import MarkdownInput from "./MarkdownInput.svelte"
 
   export let comments = []
   export let current_user_id = null
@@ -133,10 +134,11 @@
 
               {#if editingId === comment.id}
                 <div class="mb-3 space-y-2">
-                  <textarea
+                  <MarkdownInput
                     bind:value={editText}
-                    class="textarea textarea-bordered w-full min-h-20 text-sm"
-                  ></textarea>
+                    placeholder="Edit your comment..."
+                    minHeight="150px"
+                  />
                   <div class="flex gap-2 justify-end">
                     <button
                       on:click={cancelEdit}
@@ -217,10 +219,10 @@
           {#if replyingTo === comment.id}
             <div class="mt-4 pt-4 border-t border-base-300">
               <div class="space-y-2">
-                <textarea
+                <MarkdownInput
                   bind:value={replyText}
                   placeholder="Write a reply..."
-                  class="textarea textarea-bordered w-full min-h-20 text-sm"
+                  minHeight="150px"
                 />
                 <div class="flex gap-2 justify-end">
                   <button
