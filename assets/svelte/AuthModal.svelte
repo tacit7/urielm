@@ -1,5 +1,5 @@
 <script>
-  import { Eye, EyeOff, X } from 'lucide-svelte'
+  import { Eye, EyeOff, X, CheckCircle, AlertCircle } from 'lucide-svelte'
   import GoogleSignInButton from './GoogleSignInButton.svelte'
 
   let { isOpen = $bindable(false), live } = $props()
@@ -7,18 +7,70 @@
   let mode = $state('signin') // 'signin' or 'signup'
   let email = $state('')
   let password = $state('')
-  let name = $state('')
+  let username = $state('')
+  let displayName = $state('')
   let error = $state('')
   let loading = $state(false)
   let showPassword = $state(false)
+  let handleStatus = $state(null) // null, 'valid', 'taken', 'invalid'
+  let handleCheckLoading = $state(false)
+  let checkTimeout = null
+
+  const HANDLE_PATTERN = /^(?=.{3,20}$)[a-z0-9]+([_-][a-z0-9]+)*$/
+
+  function normalizeHandle(value) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_-]/g, '')
+  }
+
+  function validateHandleFormat(value) {
+    return HANDLE_PATTERN.test(value)
+  }
+
+  function onHandleInput(e) {
+    username = normalizeHandle(e.target.value)
+
+    if (checkTimeout) clearTimeout(checkTimeout)
+
+    if (!username) {
+      handleStatus = null
+      return
+    }
+
+    if (!validateHandleFormat(username)) {
+      handleStatus = 'invalid'
+      return
+    }
+
+    handleStatus = null
+    handleCheckLoading = true
+
+    checkTimeout = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/check-handle?username=${encodeURIComponent(username)}`)
+        const data = await response.json()
+        handleStatus = data.available ? 'valid' : 'taken'
+      } catch (e) {
+        handleStatus = null
+      } finally {
+        handleCheckLoading = false
+      }
+    }, 300)
+  }
 
   function closeModal() {
     isOpen = false
     email = ''
     password = ''
-    name = ''
+    username = ''
+    displayName = ''
     error = ''
     showPassword = false
+    handleStatus = null
+    if (checkTimeout) clearTimeout(checkTimeout)
   }
 
   function switchMode() {
@@ -35,7 +87,7 @@
       const endpoint = mode === 'signin' ? '/auth/signin' : '/auth/signup'
       const body = mode === 'signin'
         ? { email, password }
-        : { email, password, name }
+        : { email, password, username, displayName }
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -87,18 +139,52 @@
     <form onsubmit={handleEmailAuth} class="flex flex-col gap-4">
       {#if mode === 'signup'}
         <div class="form-control w-full">
-          <label class="label pb-1" for="name">
-            <span class="label-text text-sm">Name</span>
+          <label class="label pb-1" for="username">
+            <span class="label-text text-sm">Handle</span>
           </label>
           <input
-            id="name"
+            id="username"
             type="text"
-            bind:value={name}
-            placeholder="Your name"
+            oninput={onHandleInput}
+            value={username}
+            placeholder="lowercase-handle"
             class="input input-bordered w-full"
             required
             disabled={loading}
+            autocomplete="off"
           />
+          <div class="mt-1 flex items-center gap-2">
+            {#if handleCheckLoading}
+              <span class="loading loading-spinner loading-sm"></span>
+              <span class="text-xs text-base-content/60">Checking availability...</span>
+            {:else if handleStatus === 'valid'}
+              <CheckCircle class="w-4 h-4 text-success" />
+              <span class="text-xs text-success">Available</span>
+            {:else if handleStatus === 'taken'}
+              <AlertCircle class="w-4 h-4 text-warning" />
+              <span class="text-xs text-warning">Taken</span>
+            {:else if handleStatus === 'invalid'}
+              <AlertCircle class="w-4 h-4 text-error" />
+              <span class="text-xs text-error">Only letters, numbers, dashes/underscores; 3-20 chars</span>
+            {/if}
+          </div>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label pb-1" for="displayName">
+            <span class="label-text text-sm">Display Name</span>
+          </label>
+          <input
+            id="displayName"
+            type="text"
+            bind:value={displayName}
+            placeholder="Your Name"
+            class="input input-bordered w-full"
+            required
+            disabled={loading}
+            maxlength="50"
+          />
+          <p class="text-xs text-base-content/50 mt-1">Shows on your profile and comments</p>
         </div>
       {/if}
 

@@ -6,6 +6,7 @@ defmodule Urielm.Accounts.User do
     field(:email, :string)
     field(:name, :string)
     field(:username, :string)
+    field(:display_name, :string)
     field(:avatar_url, :string)
     field(:email_verified, :boolean, default: false)
     field(:active, :boolean, default: true)
@@ -32,20 +33,19 @@ defmodule Urielm.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :name, :username, :avatar_url, :email_verified, :active])
+    |> cast(attrs, [:email, :name, :username, :display_name, :avatar_url, :email_verified, :active])
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email")
-    |> validate_username()
+    |> validate_handle()
     |> unique_constraint(:email)
     |> unique_constraint(:username)
   end
 
-  defp validate_username(changeset) do
+  defp validate_handle(changeset) do
     changeset
-    |> validate_format(:username, ~r/^[a-zA-Z0-9_]+$/,
-      message: "can only contain letters, numbers, and underscores"
+    |> validate_format(:username, ~r/^(?=.{3,20}$)[a-z0-9]+([_-][a-z0-9]+)*$/,
+      message: "must be 3-20 lowercase letters, numbers, dashes or underscores; no leading/trailing dashes"
     )
-    |> validate_length(:username, min: 3, max: 20)
   end
 
   @doc """
@@ -53,11 +53,11 @@ defmodule Urielm.Accounts.User do
   """
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :name, :username, :password])
-    |> validate_required([:email, :password])
+    |> cast(attrs, [:email, :username, :display_name, :password])
+    |> validate_required([:email, :password, :username, :display_name])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email")
     |> validate_length(:password, min: 8, message: "must be at least 8 characters")
-    |> validate_username()
+    |> validate_handle()
     |> unique_constraint(:email)
     |> unique_constraint(:username)
     |> put_password_hash()

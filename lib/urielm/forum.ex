@@ -881,6 +881,44 @@ defmodule Urielm.Forum do
     get_notification_level(user_id, thread_id) == "muted"
   end
 
+  # User Profiles
+
+  def list_threads_by_author(author_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(t in Thread)
+    |> where([t], t.author_id == ^author_id and t.is_removed == false)
+    |> preload([:author, :board])
+    |> order_by([t], desc: t.inserted_at)
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def list_comments_by_author(author_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 20)
+    offset = Keyword.get(opts, :offset, 0)
+
+    from(c in Comment)
+    |> where([c], c.author_id == ^author_id and c.is_removed == false)
+    |> preload([:author, thread: :board])
+    |> order_by([c], desc: c.inserted_at)
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def count_threads_by_author(author_id) do
+    from(t in Thread, where: t.author_id == ^author_id and t.is_removed == false)
+    |> Repo.aggregate(:count)
+  end
+
+  def count_comments_by_author(author_id) do
+    from(c in Comment, where: c.author_id == ^author_id and c.is_removed == false)
+    |> Repo.aggregate(:count)
+  end
+
   # Helpers
 
   defp update_thread_comment_count(thread_id) do

@@ -40,6 +40,13 @@ defmodule UrielmWeb.Router do
     post "/signin", AuthController, :signin
   end
 
+  # API routes
+  scope "/api", UrielmWeb do
+    pipe_through :browser
+
+    get "/check-handle", AuthController, :check_handle
+  end
+
   scope "/", UrielmWeb do
     pipe_through :browser
 
@@ -54,6 +61,7 @@ defmodule UrielmWeb.Router do
       live "/forum/b/:board_slug", BoardLive
       live "/forum/t/:thread_id", ThreadLive
       live "/forum/search", SearchLive
+      live "/u/:username", UserProfileLive
     end
 
     get "/blog", PostController, :index

@@ -67,10 +67,7 @@ defmodule UrielmWeb.HomeLive do
             class="group btn btn-primary h-12 px-8 rounded-full font-medium flex items-center space-x-2 transition-all transform hover:scale-105"
           >
             <span>Explore Tutorials</span>
-            <.icon
-              name="hero-play-solid"
-              class="h-4 w-4 group-hover:translate-x-1 transition-transform"
-            />
+            <UMIcon.um_icon name="play" variant="solid" class="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </.link>
           <.link
             id="cta-consult"
@@ -174,7 +171,7 @@ defmodule UrielmWeb.HomeLive do
             <div class="relative z-10 h-full flex flex-col justify-between">
               <div>
                 <div class="w-12 h-12 bg-base-100 rounded-2xl flex items-center justify-center mb-6 border border-base-content/20">
-                  <.icon name="hero-bolt" class="h-6 w-6 text-warning" />
+                  <UMIcon.um_icon name="bolt" class="h-6 w-6 text-warning" />
                 </div>
                 <h3 class="text-2xl font-semibold mb-2">Automation Systems</h3>
                 <p class="text-base-content/60">
@@ -214,7 +211,7 @@ defmodule UrielmWeb.HomeLive do
             class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-primary/10 transition-colors duration-500"
           >
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-              <.icon name="hero-chat-bubble-left-right" class="h-6 w-6 text-primary" />
+              <UMIcon.um_icon name="topics" class="h-6 w-6 text-primary" />
             </div>
             <h3 class="text-xl font-semibold mb-2 text-base-content">Prompting</h3>
             <p class="text-base-content/70 text-sm">
@@ -228,7 +225,7 @@ defmodule UrielmWeb.HomeLive do
             class="rounded-3xl bg-base-200 p-8 relative overflow-hidden group hover:bg-success/10 transition-colors duration-500"
           >
             <div class="w-12 h-12 bg-base-300 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-              <.icon name="hero-code-bracket" class="h-6 w-6 text-success" />
+              <UMIcon.um_icon name="hero-code-bracket" class="h-6 w-6 text-success" />
             </div>
             <h3 class="text-xl font-semibold mb-2 text-base-content">Code</h3>
             <p class="text-base-content/70 text-sm">

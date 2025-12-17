@@ -241,6 +241,26 @@ defmodule Urielm.Accounts do
 
   def is_prompt_liked?(nil, _prompt_id), do: false
 
+  ## User Profiles
+
+  def get_user_by_username(username) when is_binary(username) do
+    from(u in User, where: fragment("LOWER(?)", u.username) == fragment("LOWER(?)", ^username))
+    |> Repo.one()
+  end
+
+  def get_user_stats(user_id) do
+    from_count = from(t in Urielm.Forum.Thread, where: t.author_id == ^user_id and t.is_removed == false)
+                 |> Repo.aggregate(:count)
+
+    comment_count = from(c in Urielm.Forum.Comment, where: c.author_id == ^user_id and c.is_removed == false)
+                    |> Repo.aggregate(:count)
+
+    %{
+      thread_count: from_count,
+      comment_count: comment_count
+    }
+  end
+
   ## Counter helpers
 
   defp increment_prompt_counter(prompt_id, counter_field) do

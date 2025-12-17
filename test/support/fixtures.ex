@@ -14,7 +14,7 @@ defmodule Urielm.Fixtures do
       |> Enum.into(%{
         email: "user#{unique_suffix}@example.com",
         username: "user#{unique_suffix}",
-        name: "Test User",
+        display_name: "Test User #{unique_suffix}",
         password: "password123"
       })
       |> Urielm.Accounts.register_user()
@@ -32,7 +32,7 @@ defmodule Urielm.Fixtures do
       |> Enum.into(%{
         email: "admin#{unique_suffix}@example.com",
         username: "admin#{unique_suffix}",
-        name: "Admin User",
+        display_name: "Admin User #{unique_suffix}",
         password: "password123"
       })
       |> Urielm.Accounts.register_user()

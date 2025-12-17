@@ -80,7 +80,7 @@ defmodule UrielmWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+        <UMIcon.um_icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -92,7 +92,7 @@ defmodule UrielmWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+        <UMIcon.um_icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """
@@ -113,7 +113,7 @@ defmodule UrielmWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <UMIcon.um_icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
       <button
@@ -121,7 +121,8 @@ defmodule UrielmWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <UMIcon.um_icon name="moon" class="hidden" />
+        <UMIcon.um_icon name="sun" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
       <button
@@ -129,7 +130,7 @@ defmodule UrielmWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <UMIcon.um_icon name="moon" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
     </div>
     """

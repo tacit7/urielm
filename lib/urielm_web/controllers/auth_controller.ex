@@ -40,11 +40,17 @@ defmodule UrielmWeb.AuthController do
   @doc """
   Sign up with email and password
   """
-  def signup(conn, %{"email" => email, "password" => password} = params) do
+  def signup(conn, params) do
+    email = Map.get(params, "email")
+    password = Map.get(params, "password")
+    username = Map.get(params, "username")
+    display_name = Map.get(params, "displayName")
+
     user_params = %{
       email: email,
       password: password,
-      name: Map.get(params, "name")
+      username: if(username, do: String.downcase(String.trim(username))),
+      display_name: if(display_name, do: String.trim(display_name))
     }
 
     case Accounts.register_user(user_params) do
@@ -90,6 +96,23 @@ defmodule UrielmWeb.AuthController do
       "#{field}: #{Enum.join(messages, ", ")}"
     end)
     |> Enum.join("; ")
+  end
+
+  @doc """
+  Check if handle (username) is available
+  """
+  def check_handle(conn, %{"username" => username}) do
+    case Accounts.get_user_by_username(String.downcase(String.trim(username))) do
+      nil ->
+        conn
+        |> put_status(:ok)
+        |> json(%{available: true})
+
+      _user ->
+        conn
+        |> put_status(:ok)
+        |> json(%{available: false})
+    end
   end
 
   @doc """
