@@ -9,6 +9,7 @@
   export let user_vote = null
   export let is_saved = false
   export let is_subscribed = false
+  export let is_unread = false
 
   // live is automatically available from LiveSvelte
   export let live
@@ -62,9 +63,14 @@
   <!-- Topic Column (7 cols) -->
   <div class="col-span-7">
     <a href="/forum/t/{id}" class="block group">
-      <h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors">
-        {title}
-      </h3>
+      <div class="flex items-center gap-2">
+        <h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors">
+          {title}
+        </h3>
+        {#if is_unread}
+          <span class="badge badge-success badge-sm">new</span>
+        {/if}
+      </div>
       <p class="text-sm text-base-content/60 mt-1 line-clamp-1">
         {body}
       </p>

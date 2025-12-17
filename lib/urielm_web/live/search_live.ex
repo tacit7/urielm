@@ -223,6 +223,7 @@ defmodule UrielmWeb.SearchLive do
   defp serialize_thread(thread, current_user) do
     is_saved = current_user && Forum.is_thread_saved?(current_user.id, thread.id)
     is_subscribed = current_user && Forum.is_subscribed?(current_user.id, thread.id)
+    is_unread = current_user && Forum.is_thread_unread?(current_user.id, thread.id)
 
     %{
       id: to_string(thread.id),
@@ -237,7 +238,8 @@ defmodule UrielmWeb.SearchLive do
       created_at: thread.inserted_at,
       user_vote: get_user_vote(current_user, "thread", thread.id),
       is_saved: is_saved,
-      is_subscribed: is_subscribed
+      is_subscribed: is_subscribed,
+      is_unread: is_unread
     }
   end
 

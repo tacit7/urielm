@@ -160,6 +160,7 @@ defmodule UrielmWeb.SavedThreadsLive do
 
   defp serialize_thread(thread, current_user) do
     is_subscribed = Forum.is_subscribed?(current_user.id, thread.id)
+    is_unread = Forum.is_thread_unread?(current_user.id, thread.id)
 
     %{
       id: to_string(thread.id),
@@ -174,7 +175,8 @@ defmodule UrielmWeb.SavedThreadsLive do
       created_at: thread.inserted_at,
       user_vote: get_user_vote(current_user, "thread", thread.id),
       is_saved: true,
-      is_subscribed: is_subscribed
+      is_subscribed: is_subscribed,
+      is_unread: is_unread
     }
   end
 
