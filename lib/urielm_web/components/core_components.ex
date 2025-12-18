@@ -393,6 +393,78 @@ defmodule UrielmWeb.CoreComponents do
   end
 
   @doc """
+  Renders numbered pagination with daisyUI styling.
+
+  Uses Flop.Meta for page information and renders navigation buttons
+  with daisyUI's join component pattern.
+
+  ## Examples
+
+      <.pagination meta={@meta} path={fn n -> ~p"/posts?page=\#{n}" end} />
+      <.pagination meta={@meta} path={&build_path/1} />
+  """
+  attr :meta, :map, required: true, doc: "Flop.Meta struct with pagination metadata"
+  attr :path, :any, required: true, doc: "Function that takes page number and returns path"
+
+  def pagination(%{meta: nil} = assigns), do: ~H""
+
+  def pagination(assigns) do
+    ~H"""
+    <div class="join">
+      <%= if @meta.has_previous_page? do %>
+        <.link patch={@path.(@meta.current_page - 1)} class="join-item btn btn-sm">
+          «
+        </.link>
+      <% else %>
+        <button class="join-item btn btn-sm btn-disabled">«</button>
+      <% end %>
+
+      <%= for page <- page_links(@meta) do %>
+        <%= case page do %>
+          <% :ellipsis -> %>
+            <button class="join-item btn btn-sm btn-disabled">...</button>
+          <% n when n == @meta.current_page -> %>
+            <button class="join-item btn btn-sm btn-active">{n}</button>
+          <% n -> %>
+            <.link patch={@path.(n)} class="join-item btn btn-sm">
+              {n}
+            </.link>
+        <% end %>
+      <% end %>
+
+      <%= if @meta.has_next_page? do %>
+        <.link patch={@path.(@meta.current_page + 1)} class="join-item btn btn-sm">
+          »
+        </.link>
+      <% else %>
+        <button class="join-item btn btn-sm btn-disabled">»</button>
+      <% end %>
+    </div>
+    """
+  end
+
+  # Generate compact page links (current ± 2 pages with ellipsis)
+  defp page_links(%{current_page: current, total_pages: total}) do
+    start_page = max(1, current - 2)
+    end_page = min(total, current + 2)
+
+    pages = Enum.to_list(start_page..end_page)
+
+    pages =
+      if start_page > 1 do
+        [1, :ellipsis | pages]
+      else
+        pages
+      end
+
+    if end_page < total do
+      pages ++ [:ellipsis, total]
+    else
+      pages
+    end
+  end
+
+  @doc """
   Renders a [Heroicon](https://heroicons.com).
 
   Heroicons come in three styles – outline, solid, and mini.

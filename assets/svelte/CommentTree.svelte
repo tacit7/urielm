@@ -1,23 +1,23 @@
 <script>
   import VoteButtons from "./VoteButtons.svelte"
   import PostActions from "./PostActions.svelte"
-  import MarkdownInput from "./MarkdownInput.svelte"
+  import CommentTree from "./CommentTree.svelte"
 
-  export let comments = []
-  export let current_user_id = null
-  export let current_user_is_admin = false
-  export let depth = 0
-
-  // live is automatically available from LiveSvelte
-  export let live
+  let {
+    comments = [],
+    current_user_id = null,
+    current_user_is_admin = false,
+    thread_author_id = null,
+    solved_comment_id = null,
+    depth = 0,
+    live
+  } = $props()
 
   const MAX_DEPTH = 8
-  let replyingTo = null
-  let replyText = ""
-  let editingId = null
-  let editText = ""
-  let replyEditorRef = null
-  let editEditorRef = null
+  let replyingTo = $state(null)
+  let replyText = $state("")
+  let editingId = $state(null)
+  let editText = $state("")
 
   function formatDate(date) {
     if (!date) return ""
@@ -113,6 +113,17 @@
     if (!current_user_id) return false
     return current_user_id === authorId || current_user_is_admin
   }
+
+  function canMarkSolved() {
+    if (!current_user_id) return false
+    return current_user_id === thread_author_id || current_user_is_admin
+  }
+
+  function handleMarkSolved(commentId) {
+    if (live) {
+      live.pushEvent("mark_solved", { comment_id: commentId })
+    }
+  }
 </script>
 
 <div class="space-y-3">
@@ -146,22 +157,21 @@
 
               {#if editingId === comment.id}
                 <div class="mb-3 space-y-2">
-                  <MarkdownInput
+                  <textarea
                     bind:value={editText}
-                    bind:this={editEditorRef}
                     placeholder="Edit your comment..."
-                    minHeight="150px"
-                    draftKey={`draft_comment_edit_${comment.id}`}
-                  />
+                    class="textarea textarea-bordered w-full bg-base-200 text-base-content"
+                    rows="4"
+                  ></textarea>
                   <div class="flex gap-2 justify-end">
                     <button
-                      on:click={cancelEdit}
+                      onclick={cancelEdit}
                       class="btn btn-sm btn-ghost"
                     >
                       Cancel
                     </button>
                     <button
-                      on:click={() => submitEdit(comment.id)}
+                      onclick={() => submitEdit(comment.id)}
                       disabled={!editText.trim()}
                       class="btn btn-sm btn-primary"
                     >
@@ -190,9 +200,23 @@
             </div>
 
             <div class="flex gap-2">
+              {#if canMarkSolved() && comment.id === solved_comment_id}
+                <span class="badge badge-success badge-sm gap-1">
+                  ✓ Solution
+                </span>
+              {/if}
+              {#if canMarkSolved() && comment.id !== solved_comment_id && !solved_comment_id}
+                <button
+                  onclick={() => handleMarkSolved(comment.id)}
+                  class="btn btn-xs btn-success btn-outline"
+                  title="Mark as solution"
+                >
+                  ✓ Solution
+                </button>
+              {/if}
               {#if canEdit(comment.author?.id) && editingId !== comment.id}
                 <button
-                  on:click={() => startEdit(comment.id, comment.body)}
+                  onclick={() => startEdit(comment.id, comment.body)}
                   class="btn btn-xs btn-ghost text-info"
                 >
                   Edit
@@ -200,7 +224,7 @@
               {/if}
               {#if canDelete(comment.author?.id)}
                 <button
-                  on:click={() => handleDelete(comment.id)}
+                  onclick={() => handleDelete(comment.id)}
                   class="btn btn-xs btn-ghost text-error"
                 >
                   Delete
@@ -208,7 +232,7 @@
               {/if}
               {#if current_user_id}
                 <button
-                  on:click={() => handleReport(comment.id)}
+                  onclick={() => handleReport(comment.id)}
                   class="btn btn-xs btn-ghost text-warning"
                   title="Report this comment"
                 >
@@ -218,13 +242,15 @@
             </div>
           </div>
 
-          <!-- Post Actions (reply, like, copy link) -->
+          <!-- Post Actions (reply, like, bookmark, copy link) -->
           {#if current_user_id}
             <PostActions
               postId={comment.id}
               liked={false}
               likeCount={0}
+              is_saved={comment.is_saved || false}
               canReply={depth < MAX_DEPTH}
+              onReply={() => startReply(comment.id)}
               {live}
             />
           {/if}
@@ -233,22 +259,21 @@
           {#if replyingTo === comment.id}
             <div class="mt-4 pt-4 border-t border-base-300">
               <div class="space-y-2">
-                <MarkdownInput
+                <textarea
                   bind:value={replyText}
-                  bind:this={replyEditorRef}
                   placeholder="Write a reply..."
-                  minHeight="150px"
-                  draftKey={`draft_comment_reply_${comment.id}`}
-                />
+                  class="textarea textarea-bordered w-full bg-base-200 text-base-content"
+                  rows="4"
+                ></textarea>
                 <div class="flex gap-2 justify-end">
                   <button
-                    on:click={cancelReply}
+                    onclick={cancelReply}
                     class="btn btn-sm btn-ghost"
                   >
                     Cancel
                   </button>
                   <button
-                    on:click={() => submitReply(comment.id)}
+                    onclick={() => submitReply(comment.id)}
                     disabled={!replyText.trim()}
                     class="btn btn-sm btn-primary"
                   >
@@ -262,10 +287,12 @@
           <!-- Nested replies -->
           {#if comment.replies && comment.replies.length > 0 && depth < MAX_DEPTH}
             <div class="mt-4 ml-4 border-l-2 border-base-300 pl-4">
-              <svelte:self
+              <CommentTree
                 comments={comment.replies}
                 current_user_id={current_user_id}
                 current_user_is_admin={current_user_is_admin}
+                thread_author_id={thread_author_id}
+                solved_comment_id={solved_comment_id}
                 {live}
                 depth={depth + 1}
               />

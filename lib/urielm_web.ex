@@ -88,13 +88,14 @@ defmodule UrielmWeb do
       import Phoenix.HTML
       # Core UI components
       import UrielmWeb.CoreComponents
+      # Project icon component (function component)
+      import UrielmWeb.Components.UMIcon, only: [um_icon: 1]
       # LiveSvelte integration
       import LiveSvelte
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS
       alias UrielmWeb.Layouts
-      alias UrielmWeb.Components.UMIcon
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())

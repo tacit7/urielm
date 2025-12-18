@@ -3,14 +3,14 @@ defmodule UrielmWeb.BoardLive do
   use LiveSvelte.Components
 
   alias Urielm.Forum
-  alias Urielm.Repo
+  alias UrielmWeb.LiveHelpers
 
   @page_size 20
 
   @impl true
   def mount(%{"board_slug" => slug}, _session, socket) do
     board = Forum.get_board!(slug)
-    categories = Forum.list_categories() |> Repo.preload(:boards)
+    categories = Forum.list_categories_with_boards()
 
     {:ok,
      socket
@@ -18,30 +18,54 @@ defmodule UrielmWeb.BoardLive do
      |> assign(:board, board)
      |> assign(:all_categories, categories)
      |> assign(:sort, "new")
-     |> assign(:page, 0)
-     |> assign(:has_more, true)}
+     |> assign(:page, 1)}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     sort = Map.get(params, "sort", "latest")
     filter = Map.get(params, "filter", "all")
+    page = Map.get(params, "page", "1") |> String.to_integer()
     %{board: board, current_user: user} = socket.assigns
 
-    threads =
+    {threads, meta} =
       case filter do
         "unread" when not is_nil(user) ->
-          Forum.list_unread_threads(user.id, board.id, limit: @page_size, offset: 0)
+          case Forum.paginate_unread_threads(user.id, board.id, %{
+                 page: page,
+                 page_size: @page_size
+               }) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
+          end
 
         "new" ->
-          Forum.list_new_threads(user && user.id, board.id, limit: @page_size, offset: 0)
+          case Forum.paginate_new_threads(board.id, %{page: page, page_size: @page_size}) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
+          end
 
         _ ->
-          sort_atom = String.to_atom(sort)
+          flop_order =
+            case sort do
+              "latest" ->
+                %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
 
-          case sort_atom do
-            :latest -> Forum.list_latest_threads(board.id, limit: @page_size, offset: 0)
-            _ -> Forum.list_threads(board.id, sort: sort_atom, limit: @page_size, offset: 0)
+              "top" ->
+                %{order_by: [:score, :inserted_at, :id], order_directions: [:desc, :desc, :desc]}
+
+              "new" ->
+                %{order_by: [:inserted_at, :id], order_directions: [:desc, :desc]}
+
+              _ ->
+                %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
+            end
+
+          flop_params = Map.merge(%{page: page, page_size: @page_size}, flop_order)
+
+          case Forum.paginate_threads(board.id, flop_params) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
           end
       end
 
@@ -49,8 +73,8 @@ defmodule UrielmWeb.BoardLive do
      socket
      |> assign(:sort, sort)
      |> assign(:filter, filter)
-     |> assign(:page, 0)
-     |> assign(:has_more, length(threads) == @page_size)
+     |> assign(:page, page)
+     |> assign(:meta, meta)
      |> stream(:threads, serialize_threads(threads, user), reset: true)}
   end
 
@@ -73,10 +97,8 @@ defmodule UrielmWeb.BoardLive do
         case Forum.cast_vote(user.id, target_type, target_id_binary, value_int) do
           {:ok, _vote} ->
             # Fetch updated thread and serialize
-            thread = Forum.get_thread!(target_id_binary) |> Repo.preload(:author)
-            serialized = serialize_thread(thread, user)
-
-            {:noreply, stream_insert(socket, :threads, serialized)}
+            {:noreply,
+             LiveHelpers.update_thread_in_stream(socket, :threads, target_id_binary, user)}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to vote")}
@@ -84,256 +106,171 @@ defmodule UrielmWeb.BoardLive do
     end
   end
 
+  @impl true
   def handle_event("save_thread", %{"thread_id" => thread_id}, socket) do
-    %{current_user: user} = socket.assigns
+    LiveHelpers.with_auth(socket, "save threads", fn socket, user ->
+      case Forum.toggle_save_thread(user.id, thread_id) do
+        {:ok, _} ->
+          {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, thread_id, user)}
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to save threads")}
-
-      user ->
-        case Forum.toggle_save_thread(user.id, thread_id) do
-          {:ok, _} ->
-            thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
-            serialized = serialize_thread(thread, user)
-
-            {:noreply, stream_insert(socket, :threads, serialized)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to save thread")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to save thread")}
+      end
+    end)
   end
 
+  @impl true
   def handle_event("subscribe", %{"thread_id" => thread_id}, socket) do
-    %{current_user: user} = socket.assigns
+    LiveHelpers.with_auth(socket, "subscribe", fn socket, user ->
+      case Forum.subscribe_to_thread(user.id, thread_id) do
+        {:ok, _} ->
+          {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, thread_id, user)}
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to subscribe")}
-
-      user ->
-        case Forum.subscribe_to_thread(user.id, thread_id) do
-          {:ok, _} ->
-            thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
-            serialized = serialize_thread(thread, user)
-
-            {:noreply, stream_insert(socket, :threads, serialized)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to subscribe")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to subscribe")}
+      end
+    end)
   end
 
+  @impl true
   def handle_event("unsubscribe", %{"thread_id" => thread_id}, socket) do
-    %{current_user: user} = socket.assigns
+    LiveHelpers.with_auth(socket, "unsubscribe", fn socket, user ->
+      case Forum.unsubscribe_from_thread(user.id, thread_id) do
+        {:ok, _} ->
+          {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, thread_id, user)}
 
-    case user do
-      nil ->
-        {:noreply, socket}
-
-      user ->
-        case Forum.unsubscribe_from_thread(user.id, thread_id) do
-          {:ok, _} ->
-            thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
-            serialized = serialize_thread(thread, user)
-
-            {:noreply, stream_insert(socket, :threads, serialized)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
+      end
+    end)
   end
 
-  # PAGINATION STABILITY NOTE:
-  # Offset-based pagination with "Top" sorting may cause missing/duplicate threads
-  # if votes change scores mid-scroll. Acceptable for MVP. For high-traffic boards,
-  # migrate to cursor-based pagination using (score, inserted_at, id) composite.
-  # See: https://use-the-index-luke.com/no-offset
-  def handle_event("load_more", _params, socket) do
-    %{board: board, sort: sort, page: page, has_more: has_more} = socket.assigns
-
-    if not has_more do
-      {:noreply, socket}
-    else
-      offset = (page + 1) * @page_size
-
-      threads =
-        Forum.list_threads(board.id,
-          sort: String.to_atom(sort),
-          limit: @page_size,
-          offset: offset
-        )
-
-      {:noreply,
-       socket
-       |> assign(:page, page + 1)
-       |> assign(:has_more, length(threads) == @page_size)
-       |> stream(:threads, serialize_threads(threads, socket.assigns.current_user))}
-    end
-  end
+  # No load_more; pagination is handled via Flop and patch navigation
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
-    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
-      <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
-            <p class="text-base-content/60 mt-2">{@board.description}</p>
+      <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
+        <!-- Header -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
+              <p class="text-base-content/60 mt-2">{@board.description}</p>
+            </div>
+            <%= if @current_user do %>
+              <a
+                href={~p"/forum/b/#{@board.slug}/new"}
+                class="btn btn-primary"
+              >
+                New Topic
+              </a>
+            <% end %>
           </div>
-          <%= if @current_user do %>
-            <a
-              href={~p"/forum/b/#{@board.slug}/new"}
-              class="btn btn-primary"
-            >
-              New Topic
-            </a>
-          <% end %>
-        </div>
-        
+          
     <!-- Filter Tabs -->
-        <div class="flex gap-4 border-b border-base-300 pb-0">
-          <%= if @current_user do %>
+          <div class="flex gap-4 border-b border-base-300 pb-0">
+            <%= if @current_user do %>
+              <a
+                href={~p"/forum/b/#{@board.slug}?filter=unread"}
+                class={[
+                  "px-4 py-3 font-medium border-b-2 transition-colors",
+                  if(@filter == "unread",
+                    do: "border-primary text-primary",
+                    else: "border-transparent text-base-content/60 hover:text-base-content"
+                  )
+                ]}
+              >
+                Unread
+              </a>
+            <% end %>
             <a
-              href={~p"/forum/b/#{@board.slug}?filter=unread"}
+              href={~p"/forum/b/#{@board.slug}?filter=new"}
               class={[
                 "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@filter == "unread",
+                if(@filter == "new",
                   do: "border-primary text-primary",
                   else: "border-transparent text-base-content/60 hover:text-base-content"
                 )
               ]}
             >
-              Unread
+              New
             </a>
-          <% end %>
-          <a
-            href={~p"/forum/b/#{@board.slug}?filter=new"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@filter == "new",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            New
-          </a>
-          <a
-            href={~p"/forum/b/#{@board.slug}"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@filter == "all",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            Latest
-          </a>
-          <a
-            href={~p"/forum/b/#{@board.slug}?sort=top&filter=all"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@sort == "top",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            Top
-          </a>
-        </div>
-      </div>
-      
-    <!-- Threads Table -->
-      <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
-        <!-- Table Header -->
-        <div class="grid grid-cols-12 gap-4 px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
-          <div class="col-span-7">Topic</div>
-          <div class="col-span-2 text-right">Replies</div>
-          <div class="col-span-3 text-right">Activity</div>
+            <a
+              href={~p"/forum/b/#{@board.slug}"}
+              class={[
+                "px-4 py-3 font-medium border-b-2 transition-colors",
+                if(@filter == "all",
+                  do: "border-primary text-primary",
+                  else: "border-transparent text-base-content/60 hover:text-base-content"
+                )
+              ]}
+            >
+              Latest
+            </a>
+            <a
+              href={~p"/forum/b/#{@board.slug}?sort=top&filter=all"}
+              class={[
+                "px-4 py-3 font-medium border-b-2 transition-colors",
+                if(@sort == "top",
+                  do: "border-primary text-primary",
+                  else: "border-transparent text-base-content/60 hover:text-base-content"
+                )
+              ]}
+            >
+              Top
+            </a>
+          </div>
         </div>
         
+    <!-- Threads Table -->
+        <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
+          <!-- Table Header -->
+          <div class="grid grid-cols-12 gap-4 px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
+            <div class="col-span-7">Topic</div>
+            <div class="col-span-2 text-right">Replies</div>
+            <div class="col-span-3 text-right">Activity</div>
+          </div>
+          
     <!-- Threads List -->
-        <div id="threads" phx-update="stream" class="">
-          <div id="empty-state" class="hidden only:flex justify-center py-12">
-            <div class="text-center text-base-content/50">
-              <p class="text-lg font-medium mb-2">No topics yet</p>
-              <p class="text-sm">Be the first to start a discussion!</p>
+          <div id="threads" phx-update="stream" class="">
+            <div id="empty-state" class="hidden only:flex justify-center py-12">
+              <div class="text-center text-base-content/50">
+                <p class="text-lg font-medium mb-2">No topics yet</p>
+                <p class="text-sm">Be the first to start a discussion!</p>
+              </div>
+            </div>
+            <div
+              :for={{id, thread} <- @streams.threads}
+              id={id}
+              class="border-t border-base-300 first:border-t-0"
+            >
+              <.svelte
+                name="ThreadCard"
+                props={thread}
+                socket={@socket}
+              />
             </div>
           </div>
-          <div
-            :for={{id, thread} <- @streams.threads}
-            id={id}
-            class="border-t border-base-300 first:border-t-0"
-          >
-            <.svelte
-              name="ThreadCard"
-              props={thread}
-              socket={@socket}
+        </div>
+        
+    <!-- Pager -->
+        <div class="flex items-center justify-center gap-2 mt-8">
+          <%= if @meta do %>
+            <.pagination
+              meta={@meta}
+              path={fn n -> ~p"/forum/b/#{@board.slug}?sort=#{@sort}&filter=#{@filter}&page=#{n}" end}
             />
-          </div>
+          <% end %>
         </div>
-      </div>
-
-      <%= if @has_more do %>
-        <div
-          id="infinite-scroll-marker"
-          phx-hook="InfiniteScroll"
-          class="h-20 flex items-center justify-center mt-8"
-        >
-          <div class="text-base-content/40 text-sm">Loading more...</div>
-        </div>
-      <% end %>
-    </UrielmWeb.Components.ForumLayout.forum_layout>
+      </UrielmWeb.Components.ForumLayout.forum_layout>
     </Layouts.app>
     """
   end
 
-  defp serialize_threads(threads, current_user) do
-    threads = Repo.preload(threads, :author)
+  defp serialize_threads(threads, current_user),
+    do: LiveHelpers.serialize_thread_list(threads, current_user)
 
-    Enum.map(threads, fn thread ->
-      serialize_thread(thread, current_user)
-    end)
-  end
-
-  defp serialize_thread(thread, current_user) do
-    is_saved = current_user && Forum.is_thread_saved?(current_user.id, thread.id)
-    is_subscribed = current_user && Forum.is_subscribed?(current_user.id, thread.id)
-    is_unread = current_user && Forum.is_thread_unread?(current_user.id, thread.id)
-
-    %{
-      id: to_string(thread.id),
-      title: thread.title,
-      body: String.slice(thread.body, 0, 150),
-      score: thread.score,
-      comment_count: thread.comment_count,
-      author: %{
-        id: thread.author.id,
-        username: thread.author.username
-      },
-      created_at: thread.inserted_at,
-      user_vote: get_user_vote(current_user, "thread", thread.id),
-      is_saved: is_saved,
-      is_subscribed: is_subscribed,
-      is_unread: is_unread
-    }
-  end
-
-  defp get_user_vote(nil, _target_type, _target_id), do: nil
-
-  defp get_user_vote(user, target_type, target_id) do
-    case Forum.get_user_vote(user.id, target_type, target_id) do
-      nil -> nil
-      vote -> vote.value
-    end
-  end
+  # per-ThreadCard serialization and vote lookups now live in LiveHelpers
 end

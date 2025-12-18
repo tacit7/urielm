@@ -2,6 +2,9 @@ defmodule Urielm.Forum.Comment do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Flop.Schema,
+           filterable: [], sortable: [:id, :inserted_at, :score, :author_id, :thread_id]}
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
@@ -25,7 +28,15 @@ defmodule Urielm.Forum.Comment do
   @doc false
   def changeset(comment, attrs) do
     comment
-    |> cast(attrs, [:thread_id, :author_id, :parent_id, :body, :is_removed, :removed_by_id, :edited_at])
+    |> cast(attrs, [
+      :thread_id,
+      :author_id,
+      :parent_id,
+      :body,
+      :is_removed,
+      :removed_by_id,
+      :edited_at
+    ])
     |> validate_required([:thread_id, :author_id, :body])
     |> validate_length(:body, min: 1, max: 5000)
     |> sanitize_body()
