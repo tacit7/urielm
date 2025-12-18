@@ -53,6 +53,7 @@ defmodule UrielmWeb.ChatLive do
     end
   end
 
+  @impl true
   def handle_params(_params, _url, socket) do
     {:noreply, socket}
   end
@@ -61,114 +62,114 @@ defmodule UrielmWeb.ChatLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_page="chat" socket={@socket}>
-    <div class="flex h-[calc(100vh-4rem)] bg-base-200">
-      <!-- Create Room Modal -->
-      <div class={["modal", @show_create_modal && "modal-open"]}>
-        <div class="modal-box">
-          <h3 class="font-bold text-lg text-base-content">Create New Room</h3>
-          <form phx-submit="create_room" class="py-4">
-            <div class="form-control w-full">
-              <label class="label">
-                <span class="label-text text-base-content">Room Name</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                placeholder="e.g., general, random, dev"
-                class="input input-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/50"
-                required
-              />
-            </div>
-            <div class="form-control w-full">
-              <label class="label">
-                <span class="label-text text-base-content">Description (optional)</span>
-              </label>
-              <textarea
-                name="description"
-                placeholder="Optional room description"
-                class="textarea textarea-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/50"
-                rows="3"
-              ></textarea>
-            </div>
-            <div class="modal-action">
-              <button
-                type="button"
-                phx-click="toggle_create_modal"
-                class="btn btn-ghost"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="btn btn-primary"
-              >
-                Create
-              </button>
-            </div>
+      <div class="flex h-[calc(100vh-4rem)] bg-base-200">
+        <!-- Create Room Modal -->
+        <div class={["modal", @show_create_modal && "modal-open"]}>
+          <div class="modal-box">
+            <h3 class="font-bold text-lg text-base-content">Create New Room</h3>
+            <form phx-submit="create_room" class="py-4">
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text text-base-content">Room Name</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g., general, random, dev"
+                  class="input input-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/50"
+                  required
+                />
+              </div>
+              <div class="form-control w-full">
+                <label class="label">
+                  <span class="label-text text-base-content">Description (optional)</span>
+                </label>
+                <textarea
+                  name="description"
+                  placeholder="Optional room description"
+                  class="textarea textarea-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/50"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="modal-action">
+                <button
+                  type="button"
+                  phx-click="toggle_create_modal"
+                  class="btn btn-ghost"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" class="modal-backdrop">
+            <button phx-click="toggle_create_modal">close</button>
           </form>
         </div>
-        <form method="dialog" class="modal-backdrop">
-          <button phx-click="toggle_create_modal">close</button>
-        </form>
-      </div>
-      
+        
     <!-- Sidebar with rooms -->
-      <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-300">
-        <div class="p-4 border-b border-base-300">
-          <h1 class="text-2xl font-bold text-base-content">Chat</h1>
-        </div>
-
-        <%= if @current_user.is_admin do %>
-          <div class="p-4">
-            <button
-              phx-click="toggle_create_modal"
-              class="w-full btn btn-primary btn-sm"
-            >
-              + New Room
-            </button>
+        <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-300">
+          <div class="p-4 border-b border-base-300">
+            <h1 class="text-2xl font-bold text-base-content">Chat</h1>
           </div>
-        <% end %>
 
-        <nav class="space-y-1 p-3">
-          <%= for room <- @rooms do %>
-            <a
-              href={~p"/chat?room_id=#{room.id}"}
-              class={[
-                "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
-                @selected_room && @selected_room.id == room.id &&
-                  "bg-primary/10 text-primary border-l-primary font-semibold",
-                @selected_room && @selected_room.id != room.id &&
-                  "text-base-content hover:bg-base-200/50"
-              ]}
-            >
-              # {room.name}
-            </a>
+          <%= if @current_user.is_admin do %>
+            <div class="p-4">
+              <button
+                phx-click="toggle_create_modal"
+                class="w-full btn btn-primary btn-sm"
+              >
+                + New Room
+              </button>
+            </div>
           <% end %>
-        </nav>
-      </div>
-      
+
+          <nav class="space-y-1 p-3">
+            <%= for room <- @rooms do %>
+              <a
+                href={~p"/chat?room_id=#{room.id}"}
+                class={[
+                  "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
+                  @selected_room && @selected_room.id == room.id &&
+                    "bg-primary/10 text-primary border-l-primary font-semibold",
+                  @selected_room && @selected_room.id != room.id &&
+                    "text-base-content hover:bg-base-200/50"
+                ]}
+              >
+                # {room.name}
+              </a>
+            <% end %>
+          </nav>
+        </div>
+        
     <!-- Main chat area -->
-      <div class="flex-1 flex flex-col bg-base-100 h-full">
-        <%= if @selected_room do %>
-          <.svelte
-            name="ChatWindow"
-            class="h-full"
-            props={
-              %{
-                room: serialize_room(@selected_room),
-                messages: Enum.map(@messages, &serialize_message/1),
-                userId: to_string(@current_user.id)
+        <div class="flex-1 flex flex-col bg-base-100 h-full">
+          <%= if @selected_room do %>
+            <.svelte
+              name="ChatWindow"
+              class="h-full"
+              props={
+                %{
+                  room: serialize_room(@selected_room),
+                  messages: Enum.map(@messages, &serialize_message/1),
+                  userId: to_string(@current_user.id)
+                }
               }
-            }
-            socket={@socket}
-          />
-        <% else %>
-          <div class="flex-1 flex items-center justify-center text-base-content/50">
-            <p>Select a room to start chatting</p>
-          </div>
-        <% end %>
+              socket={@socket}
+            />
+          <% else %>
+            <div class="flex-1 flex items-center justify-center text-base-content/50">
+              <p>Select a room to start chatting</p>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
     </Layouts.app>
     """
   end
@@ -178,6 +179,7 @@ defmodule UrielmWeb.ChatLive do
     {:noreply, assign(socket, :show_create_modal, !socket.assigns[:show_create_modal])}
   end
 
+  @impl true
   def handle_event("create_room", %{"name" => name, "description" => description}, socket) do
     user = socket.assigns[:current_user]
 
@@ -206,6 +208,7 @@ defmodule UrielmWeb.ChatLive do
     end
   end
 
+  @impl true
   def handle_event("send_message", %{"body" => body}, socket) do
     user = socket.assigns[:current_user]
     room = socket.assigns[:selected_room]

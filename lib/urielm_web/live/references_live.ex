@@ -97,7 +97,6 @@ defmodule UrielmWeb.ReferencesLive do
       id
       |> String.to_integer()
       |> Content.get_prompt!()
-      |> Urielm.Repo.preload(:tag_records)
 
     tag_names = Enum.map(prompt.tag_records, & &1.name)
 
@@ -145,7 +144,6 @@ defmodule UrielmWeb.ReferencesLive do
                 prompt =
                   prompt_id
                   |> Content.get_prompt!()
-                  |> Urielm.Repo.preload(:tag_records)
 
                 tag_names = Enum.map(prompt.tag_records, & &1.name)
 
@@ -192,7 +190,6 @@ defmodule UrielmWeb.ReferencesLive do
                 prompt =
                   prompt_id
                   |> Content.get_prompt!()
-                  |> Urielm.Repo.preload(:tag_records)
 
                 tag_names = Enum.map(prompt.tag_records, & &1.name)
 
@@ -265,7 +262,10 @@ defmodule UrielmWeb.ReferencesLive do
             </div>
 
             <div id="prompts" phx-update="stream" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div id="empty-state" class="hidden only:block col-span-full text-center py-12 text-base-content/50">
+              <div
+                id="empty-state"
+                class="hidden only:block col-span-full text-center py-12 text-base-content/50"
+              >
                 No prompts found.
               </div>
               <div
@@ -317,7 +317,7 @@ defmodule UrielmWeb.ReferencesLive do
                 class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
                 aria-label="Close"
               >
-                <UMIcon.um_icon name="close" class="w-4 h-4" />
+                <.um_icon name="close" class="w-4 h-4" />
               </button>
             </form>
 
@@ -392,8 +392,6 @@ defmodule UrielmWeb.ReferencesLive do
   end
 
   defp serialize_prompts(prompts) do
-    prompts = Urielm.Repo.preload(prompts, :tag_records)
-
     Enum.map(prompts, fn prompt ->
       tag_names = Enum.map(prompt.tag_records, & &1.name)
 

@@ -33,10 +33,12 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
     {:noreply, assign(socket, editing: level, edit_form: form)}
   end
 
+  @impl true
   def handle_event("cancel_edit", _params, socket) do
     {:noreply, assign(socket, editing: nil, edit_form: nil)}
   end
 
+  @impl true
   def handle_event("save", %{"trust_level_config" => attrs}, socket) do
     level = socket.assigns.editing
 
@@ -65,37 +67,39 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_page="admin" socket={@socket}>
-    <div class="min-h-screen bg-base-100">
-      <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-base-content">Trust Level Settings</h1>
-          <p class="text-base-content/60 mt-2">Configure user tiers, permissions, and rate limits</p>
-        </div>
+      <div class="min-h-screen bg-base-100">
+        <div class="container mx-auto px-4 py-8 max-w-6xl">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-base-content">Trust Level Settings</h1>
+            <p class="text-base-content/60 mt-2">
+              Configure user tiers, permissions, and rate limits
+            </p>
+          </div>
 
-        <div class="grid gap-4">
-          <%= for config <- @configs do %>
-            <div class="card bg-base-200 border border-base-300">
-              <div class="card-body">
-                <%= if @editing == config.level do %>
-                  <.edit_form config={config} form={@edit_form} />
-                <% else %>
-                  <.config_view config={config} />
-                  <div class="card-actions justify-end mt-4">
-                    <button
-                      phx-click="edit"
-                      phx-value-level={config.level}
-                      class="btn btn-sm btn-primary"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                <% end %>
+          <div class="grid gap-4">
+            <%= for config <- @configs do %>
+              <div class="card bg-base-200 border border-base-300">
+                <div class="card-body">
+                  <%= if @editing == config.level do %>
+                    <.edit_form config={config} form={@edit_form} />
+                  <% else %>
+                    <.config_view config={config} />
+                    <div class="card-actions justify-end mt-4">
+                      <button
+                        phx-click="edit"
+                        phx-value-level={config.level}
+                        class="btn btn-sm btn-primary"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  <% end %>
+                </div>
               </div>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         </div>
       </div>
-    </div>
     </Layouts.app>
     """
   end
@@ -191,11 +195,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Min Topics</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[min_topics]"
+            type="number"
             value={@config.min_topics}
-            class="input input-bordered w-full"
+            label="Min Topics"
           />
         </div>
 
@@ -203,11 +207,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Min Posts</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[min_posts]"
+            type="number"
             value={@config.min_posts}
-            class="input input-bordered w-full"
+            label="Min Posts"
           />
         </div>
 
@@ -215,11 +219,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Min Days Joined</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[min_days_joined]"
+            type="number"
             value={@config.min_days_joined}
-            class="input input-bordered w-full"
+            label="Min Days Joined"
           />
         </div>
 
@@ -227,11 +231,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Min Likes Given</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[min_likes_given]"
+            type="number"
             value={@config.min_likes_given}
-            class="input input-bordered w-full"
+            label="Min Likes Given"
           />
         </div>
 
@@ -239,11 +243,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Min Likes Received</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[min_likes_received]"
+            type="number"
             value={@config.min_likes_received}
-            class="input input-bordered w-full"
+            label="Min Likes Received"
           />
         </div>
 
@@ -251,11 +255,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Max Posts Per Minute</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[max_posts_per_minute]"
+            type="number"
             value={@config.max_posts_per_minute}
-            class="input input-bordered w-full"
+            label="Max Posts Per Minute"
           />
           <p class="text-xs text-base-content/60 mt-1">-1 for unlimited</p>
         </div>
@@ -264,11 +268,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Max New Topics Per Day</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[max_new_topics_per_day]"
+            type="number"
             value={@config.max_new_topics_per_day}
-            class="input input-bordered w-full"
+            label="Max New Topics Per Day"
           />
           <p class="text-xs text-base-content/60 mt-1">-1 for unlimited</p>
         </div>
@@ -277,11 +281,11 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           <label class="label">
             <span class="label-text font-semibold">Post Edit Time Limit (min)</span>
           </label>
-          <input
-            type="number"
+          <.input
             name="trust_level_config[post_edit_time_limit]"
+            type="number"
             value={@config.post_edit_time_limit}
-            class="input input-bordered w-full"
+            label="Post Edit Time Limit (min)"
           />
           <p class="text-xs text-base-content/60 mt-1">-1 for unlimited</p>
         </div>

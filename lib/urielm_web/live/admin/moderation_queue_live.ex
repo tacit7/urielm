@@ -2,7 +2,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
   use UrielmWeb, :live_view
 
   alias Urielm.Forum
-  alias Urielm.Repo
+  alias UrielmWeb.LiveHelpers
 
   @page_size 20
 
@@ -42,6 +42,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end
   end
 
+  @impl true
   def handle_event("approve", %{"report_id" => report_id}, socket) do
     report = Forum.get_report!(report_id)
 
@@ -61,6 +62,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end
   end
 
+  @impl true
   def handle_event("resolve", %{"report_id" => report_id}, socket) do
     report = Forum.get_report!(report_id)
 
@@ -80,6 +82,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end
   end
 
+  @impl true
   def handle_event("dismiss", %{"report_id" => report_id}, socket) do
     report = Forum.get_report!(report_id)
 
@@ -99,6 +102,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end
   end
 
+  @impl true
   def handle_event("add_notes", %{"report_id" => report_id, "notes" => notes}, socket) do
     report = Forum.get_report!(report_id)
 
@@ -115,185 +119,198 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_page="admin" socket={@socket}>
-    <div class="min-h-screen bg-base-100">
-      <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold text-base-content">Moderation Queue</h1>
-          <p class="text-base-content/60 mt-2">
-            <span class="badge badge-lg badge-error">{@pending_count}</span> pending reports
-          </p>
-        </div>
-
-        <%= if length(@reports) == 0 do %>
-          <div id="reports-empty" class="card bg-base-200 border border-base-300">
-            <div class="card-body text-center py-12">
-              <p class="text-lg font-medium text-base-content">All caught up!</p>
-              <p class="text-sm text-base-content/60">No pending reports at this time.</p>
-            </div>
+      <div class="min-h-screen bg-base-100">
+        <div class="container mx-auto px-4 py-8 max-w-5xl">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-base-content">Moderation Queue</h1>
+            <p class="text-base-content/60 mt-2">
+              <span class="badge badge-lg badge-error">{@pending_count}</span> pending reports
+            </p>
           </div>
-        <% else %>
-          <div class="space-y-4">
-            <%= for report <- @reports do %>
-              <div class="card bg-base-200 border border-base-300" data-testid={"report-card-#{report.id}"}>
-                <div class="card-body">
-                  <div class="flex justify-between items-start mb-4">
-                    <div class="flex-1">
-                      <div class="flex items-center gap-2 mb-2">
-                        <span class="badge badge-sm">
-                          {String.capitalize(report.target_type)}
-                        </span>
-                        <span class="badge badge-sm badge-warning">
-                          {String.capitalize(report.reason)}
-                        </span>
+
+          <%= if length(@reports) == 0 do %>
+            <div id="reports-empty" class="card bg-base-200 border border-base-300">
+              <div class="card-body text-center py-12">
+                <p class="text-lg font-medium text-base-content">All caught up!</p>
+                <p class="text-sm text-base-content/60">No pending reports at this time.</p>
+              </div>
+            </div>
+          <% else %>
+            <div class="space-y-4">
+              <%= for report <- @reports do %>
+                <div
+                  class="card bg-base-200 border border-base-300"
+                  data-testid={"report-card-#{report.id}"}
+                >
+                  <div class="card-body">
+                    <div class="flex justify-between items-start mb-4">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                          <span class="badge badge-sm">
+                            {String.capitalize(report.target_type)}
+                          </span>
+                          <span class="badge badge-sm badge-warning">
+                            {String.capitalize(report.reason)}
+                          </span>
+                        </div>
+                        <h2 class="text-lg font-semibold text-base-content mb-1">
+                          {report.target_title}
+                        </h2>
+                        <p class="text-sm text-base-content/60">
+                          Reported by
+                          <span class="font-medium text-base-content">
+                            {report.reporter_username}
+                          </span> {LiveHelpers.format_short(report.inserted_at)}
+                        </p>
                       </div>
-                      <h2 class="text-lg font-semibold text-base-content mb-1">
-                        {report.target_title}
-                      </h2>
-                      <p class="text-sm text-base-content/60">
-                        Reported by <span class="font-medium text-base-content">{report.reporter_username}</span> {format_time(report.inserted_at)}
-                      </p>
-                    </div>
 
-                    <div class="flex gap-2">
-                      <button
-                        phx-click="approve"
-                        phx-value-report_id={report.id}
-                        class="btn btn-sm btn-success"
-                        data-testid="approve-button"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        phx-click="resolve"
-                        phx-value-report_id={report.id}
-                        class="btn btn-sm btn-primary"
-                        data-testid="resolve-button"
-                      >
-                        Resolve
-                      </button>
-                      <button
-                        phx-click="dismiss"
-                        phx-value-report_id={report.id}
-                        class="btn btn-sm btn-ghost"
-                        data-testid="dismiss-button"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
-                  </div>
-
-                  <%= if report.description do %>
-                    <div class="bg-base-300 rounded p-3 my-3">
-                      <p class="text-xs text-base-content/60 mb-1">Report reason:</p>
-                      <p class="text-sm text-base-content">{report.description}</p>
-                    </div>
-                  <% end %>
-
-                  <div class="my-4">
-                    <form phx-submit="add_notes" class="flex gap-2">
-                      <input
-                        type="hidden"
-                        name="report_id"
-                        value={report.id}
-                      />
-                      <input
-                        type="text"
-                        name="notes"
-                        placeholder="Add moderation notes..."
-                        class="input input-bordered input-sm flex-1"
-                        maxlength="500"
-                      />
-                      <button type="submit" class="btn btn-sm btn-outline">
-                        Save notes
-                      </button>
-                    </form>
-                  </div>
-
-                  <div class="divider my-2"></div>
-
-                  <div class="flex justify-between items-center">
-                    <div class="flex gap-2">
-                      <%= if report.target_type == "thread" do %>
-                        <a
-                          href={"/forum/t/#{report.target_id}"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="link link-primary text-sm"
+                      <div class="flex gap-2">
+                        <button
+                          phx-click="approve"
+                          phx-value-report_id={report.id}
+                          class="btn btn-sm btn-success"
+                          data-testid="approve-button"
                         >
-                          View thread ↗
-                        </a>
-                      <% end %>
-                      <%= if report.target_type == "comment" && report.thread_id do %>
-                        <a
-                          href={"/forum/t/#{report.thread_id}#comment-#{report.target_id}"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="link link-primary text-sm"
+                          Approve
+                        </button>
+                        <button
+                          phx-click="resolve"
+                          phx-value-report_id={report.id}
+                          class="btn btn-sm btn-primary"
+                          data-testid="resolve-button"
                         >
-                          View in thread ↗
-                        </a>
-                      <% end %>
+                          Resolve
+                        </button>
+                        <button
+                          phx-click="dismiss"
+                          phx-value-report_id={report.id}
+                          class="btn btn-sm btn-ghost"
+                          data-testid="dismiss-button"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
                     </div>
-                    <div class="text-xs text-base-content/60">
-                      <span>Report ID: {String.slice(report.id, 0, 8)}</span>
+
+                    <%= if report.description do %>
+                      <div class="bg-base-300 rounded p-3 my-3">
+                        <p class="text-xs text-base-content/60 mb-1">Report reason:</p>
+                        <p class="text-sm text-base-content">{report.description}</p>
+                      </div>
+                    <% end %>
+
+                    <div class="my-4">
+                      <form phx-submit="add_notes" class="flex gap-2">
+                        <input
+                          type="hidden"
+                          name="report_id"
+                          value={report.id}
+                        />
+                        <input
+                          type="text"
+                          name="notes"
+                          placeholder="Add moderation notes..."
+                          class="input input-bordered input-sm flex-1"
+                          maxlength="500"
+                        />
+                        <button type="submit" class="btn btn-sm btn-outline">
+                          Save notes
+                        </button>
+                      </form>
+                    </div>
+
+                    <div class="divider my-2"></div>
+
+                    <div class="flex justify-between items-center">
+                      <div class="flex gap-2">
+                        <%= if report.target_type == "thread" do %>
+                          <a
+                            href={"/forum/t/#{report.target_id}"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="link link-primary text-sm"
+                          >
+                            View thread ↗
+                          </a>
+                        <% end %>
+                        <%= if report.target_type == "comment" && report.thread_id do %>
+                          <a
+                            href={"/forum/t/#{report.thread_id}#comment-#{report.target_id}"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="link link-primary text-sm"
+                          >
+                            View in thread ↗
+                          </a>
+                        <% end %>
+                      </div>
+                      <div class="text-xs text-base-content/60">
+                        <span>Report ID: {String.slice(report.id, 0, 8)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            <% end %>
+              <% end %>
 
-            <%= if @has_more do %>
-              <div
-                id="infinite-scroll-marker"
-                phx-hook="InfiniteScroll"
-                class="h-20 flex items-center justify-center"
-              >
-                <div class="text-base-content/40 text-sm">Loading more...</div>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
+              <%= if @has_more do %>
+                <div
+                  id="infinite-scroll-marker"
+                  phx-hook="InfiniteScroll"
+                  class="h-20 flex items-center justify-center"
+                >
+                  <div class="text-base-content/40 text-sm">Loading more...</div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
     </Layouts.app>
     """
   end
 
   defp serialize_reports(reports) do
     Enum.map(reports, fn report ->
-      reporter = Repo.get(Urielm.Accounts.User, report.user_id)
-
       # Fetch target content (thread or comment) title
-      target_title = case report.target_type do
-        "thread" ->
-          try do
-            thread = Forum.get_thread!(report.target_id)
-            thread.title
-          rescue
-            Ecto.NoResultsError -> "Deleted thread"
-          end
-        "comment" ->
-          try do
-            comment = Forum.get_comment!(report.target_id)
-            String.slice(comment.body, 0, 80) <> "..."
-          rescue
-            Ecto.NoResultsError -> "Deleted comment"
-          end
-        _ -> "Unknown"
-      end
+      target_title =
+        case report.target_type do
+          "thread" ->
+            try do
+              thread = Forum.get_thread!(report.target_id)
+              thread.title
+            rescue
+              Ecto.NoResultsError -> "Deleted thread"
+            end
+
+          "comment" ->
+            try do
+              comment = Forum.get_comment!(report.target_id)
+              String.slice(comment.body, 0, 80) <> "..."
+            rescue
+              Ecto.NoResultsError -> "Deleted comment"
+            end
+
+          _ ->
+            "Unknown"
+        end
 
       # For comments, we need to fetch the thread to create a proper link
-      thread_id = case report.target_type do
-        "thread" -> to_string(report.target_id)
-        "comment" ->
-          try do
-            comment = Forum.get_comment!(report.target_id)
-            to_string(comment.thread_id)
-          rescue
-            Ecto.NoResultsError -> nil
-          end
-        _ -> nil
-      end
+      thread_id =
+        case report.target_type do
+          "thread" ->
+            to_string(report.target_id)
+
+          "comment" ->
+            try do
+              comment = Forum.get_comment!(report.target_id)
+              to_string(comment.thread_id)
+            rescue
+              Ecto.NoResultsError -> nil
+            end
+
+          _ ->
+            nil
+        end
 
       %{
         id: to_string(report.id),
@@ -304,21 +321,11 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
         reason: report.reason,
         description: report.description,
         status: report.status,
-        reporter_username: reporter.username,
+        reporter_username: report.user.username,
         inserted_at: report.inserted_at
       }
     end)
   end
 
-  defp format_time(datetime) do
-    now = DateTime.utc_now()
-    seconds_ago = DateTime.diff(now, datetime, :second)
-
-    cond do
-      seconds_ago < 60 -> "now"
-      seconds_ago < 3600 -> "#{div(seconds_ago, 60)}m ago"
-      seconds_ago < 86400 -> "#{div(seconds_ago, 3600)}h ago"
-      true -> Calendar.strftime(datetime, "%b %d, %Y")
-    end
-  end
+  # concise time formatting moved to LiveHelpers
 end

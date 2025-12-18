@@ -4,6 +4,7 @@ defmodule UrielmWeb.UserProfileLive do
 
   alias Urielm.Accounts
   alias Urielm.Forum
+  alias UrielmWeb.LiveHelpers
 
   @impl true
   def mount(%{"username" => username}, _session, socket) do
@@ -27,140 +28,83 @@ defmodule UrielmWeb.UserProfileLive do
          |> assign(:active_tab, "threads")
          |> assign(:threads, [])
          |> assign(:comments, [])
-         |> assign(:thread_page, 0)
-         |> assign(:comment_page, 0)
-         |> assign(:has_more_threads, true)
-         |> assign(:has_more_comments, true)
-         |> load_threads(user.id, 0)}
+         |> assign(:threads_meta, nil)
+         |> assign(:comments_meta, nil)}
     end
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     tab = Map.get(params, "tab", "threads")
-    {:noreply, assign(socket, :active_tab, tab)}
+    page = Map.get(params, "page", "1") |> String.to_integer()
+    user_id = socket.assigns.user.id
+
+    socket = assign(socket, :active_tab, tab)
+
+    socket =
+      case tab do
+        "threads" ->
+          case Forum.paginate_threads_by_author(user_id, %{
+                 page: page,
+                 page_size: 20,
+                 order_by: [:inserted_at],
+                 order_directions: [:desc]
+               }) do
+            {:ok, {threads, meta}} ->
+              assign(socket,
+                threads:
+                  Enum.map(
+                    threads,
+                    &LiveHelpers.serialize_thread_card(&1, socket.assigns.current_user)
+                  ),
+                threads_meta: meta
+              )
+
+            {:error, _} ->
+              assign(socket, threads: [], threads_meta: nil)
+          end
+
+        "comments" ->
+          case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
+            {:ok, {comments, meta}} ->
+              assign(socket,
+                comments:
+                  Enum.map(
+                    comments,
+                    &LiveHelpers.serialize_comment(&1, socket.assigns.current_user)
+                  ),
+                comments_meta: meta
+              )
+
+            {:error, _} ->
+              assign(socket, comments: [], comments_meta: nil)
+          end
+
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
   end
 
   @impl true
-  def handle_event("load_more", %{"tab" => tab}, socket) do
-    user = socket.assigns.user
-
-    case tab do
-      "threads" ->
-        new_page = socket.assigns.thread_page + 1
-        {:noreply, load_threads(socket, user.id, new_page)}
-
-      "comments" ->
-        new_page = socket.assigns.comment_page + 1
-        {:noreply, load_comments(socket, user.id, new_page)}
-
-      _ ->
-        {:noreply, socket}
-    end
-  end
+  def handle_event("load_more", _params, socket), do: {:noreply, socket}
 
   @impl true
   def handle_event("switch_tab", %{"tab" => tab}, socket) do
-    user = socket.assigns.user
-
-    case tab do
-      "threads" ->
-        {:noreply, assign(socket, :active_tab, "threads")}
-
-      "comments" ->
-        if Enum.empty?(socket.assigns.comments) do
-          {:noreply, load_comments(assign(socket, :active_tab, "comments"), user.id, 0)}
-        else
-          {:noreply, assign(socket, :active_tab, "comments")}
-        end
-
-      _ ->
-        {:noreply, socket}
-    end
+    username = socket.assigns.user.username
+    page = 1
+    {:noreply, push_patch(socket, to: ~p"/u/#{username}?tab=#{tab}&page=#{page}")}
   end
 
-  defp load_threads(socket, user_id, page) do
-    limit = 20
-    offset = page * limit
+  # pagination handled via handle_params; no incremental loaders
 
-    threads = Forum.list_threads_by_author(user_id, limit: limit, offset: offset)
-    threads_serialized = Enum.map(threads, &serialize_thread(&1, socket.assigns.current_user))
-
-    has_more = length(threads) == limit
-
-    socket
-    |> assign(:threads, socket.assigns.threads ++ threads_serialized)
-    |> assign(:thread_page, page)
-    |> assign(:has_more_threads, has_more)
-  end
-
-  defp load_comments(socket, user_id, page) do
-    limit = 20
-    offset = page * limit
-
-    comments = Forum.list_comments_by_author(user_id, limit: limit, offset: offset)
-    comments_serialized = Enum.map(comments, &serialize_comment(&1, socket.assigns.current_user))
-
-    has_more = length(comments) == limit
-
-    socket
-    |> assign(:comments, socket.assigns.comments ++ comments_serialized)
-    |> assign(:comment_page, page)
-    |> assign(:has_more_comments, has_more)
-  end
-
-  defp serialize_thread(thread, current_user) do
-    is_saved = current_user && Forum.is_thread_saved?(current_user.id, thread.id)
-    is_subscribed = current_user && Forum.is_subscribed?(current_user.id, thread.id)
-    is_unread = current_user && Forum.is_thread_unread?(current_user.id, thread.id)
-
-    %{
-      id: to_string(thread.id),
-      title: thread.title,
-      body: String.slice(thread.body, 0, 150),
-      score: thread.score,
-      comment_count: thread.comment_count,
-      author: %{
-        id: thread.author.id,
-        username: thread.author.username
-      },
-      created_at: thread.inserted_at,
-      user_vote: get_user_vote(current_user, "thread", thread.id),
-      is_saved: is_saved,
-      is_subscribed: is_subscribed,
-      is_unread: is_unread
-    }
-  end
-
-  defp serialize_comment(comment, current_user) do
-    %{
-      id: to_string(comment.id),
-      body: comment.body,
-      score: comment.score,
-      author: %{
-        id: comment.author.id,
-        username: comment.author.username
-      },
-      created_at: comment.inserted_at,
-      thread_id: to_string(comment.thread_id),
-      thread_title: comment.thread.title,
-      user_vote: get_user_vote(current_user, "comment", comment.id),
-      edited_at: comment.edited_at
-    }
-  end
-
-  defp get_user_vote(nil, _target_type, _target_id), do: nil
-
-  defp get_user_vote(user, target_type, target_id) do
-    case Forum.get_user_vote(user.id, target_type, target_id) do
-      nil -> nil
-      vote -> vote.value
-    end
-  end
+  # comment serialization moved to LiveHelpers.serialize_comment/2
 
   @impl true
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
     <div class="min-h-screen bg-base-100">
       <div class="max-w-4xl mx-auto p-6">
         <!-- Profile Header -->
@@ -176,43 +120,43 @@ defmodule UrielmWeb.UserProfileLive do
                 />
               <% else %>
                 <div class="w-24 h-24 rounded-full bg-base-300 flex items-center justify-center text-3xl font-bold">
-                  <%= String.slice(@user.username || "U", 0..0) |> String.upcase() %>
+                  {String.slice(@user.username || "U", 0..0) |> String.upcase()}
                 </div>
               <% end %>
             </div>
-
-            <!-- User Info -->
+            
+    <!-- User Info -->
             <div class="flex-1">
               <div class="flex items-center gap-4 mb-2">
-                <h1 class="text-3xl font-bold"><%= @user.username %></h1>
+                <h1 class="text-3xl font-bold">{@user.username}</h1>
                 <%= if @user.is_admin do %>
                   <span class="badge badge-error">Admin</span>
                 <% end %>
               </div>
 
               <p class="text-base-content/70 mb-4">
-                Joined <%= Calendar.strftime(@user.inserted_at, "%B %Y") %>
+                Joined {Calendar.strftime(@user.inserted_at, "%B %Y")}
               </p>
 
               <div class="flex items-center gap-6">
                 <div class="text-center">
-                  <p class="text-2xl font-bold"><%= @stats.thread_count %></p>
+                  <p class="text-2xl font-bold">{@stats.thread_count}</p>
                   <p class="text-sm text-base-content/70">
-                    <%= if @stats.thread_count == 1, do: "Thread", else: "Threads" %>
+                    {if @stats.thread_count == 1, do: "Thread", else: "Threads"}
                   </p>
                 </div>
                 <div class="text-center">
-                  <p class="text-2xl font-bold"><%= @stats.comment_count %></p>
+                  <p class="text-2xl font-bold">{@stats.comment_count}</p>
                   <p class="text-sm text-base-content/70">
-                    <%= if @stats.comment_count == 1, do: "Comment", else: "Comments" %>
+                    {if @stats.comment_count == 1, do: "Comment", else: "Comments"}
                   </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Tabs -->
+        
+    <!-- Tabs -->
         <div class="tabs tabs-bordered mb-6">
           <a
             class={["tab", @active_tab == "threads" && "tab-active"]}
@@ -229,9 +173,9 @@ defmodule UrielmWeb.UserProfileLive do
             Comments
           </a>
         </div>
-
-        <!-- Content -->
-        <div phx-hook="InfiniteScroll" id="profile-content">
+        
+    <!-- Content -->
+        <div id="profile-content">
           <%= if @active_tab == "threads" do %>
             <!-- Threads Tab -->
             <div class="space-y-4">
@@ -246,15 +190,19 @@ defmodule UrielmWeb.UserProfileLive do
                       <div class="flex justify-between items-start gap-4">
                         <div class="flex-1">
                           <h3 class="font-semibold text-lg group-hover:text-primary transition-colors">
-                            <%= thread.title %>
+                            {thread.title}
                           </h3>
                           <p class="text-sm text-base-content/60 mt-1 line-clamp-1">
-                            <%= thread.body %>
+                            {thread.body}
                           </p>
                           <div class="flex items-center gap-3 text-xs text-base-content/50 mt-2">
-                            <span><%= Calendar.strftime(thread.created_at, "%b %d, %Y") %></span>
+                            <span>{Calendar.strftime(thread.created_at, "%b %d, %Y")}</span>
                             <span>•</span>
-                            <span><%= thread.comment_count %> <%= if thread.comment_count == 1, do: "reply", else: "replies" %></span>
+                            <span>
+                              {thread.comment_count} {if thread.comment_count == 1,
+                                do: "reply",
+                                else: "replies"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -263,14 +211,12 @@ defmodule UrielmWeb.UserProfileLive do
                 <% end %>
               <% end %>
 
-              <div
-                id="threads-loader"
-                phx-hook="InfiniteScroll"
-                phx-value-tab="threads"
-                class="py-4 text-center"
-              >
-                <%= if @has_more_threads do %>
-                  <span class="text-base-content/50">Load more...</span>
+              <div class="flex items-center justify-center gap-2 py-4">
+                <%= if @threads_meta do %>
+                  <.pagination
+                    meta={@threads_meta}
+                    path={fn n -> ~p"/u/#{@user.username}?tab=threads&page=#{n}" end}
+                  />
                 <% end %>
               </div>
             </div>
@@ -285,31 +231,32 @@ defmodule UrielmWeb.UserProfileLive do
                 <%= for comment <- @comments do %>
                   <div class="card bg-base-200 border border-base-300">
                     <div class="card-body p-4">
-                      <a href={~p"/forum/t/#{comment.thread_id}"} class="text-sm link link-primary mb-2">
-                        <%= comment.thread_title %>
+                      <a
+                        href={~p"/forum/t/#{comment.thread_id}"}
+                        class="text-sm link link-primary mb-2"
+                      >
+                        {comment.thread_title}
                       </a>
                       <p class="text-base-content mb-2">
-                        <%= comment.body %>
+                        {comment.body}
                         <%= if comment.edited_at do %>
                           <span class="text-xs text-base-content/50 ml-2">(edited)</span>
                         <% end %>
                       </p>
                       <div class="text-xs text-base-content/50">
-                        <%= Calendar.strftime(comment.created_at, "%b %d, %Y at %l:%M %p") %>
+                        {Calendar.strftime(comment.created_at, "%b %d, %Y at %l:%M %p")}
                       </div>
                     </div>
                   </div>
                 <% end %>
               <% end %>
 
-              <div
-                id="comments-loader"
-                phx-hook="InfiniteScroll"
-                phx-value-tab="comments"
-                class="py-4 text-center"
-              >
-                <%= if @has_more_comments do %>
-                  <span class="text-base-content/50">Load more...</span>
+              <div class="flex items-center justify-center gap-2 py-4">
+                <%= if @comments_meta do %>
+                  <.pagination
+                    meta={@comments_meta}
+                    path={fn n -> ~p"/u/#{@user.username}?tab=comments&page=#{n}" end}
+                  />
                 <% end %>
               </div>
             </div>
@@ -317,6 +264,7 @@ defmodule UrielmWeb.UserProfileLive do
         </div>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 end

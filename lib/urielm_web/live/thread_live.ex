@@ -3,12 +3,12 @@ defmodule UrielmWeb.ThreadLive do
   use LiveSvelte.Components
 
   alias Urielm.Forum
-  alias Urielm.Repo
+  alias UrielmWeb.LiveHelpers
 
   @impl true
   def mount(%{"thread_id" => id}, _session, socket) do
     thread = Forum.get_thread!(id)
-    comment_tree = build_comment_tree(thread.comments)
+    comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
 
     # Mark thread as read
     if socket.assigns.current_user do
@@ -33,7 +33,7 @@ defmodule UrielmWeb.ThreadLive do
     {:ok,
      socket
      |> assign(:page_title, thread.title)
-     |> assign(:thread, serialize_thread(thread, socket.assigns.current_user))
+     |> assign(:thread, LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user))
      |> assign(:comment_tree, comment_tree)
      |> assign(:thread_is_saved, is_saved)
      |> assign(:thread_is_subscribed, is_subscribed)
@@ -41,25 +41,32 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   @impl true
-  def handle_event("create_comment", %{"body" => body}, socket) do
+  def handle_event("create_comment", %{"body" => body} = params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    case user do
-      nil ->
+    cond do
+      is_nil(user) ->
         {:noreply, put_flash(socket, :error, "Sign in to comment")}
 
-      user ->
+      is_nil(user.username) ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Please set a username before commenting")
+         |> redirect(to: ~p"/signup/set-handle")}
+
+      true ->
         thread_id = thread_data.id
+        parent_id = Map.get(params, "parent_id")
 
-        case Forum.create_comment(thread_id, user.id, %{"body" => body}) do
+        attrs =
+          %{"body" => body}
+          |> maybe_put_parent_id(parent_id)
+
+        case Forum.create_comment(thread_id, user.id, attrs) do
           {:ok, _comment} ->
-            # Reload thread and rebuild comment tree
-            thread = Forum.get_thread!(thread_id)
-            comment_tree = build_comment_tree(thread.comments)
-
             {:noreply,
              socket
-             |> assign(:comment_tree, comment_tree)
+             |> refresh_thread(user)
              |> put_flash(:info, "Comment posted")}
 
           {:error, _} ->
@@ -68,6 +75,10 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  defp maybe_put_parent_id(attrs, parent_id) when parent_id in [nil, ""], do: attrs
+  defp maybe_put_parent_id(attrs, parent_id), do: Map.put(attrs, "parent_id", parent_id)
+
+  @impl true
   def handle_event(
         "vote",
         %{"target_type" => target_type, "target_id" => target_id, "value" => value},
@@ -84,14 +95,7 @@ defmodule UrielmWeb.ThreadLive do
 
         case Forum.cast_vote(user.id, target_type, target_id, value_int) do
           {:ok, _vote} ->
-            # Reload thread with updated scores
-            thread = Forum.get_thread!(thread_data.id)
-            comment_tree = build_comment_tree(thread.comments)
-
-            {:noreply,
-             socket
-             |> assign(:thread, serialize_thread(thread, user))
-             |> assign(:comment_tree, comment_tree)}
+            {:noreply, socket |> refresh_thread(user)}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to vote")}
@@ -99,6 +103,7 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  @impl true
   def handle_event("delete_thread", _params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
@@ -125,63 +130,109 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  @impl true
+  def handle_event("mark_solved", %{"comment_id" => comment_id}, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Not authorized")}
+
+      user ->
+        thread_id = thread_data.id
+        thread = Forum.get_thread!(thread_id)
+
+        case Forum.mark_as_solved(thread, comment_id, user) do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> refresh_thread(user)
+             |> put_flash(:info, "Marked as solved")}
+
+          {:error, :unauthorized} ->
+            {:noreply, put_flash(socket, :error, "Only the author can mark as solved")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to mark as solved")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_event("unmark_solved", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Not authorized")}
+
+      user ->
+        thread_id = thread_data.id
+        thread = Forum.get_thread!(thread_id)
+
+        case Forum.unmark_as_solved(thread, user) do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> refresh_thread(user)
+             |> put_flash(:info, "Unmarked as solved")}
+
+          {:error, :unauthorized} ->
+            {:noreply, put_flash(socket, :error, "Only the author can unmark solved")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to unmark as solved")}
+        end
+    end
+  end
+
+  @impl true
   def handle_event("save_thread", _params, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to save threads")}
+    LiveHelpers.with_auth(socket, "save threads", fn socket, user ->
+      case Forum.toggle_save_thread(user.id, thread_data.id) do
+        {:ok, _} ->
+          thread = Forum.get_thread!(thread_data.id)
+          {:noreply, assign(socket, :thread_is_saved, Forum.is_thread_saved?(user.id, thread.id))}
 
-      user ->
-        case Forum.toggle_save_thread(user.id, thread_data.id) do
-          {:ok, _} ->
-            thread = Forum.get_thread!(thread_data.id)
-            is_saved = Forum.is_thread_saved?(user.id, thread.id)
-
-            {:noreply, assign(socket, :thread_is_saved, is_saved)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to save thread")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to save thread")}
+      end
+    end)
   end
 
+  @impl true
   def handle_event("subscribe", _params, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to subscribe")}
+    LiveHelpers.with_auth(socket, "subscribe", fn socket, user ->
+      case Forum.subscribe_to_thread(user.id, thread_data.id) do
+        {:ok, _} ->
+          {:noreply, assign(socket, :thread_is_subscribed, true)}
 
-      user ->
-        case Forum.subscribe_to_thread(user.id, thread_data.id) do
-          {:ok, _} ->
-            {:noreply, assign(socket, :thread_is_subscribed, true)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to subscribe")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to subscribe")}
+      end
+    end)
   end
 
+  @impl true
   def handle_event("unsubscribe", _params, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, socket}
+    LiveHelpers.with_auth(socket, "unsubscribe", fn socket, user ->
+      case Forum.unsubscribe_from_thread(user.id, thread_data.id) do
+        {:ok, _} ->
+          {:noreply, assign(socket, :thread_is_subscribed, false)}
 
-      user ->
-        case Forum.unsubscribe_from_thread(user.id, thread_data.id) do
-          {:ok, _} ->
-            {:noreply, assign(socket, :thread_is_subscribed, false)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
+      end
+    end)
   end
 
+  @impl true
   def handle_event("edit_comment", %{"id" => comment_id, "body" => body}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
@@ -194,13 +245,9 @@ defmodule UrielmWeb.ThreadLive do
 
         case Forum.edit_comment(comment, body, user) do
           {:ok, _} ->
-            # Reload thread and rebuild tree
-            thread = Forum.get_thread!(thread_data.id)
-            comment_tree = build_comment_tree(thread.comments)
-
             {:noreply,
              socket
-             |> assign(:comment_tree, comment_tree)
+             |> refresh_thread(user)
              |> put_flash(:info, "Comment updated")}
 
           {:error, :unauthorized} ->
@@ -212,6 +259,7 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  @impl true
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
@@ -224,13 +272,9 @@ defmodule UrielmWeb.ThreadLive do
 
         case Forum.remove_comment(comment, user) do
           {:ok, _} ->
-            # Reload thread and rebuild tree
-            thread = Forum.get_thread!(thread_data.id)
-            comment_tree = build_comment_tree(thread.comments)
-
             {:noreply,
              socket
-             |> assign(:comment_tree, comment_tree)
+             |> refresh_thread(user)
              |> put_flash(:info, "Comment deleted")}
 
           {:error, :unauthorized} ->
@@ -242,7 +286,12 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
-  def handle_event("toggle_like", %{"target_type" => _target_type, "target_id" => _target_id}, socket) do
+  @impl true
+  def handle_event(
+        "toggle_like",
+        %{"target_type" => _target_type, "target_id" => _target_id},
+        socket
+      ) do
     %{current_user: user} = socket.assigns
 
     case user do
@@ -256,11 +305,29 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  @impl true
+  def handle_event("save_comment", %{"comment_id" => comment_id}, socket) do
+    LiveHelpers.with_auth(socket, "save comments", fn socket, user ->
+      case Forum.toggle_save_comment(user.id, comment_id) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Bookmark toggled")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to toggle bookmark")}
+      end
+    end)
+  end
+
+  @impl true
   def handle_event("reply_to_comment", %{"comment_id" => _comment_id}, socket) do
     # This just acknowledges the event. The actual reply UI is managed by the CommentTree component
     {:noreply, socket}
   end
 
+  @impl true
   def handle_event("report_thread", %{"reason" => reason, "description" => description}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
@@ -290,6 +357,7 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  @impl true
   def handle_event(
         "report_comment",
         %{"comment_id" => comment_id, "reason" => reason, "description" => description},
@@ -323,6 +391,7 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
+  @impl true
   def handle_event("set_notification_level", %{"level" => level}, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
@@ -344,255 +413,216 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
-
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
-    <div class="min-h-screen bg-base-100">
-      <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
-          ← Back to {@thread.board_name}
-        </.link>
+      <div class="min-h-screen bg-base-100">
+        <div class="container mx-auto px-4 py-8 max-w-6xl">
+          <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
+            ← Back to {@thread.board_name}
+          </.link>
 
-        <div class="card bg-base-200 border border-base-300 mb-8">
-          <div class="card-body">
-            <div class="flex justify-between items-start">
-              <div>
-                <h1 class="text-3xl font-bold text-base-content mb-2">{@thread.title}</h1>
-                <div class="flex items-center gap-3 text-sm text-base-content/60">
-                  <%= if Map.get(@thread, :author_avatar_url) do %>
-                    <img src={Map.get(@thread, :author_avatar_url)} alt={Map.get(@thread, :author_username) || "User"} class="w-6 h-6 rounded-full object-cover" />
-                  <% else %>
-                    <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
-                      <%= String.slice(Map.get(@thread, :author_username) || "U", 0..0) |> String.upcase() %>
+          <div class="card bg-base-200 border border-base-300 mb-8">
+            <div class="card-body">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h1 class="text-3xl font-bold text-base-content mb-2">{@thread.title}</h1>
+                  <div class="flex items-center gap-3 text-sm text-base-content/60">
+                    <%= if Map.get(@thread, :author_avatar_url) do %>
+                      <img
+                        src={Map.get(@thread, :author_avatar_url)}
+                        alt={Map.get(@thread, :author_username) || "User"}
+                        class="w-6 h-6 rounded-full object-cover"
+                      />
+                    <% else %>
+                      <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
+                        {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
+                        |> String.upcase()}
+                      </div>
+                    <% end %>
+                    <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
+                    <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
+                  </div>
+                </div>
+
+                <div class="flex gap-2 items-start">
+                  <%= if @current_user do %>
+                    <div class="dropdown dropdown-end">
+                      <button
+                        data-testid="notification-button"
+                        class="btn btn-xs btn-ghost"
+                        title="Notification settings"
+                      >
+                        <.um_icon name="bell" class="w-4 h-4" />
+                      </button>
+                      <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li>
+                          <a
+                            data-testid="notification-watching"
+                            phx-click="set_notification_level"
+                            phx-value-level="watching"
+                            class={(@notification_level == "watching" && "active") || ""}
+                          >
+                            Watching
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            data-testid="notification-tracking"
+                            phx-click="set_notification_level"
+                            phx-value-level="tracking"
+                            class={(@notification_level == "tracking" && "active") || ""}
+                          >
+                            Tracking
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            data-testid="notification-muted"
+                            phx-click="set_notification_level"
+                            phx-value-level="muted"
+                            class={(@notification_level == "muted" && "active") || ""}
+                          >
+                            Muted
+                          </a>
+                        </li>
+                      </ul>
                     </div>
+
+                    <button
+                      class="btn btn-xs btn-ghost"
+                      phx-click="save_thread"
+                      title="Save this thread"
+                    >
+                      <.um_icon
+                        name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"}
+                        class="w-4 h-4"
+                      />
+                    </button>
+
+                    <button
+                      data-testid="report-button"
+                      class="btn btn-xs btn-ghost text-warning"
+                      onclick="document.getElementById('report_thread_modal').showModal()"
+                      title="Report this thread"
+                    >
+                      <.um_icon name="warning" class="w-4 h-4" />
+                    </button>
                   <% end %>
-                  <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
-                  <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
+
+                  <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
+                    <button
+                      phx-click="delete_thread"
+                      class="btn btn-xs btn-ghost text-error"
+                      data-confirm="Delete this thread?"
+                    >
+                      Delete
+                    </button>
+                  <% end %>
                 </div>
               </div>
 
-              <div class="flex gap-2 items-start">
-                <%= if @current_user do %>
-                  <div class="dropdown dropdown-end">
-                    <button data-testid="notification-button" class="btn btn-xs btn-ghost" title="Notification settings">
-                      <UMIcon.um_icon name="bell" class="w-4 h-4" />
-                    </button>
-                    <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                      <li>
-                        <a
-                          data-testid="notification-watching"
-                          phx-click="set_notification_level"
-                          phx-value-level="watching"
-                          class={@notification_level == "watching" && "active" || ""}
-                        >
-                          Watching
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          data-testid="notification-tracking"
-                          phx-click="set_notification_level"
-                          phx-value-level="tracking"
-                          class={@notification_level == "tracking" && "active" || ""}
-                        >
-                          Tracking
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          data-testid="notification-muted"
-                          phx-click="set_notification_level"
-                          phx-value-level="muted"
-                          class={@notification_level == "muted" && "active" || ""}
-                        >
-                          Muted
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <button
-                    class="btn btn-xs btn-ghost"
-                    phx-click="save_thread"
-                    title="Save this thread"
-                  >
-                    <UMIcon.um_icon name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"} class="w-4 h-4" />
-                  </button>
-
-                  <button
-                    data-testid="report-button"
-                    class="btn btn-xs btn-ghost text-warning"
-                    onclick="document.getElementById('report_thread_modal').showModal()"
-                    title="Report this thread"
-                  >
-                    <UMIcon.um_icon name="warning" class="w-4 h-4" />
-                  </button>
-                <% end %>
-
-                <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
-                  <button
-                    phx-click="delete_thread"
-                    class="btn btn-xs btn-ghost text-error"
-                    data-confirm="Delete this thread?"
-                  >
-                    Delete
-                  </button>
-                <% end %>
+              <div class="p-4 my-4">
+                <.svelte
+                  name="MarkdownRenderer"
+                  props={%{content: @thread.body}}
+                  socket={@socket}
+                />
               </div>
-            </div>
 
-            <div class="p-4 my-4">
-              <.svelte
-                name="MarkdownRenderer"
-                props={%{content: @thread.body}}
-                socket={@socket}
-              />
-            </div>
-
-            <div class="flex items-center gap-4">
-              <.svelte
-                name="VoteButtons"
-                props={
-                  %{
-                    targetType: "thread",
-                    targetId: @thread.id,
-                    score: @thread.score,
-                    userVote: @thread.user_vote
+              <div class="flex items-center gap-4">
+                <.svelte
+                  name="VoteButtons"
+                  props={
+                    %{
+                      target_type: "thread",
+                      target_id: @thread.id,
+                      score: @thread.score,
+                      user_vote: @thread.user_vote
+                    }
                   }
-                }
-                socket={@socket}
-              />
-              <span class="text-sm text-base-content/60">
-                {pluralize(@thread.comment_count, "comment")}
-              </span>
+                  socket={@socket}
+                />
+                <span class="text-sm text-base-content/60">
+                  {pluralize(@thread.comment_count, "comment")}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-base-content mb-4">Comments</h2>
+          <div class="mb-8">
+            <h2 class="text-2xl font-bold text-base-content mb-4">Comments</h2>
 
-          <%= if @current_user do %>
-            <div class="card bg-base-200 border border-base-300 mb-6">
-              <div class="card-body">
-                <form phx-submit="create_comment" class="space-y-4">
-                  <textarea
-                    name="body"
-                    placeholder="Share your thoughts... (Markdown supported)"
-                    required
-                    class="textarea textarea-bordered w-full min-h-24"
-                  >
+            <%= if @current_user do %>
+              <div class="card bg-base-200 border border-base-300 mb-6">
+                <div class="card-body">
+                  <form phx-submit="create_comment" class="space-y-4">
+                    <textarea
+                      name="body"
+                      placeholder="Share your thoughts... (Markdown supported)"
+                      required
+                      class="textarea textarea-bordered w-full min-h-24"
+                    >
                   </textarea>
-                  <button type="submit" class="btn btn-primary">Post Comment</button>
-                </form>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                  </form>
+                </div>
               </div>
-            </div>
-          <% else %>
-            <div class="alert alert-info mb-6">
-              <span>
-                <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
-                to comment on this thread
-              </span>
-            </div>
-          <% end %>
+            <% else %>
+              <div class="alert alert-info mb-6">
+                <span>
+                  <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
+                  to comment on this thread
+                </span>
+              </div>
+            <% end %>
 
-          <.svelte
-            name="CommentTree"
-            props={
-              %{
-                comments: @comment_tree,
-                current_user_id: (@current_user && @current_user.id) || nil,
-                current_user_is_admin: (@current_user && @current_user.is_admin) || false
+            <.svelte
+              name="CommentTree"
+              props={
+                %{
+                  comments: @comment_tree,
+                  current_user_id: (@current_user && @current_user.id) || nil,
+                  current_user_is_admin: (@current_user && @current_user.is_admin) || false,
+                  thread_author_id: @thread.author_id,
+                  solved_comment_id: @thread.solved_comment_id
+                }
               }
-            }
-            socket={@socket}
-          />
+              socket={@socket}
+            />
+          </div>
         </div>
-      </div>
-
-      <!-- Report Modal -->
-      <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
-        <div class="modal-box bg-base-300">
-          <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" aria-label="Close">
-              <UMIcon.um_icon name="close" class="w-4 h-4" />
-            </button>
-          </form>
-          <h3 class="font-bold text-lg">Report this thread</h3>
-          <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
-
-          <form phx-submit="report_thread" data-testid="report-form" class="space-y-4">
-            <div>
-              <label class="label">
-                <span class="label-text">Reason</span>
-              </label>
-              <select
-                name="reason"
-                required
-                data-testid="report-reason"
-                class="select select-bordered w-full"
-              >
-                <option disabled selected>Choose a reason</option>
-                <option value="spam">Spam</option>
-                <option value="abuse">Abuse</option>
-                <option value="offensive">Offensive Content</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label">
-                <span class="label-text">Description (required)</span>
-              </label>
-              <textarea
-                name="description"
-                required
-                minlength="10"
-                maxlength="5000"
-                placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
-                data-testid="report-description"
-                class="textarea textarea-bordered w-full h-24"
-              ></textarea>
-              <p class="text-xs text-base-content/50 mt-1">Minimum 10 characters • Maximum 5000 characters</p>
-            </div>
-
-            <div class="modal-action">
-              <form method="dialog">
-                <button class="btn">Cancel</button>
-              </form>
-              <button type="submit" data-testid="report-submit" class="btn btn-error">Submit Report</button>
-            </div>
-          </form>
-        </div>
-        <form method="dialog" class="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
-
-      <!-- Comment Report Modals -->
-      <%= for comment <- flatten_comments(@comment_tree) do %>
-        <dialog id={"report_comment_modal_#{comment.id}"} data-testid="comment-report-modal" class="modal">
+        
+    <!-- Report Modal -->
+        <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
           <div class="modal-box bg-base-300">
             <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" aria-label="Close">
-              <UMIcon.um_icon name="close" class="w-4 h-4" />
-            </button>
+              <button
+                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                aria-label="Close"
+              >
+                <.um_icon name="close" class="w-4 h-4" />
+              </button>
             </form>
-            <h3 class="font-bold text-lg mb-4">Report Comment</h3>
-            <form phx-submit="report_comment" class="space-y-4">
-              <input type="hidden" name="comment_id" value={comment.id} />
+            <h3 class="font-bold text-lg">Report this thread</h3>
+            <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
 
+            <form phx-submit="report_thread" data-testid="report-form" class="space-y-4">
               <div>
                 <label class="label">
                   <span class="label-text">Reason</span>
                 </label>
-                <select name="reason" class="select select-bordered w-full" required>
-                  <option value="">Select a reason</option>
+                <select
+                  name="reason"
+                  required
+                  data-testid="report-reason"
+                  class="select select-bordered w-full"
+                >
+                  <option disabled selected>Choose a reason</option>
                   <option value="spam">Spam</option>
                   <option value="abuse">Abuse</option>
-                  <option value="offensive">Offensive</option>
+                  <option value="offensive">Offensive Content</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -603,20 +633,25 @@ defmodule UrielmWeb.ThreadLive do
                 </label>
                 <textarea
                   name="description"
-                  placeholder="Explain why you're reporting this comment..."
-                  class="textarea textarea-bordered w-full min-h-24"
                   required
                   minlength="10"
                   maxlength="5000"
+                  placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
+                  data-testid="report-description"
+                  class="textarea textarea-bordered w-full h-24"
                 ></textarea>
-                <p class="text-xs text-base-content/60 mt-1">Minimum 10 characters • Maximum 5000 characters</p>
+                <p class="text-xs text-base-content/50 mt-1">
+                  Minimum 10 characters • Maximum 5000 characters
+                </p>
               </div>
 
               <div class="modal-action">
                 <form method="dialog">
-                  <button class="btn btn-ghost">Cancel</button>
+                  <button class="btn">Cancel</button>
                 </form>
-                <button type="submit" class="btn btn-warning">Submit Report</button>
+                <button type="submit" data-testid="report-submit" class="btn btn-error">
+                  Submit Report
+                </button>
               </div>
             </form>
           </div>
@@ -624,66 +659,88 @@ defmodule UrielmWeb.ThreadLive do
             <button>close</button>
           </form>
         </dialog>
-      <% end %>
-    </div>
+        
+    <!-- Comment Report Modals -->
+        <%= for comment <- flatten_comments(@comment_tree) do %>
+          <dialog
+            id={"report_comment_modal_#{comment.id}"}
+            data-testid="comment-report-modal"
+            class="modal"
+          >
+            <div class="modal-box bg-base-300">
+              <form method="dialog">
+                <button
+                  class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                  aria-label="Close"
+                >
+                  <.um_icon name="close" class="w-4 h-4" />
+                </button>
+              </form>
+              <h3 class="font-bold text-lg mb-4">Report Comment</h3>
+              <form phx-submit="report_comment" class="space-y-4">
+                <input type="hidden" name="comment_id" value={comment.id} />
+
+                <div>
+                  <label class="label">
+                    <span class="label-text">Reason</span>
+                  </label>
+                  <select name="reason" class="select select-bordered w-full" required>
+                    <option value="">Select a reason</option>
+                    <option value="spam">Spam</option>
+                    <option value="abuse">Abuse</option>
+                    <option value="offensive">Offensive</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="label">
+                    <span class="label-text">Description (required)</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    placeholder="Explain why you're reporting this comment..."
+                    class="textarea textarea-bordered w-full min-h-24"
+                    required
+                    minlength="10"
+                    maxlength="5000"
+                  ></textarea>
+                  <p class="text-xs text-base-content/60 mt-1">
+                    Minimum 10 characters • Maximum 5000 characters
+                  </p>
+                </div>
+
+                <div class="modal-action">
+                  <form method="dialog">
+                    <button class="btn btn-ghost">Cancel</button>
+                  </form>
+                  <button type="submit" class="btn btn-warning">Submit Report</button>
+                </div>
+              </form>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+              <button>close</button>
+            </form>
+          </dialog>
+        <% end %>
+      </div>
     </Layouts.app>
     """
   end
 
-  defp serialize_thread(thread, current_user) do
-    %{
-      id: to_string(thread.id),
-      title: thread.title,
-      body: thread.body,
-      score: thread.score,
-      comment_count: thread.comment_count,
-      author_id: thread.author_id,
-      author_username: thread.author.username,
-      author_avatar_url: thread.author.avatar_url,
-      created_at: thread.inserted_at,
-      board_name: thread.board.name,
-      board_slug: thread.board.slug,
-      user_vote: get_user_vote(current_user, "thread", thread.id)
-    }
+  # full thread serialization handled by LiveHelpers.serialize_thread_full/2
+
+  defp refresh_thread(socket, current_user) do
+    thread_id = socket.assigns.thread.id
+    thread = Forum.get_thread!(thread_id)
+    comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)
+
+    socket
+    |> assign(:thread, LiveHelpers.serialize_thread_full(thread, current_user))
+    |> assign(:comment_tree, comment_tree)
   end
 
-  defp get_user_vote(nil, _target_type, _target_id), do: nil
-
-  defp get_user_vote(user, target_type, target_id) do
-    case Forum.get_user_vote(user.id, target_type, target_id) do
-      nil -> nil
-      vote -> vote.value
-    end
-  end
-
-  defp build_comment_tree(comments) do
-    comments = Repo.preload(comments, :author)
-    grouped = Enum.group_by(comments, & &1.parent_id)
-
-    root_comments = grouped[nil] || []
-
-    Enum.map(root_comments, fn comment ->
-      build_node(comment, grouped)
-    end)
-  end
-
-  defp build_node(comment, grouped) do
-    children = grouped[comment.id] || []
-
-    %{
-      id: to_string(comment.id),
-      body: comment.body,
-      author: %{
-        id: comment.author.id,
-        username: comment.author.username,
-        avatar_url: comment.author.avatar_url
-      },
-      score: comment.score,
-      inserted_at: comment.inserted_at,
-      user_vote: nil,
-      replies: Enum.map(children, &build_node(&1, grouped))
-    }
-  end
+  # comment tree handled by LiveHelpers.build_comment_tree/2
 
   defp flatten_comments(tree) when is_list(tree) do
     Enum.flat_map(tree, &flatten_comments/1)
@@ -704,15 +761,17 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   defp format_errors(changeset) do
-    errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-      Enum.reduce(opts, msg, fn {key, value}, acc ->
-        String.replace(acc, "%{#{key}}", to_string(value))
+    errors =
+      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+        Enum.reduce(opts, msg, fn {key, value}, acc ->
+          String.replace(acc, "%{#{key}}", to_string(value))
+        end)
       end)
-    end)
 
     case errors do
       %{description: msgs} when is_list(msgs) ->
         "Description #{Enum.join(msgs, "; ")}"
+
       _ ->
         "Failed to submit report. Please check your input."
     end

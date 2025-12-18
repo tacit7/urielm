@@ -51,7 +51,7 @@ defmodule Urielm.Content do
   end
 
   @doc """
-  Gets a single prompt.
+  Gets a single prompt with tag_records preloaded.
 
   Raises `Ecto.NoResultsError` if the Prompt does not exist.
 
@@ -64,7 +64,10 @@ defmodule Urielm.Content do
       ** (Ecto.NoResultsError)
 
   """
-  def get_prompt!(id), do: Repo.get!(Prompt, id)
+  def get_prompt!(id) do
+    Repo.get!(Prompt, id)
+    |> Repo.preload(:tag_records)
+  end
 
   @doc """
   Creates a prompt.
@@ -179,7 +182,7 @@ defmodule Urielm.Content do
     cond do
       query_text == "" ->
         # No search term, just return filtered results alphabetically
-        from(p in base, order_by: [asc: p.title])
+        from(p in base, order_by: [asc: p.title], preload: :tag_records)
         |> apply_pagination(opts)
         |> Repo.all()
 
@@ -247,7 +250,8 @@ defmodule Urielm.Content do
             "ts_rank(search_vector, plainto_tsquery('simple', ?))",
             ^query_text
           )
-      ]
+      ],
+      preload: :tag_records
     )
     |> apply_pagination(opts)
     |> Repo.all()
@@ -262,7 +266,8 @@ defmodule Urielm.Content do
       },
       order_by: [
         desc: fragment("similarity(?, ?)", p.title, ^query_text)
-      ]
+      ],
+      preload: :tag_records
     )
     |> apply_pagination(opts)
     |> Repo.all()
