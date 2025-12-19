@@ -29,6 +29,7 @@ defmodule Urielm.Chat do
 
   def update_room(%Room{} = room, attrs) do
     attrs = Urielm.Params.normalize(attrs)
+
     room
     |> Room.changeset(attrs)
     |> Repo.update()

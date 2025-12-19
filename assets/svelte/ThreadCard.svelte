@@ -5,11 +5,15 @@
   export let author = {}
   export let score = 0
   export let comment_count = 0
+  export let view_count = 0
   export let created_at = null
   export let user_vote = null
   export let is_saved = false
   export let is_subscribed = false
   export let is_unread = false
+  export let is_solved = false
+  export let is_locked = false
+  export let is_pinned = false
 
   // live is automatically available from LiveSvelte
   export let live
@@ -67,8 +71,26 @@
         <h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors">
           {title}
         </h3>
+        {#if is_pinned}
+          <span class="badge badge-info badge-sm gap-1">
+            <UMIcon name="arrow_up" className="w-3 h-3" />
+            pinned
+          </span>
+        {/if}
+        {#if is_locked}
+          <span class="badge badge-warning badge-sm gap-1">
+            <UMIcon name="lock_closed" className="w-3 h-3" />
+            locked
+          </span>
+        {/if}
+        {#if is_solved}
+          <span class="badge badge-success badge-sm gap-1">
+            <UMIcon name="check_circle" className="w-3 h-3" />
+            solved
+          </span>
+        {/if}
         {#if is_unread}
-          <span class="badge badge-success badge-sm">new</span>
+          <span class="badge badge-info badge-sm">new</span>
         {/if}
       </div>
       <p class="text-sm text-base-content/60 mt-1 line-clamp-1">
@@ -78,6 +100,10 @@
         <span>by {author?.username || "Unknown"}</span>
         <span>•</span>
         <span>{formatDate(created_at)}</span>
+        {#if view_count > 0}
+          <span>•</span>
+          <span>{view_count} {view_count === 1 ? "view" : "views"}</span>
+        {/if}
       </div>
     </a>
   </div>

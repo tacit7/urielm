@@ -19,12 +19,15 @@ defmodule UrielmWeb.UserProfileLive do
 
       user ->
         stats = Accounts.get_user_stats(user.id)
+        current_user = socket.assigns.current_user
+        is_following = current_user && Accounts.is_following?(current_user.id, user.id)
 
         {:ok,
          socket
          |> assign(:page_title, "@#{user.username}")
          |> assign(:user, user)
          |> assign(:stats, stats)
+         |> assign(:is_following, is_following || false)
          |> assign(:active_tab, "threads")
          |> assign(:threads, [])
          |> assign(:comments, [])
@@ -88,6 +91,32 @@ defmodule UrielmWeb.UserProfileLive do
   end
 
   @impl true
+  def handle_event("toggle_follow", _params, socket) do
+    current_user = socket.assigns.current_user
+    profile_user = socket.assigns.user
+
+    case current_user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to follow users")}
+
+      user ->
+        case Accounts.toggle_follow(user.id, profile_user.id) do
+          {:ok, _} ->
+            is_following = Accounts.is_following?(user.id, profile_user.id)
+            stats = Accounts.get_user_stats(profile_user.id)
+
+            {:noreply,
+             socket
+             |> assign(:is_following, is_following)
+             |> assign(:stats, stats)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to toggle follow")}
+        end
+    end
+  end
+
+  @impl true
   def handle_event("load_more", _params, socket), do: {:noreply, socket}
 
   @impl true
@@ -134,11 +163,34 @@ defmodule UrielmWeb.UserProfileLive do
                 <% end %>
               </div>
 
-              <p class="text-base-content/70 mb-4">
-                Joined {Calendar.strftime(@user.inserted_at, "%B %Y")}
-              </p>
+              <%= if @user.display_name && @user.display_name != @user.username do %>
+                <p class="text-lg text-base-content/90 mb-2">{@user.display_name}</p>
+              <% end %>
 
-              <div class="flex items-center gap-6">
+              <%= if @user.bio do %>
+                <p class="text-base-content/70 mb-3 max-w-2xl">{@user.bio}</p>
+              <% end %>
+
+              <div class="flex items-center gap-4 text-sm text-base-content/60 mb-4">
+                <%= if @user.location do %>
+                  <span class="flex items-center gap-1">
+                    <.um_icon name="map_pin" class="w-4 h-4" />
+                    {@user.location}
+                  </span>
+                <% end %>
+                <%= if @user.website do %>
+                  <a href={@user.website} target="_blank" rel="noopener" class="flex items-center gap-1 link link-hover">
+                    <.um_icon name="link" class="w-4 h-4" />
+                    {String.replace(@user.website, ~r/^https?:\/\//, "")}
+                  </a>
+                <% end %>
+                <span class="flex items-center gap-1">
+                  <.um_icon name="calendar" class="w-4 h-4" />
+                  Joined {Calendar.strftime(@user.inserted_at, "%B %Y")}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-6 mb-4">
                 <div class="text-center">
                   <p class="text-2xl font-bold">{@stats.thread_count}</p>
                   <p class="text-sm text-base-content/70">
@@ -151,7 +203,33 @@ defmodule UrielmWeb.UserProfileLive do
                     {if @stats.comment_count == 1, do: "Comment", else: "Comments"}
                   </p>
                 </div>
+                <div class="text-center">
+                  <p class="text-2xl font-bold">{@stats.follower_count}</p>
+                  <p class="text-sm text-base-content/70">
+                    {if @stats.follower_count == 1, do: "Follower", else: "Followers"}
+                  </p>
+                </div>
+                <div class="text-center">
+                  <p class="text-2xl font-bold">{@stats.following_count}</p>
+                  <p class="text-sm text-base-content/70">Following</p>
+                </div>
               </div>
+
+              <%= if @current_user && @current_user.id != @user.id do %>
+                <button
+                  phx-click="toggle_follow"
+                  class={[
+                    "btn btn-sm",
+                    if(@is_following, do: "btn-outline", else: "btn-primary")
+                  ]}
+                >
+                  <%= if @is_following do %>
+                    Following
+                  <% else %>
+                    Follow
+                  <% end %>
+                </button>
+              <% end %>
             </div>
           </div>
         </div>

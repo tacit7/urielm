@@ -34,6 +34,7 @@ defmodule UrielmWeb.Router do
     get "/:provider/callback", AuthController, :callback
     post "/:provider/callback", AuthController, :callback
     delete "/logout", AuthController, :delete
+    get "/post-signup/:user_id", AuthController, :post_signup
 
     # Email/password authentication
     post "/signup", AuthController, :signup
@@ -52,6 +53,8 @@ defmodule UrielmWeb.Router do
 
     live_session :default do
       live "/", HomeLive
+      live "/signup", SignupLive
+      live "/signup/email", SignupEmailLive
       live "/romanov-prompts", ReferencesLive
       live "/prompts/:id", PromptLive
       live "/courses/:course_slug", CourseLive
@@ -71,6 +74,8 @@ defmodule UrielmWeb.Router do
       on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}] do
       live "/profile", ProfileLive
       live "/settings", SettingsLive
+      live "/signup/verify-email", VerifyEmailLive
+      live "/signup/set-handle", SetHandleLive
       live "/chat", ChatLive
       live "/forum/b/:board_slug/new", NewThreadLive
       live "/saved", SavedThreadsLive

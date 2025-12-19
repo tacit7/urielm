@@ -15,17 +15,23 @@ defmodule Urielm.Forum.Thread do
     field(:body, :string)
     field(:score, :integer, default: 0)
     field(:comment_count, :integer, default: 0)
+    field(:view_count, :integer, default: 0)
     field(:is_locked, :boolean, default: false)
     field(:is_removed, :boolean, default: false)
     field(:is_solved, :boolean, default: false)
+    field(:is_pinned, :boolean, default: false)
     field(:edited_at, :utc_datetime_usec)
     field(:solved_at, :utc_datetime_usec)
+    field(:pinned_at, :utc_datetime_usec)
+    field(:close_at, :utc_datetime_usec)
 
     belongs_to(:board, Urielm.Forum.Board)
     belongs_to(:author, Urielm.Accounts.User, type: :id)
     belongs_to(:removed_by, Urielm.Accounts.User, foreign_key: :removed_by_id, type: :id)
     belongs_to(:solved_comment, Urielm.Forum.Comment, type: :binary_id)
     belongs_to(:solved_by, Urielm.Accounts.User, foreign_key: :solved_by_id, type: :id)
+    belongs_to(:pinned_by, Urielm.Accounts.User, foreign_key: :pinned_by_id, type: :id)
+    belongs_to(:close_timer_set_by, Urielm.Accounts.User, foreign_key: :close_timer_set_by_id, type: :id)
 
     has_many(:comments, Urielm.Forum.Comment)
     has_many(:votes, Urielm.Forum.Vote, foreign_key: :target_id)
@@ -61,7 +67,10 @@ defmodule Urielm.Forum.Thread do
       :is_solved,
       :solved_comment_id,
       :solved_at,
-      :solved_by_id
+      :solved_by_id,
+      :is_pinned,
+      :pinned_at,
+      :pinned_by_id
     ])
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
     |> validate_length(:title, min: 3, max: 300)

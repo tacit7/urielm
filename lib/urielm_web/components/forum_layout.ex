@@ -1,5 +1,5 @@
 defmodule UrielmWeb.Components.ForumLayout do
-  use Phoenix.Component
+  use UrielmWeb, :html
 
   def forum_layout(assigns) do
     ~H"""
@@ -17,10 +17,10 @@ defmodule UrielmWeb.Components.ForumLayout do
           
     <!-- Main Navigation -->
           <nav class="space-y-1 mb-8">
-      <.nav_link href="/forum" icon="home" label="Home" />
-      <.nav_link href="/forum" icon="topics" label="Topics" />
-      <.nav_link href="/saved" icon="bookmark" label="Saved" />
-      <.nav_link href="/notifications" icon="bell" label="Notifications" />
+            <.nav_link href="/forum" icon="home" label="Home" />
+            <.nav_link href="/forum" icon="topics" label="Topics" />
+            <.nav_link href="/saved" icon="bookmark" label="Saved" />
+            <.nav_link href="/notifications" icon="bell" label="Notifications" />
           </nav>
           
     <!-- Categories -->
@@ -37,10 +37,10 @@ defmodule UrielmWeb.Components.ForumLayout do
           
     <!-- More Section -->
           <nav class="space-y-1 pt-6 border-t border-base-300">
-      <.nav_link href="#" icon="users" label="Users" />
-      <.nav_link href="#" icon="trophy" label="Badges" />
-      <.nav_link href="#" icon="info" label="About" />
-      <.nav_link href="#" icon="ellipsis" label="More" />
+            <.nav_link href="#" icon="users" label="Users" />
+            <.nav_link href="#" icon="trophy" label="Badges" />
+            <.nav_link href="#" icon="info" label="About" />
+            <.nav_link href="#" icon="ellipsis" label="More" />
           </nav>
         </div>
       </div>
@@ -61,7 +61,7 @@ defmodule UrielmWeb.Components.ForumLayout do
       href={@href}
       class="flex items-center gap-3 px-3 py-2 rounded text-sm text-base-content/70 hover:text-base-content hover:bg-base-300 transition-colors"
     >
-      <UMIcon.um_icon name={@icon} class="w-4 h-4" />
+      <.um_icon name={@icon} class="w-4 h-4" />
       <span>{@label}</span>
     </a>
     """

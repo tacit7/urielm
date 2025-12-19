@@ -6,7 +6,7 @@ defmodule UrielmWeb.Components.UMIcon do
   Use `<.um_icon name="bell" />` instead of hardcoding `hero-bell`.
   This preserves a single mapping point if we change icon libraries.
   """
-  use UrielmWeb, :html
+  use Phoenix.Component
 
   @type variant :: nil | String.t()
 
@@ -20,13 +20,14 @@ defmodule UrielmWeb.Components.UMIcon do
     assigns = assign(assigns, :resolved_name, resolve(assigns.name, assigns.variant))
 
     ~H"""
-    <.icon name={@resolved_name} class={@class} {@rest} />
+    <span class={[@resolved_name, @class]} {@rest} />
     """
   end
 
   # Resolve a logical token to a concrete hero-* class. If the caller passes
   # an explicit `hero-*` value, pass it through unchanged.
   defp resolve("hero-" <> _ = explicit, _variant), do: explicit
+
   defp resolve(name, variant) when is_binary(name) do
     base =
       %{
@@ -55,7 +56,8 @@ defmodule UrielmWeb.Components.UMIcon do
       |> Map.get(name, name)
 
     has_variant_suffix =
-      String.ends_with?(base, "-solid") or String.ends_with?(base, "-mini") or String.ends_with?(base, "-micro")
+      String.ends_with?(base, "-solid") or String.ends_with?(base, "-mini") or
+        String.ends_with?(base, "-micro")
 
     suffix =
       if has_variant_suffix do

@@ -23,6 +23,23 @@ defmodule Urielm.ModerationTest do
       assert report.target_type == "thread"
     end
 
+    test "report requires description of at least 10 characters" do
+      reporter = Fixtures.user_fixture()
+      accused = Fixtures.user_fixture()
+      category = Fixtures.category_fixture()
+      board = Fixtures.board_fixture(%{category_id: category.id})
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
+
+      {:error, changeset} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "Too short"
+        })
+
+      assert changeset.errors[:description]
+      assert {"should be at least %{count} character(s)", _} = changeset.errors[:description]
+    end
+
     test "user cannot report the same content twice" do
       reporter = Fixtures.user_fixture()
       accused = Fixtures.user_fixture()
@@ -30,10 +47,17 @@ defmodule Urielm.ModerationTest do
       board = Fixtures.board_fixture(%{category_id: category.id})
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      {:ok, _report} = Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam", description: "This is spam"})
+      {:ok, _report} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "This is spam"
+        })
 
       {:error, changeset} =
-        Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam", description: "More spam"})
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "More spam content"
+        })
 
       assert changeset.errors[:user_id]
     end
@@ -64,8 +88,15 @@ defmodule Urielm.ModerationTest do
       thread1 = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
       thread2 = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      Forum.create_report(reporter.id, "thread", thread1.id, %{reason: "spam", description: "Spam content"})
-      Forum.create_report(reporter.id, "thread", thread2.id, %{reason: "abuse", description: "Abusive content"})
+      Forum.create_report(reporter.id, "thread", thread1.id, %{
+        reason: "spam",
+        description: "Spam content"
+      })
+
+      Forum.create_report(reporter.id, "thread", thread2.id, %{
+        reason: "abuse",
+        description: "Abusive content"
+      })
 
       reports = Forum.list_reports(status: "pending")
 
@@ -81,7 +112,12 @@ defmodule Urielm.ModerationTest do
       board = Fixtures.board_fixture(%{category_id: category.id})
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      {:ok, report} = Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam", description: "This is spam"})
+      {:ok, report} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "This is spam"
+        })
+
       assert report.status == "pending"
 
       {:ok, reviewed} = Forum.review_report(report, admin.id, "reviewed", "Content approved")
@@ -100,7 +136,11 @@ defmodule Urielm.ModerationTest do
       board = Fixtures.board_fixture(%{category_id: category.id})
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      {:ok, report} = Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam", description: "This is spam"})
+      {:ok, report} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "This is spam"
+        })
 
       {:ok, resolved} = Forum.review_report(report, admin.id, "resolved", nil)
 
@@ -115,7 +155,11 @@ defmodule Urielm.ModerationTest do
       board = Fixtures.board_fixture(%{category_id: category.id})
       thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      {:ok, report} = Forum.create_report(reporter.id, "thread", thread.id, %{reason: "spam", description: "This is spam"})
+      {:ok, report} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "This is spam"
+        })
 
       {:ok, dismissed} = Forum.review_report(report, admin.id, "dismissed", nil)
 
@@ -130,8 +174,15 @@ defmodule Urielm.ModerationTest do
       thread1 = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
       thread2 = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
 
-      Forum.create_report(reporter.id, "thread", thread1.id, %{reason: "spam", description: "Spam content"})
-      Forum.create_report(reporter.id, "thread", thread2.id, %{reason: "abuse", description: "Abusive content"})
+      Forum.create_report(reporter.id, "thread", thread1.id, %{
+        reason: "spam",
+        description: "Spam content"
+      })
+
+      Forum.create_report(reporter.id, "thread", thread2.id, %{
+        reason: "abuse",
+        description: "Abusive content"
+      })
 
       count = Forum.count_pending_reports()
 

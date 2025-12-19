@@ -17,11 +17,23 @@ defmodule UrielmWeb.AuthController do
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     case Accounts.find_or_create_user(auth) do
       {:ok, user} ->
-        conn
-        |> put_flash(:info, "Welcome #{user.name || user.email}!")
-        |> put_session(:user_id, user.id)
-        |> configure_session(renew: true)
-        |> redirect(to: ~p"/")
+        return_to = get_session(conn, :return_to) || "/"
+
+        conn =
+          conn
+          |> put_flash(:info, "Welcome #{user.name || user.email}!")
+          |> put_session(:user_id, user.id)
+          |> delete_session(:return_to)
+          |> configure_session(renew: true)
+
+        # Check if user needs a handle for this action
+        if needs_handle_for_action?(return_to) && is_nil(user.username) do
+          conn
+          |> put_session(:pending_redirect, return_to)
+          |> redirect(to: ~p"/signup/set-handle")
+        else
+          redirect(conn, to: return_to)
+        end
 
       {:error, _reason} ->
         conn
@@ -35,6 +47,14 @@ defmodule UrielmWeb.AuthController do
     conn
     |> put_flash(:error, "Failed to authenticate. Please try again.")
     |> redirect(to: ~p"/")
+  end
+
+  # Check if the action requires a username/handle
+  defp needs_handle_for_action?(path) do
+    # Paths that require a handle: posting, commenting, creating threads
+    String.contains?(path, "/new") ||
+      String.contains?(path, "/post") ||
+      String.contains?(path, "/comment")
   end
 
   @doc """
@@ -112,6 +132,36 @@ defmodule UrielmWeb.AuthController do
         conn
         |> put_status(:ok)
         |> json(%{available: false})
+    end
+  end
+
+  @doc """
+  Post-signup redirect - sets session and redirects to verification page or intended destination
+  """
+  def post_signup(conn, %{"user_id" => user_id}) do
+    user = Accounts.get_user(String.to_integer(user_id))
+    return_to = get_session(conn, :return_to) || "/"
+
+    conn =
+      conn
+      |> put_session(:user_id, user.id)
+      |> delete_session(:return_to)
+      |> configure_session(renew: true)
+
+    # If email not verified, redirect to verification page
+    cond do
+      !user.email_verified ->
+        conn
+        |> put_session(:pending_redirect, return_to)
+        |> redirect(to: ~p"/signup/verify-email")
+
+      needs_handle_for_action?(return_to) && is_nil(user.username) ->
+        conn
+        |> put_session(:pending_redirect, return_to)
+        |> redirect(to: ~p"/signup/set-handle")
+
+      true ->
+        redirect(conn, to: return_to)
     end
   end
 

@@ -56,6 +56,33 @@ defmodule UrielmWeb.Layouts do
   end
 
   @doc """
+  Renders a minimal auth layout without navbar.
+
+  Used for signup, signin, and other auth pages.
+
+  ## Examples
+
+      <Layouts.auth flash={@flash}>
+        <h1>Sign Up</h1>
+      </Layouts.auth>
+
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+  slot :inner_block, required: true
+
+  def auth(assigns) do
+    ~H"""
+    <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+      <main>
+        {render_slot(@inner_block)}
+      </main>
+
+      <.flash_group flash={@flash} />
+    </div>
+    """
+  end
+
+  @doc """
   Shows the flash group with standard titles and content.
 
   ## Examples
@@ -80,7 +107,7 @@ defmodule UrielmWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <UMIcon.um_icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+        <.um_icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -92,7 +119,7 @@ defmodule UrielmWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <UMIcon.um_icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+        <.um_icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """
@@ -106,14 +133,14 @@ defmodule UrielmWeb.Layouts do
   def theme_toggle(assigns) do
     ~H"""
     <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
+      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=midnight]_&]:left-2/3 transition-[left]" />
 
       <button
         class="flex p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <UMIcon.um_icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.um_icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
       <button
@@ -121,16 +148,16 @@ defmodule UrielmWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <UMIcon.um_icon name="moon" class="hidden" />
-        <UMIcon.um_icon name="sun" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.um_icon name="moon" class="hidden" />
+        <.um_icon name="sun" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
       <button
         class="flex p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="dark"
+        data-phx-theme="midnight"
       >
-        <UMIcon.um_icon name="moon" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.um_icon name="moon" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
     </div>
     """

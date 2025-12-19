@@ -1,12 +1,10 @@
 <script>
-  import AuthModal from './AuthModal.svelte';
   import UserMenu from './UserMenu.svelte';
 
   let { currentPage = '', currentUser = null } = $props()
 
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
-  let showAuthModal = $state(false)
   let dropdownRef
 
 
@@ -20,10 +18,6 @@
 
   function closeMenu() {
     isMenuOpen = false
-  }
-
-  function openAuthModal() {
-    showAuthModal = true
   }
 
   function handleClickOutside(event) {
@@ -135,14 +129,12 @@
     {#if currentUser}
       <UserMenu {currentUser} />
     {:else}
-      <button
-        onclick={openAuthModal}
+      <a
+        href="/signup"
         class="btn btn-sm btn-primary rounded-full px-6"
       >
-        Sign In
-      </button>
+        Sign Up
+      </a>
     {/if}
   </div>
 </div>
-
-<AuthModal bind:isOpen={showAuthModal} />

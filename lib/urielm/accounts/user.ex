@@ -8,6 +8,9 @@ defmodule Urielm.Accounts.User do
     field(:username, :string)
     field(:display_name, :string)
     field(:avatar_url, :string)
+    field(:bio, :string)
+    field(:location, :string)
+    field(:website, :string)
     field(:email_verified, :boolean, default: false)
     field(:active, :boolean, default: true)
     field(:is_admin, :boolean, default: false)
@@ -33,18 +36,39 @@ defmodule Urielm.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:email, :name, :username, :display_name, :avatar_url, :email_verified, :active])
+    |> cast(attrs, [
+      :email,
+      :name,
+      :username,
+      :display_name,
+      :avatar_url,
+      :bio,
+      :location,
+      :website,
+      :email_verified,
+      :active
+    ])
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email")
+    |> validate_length(:bio, max: 1000)
+    |> validate_length(:location, max: 100)
+    |> validate_length(:website, max: 200)
     |> validate_handle()
+    |> validate_display_name()
     |> unique_constraint(:email)
     |> unique_constraint(:username)
+  end
+
+  defp validate_display_name(changeset) do
+    changeset
+    |> validate_length(:display_name, min: 2, max: 50)
   end
 
   defp validate_handle(changeset) do
     changeset
     |> validate_format(:username, ~r/^(?=.{3,20}$)[a-z0-9]+([_-][a-z0-9]+)*$/,
-      message: "must be 3-20 lowercase letters, numbers, dashes or underscores; no leading/trailing dashes"
+      message:
+        "must be 3-20 lowercase letters, numbers, dashes or underscores; no leading/trailing dashes"
     )
   end
 
@@ -60,19 +84,35 @@ defmodule Urielm.Accounts.User do
     |> validate_handle()
     |> unique_constraint(:email)
     |> unique_constraint(:username)
-    |> put_password_hash()
+    |> put_password_hash(verify_email: true)
+  end
+
+  @doc """
+  Changeset for email-only registration (username collected later).
+  Email verification required before posting/commenting.
+  """
+  def email_only_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:email, :password])
+    |> validate_required([:email, :password])
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must be a valid email")
+    |> validate_length(:password, min: 8, message: "must be at least 8 characters")
+    |> unique_constraint(:email)
+    |> put_password_hash(verify_email: false)
   end
 
   defp put_password_hash(
-         %Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset
+         %Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset,
+         opts
        ) do
+    verify_email = Keyword.get(opts, :verify_email, false)
+
     changeset
     |> put_change(:password_hash, Bcrypt.hash_pwd_salt(password))
-    # Auto-verify for email/password signups
-    |> put_change(:email_verified, true)
+    |> put_change(:email_verified, verify_email)
   end
 
-  defp put_password_hash(changeset), do: changeset
+  defp put_password_hash(changeset, _opts), do: changeset
 
   @doc """
   Verify a plain text password against the stored hash.

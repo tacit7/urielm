@@ -69,6 +69,9 @@ defmodule UrielmWeb.ThreadLive do
              |> refresh_thread(user)
              |> put_flash(:info, "Comment posted")}
 
+          {:error, :thread_locked} ->
+            {:noreply, put_flash(socket, :error, "This thread is locked")}
+
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to post comment")}
         end
@@ -322,6 +325,106 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   @impl true
+  def handle_event("lock_thread", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    if user && user.is_admin do
+      thread = Forum.get_thread!(thread_data.id)
+
+      case Forum.lock_thread(thread, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Thread locked")}
+
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Admin only")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to lock thread")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Admin only")}
+    end
+  end
+
+  @impl true
+  def handle_event("unlock_thread", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    if user && user.is_admin do
+      thread = Forum.get_thread!(thread_data.id)
+
+      case Forum.unlock_thread(thread, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Thread unlocked")}
+
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Admin only")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unlock thread")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Admin only")}
+    end
+  end
+
+  @impl true
+  def handle_event("pin_thread", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    if user && user.is_admin do
+      thread = Forum.get_thread!(thread_data.id)
+
+      case Forum.pin_thread(thread, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Thread pinned")}
+
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Admin only")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to pin thread")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Admin only")}
+    end
+  end
+
+  @impl true
+  def handle_event("unpin_thread", _params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    if user && user.is_admin do
+      thread = Forum.get_thread!(thread_data.id)
+
+      case Forum.unpin_thread(thread, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Thread unpinned")}
+
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Admin only")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unpin thread")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Admin only")}
+    end
+  end
+
+  @impl true
   def handle_event("reply_to_comment", %{"comment_id" => _comment_id}, socket) do
     # This just acknowledges the event. The actual reply UI is managed by the CommentTree component
     {:noreply, socket}
@@ -501,6 +604,44 @@ defmodule UrielmWeb.ThreadLive do
                       />
                     </button>
 
+                    <%= if @current_user && @current_user.is_admin do %>
+                      <%= if @thread.is_pinned do %>
+                        <button
+                          class="btn btn-xs btn-ghost"
+                          phx-click="unpin_thread"
+                          title="Unpin thread"
+                        >
+                          <.um_icon name="bookmark_slash" class="w-4 h-4" />
+                        </button>
+                      <% else %>
+                        <button
+                          class="btn btn-xs btn-ghost text-info"
+                          phx-click="pin_thread"
+                          title="Pin thread to top"
+                        >
+                          <.um_icon name="bookmark" class="w-4 h-4" />
+                        </button>
+                      <% end %>
+
+                      <%= if @thread.is_locked do %>
+                        <button
+                          class="btn btn-xs btn-ghost text-warning"
+                          phx-click="unlock_thread"
+                          title="Unlock thread"
+                        >
+                          <.um_icon name="lock_open" class="w-4 h-4" />
+                        </button>
+                      <% else %>
+                        <button
+                          class="btn btn-xs btn-ghost"
+                          phx-click="lock_thread"
+                          title="Lock thread"
+                        >
+                          <.um_icon name="lock_closed" class="w-4 h-4" />
+                        </button>
+                      <% end %>
+                    <% end %>
+
                     <button
                       data-testid="report-button"
                       class="btn btn-xs btn-ghost text-warning"
@@ -552,12 +693,26 @@ defmodule UrielmWeb.ThreadLive do
           </div>
 
           <div class="mb-8">
-            <h2 class="text-2xl font-bold text-base-content mb-4">Comments</h2>
+            <h2 class="text-2xl font-bold text-base-content mb-4">
+              Comments
+              <%= if @thread.is_locked do %>
+                <span class="badge badge-warning badge-sm ml-2">
+                  <.um_icon name="lock_closed" class="w-3 h-3 mr-1" />
+                  Locked
+                </span>
+              <% end %>
+            </h2>
 
-            <%= if @current_user do %>
-              <div class="card bg-base-200 border border-base-300 mb-6">
-                <div class="card-body">
-                  <form phx-submit="create_comment" class="space-y-4">
+            <%= if @thread.is_locked do %>
+              <div class="alert alert-warning mb-6">
+                <.um_icon name="lock_closed" class="w-5 h-5" />
+                <span>This thread is locked. New comments cannot be added.</span>
+              </div>
+            <% else %>
+              <%= if @current_user do %>
+                <div class="card bg-base-200 border border-base-300 mb-6">
+                  <div class="card-body">
+                    <form phx-submit="create_comment" class="space-y-4">
                     <textarea
                       name="body"
                       placeholder="Share your thoughts... (Markdown supported)"
@@ -569,13 +724,14 @@ defmodule UrielmWeb.ThreadLive do
                   </form>
                 </div>
               </div>
-            <% else %>
-              <div class="alert alert-info mb-6">
-                <span>
-                  <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
-                  to comment on this thread
-                </span>
-              </div>
+              <% else %>
+                <div class="alert alert-info mb-6">
+                  <span>
+                    <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
+                    to comment on this thread
+                  </span>
+                </div>
+              <% end %>
             <% end %>
 
             <.svelte

@@ -33,7 +33,8 @@ defmodule UrielmWeb.UserAuth do
     if socket.assigns.current_user do
       {:cont, socket}
     else
-      {:halt, redirect(socket, to: "/auth/signin")}
+      # Redirect to signup - the return path will be preserved via query param or referer
+      {:halt, redirect(socket, to: "/signup")}
     end
   end
 end

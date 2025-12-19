@@ -35,7 +35,10 @@ defmodule UrielmWeb.LiveHelpers do
       body: String.slice(thread.body, 0, 150),
       score: thread.score,
       comment_count: thread.comment_count,
+      view_count: thread.view_count || 0,
       is_solved: thread.is_solved || false,
+      is_locked: thread.is_locked || false,
+      is_pinned: thread.is_pinned || false,
       author: %{
         id: thread.author.id,
         username: thread.author.username
@@ -83,7 +86,9 @@ defmodule UrielmWeb.LiveHelpers do
       author_avatar_url: thread.author.avatar_url,
       board_name: thread.board.name,
       board_slug: thread.board.slug,
-      solved_comment_id: thread.solved_comment_id && to_string(thread.solved_comment_id)
+      solved_comment_id: thread.solved_comment_id && to_string(thread.solved_comment_id),
+      is_locked: thread.is_locked || false,
+      is_pinned: thread.is_pinned || false
     })
   end
 

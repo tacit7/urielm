@@ -5,7 +5,7 @@ defmodule Urielm.Accounts do
 
   import Ecto.Query, warn: false
   alias Urielm.Repo
-  alias Urielm.Accounts.{User, OAuthIdentity, SavedPrompt}
+  alias Urielm.Accounts.{User, OAuthIdentity, SavedPrompt, UserFollow}
   alias Urielm.Content.{Like, Prompt}
 
   ## User functions
@@ -84,6 +84,16 @@ defmodule Urielm.Accounts do
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Registers a new user with email and password only (no username yet).
+  Email verification required before posting/commenting.
+  """
+  def register_user_email_only(attrs) do
+    %User{}
+    |> User.email_only_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -171,11 +181,7 @@ defmodule Urielm.Accounts do
   Checks if a prompt is saved by a user.
   """
   def is_prompt_saved?(%User{id: user_id}, prompt_id) do
-    Repo.exists?(
-      from(s in SavedPrompt,
-        where: s.user_id == ^user_id and s.prompt_id == ^prompt_id
-      )
-    )
+    Urielm.Content.user_saved_prompt?(user_id, prompt_id)
   end
 
   def is_prompt_saved?(nil, _prompt_id), do: false
@@ -232,11 +238,7 @@ defmodule Urielm.Accounts do
   Checks if a prompt is liked by a user.
   """
   def is_prompt_liked?(%User{id: user_id}, prompt_id) do
-    Repo.exists?(
-      from(l in Like,
-        where: l.user_id == ^user_id and l.prompt_id == ^prompt_id
-      )
-    )
+    Urielm.Content.user_liked_prompt?(user_id, prompt_id)
   end
 
   def is_prompt_liked?(nil, _prompt_id), do: false
@@ -249,16 +251,64 @@ defmodule Urielm.Accounts do
   end
 
   def get_user_stats(user_id) do
-    from_count = from(t in Urielm.Forum.Thread, where: t.author_id == ^user_id and t.is_removed == false)
-                 |> Repo.aggregate(:count)
+    from_count =
+      from(t in Urielm.Forum.Thread, where: t.author_id == ^user_id and t.is_removed == false)
+      |> Repo.aggregate(:count)
 
-    comment_count = from(c in Urielm.Forum.Comment, where: c.author_id == ^user_id and c.is_removed == false)
-                    |> Repo.aggregate(:count)
+    comment_count =
+      from(c in Urielm.Forum.Comment, where: c.author_id == ^user_id and c.is_removed == false)
+      |> Repo.aggregate(:count)
+
+    follower_count = count_followers(user_id)
+    following_count = count_following(user_id)
 
     %{
       thread_count: from_count,
-      comment_count: comment_count
+      comment_count: comment_count,
+      follower_count: follower_count,
+      following_count: following_count
     }
+  end
+
+  ## User Following
+
+  def follow_user(follower_id, following_id) do
+    %UserFollow{}
+    |> UserFollow.changeset(%{follower_id: follower_id, following_id: following_id})
+    |> Repo.insert()
+  end
+
+  def unfollow_user(follower_id, following_id) do
+    case Repo.get_by(UserFollow, follower_id: follower_id, following_id: following_id) do
+      nil -> {:error, :not_found}
+      follow -> Repo.delete(follow)
+    end
+  end
+
+  def is_following?(follower_id, following_id) do
+    Repo.exists?(
+      from(uf in UserFollow,
+        where: uf.follower_id == ^follower_id and uf.following_id == ^following_id
+      )
+    )
+  end
+
+  def toggle_follow(follower_id, following_id) do
+    if is_following?(follower_id, following_id) do
+      unfollow_user(follower_id, following_id)
+    else
+      follow_user(follower_id, following_id)
+    end
+  end
+
+  def count_followers(user_id) do
+    from(uf in UserFollow, where: uf.following_id == ^user_id)
+    |> Repo.aggregate(:count)
+  end
+
+  def count_following(user_id) do
+    from(uf in UserFollow, where: uf.follower_id == ^user_id)
+    |> Repo.aggregate(:count)
   end
 
   ## Counter helpers

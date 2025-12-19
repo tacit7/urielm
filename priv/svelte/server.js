@@ -92528,12 +92528,15 @@ function ThreadCard($$renderer, $$props) {
       let author = fallback($$props["author"], () => ({}), true);
       let score = fallback($$props["score"], 0);
       let comment_count = fallback($$props["comment_count"], 0);
+      let view_count = fallback($$props["view_count"], 0);
       let created_at = fallback($$props["created_at"], null);
       let user_vote = fallback($$props["user_vote"], null);
       let is_saved = fallback($$props["is_saved"], false);
       let is_subscribed = fallback($$props["is_subscribed"], false);
       let is_unread = fallback($$props["is_unread"], false);
       let is_solved = fallback($$props["is_solved"], false);
+      let is_locked = fallback($$props["is_locked"], false);
+      let is_pinned = fallback($$props["is_pinned"], false);
       let live = $$props["live"];
       function formatDate(date) {
         if (!date) return "";
@@ -92564,22 +92567,44 @@ function ThreadCard($$renderer, $$props) {
         }
       }
       $$renderer2.push(`<div class="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-base-200/30 transition-colors">`);
-      push_element($$renderer2, "div", 63, 0);
+      push_element($$renderer2, "div", 66, 0);
       $$renderer2.push(`<div class="col-span-7">`);
-      push_element($$renderer2, "div", 65, 2);
+      push_element($$renderer2, "div", 68, 2);
       $$renderer2.push(`<a${attr("href", `/forum/t/${stringify(id)}`)} class="block group">`);
-      push_element($$renderer2, "a", 66, 4);
+      push_element($$renderer2, "a", 69, 4);
       $$renderer2.push(`<div class="flex items-center gap-2">`);
-      push_element($$renderer2, "div", 67, 6);
+      push_element($$renderer2, "div", 70, 6);
       $$renderer2.push(`<h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors">`);
-      push_element($$renderer2, "h3", 68, 8);
+      push_element($$renderer2, "h3", 71, 8);
       $$renderer2.push(`${escape_html(title)}</h3>`);
       pop_element();
       $$renderer2.push(` `);
+      if (is_pinned) {
+        $$renderer2.push("<!--[-->");
+        $$renderer2.push(`<span class="badge badge-info badge-sm gap-1">`);
+        push_element($$renderer2, "span", 75, 10);
+        UMIcon_default($$renderer2, { name: "arrow_up", className: "w-3 h-3" });
+        $$renderer2.push(`<!----> pinned</span>`);
+        pop_element();
+      } else {
+        $$renderer2.push("<!--[!-->");
+      }
+      $$renderer2.push(`<!--]--> `);
+      if (is_locked) {
+        $$renderer2.push("<!--[-->");
+        $$renderer2.push(`<span class="badge badge-warning badge-sm gap-1">`);
+        push_element($$renderer2, "span", 81, 10);
+        UMIcon_default($$renderer2, { name: "lock_closed", className: "w-3 h-3" });
+        $$renderer2.push(`<!----> locked</span>`);
+        pop_element();
+      } else {
+        $$renderer2.push("<!--[!-->");
+      }
+      $$renderer2.push(`<!--]--> `);
       if (is_solved) {
         $$renderer2.push("<!--[-->");
         $$renderer2.push(`<span class="badge badge-success badge-sm gap-1">`);
-        push_element($$renderer2, "span", 72, 10);
+        push_element($$renderer2, "span", 87, 10);
         UMIcon_default($$renderer2, { name: "check_circle", className: "w-3 h-3" });
         $$renderer2.push(`<!----> solved</span>`);
         pop_element();
@@ -92590,7 +92615,7 @@ function ThreadCard($$renderer, $$props) {
       if (is_unread) {
         $$renderer2.push("<!--[-->");
         $$renderer2.push(`<span class="badge badge-info badge-sm">`);
-        push_element($$renderer2, "span", 78, 10);
+        push_element($$renderer2, "span", 93, 10);
         $$renderer2.push(`new</span>`);
         pop_element();
       } else {
@@ -92599,39 +92624,53 @@ function ThreadCard($$renderer, $$props) {
       $$renderer2.push(`<!--]--></div>`);
       pop_element();
       $$renderer2.push(` <p class="text-sm text-base-content/60 mt-1 line-clamp-1">`);
-      push_element($$renderer2, "p", 81, 6);
+      push_element($$renderer2, "p", 96, 6);
       $$renderer2.push(`${escape_html(body)}</p>`);
       pop_element();
       $$renderer2.push(` <div class="flex items-center gap-3 text-xs text-base-content/50 mt-2">`);
-      push_element($$renderer2, "div", 84, 6);
+      push_element($$renderer2, "div", 99, 6);
       $$renderer2.push(`<span>`);
-      push_element($$renderer2, "span", 85, 8);
+      push_element($$renderer2, "span", 100, 8);
       $$renderer2.push(`by ${escape_html(author?.username || "Unknown")}</span>`);
       pop_element();
       $$renderer2.push(` <span>`);
-      push_element($$renderer2, "span", 86, 8);
+      push_element($$renderer2, "span", 101, 8);
       $$renderer2.push(`\u2022</span>`);
       pop_element();
       $$renderer2.push(` <span>`);
-      push_element($$renderer2, "span", 87, 8);
+      push_element($$renderer2, "span", 102, 8);
       $$renderer2.push(`${escape_html(formatDate(created_at))}</span>`);
       pop_element();
-      $$renderer2.push(`</div>`);
+      $$renderer2.push(` `);
+      if (view_count > 0) {
+        $$renderer2.push("<!--[-->");
+        $$renderer2.push(`<span>`);
+        push_element($$renderer2, "span", 104, 10);
+        $$renderer2.push(`\u2022</span>`);
+        pop_element();
+        $$renderer2.push(` <span>`);
+        push_element($$renderer2, "span", 105, 10);
+        $$renderer2.push(`${escape_html(view_count)} ${escape_html(view_count === 1 ? "view" : "views")}</span>`);
+        pop_element();
+      } else {
+        $$renderer2.push("<!--[!-->");
+      }
+      $$renderer2.push(`<!--]--></div>`);
       pop_element();
       $$renderer2.push(`</a>`);
       pop_element();
       $$renderer2.push(`</div>`);
       pop_element();
       $$renderer2.push(` <div class="col-span-2 text-right">`);
-      push_element($$renderer2, "div", 93, 2);
+      push_element($$renderer2, "div", 112, 2);
       $$renderer2.push(`<div class="flex flex-col items-end">`);
-      push_element($$renderer2, "div", 94, 4);
+      push_element($$renderer2, "div", 113, 4);
       $$renderer2.push(`<span class="text-sm font-semibold text-base-content">`);
-      push_element($$renderer2, "span", 95, 6);
+      push_element($$renderer2, "span", 114, 6);
       $$renderer2.push(`${escape_html(comment_count)}</span>`);
       pop_element();
       $$renderer2.push(` <span class="text-xs text-base-content/50">`);
-      push_element($$renderer2, "span", 98, 6);
+      push_element($$renderer2, "span", 117, 6);
       $$renderer2.push(`${escape_html(comment_count === 1 ? "reply" : "replies")}</span>`);
       pop_element();
       $$renderer2.push(`</div>`);
@@ -92639,35 +92678,35 @@ function ThreadCard($$renderer, $$props) {
       $$renderer2.push(`</div>`);
       pop_element();
       $$renderer2.push(` <div class="col-span-3 text-right">`);
-      push_element($$renderer2, "div", 105, 2);
+      push_element($$renderer2, "div", 124, 2);
       $$renderer2.push(`<div class="flex items-center justify-end gap-3">`);
-      push_element($$renderer2, "div", 106, 4);
+      push_element($$renderer2, "div", 125, 4);
       $$renderer2.push(`<div class="flex flex-col items-center gap-1 min-w-12">`);
-      push_element($$renderer2, "div", 108, 6);
+      push_element($$renderer2, "div", 127, 6);
       $$renderer2.push(`<button${attr_class("text-base-content/50 hover:text-primary transition-colors text-sm", void 0, { "text-primary": user_vote === 1 })} title="Upvote">`);
-      push_element($$renderer2, "button", 109, 8);
+      push_element($$renderer2, "button", 128, 8);
       UMIcon_default($$renderer2, { name: "chevron_up", className: "w-3 h-3" });
       $$renderer2.push(`<!----></button>`);
       pop_element();
       $$renderer2.push(` <span class="text-sm font-semibold text-base-content min-w-6 text-center">`);
-      push_element($$renderer2, "span", 117, 8);
+      push_element($$renderer2, "span", 136, 8);
       $$renderer2.push(`${escape_html(score)}</span>`);
       pop_element();
       $$renderer2.push(` <button${attr_class("text-base-content/50 hover:text-error transition-colors text-sm", void 0, { "text-error": user_vote === -1 })} title="Downvote">`);
-      push_element($$renderer2, "button", 120, 8);
+      push_element($$renderer2, "button", 139, 8);
       UMIcon_default($$renderer2, { name: "chevron_down", className: "w-3 h-3" });
       $$renderer2.push(`<!----></button>`);
       pop_element();
       $$renderer2.push(`</div>`);
       pop_element();
       $$renderer2.push(` <div class="flex items-center gap-2">`);
-      push_element($$renderer2, "div", 131, 6);
+      push_element($$renderer2, "div", 150, 6);
       $$renderer2.push(`<button${attr_class("btn btn-ghost btn-sm px-2 rounded", void 0, { "btn-primary": is_subscribed })}${attr("title", is_subscribed ? "Unsubscribe" : "Subscribe")}>`);
-      push_element($$renderer2, "button", 132, 8);
+      push_element($$renderer2, "button", 151, 8);
       $$renderer2.push(`<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">`);
-      push_element($$renderer2, "svg", 138, 10);
+      push_element($$renderer2, "svg", 157, 10);
       $$renderer2.push(`<path d="M15 5H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 4l-7 4.5L3 9V7l7 4.5L15 7v2z">`);
-      push_element($$renderer2, "path", 139, 12);
+      push_element($$renderer2, "path", 158, 12);
       $$renderer2.push(`</path>`);
       pop_element();
       $$renderer2.push(`</svg>`);
@@ -92675,11 +92714,11 @@ function ThreadCard($$renderer, $$props) {
       $$renderer2.push(`</button>`);
       pop_element();
       $$renderer2.push(` <button${attr_class("btn btn-ghost btn-sm px-2 rounded", void 0, { "btn-primary": is_saved })}${attr("title", is_saved ? "Unsave" : "Save")}>`);
-      push_element($$renderer2, "button", 142, 8);
+      push_element($$renderer2, "button", 161, 8);
       $$renderer2.push(`<svg class="w-4 h-4"${attr("fill", is_saved ? "currentColor" : "none")} stroke="currentColor" viewBox="0 0 24 24">`);
-      push_element($$renderer2, "svg", 148, 10);
+      push_element($$renderer2, "svg", 167, 10);
       $$renderer2.push(`<path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v16l-8-4-8 4V5z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">`);
-      push_element($$renderer2, "path", 149, 12);
+      push_element($$renderer2, "path", 168, 12);
       $$renderer2.push(`</path>`);
       pop_element();
       $$renderer2.push(`</svg>`);
@@ -92701,12 +92740,15 @@ function ThreadCard($$renderer, $$props) {
         author,
         score,
         comment_count,
+        view_count,
         created_at,
         user_vote,
         is_saved,
         is_subscribed,
         is_unread,
         is_solved,
+        is_locked,
+        is_pinned,
         live
       });
     },

@@ -24,9 +24,12 @@
   themes: all;
 }
 
-/* Custom Tokyo Night Theme tuned to VS Code background (#1A1B27) */
+/* Custom Midnight Theme tuned to VS Code background (#1A1B27)
+   Note: Using Tailwind gray-900 (#111827) for base-100 to avoid color drift.
+   Original Tokyo Night uses #1A1B27, but color space conversion causes green drift (+8 units).
+   Tailwind gray-900 has minimal drift (±2 units) and matches auth pages. */
 @plugin "daisyui/theme" {
-  name: "tokyo-night";
+  name: "midnight";
   color-scheme: dark;
   --color-primary: oklch(74.84% 0.149 263.94);
   --color-primary-content: oklch(12.51% 0.01 247.36);
@@ -34,10 +37,10 @@
   --color-secondary-content: oklch(12.51% 0.01 247.36);
   --color-accent: oklch(76.83% 0.146 168.48);
   --color-accent-content: oklch(12.51% 0.01 247.36);
-  /* Use exact VS Code-like background and sensible surface steps */
+  /* Use Tailwind gray-900 to minimize color drift across pages */
   --color-neutral: #1F2335;
   --color-neutral-content: oklch(80.71% 0.038 265.68);
-  --color-base-100: #1A1B27; /* main app background */
+  --color-base-100: #111827; /* main app background (Tailwind gray-900) */
   --color-base-200: #1F2335; /* elevated surfaces (slightly lighter) */
   --color-base-300: #2F334D; /* higher elevation (lighter) */
   --color-base-content: oklch(80.71% 0.038 265.68);
@@ -113,26 +116,30 @@
   --color-error: oklch(72.8% 0.226 13.19);
 }
 
-/* Custom GitHub Light Theme (OKLCH) */
+/* Custom GitHub Light Theme (using official Primer colors) */
 @plugin "daisyui/theme" {
   name: "github-light";
   color-scheme: light;
-  --color-primary: oklch(52.6% 0.253 262.44);
-  --color-primary-content: oklch(100% 0 0);
-  --color-secondary: oklch(52.17% 0.187 297.49);
-  --color-secondary-content: oklch(100% 0 0);
-  --color-accent: oklch(65.31% 0.216 227.03);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(53.41% 0.097 254.16);
-  --color-neutral-content: oklch(100% 0 0);
-  --color-base-100: oklch(93.04% 0.002 261.38);
-  --color-base-200: oklch(96.58% 0.002 247.84);
-  --color-base-300: oklch(100% 0 0);
-  --color-base-content: oklch(22.49% 0.026 264.84);
-  --color-info: oklch(52.6% 0.253 262.44);
-  --color-success: oklch(53.77% 0.198 189.9);
-  --color-warning: oklch(65.97% 0.219 54.48);
-  --color-error: oklch(60.17% 0.267 19.28);
+  --color-primary: #0969da;           /* bgColor-accent-emphasis */
+  --color-primary-content: #ffffff;
+  --color-secondary: #8250df;         /* done/purple emphasis */
+  --color-secondary-content: #ffffff;
+  --color-accent: #0969da;
+  --color-accent-content: #ffffff;
+  --color-neutral: #59636e;           /* fgColor-muted/neutral */
+  --color-neutral-content: #ffffff;
+  --color-base-100: #ffffff;          /* bgColor-default */
+  --color-base-200: #f6f8fa;          /* bgColor-muted */
+  --color-base-300: #d1d9e0;          /* borderColor-default */
+  --color-base-content: #25292e;      /* bgColor-emphasis (text) */
+  --color-info: #0969da;
+  --color-info-content: #ffffff;      /* white text on alerts */
+  --color-success: #1f883d;           /* bgColor-success-emphasis */
+  --color-success-content: #ffffff;   /* white text on alerts */
+  --color-warning: #9a6700;           /* fgColor-attention */
+  --color-warning-content: #ffffff;   /* white text on alerts */
+  --color-error: #d1242f;             /* fgColor-danger */
+  --color-error-content: #ffffff;     /* white text on alerts */
 }
 
 /* Custom GitHub Dark Theme (OKLCH) */

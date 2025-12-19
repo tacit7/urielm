@@ -29,8 +29,13 @@ defmodule Urielm.Forum do
     Subscription,
     Notification,
     TopicRead,
-    TopicNotificationSetting
+    TopicNotificationSetting,
+    CategoryWatch,
+    Mention,
+    PostRevision
   }
+
+  alias Urielm.MentionParser
 
   @max_comment_depth 8
 
@@ -114,6 +119,7 @@ defmodule Urielm.Forum do
     base =
       from(t in Thread)
       |> where([t], t.board_id == ^board_id and t.is_removed == false)
+      |> order_by([t], desc: t.is_pinned)
       |> thread_preloads()
 
     Flop.validate_and_run(base, params, for: Thread, repo: Repo)
@@ -123,9 +129,17 @@ defmodule Urielm.Forum do
     thread = Repo.get!(Thread, id)
     comments = list_comments_with_authors(id)
 
+    # Increment view count
+    increment_view_count(id)
+
     thread
     |> preload_thread_meta()
     |> Map.put(:comments, comments)
+  end
+
+  defp increment_view_count(thread_id) do
+    from(t in Thread, where: t.id == ^thread_id)
+    |> Repo.update_all(inc: [view_count: 1])
   end
 
   defp list_comments_with_authors(thread_id) do
@@ -149,9 +163,18 @@ defmodule Urielm.Forum do
   defp insert_thread(board_id, author_id, attrs) do
     attrs = Urielm.Params.normalize(attrs)
 
-    %Thread{}
-    |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
-    |> Repo.insert()
+    case %Thread{}
+         |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
+         |> Repo.insert() do
+      {:ok, thread} ->
+        # Process mentions
+        body = Map.get(attrs, "body", "")
+        MentionParser.process_mentions(body, author_id, "thread", thread.id)
+        {:ok, thread}
+
+      error ->
+        error
+    end
   end
 
   def update_thread(%Thread{} = thread, attrs) do
@@ -164,6 +187,8 @@ defmodule Urielm.Forum do
 
   def edit_thread(%Thread{} = thread, body, user) do
     if authorized?(user, thread.author_id) do
+      # Save revision before updating
+      save_revision("thread", thread.id, user.id, thread.body, body, thread.title, thread.title)
       update_thread(thread, %{body: body, edited_at: DateTime.utc_now()})
     else
       {:error, :unauthorized}
@@ -204,6 +229,74 @@ defmodule Urielm.Forum do
     end
   end
 
+  def lock_thread(%Thread{} = thread, %{is_admin: true} = _user) do
+    update_thread(thread, %{is_locked: true})
+  end
+
+  def lock_thread(_thread, _user), do: {:error, :unauthorized}
+
+  def unlock_thread(%Thread{} = thread, %{is_admin: true} = _user) do
+    update_thread(thread, %{is_locked: false})
+  end
+
+  def unlock_thread(_thread, _user), do: {:error, :unauthorized}
+
+  def pin_thread(%Thread{} = thread, %{is_admin: true, id: user_id} = _user) do
+    update_thread(thread, %{
+      is_pinned: true,
+      pinned_at: DateTime.utc_now(),
+      pinned_by_id: user_id
+    })
+  end
+
+  def pin_thread(_thread, _user), do: {:error, :unauthorized}
+
+  def unpin_thread(%Thread{} = thread, %{is_admin: true} = _user) do
+    update_thread(thread, %{
+      is_pinned: false,
+      pinned_at: nil,
+      pinned_by_id: nil
+    })
+  end
+
+  def unpin_thread(_thread, _user), do: {:error, :unauthorized}
+
+  def set_close_timer(%Thread{} = thread, days_from_now, %{is_admin: true, id: user_id} = _user)
+      when is_integer(days_from_now) and days_from_now > 0 do
+    close_at = DateTime.utc_now() |> DateTime.add(days_from_now * 86400, :second)
+
+    update_thread(thread, %{
+      close_at: close_at,
+      close_timer_set_by_id: user_id
+    })
+  end
+
+  def set_close_timer(_thread, _days, _user), do: {:error, :unauthorized}
+
+  def clear_close_timer(%Thread{} = thread, %{is_admin: true} = _user) do
+    update_thread(thread, %{
+      close_at: nil,
+      close_timer_set_by_id: nil
+    })
+  end
+
+  def clear_close_timer(_thread, _user), do: {:error, :unauthorized}
+
+  @doc """
+  Closes all threads that have passed their close_at time.
+  Returns count of threads closed.
+  Should be called by a scheduled task.
+  """
+  def close_expired_threads do
+    now = DateTime.utc_now()
+
+    from(t in Thread,
+      where: not is_nil(t.close_at) and t.close_at <= ^now and t.is_locked == false
+    )
+    |> Repo.update_all(set: [is_locked: true])
+    |> elem(0)
+  end
+
   # Comments
 
   def list_comments(thread_id, _opts \\ []) do
@@ -220,33 +313,42 @@ defmodule Urielm.Forum do
   end
 
   def create_comment(thread_id, author_id, attrs \\ %{}) do
-    user = Repo.get!(Urielm.Accounts.User, author_id)
-    config = TrustLevel.get_config(user.trust_level)
-    max_posts_per_minute = config.max_posts_per_minute
+    thread = Repo.get!(Thread, thread_id)
 
-    parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
-
-    with :ok <- validate_comment_depth(parent_id) do
-      with_rate_limit(author_id, "create_comment", max_posts_per_minute, 60, fn ->
-        %Comment{}
-        |> Comment.changeset(
-          Map.merge(Urielm.Params.normalize(attrs), %{
-            "thread_id" => thread_id,
-            "author_id" => author_id
-          })
-        )
-        |> Repo.insert()
-        |> case do
-          {:ok, comment} ->
-            update_thread_comment_count(thread_id)
-            {:ok, comment}
-
-          error ->
-            error
-        end
-      end)
+    if thread.is_locked do
+      {:error, :thread_locked}
     else
-      {:error, :max_depth_exceeded} -> {:error, :max_depth_exceeded}
+      user = Repo.get!(Urielm.Accounts.User, author_id)
+      config = TrustLevel.get_config(user.trust_level)
+      max_posts_per_minute = config.max_posts_per_minute
+
+      parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
+
+      with :ok <- validate_comment_depth(parent_id) do
+        with_rate_limit(author_id, "create_comment", max_posts_per_minute, 60, fn ->
+          %Comment{}
+          |> Comment.changeset(
+            Map.merge(Urielm.Params.normalize(attrs), %{
+              "thread_id" => thread_id,
+              "author_id" => author_id
+            })
+          )
+          |> Repo.insert()
+          |> case do
+            {:ok, comment} ->
+              update_thread_comment_count(thread_id)
+              # Process mentions
+              body = Map.get(attrs, "body", "")
+              MentionParser.process_mentions(body, author_id, "comment", comment.id)
+              {:ok, comment}
+
+            error ->
+              error
+          end
+        end)
+      else
+        {:error, :max_depth_exceeded} -> {:error, :max_depth_exceeded}
+      end
     end
   end
 
@@ -279,6 +381,8 @@ defmodule Urielm.Forum do
 
   def edit_comment(%Comment{} = comment, body, user) do
     if authorized?(user, comment.author_id) do
+      # Save revision before updating
+      save_revision("comment", comment.id, user.id, comment.body, body, nil, nil)
       update_comment(comment, %{body: body, edited_at: DateTime.utc_now()})
     else
       {:error, :unauthorized}
@@ -989,6 +1093,41 @@ defmodule Urielm.Forum do
     get_notification_level(user_id, thread_id) == "muted"
   end
 
+  # Category Watching
+
+  def set_category_watch_level(user_id, category_id, level)
+      when level in ["watching", "tracking", "normal", "muted"] do
+    %CategoryWatch{}
+    |> CategoryWatch.changeset(%{
+      user_id: user_id,
+      category_id: category_id,
+      watch_level: level
+    })
+    |> Repo.insert(
+      on_conflict: {:replace, [:watch_level]},
+      conflict_target: [:user_id, :category_id]
+    )
+  end
+
+  def get_category_watch_level(user_id, category_id) do
+    case Repo.get_by(CategoryWatch, user_id: user_id, category_id: category_id) do
+      nil -> "normal"
+      watch -> watch.watch_level
+    end
+  end
+
+  def is_watching_category?(user_id, category_id) do
+    get_category_watch_level(user_id, category_id) == "watching"
+  end
+
+  def is_tracking_category?(user_id, category_id) do
+    get_category_watch_level(user_id, category_id) == "tracking"
+  end
+
+  def is_category_muted?(user_id, category_id) do
+    get_category_watch_level(user_id, category_id) == "muted"
+  end
+
   # User Profiles
 
   def list_threads_by_author(author_id, opts \\ []) do
@@ -1100,4 +1239,40 @@ defmodule Urielm.Forum do
   defp authorized?(%{id: id, is_admin: true}, _owner_id) when not is_nil(id), do: true
   defp authorized?(%{id: id, is_admin: _}, owner_id) when not is_nil(id), do: id == owner_id
   defp authorized?(_user, _owner_id), do: false
+
+  # Post Revisions
+
+  defp save_revision(target_type, target_id, editor_id, body_before, body_after, title_before, title_after) do
+    # Get current revision count
+    revision_number = count_revisions(target_type, target_id) + 1
+
+    %PostRevision{}
+    |> PostRevision.changeset(%{
+      target_type: target_type,
+      target_id: target_id,
+      editor_id: editor_id,
+      body_before: body_before,
+      body_after: body_after,
+      title_before: title_before,
+      title_after: title_after,
+      revision_number: revision_number
+    })
+    |> Repo.insert()
+  end
+
+  def list_revisions(target_type, target_id) do
+    from(r in PostRevision,
+      where: r.target_type == ^target_type and r.target_id == ^target_id,
+      preload: :editor,
+      order_by: [desc: r.revision_number]
+    )
+    |> Repo.all()
+  end
+
+  def count_revisions(target_type, target_id) do
+    from(r in PostRevision,
+      where: r.target_type == ^target_type and r.target_id == ^target_id
+    )
+    |> Repo.aggregate(:count)
+  end
 end

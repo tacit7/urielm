@@ -16,6 +16,8 @@ defmodule Urielm.Application do
       {NodeJS.Supervisor, name: NodeJS, path: System.find_executable("node")},
       # Rate limiter for forum operations
       Urielm.RateLimiter,
+      # Auto-close threads with expired timers
+      Urielm.Forum.ThreadCloser,
       # Start a worker by calling: Urielm.Worker.start_link(arg)
       # {Urielm.Worker, arg},
       # Start to serve requests, typically the last entry

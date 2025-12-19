@@ -101,6 +101,12 @@ urielm/
 
 You should see a counter with increment/decrement buttons. The counter state is managed by Phoenix LiveView, but the UI is rendered by a Svelte component.
 
+## Developer Docs
+
+- Code Guidelines: `docs/CODE_GUIDELINES.md`
+- Refactoring Guide: `docs/REFACTORING_GUIDE.md`
+- Pagination Plan (reference only): `docs/PAGINATION_PLAN.md`
+
 ## Development
 
 ### Watch Mode

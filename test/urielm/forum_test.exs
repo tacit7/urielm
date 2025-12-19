@@ -797,8 +797,17 @@ defmodule Urielm.ForumTest do
       thread1 = thread_fixture()
       thread2 = thread_fixture()
 
-      {:ok, report1} = Forum.create_report(user.id, "thread", thread1.id, %{reason: "spam", description: "Spam content"})
-      {:ok, _report2} = Forum.create_report(user.id, "thread", thread2.id, %{reason: "abuse", description: "Abusive language"})
+      {:ok, report1} =
+        Forum.create_report(user.id, "thread", thread1.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
+
+      {:ok, _report2} =
+        Forum.create_report(user.id, "thread", thread2.id, %{
+          reason: "abuse",
+          description: "Abusive language"
+        })
 
       reports = Forum.list_reports()
 
@@ -812,8 +821,17 @@ defmodule Urielm.ForumTest do
       thread1 = thread_fixture()
       thread2 = thread_fixture()
 
-      {:ok, report1} = Forum.create_report(user.id, "thread", thread1.id, %{reason: "spam", description: "Spam content"})
-      {:ok, _report2} = Forum.create_report(user.id, "thread", thread2.id, %{reason: "abuse", description: "Abusive language"})
+      {:ok, report1} =
+        Forum.create_report(user.id, "thread", thread1.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
+
+      {:ok, _report2} =
+        Forum.create_report(user.id, "thread", thread2.id, %{
+          reason: "abuse",
+          description: "Abusive language"
+        })
 
       # Review one report
       {:ok, _} = Forum.review_report(report1, admin.id, "resolved", "Removed spam")
@@ -828,7 +846,12 @@ defmodule Urielm.ForumTest do
     test "get_report!/1 retrieves report with preloads" do
       user = user_fixture()
       thread = thread_fixture()
-      {:ok, report} = Forum.create_report(user.id, "thread", thread.id, %{reason: "spam", description: "Spam content"})
+
+      {:ok, report} =
+        Forum.create_report(user.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
 
       retrieved = Forum.get_report!(report.id)
 
@@ -840,7 +863,12 @@ defmodule Urielm.ForumTest do
       user = user_fixture()
       admin = admin_fixture()
       thread = thread_fixture()
-      {:ok, report} = Forum.create_report(user.id, "thread", thread.id, %{reason: "spam", description: "Spam content"})
+
+      {:ok, report} =
+        Forum.create_report(user.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
 
       {:ok, updated} = Forum.review_report(report, admin.id, "resolved", "Removed spam")
 
@@ -858,10 +886,20 @@ defmodule Urielm.ForumTest do
 
       assert Forum.count_pending_reports() == 0
 
-      {:ok, report1} = Forum.create_report(user.id, "thread", thread1.id, %{reason: "spam", description: "Spam content"})
+      {:ok, report1} =
+        Forum.create_report(user.id, "thread", thread1.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
+
       assert Forum.count_pending_reports() == 1
 
-      {:ok, _} = Forum.create_report(user.id, "thread", thread2.id, %{reason: "abuse", description: "Abusive language"})
+      {:ok, _} =
+        Forum.create_report(user.id, "thread", thread2.id, %{
+          reason: "abuse",
+          description: "Abusive language"
+        })
+
       assert Forum.count_pending_reports() == 2
 
       {:ok, _} = Forum.review_report(report1, admin.id, "resolved")
@@ -875,9 +913,23 @@ defmodule Urielm.ForumTest do
       thread1 = thread_fixture()
       thread2 = thread_fixture()
 
-      {:ok, _} = Forum.create_report(user1.id, "thread", thread1.id, %{reason: "spam", description: "Spam content"})
-      {:ok, _} = Forum.create_report(user2.id, "thread", thread1.id, %{reason: "abuse", description: "Abusive language"})
-      {:ok, _} = Forum.create_report(user3.id, "thread", thread2.id, %{reason: "offensive", description: "Offensive content"})
+      {:ok, _} =
+        Forum.create_report(user1.id, "thread", thread1.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
+
+      {:ok, _} =
+        Forum.create_report(user2.id, "thread", thread1.id, %{
+          reason: "abuse",
+          description: "Abusive language"
+        })
+
+      {:ok, _} =
+        Forum.create_report(user3.id, "thread", thread2.id, %{
+          reason: "offensive",
+          description: "Offensive content"
+        })
 
       reports = Forum.list_reports_by_target("thread", thread1.id)
 
@@ -889,8 +941,17 @@ defmodule Urielm.ForumTest do
       user = user_fixture()
       thread = thread_fixture()
 
-      {:ok, _} = Forum.create_report(user.id, "thread", thread.id, %{reason: "spam", description: "Spam content"})
-      {:error, changeset} = Forum.create_report(user.id, "thread", thread.id, %{reason: "abuse", description: "Abusive language"})
+      {:ok, _} =
+        Forum.create_report(user.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "Spam content"
+        })
+
+      {:error, changeset} =
+        Forum.create_report(user.id, "thread", thread.id, %{
+          reason: "abuse",
+          description: "Abusive language"
+        })
 
       assert changeset.errors |> Enum.any?(fn {field, _} -> field == :user_id end)
     end

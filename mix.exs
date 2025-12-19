@@ -70,7 +70,10 @@ defmodule Urielm.MixProject do
       {:earmark, "~> 1.4"},
       {:bcrypt_elixir, "~> 3.0"},
       {:html_sanitize_ex, "~> 1.4"},
-      {:floki, "~> 0.36"}
+      {:floki, "~> 0.36"},
+      # Pagination
+      {:flop, "~> 0.25"},
+      {:flop_phoenix, "~> 0.22"}
     ]
   end
 

@@ -25,7 +25,13 @@
   }
   if (!document.documentElement.hasAttribute("data-theme")) {
     try {
-      setTheme(localStorage.getItem("phx:theme") || "system")
+      let savedTheme = localStorage.getItem("phx:theme") || "system"
+      // Migrate old themes to 'midnight'
+      if (savedTheme === "dark" || savedTheme === "tokyo-night") {
+        savedTheme = "midnight"
+        localStorage.setItem("phx:theme", "midnight")
+      }
+      setTheme(savedTheme)
     } catch (_) {
       setTheme("system")
     }

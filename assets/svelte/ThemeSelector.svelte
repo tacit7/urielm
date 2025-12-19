@@ -3,15 +3,14 @@
 
   const themes = [
     { value: 'light', label: 'Light', icon: 'sun' },
-    { value: 'dark', label: 'Dark', icon: 'moon' },
-    { value: 'tokyo-night', label: 'Tokyo Night', icon: 'building' },
+    { value: 'midnight', label: 'Midnight', icon: 'moon' },
     { value: 'dracula', label: 'Dracula', icon: 'sparkles' },
     { value: 'synthwave', label: 'Synthwave', icon: 'bolt' },
     { value: 'business', label: 'Business', icon: 'briefcase' },
     { value: 'dim', label: 'Dim', icon: 'adjustments_vertical' }
   ]
 
-  let currentTheme = $state('dark')
+  let currentTheme = $state('midnight')
   let isOpen = $state(false)
 
   function applyTheme(theme) {
@@ -46,7 +45,15 @@
 
   $effect(() => {
     // Sync from page/head initialization
-    const savedTheme = localStorage.getItem('phx:theme') || 'system'
+    let savedTheme = localStorage.getItem('phx:theme') || 'system'
+
+    // Migrate old themes to 'midnight'
+    if (savedTheme === 'dark' || savedTheme === 'tokyo-night') {
+      savedTheme = 'midnight'
+      localStorage.setItem('phx:theme', 'midnight')
+      document.documentElement.setAttribute('data-theme', 'midnight')
+    }
+
     if (savedTheme === 'system') {
       currentTheme = document.documentElement.getAttribute('data-theme') || 'light'
     } else {

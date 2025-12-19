@@ -2,12 +2,15 @@
   export let postId
   export let liked = false
   export let likeCount = 0
+  export let is_saved = false
   export let canReply = true
+  export let onReply = null
   export let live
 
   let isLoading = false
   let currentLiked = liked
   let currentCount = likeCount
+  let currentSaved = is_saved
 
   async function toggleLike() {
     if (isLoading || !live) return
@@ -35,9 +38,17 @@
   }
 
   function handleReply() {
-    if (live) {
+    if (onReply) {
+      onReply()
+    } else if (live) {
       live.pushEvent('reply_to_comment', {comment_id: postId})
     }
+  }
+
+  function handleBookmark() {
+    if (!live) return
+    currentSaved = !currentSaved
+    live.pushEvent('save_comment', {comment_id: postId})
   }
 
   async function copyLink() {
@@ -90,6 +101,20 @@
         {currentCount}
       </span>
     {/if}
+
+    <!-- Bookmark button -->
+    <button
+      on:click={handleBookmark}
+      disabled={isLoading}
+      class="btn-ghost-icon"
+      title={currentSaved ? 'Remove bookmark' : 'Bookmark comment'}
+    >
+      {#if currentSaved}
+        <span class="hero hero-bookmark-solid text-warning"></span>
+      {:else}
+        <span class="hero hero-bookmark"></span>
+      {/if}
+    </button>
 
     <!-- Copy link button -->
     <button

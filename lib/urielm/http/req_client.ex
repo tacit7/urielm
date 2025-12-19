@@ -16,7 +16,7 @@ defmodule Urielm.HTTP.ReqClient do
       auth endpoints, or anything with external side effects
 
   """
-    @type method :: :get | :head | :options | :trace | :delete | :put | :post | :patch
+  @type method :: :get | :head | :options | :trace | :delete | :put | :post | :patch
 
   @default_timeout 5_000
   @default_connect_timeout 5_000
@@ -80,11 +80,22 @@ defmodule Urielm.HTTP.ReqClient do
     case result do
       {:ok, resp} ->
         status = Map.get(resp, :status)
-        :telemetry.execute([:external, :req, :response], %{duration: duration}, Map.merge(meta, %{status: status}))
+
+        :telemetry.execute(
+          [:external, :req, :response],
+          %{duration: duration},
+          Map.merge(meta, %{status: status})
+        )
+
         result
 
       {:error, reason} ->
-        :telemetry.execute([:external, :req, :response], %{duration: duration}, Map.put(meta, :error, inspect(reason)))
+        :telemetry.execute(
+          [:external, :req, :response],
+          %{duration: duration},
+          Map.put(meta, :error, inspect(reason))
+        )
+
         result
     end
   end
@@ -119,7 +130,8 @@ defmodule Urielm.HTTP.ReqClient do
   defp idempotent?(method) when method in [:get, :head, :options, :trace, :put, :delete], do: true
   defp idempotent?(_), do: false
 
-  defp do_request_with_retries(client, method, url, opts, false, _max), do: run_once(client, method, url, opts)
+  defp do_request_with_retries(client, method, url, opts, false, _max),
+    do: run_once(client, method, url, opts)
 
   defp do_request_with_retries(client, method, url, opts, true, max) do
     attempt(client, method, url, opts, max)
@@ -129,6 +141,7 @@ defmodule Urielm.HTTP.ReqClient do
     case run_once(client, method, url, opts) do
       {:ok, resp} = ok ->
         status = Map.get(resp, :status)
+
         if retriable_status?(status) and remaining > 1 do
           backoff_jitter()
           attempt(client, method, url, opts, remaining - 1)

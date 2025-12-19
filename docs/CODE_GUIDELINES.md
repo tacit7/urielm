@@ -60,6 +60,18 @@ These rules apply across the app unless a file or directory explicitly documents
 - Stream containers must set `phx-update="stream"` and each child must have an `id`. If you show a sibling empty‑state, ensure it is the only non‑stream sibling or give it a stable `id`.
 - Hooks: if a hook manages its own DOM, set `phx-update="ignore"`.
 
+### Forum & LiveView Patterns
+- Use `UrielmWeb.LiveHelpers` to centralize serialization and common UI helpers:
+  - `serialize_thread_card/2`, `serialize_thread_full/2`, `serialize_thread_list/2`
+  - `serialize_comment/2`
+  - `build_comment_tree/2` for nested comments
+  - `update_thread_in_stream/4` to refresh a single card after an action (vote/save/subscribe)
+  - `format_relative/1`, `format_short/1` for time labels
+- Prefer small, focused LiveViews that delegate mapping/formatting to helpers; avoid duplicating serialization across views.
+- Event handlers (vote/save/subscribe/unsubscribe): refresh the affected item in the stream using `update_thread_in_stream/4` instead of reloading whole pages.
+- Authorization checks: use an owner‑or‑admin helper in contexts (e.g., `authorized?/2`) and avoid scattering `is_admin or ... == user_id` across code.
+- Stable ordering: when sorting by timestamps, add an `id` tiebreaker, e.g., `order_by([x], desc: x.inserted_at, desc: x.id)` to prevent jitter and duplicate rows across pages.
+- Query preloads: use a local helper (e.g., `thread_preloads/1`) to DRY repeated `preload([:author, :board])` on Thread queries.
 ### Examples
 Verified navigation:
 ```heex
