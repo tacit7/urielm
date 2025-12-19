@@ -155,6 +155,26 @@ window.addEventListener("show-toast", (e) => {
   console.log(`[${type.toUpperCase()}] ${message}`)
 })
 
+// Auto-dismiss flash messages after 5 seconds
+document.addEventListener("DOMContentLoaded", () => {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1 && node.hasAttribute?.("data-auto-dismiss")) {
+          const delay = parseInt(node.getAttribute("data-auto-dismiss"))
+          setTimeout(() => {
+            if (node.parentNode) {
+              node.click() // Trigger the phx-click to clear flash
+            }
+          }, delay)
+        }
+      })
+    })
+  })
+
+  observer.observe(document.body, { childList: true, subtree: true })
+})
+
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,

@@ -328,7 +328,7 @@ defmodule UrielmWeb.ThreadLive do
   def handle_event("lock_thread", _params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    if user && user.is_admin do
+    if user && (user.is_admin || user.is_moderator) do
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.lock_thread(thread, user) do
@@ -353,7 +353,7 @@ defmodule UrielmWeb.ThreadLive do
   def handle_event("unlock_thread", _params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    if user && user.is_admin do
+    if user && (user.is_admin || user.is_moderator) do
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.unlock_thread(thread, user) do
@@ -378,7 +378,7 @@ defmodule UrielmWeb.ThreadLive do
   def handle_event("pin_thread", _params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    if user && user.is_admin do
+    if user && (user.is_admin || user.is_moderator) do
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.pin_thread(thread, user) do
@@ -403,7 +403,7 @@ defmodule UrielmWeb.ThreadLive do
   def handle_event("unpin_thread", _params, socket) do
     %{current_user: user, thread: thread_data} = socket.assigns
 
-    if user && user.is_admin do
+    if user && (user.is_admin || user.is_moderator) do
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.unpin_thread(thread, user) do
@@ -604,7 +604,7 @@ defmodule UrielmWeb.ThreadLive do
                       />
                     </button>
 
-                    <%= if @current_user && @current_user.is_admin do %>
+                    <%= if @current_user && (@current_user.is_admin || @current_user.is_moderator) do %>
                       <%= if @thread.is_pinned do %>
                         <button
                           class="btn btn-xs btn-ghost"

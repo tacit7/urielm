@@ -161,6 +161,9 @@ defmodule UrielmWeb.UserProfileLive do
                 <%= if @user.is_admin do %>
                   <span class="badge badge-error">Admin</span>
                 <% end %>
+                <%= if @user.is_moderator && !@user.is_admin do %>
+                  <span class="badge badge-warning">Moderator</span>
+                <% end %>
               </div>
 
               <%= if @user.display_name && @user.display_name != @user.username do %>

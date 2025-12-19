@@ -229,58 +229,72 @@ defmodule Urielm.Forum do
     end
   end
 
-  def lock_thread(%Thread{} = thread, %{is_admin: true} = _user) do
-    update_thread(thread, %{is_locked: true})
+  def lock_thread(%Thread{} = thread, user) do
+    if is_moderator?(user) do
+      update_thread(thread, %{is_locked: true})
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def lock_thread(_thread, _user), do: {:error, :unauthorized}
-
-  def unlock_thread(%Thread{} = thread, %{is_admin: true} = _user) do
-    update_thread(thread, %{is_locked: false})
+  def unlock_thread(%Thread{} = thread, user) do
+    if is_moderator?(user) do
+      update_thread(thread, %{is_locked: false})
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def unlock_thread(_thread, _user), do: {:error, :unauthorized}
-
-  def pin_thread(%Thread{} = thread, %{is_admin: true, id: user_id} = _user) do
-    update_thread(thread, %{
-      is_pinned: true,
-      pinned_at: DateTime.utc_now(),
-      pinned_by_id: user_id
-    })
+  def pin_thread(%Thread{} = thread, %{id: user_id} = user) do
+    if is_moderator?(user) do
+      update_thread(thread, %{
+        is_pinned: true,
+        pinned_at: DateTime.utc_now(),
+        pinned_by_id: user_id
+      })
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def pin_thread(_thread, _user), do: {:error, :unauthorized}
-
-  def unpin_thread(%Thread{} = thread, %{is_admin: true} = _user) do
-    update_thread(thread, %{
-      is_pinned: false,
-      pinned_at: nil,
-      pinned_by_id: nil
-    })
+  def unpin_thread(%Thread{} = thread, user) do
+    if is_moderator?(user) do
+      update_thread(thread, %{
+        is_pinned: false,
+        pinned_at: nil,
+        pinned_by_id: nil
+      })
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def unpin_thread(_thread, _user), do: {:error, :unauthorized}
-
-  def set_close_timer(%Thread{} = thread, days_from_now, %{is_admin: true, id: user_id} = _user)
+  def set_close_timer(%Thread{} = thread, days_from_now, %{id: user_id} = user)
       when is_integer(days_from_now) and days_from_now > 0 do
-    close_at = DateTime.utc_now() |> DateTime.add(days_from_now * 86400, :second)
+    if is_moderator?(user) do
+      close_at = DateTime.utc_now() |> DateTime.add(days_from_now * 86400, :second)
 
-    update_thread(thread, %{
-      close_at: close_at,
-      close_timer_set_by_id: user_id
-    })
+      update_thread(thread, %{
+        close_at: close_at,
+        close_timer_set_by_id: user_id
+      })
+    else
+      {:error, :unauthorized}
+    end
   end
 
   def set_close_timer(_thread, _days, _user), do: {:error, :unauthorized}
 
-  def clear_close_timer(%Thread{} = thread, %{is_admin: true} = _user) do
-    update_thread(thread, %{
-      close_at: nil,
-      close_timer_set_by_id: nil
-    })
+  def clear_close_timer(%Thread{} = thread, user) do
+    if is_moderator?(user) do
+      update_thread(thread, %{
+        close_at: nil,
+        close_timer_set_by_id: nil
+      })
+    else
+      {:error, :unauthorized}
+    end
   end
-
-  def clear_close_timer(_thread, _user), do: {:error, :unauthorized}
 
   @doc """
   Closes all threads that have passed their close_at time.
@@ -1239,6 +1253,11 @@ defmodule Urielm.Forum do
   defp authorized?(%{id: id, is_admin: true}, _owner_id) when not is_nil(id), do: true
   defp authorized?(%{id: id, is_admin: _}, owner_id) when not is_nil(id), do: id == owner_id
   defp authorized?(_user, _owner_id), do: false
+
+  # Moderator authorization (admin or moderator)
+  defp is_moderator?(%{is_admin: true}), do: true
+  defp is_moderator?(%{is_moderator: true}), do: true
+  defp is_moderator?(_user), do: false
 
   # Post Revisions
 

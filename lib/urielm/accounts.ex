@@ -311,6 +311,24 @@ defmodule Urielm.Accounts do
     |> Repo.aggregate(:count)
   end
 
+  ## Moderator Management (Admin only)
+
+  def grant_moderator(%User{} = user, %{is_admin: true} = _admin) do
+    user
+    |> Ecto.Changeset.change(is_moderator: true)
+    |> Repo.update()
+  end
+
+  def grant_moderator(_user, _non_admin), do: {:error, :unauthorized}
+
+  def revoke_moderator(%User{} = user, %{is_admin: true} = _admin) do
+    user
+    |> Ecto.Changeset.change(is_moderator: false)
+    |> Repo.update()
+  end
+
+  def revoke_moderator(_user, _non_admin), do: {:error, :unauthorized}
+
   ## Counter helpers
 
   defp increment_prompt_counter(prompt_id, counter_field) do

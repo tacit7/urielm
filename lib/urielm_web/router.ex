@@ -60,6 +60,7 @@ defmodule UrielmWeb.Router do
       live "/courses/:course_slug", CourseLive
       live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
       live "/themes", ThemesLive
+      live "/settings", SettingsLive
       live "/forum", ForumLive
       live "/forum/b/:board_slug", BoardLive
       live "/forum/t/:thread_id", ThreadLive

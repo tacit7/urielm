@@ -14,6 +14,7 @@ defmodule Urielm.Accounts.User do
     field(:email_verified, :boolean, default: false)
     field(:active, :boolean, default: true)
     field(:is_admin, :boolean, default: false)
+    field(:is_moderator, :boolean, default: false)
     field(:password_hash, :string)
     field(:password, :string, virtual: true)
     field(:trust_level, :integer, default: 0)

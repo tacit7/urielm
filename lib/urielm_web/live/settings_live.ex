@@ -156,6 +156,30 @@ defmodule UrielmWeb.SettingsLive do
                   placeholder="Enter your email"
                 />
 
+                <.input
+                  field={@profile_form[:bio]}
+                  type="textarea"
+                  label="Bio"
+                  placeholder="Tell us about yourself..."
+                />
+                <label class="label">
+                  <span class="label-text-alt">Max 1000 characters</span>
+                </label>
+
+                <.input
+                  field={@profile_form[:location]}
+                  type="text"
+                  label="Location"
+                  placeholder="City, Country"
+                />
+
+                <.input
+                  field={@profile_form[:website]}
+                  type="url"
+                  label="Website"
+                  placeholder="https://example.com"
+                />
+
                 <div class="card-actions">
                   <button type="submit" class="btn btn-primary">
                     Save Profile
