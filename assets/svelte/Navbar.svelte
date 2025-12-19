@@ -5,6 +5,7 @@
 
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
+  let hideNavbar = $state(false)
   let dropdownRef
 
 
@@ -15,6 +16,17 @@
   function toggleMenu() {
     isMenuOpen = !isMenuOpen
   }
+
+  // Listen for composer fullscreen toggle
+  $effect(() => {
+    if (typeof window !== 'undefined') {
+      const handler = (e) => {
+        hideNavbar = e.detail.isFullscreen
+      }
+      window.addEventListener('composer-fullscreen', handler)
+      return () => window.removeEventListener('composer-fullscreen', handler)
+    }
+  })
 
   function closeMenu() {
     isMenuOpen = false
@@ -41,7 +53,7 @@
 <div
   class={`navbar fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
     isScrolled ? 'bg-base-100/80 backdrop-blur-md border-b border-base-300' : 'bg-transparent'
-  }`}
+  } ${hideNavbar ? '-translate-y-full' : ''}`}
 >
   <div class="navbar-start">
     <!-- Mobile Dropdown -->

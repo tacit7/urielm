@@ -2,6 +2,7 @@
   import VoteButtons from "./VoteButtons.svelte"
   import PostActions from "./PostActions.svelte"
   import CommentTree from "./CommentTree.svelte"
+  import ReplyComposer from "./ReplyComposer.svelte"
 
   let {
     comments = [],
@@ -18,6 +19,8 @@
   let replyText = $state("")
   let editingId = $state(null)
   let editText = $state("")
+  let isComposerOpen = $state(false)
+  let composerParentId = $state(null)
 
   function formatDate(date) {
     if (!date) return ""
@@ -52,32 +55,30 @@
   }
 
   function startReply(commentId) {
-    replyingTo = commentId
+    composerParentId = commentId
     replyText = ""
+    isComposerOpen = true
   }
 
   function cancelReply() {
-    replyingTo = null
+    isComposerOpen = false
+    composerParentId = null
     replyText = ""
   }
 
-  function submitReply(parentId) {
-    if (!replyText.trim()) return
+  function submitReply(text) {
+    if (!text.trim()) return
 
     if (live) {
       live.pushEvent("create_comment", {
-        body: replyText,
-        parent_id: parentId
+        body: text,
+        parent_id: composerParentId
       })
     }
 
-    // Clear draft after successful submission
-    if (replyEditorRef?.clearDraft) {
-      replyEditorRef.clearDraft()
-    }
-
+    isComposerOpen = false
+    composerParentId = null
     replyText = ""
-    replyingTo = null
   }
 
   function startEdit(commentId, body) {
@@ -255,34 +256,6 @@
             />
           {/if}
 
-          <!-- Reply form -->
-          {#if replyingTo === comment.id}
-            <div class="mt-4 pt-4 border-t border-base-300">
-              <div class="space-y-2">
-                <textarea
-                  bind:value={replyText}
-                  placeholder="Write a reply..."
-                  class="textarea textarea-bordered w-full bg-base-200 text-base-content"
-                  rows="4"
-                ></textarea>
-                <div class="flex gap-2 justify-end">
-                  <button
-                    onclick={cancelReply}
-                    class="btn btn-sm btn-ghost"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onclick={() => submitReply(comment.id)}
-                    disabled={!replyText.trim()}
-                    class="btn btn-sm btn-primary"
-                  >
-                    Reply
-                  </button>
-                </div>
-              </div>
-            </div>
-          {/if}
 
           <!-- Nested replies -->
           {#if comment.replies && comment.replies.length > 0 && depth < MAX_DEPTH}
@@ -307,3 +280,11 @@
     </p>
   {/if}
 </div>
+
+<ReplyComposer
+  isOpen={isComposerOpen}
+  bind:replyText={replyText}
+  placeholder="Write your reply... (Markdown supported)"
+  onSubmit={submitReply}
+  onDiscard={cancelReply}
+/>

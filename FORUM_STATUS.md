@@ -22,6 +22,8 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - **User Mentions**: @username parsing with automatic detection
 - **Rich Embeds**: YouTube videos, images, Twitter/X posts (threads only)
 - **Post Revisions**: Full edit history with diffs
+- **Rich Text Editor**: Tiptap WYSIWYG editor with markdown toggle
+- **Reply Composer**: Discourse-style bottom-anchored composer with grippie resize
 
 ### User Features
 - **User Profiles**: Bio, location, website, avatar
@@ -107,13 +109,28 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - Thread header with title, author, metadata
 - Rich embed display (YouTube, images, Twitter)
 - Vote buttons with score
-- Markdown-rendered content
-- Nested comment tree with actions
+- Markdown-rendered content with syntax highlighting
+- Nested comment tree with actions (max depth 8)
 - Reply/like/bookmark/copy link buttons
 - Edit/delete/report in overflow menu (hover)
 - Mark as solution button (thread author)
 - Lock/pin/timer buttons (moderators)
 - Solved/locked/pinned badges
+
+### Reply Composer (Discourse-style)
+- **Bottom-anchored**: Slides up from bottom, doesn't block content
+- **Resizable**: Drag grippie to adjust height (255px - 100vh)
+- **Dual-mode**: Toggle between Markdown and Rich Text (WYSIWYG)
+- **Markdown toolbar**: Insert syntax with button clicks
+- **Rich text toolbar**: Tiptap WYSIWYG with active button states
+- **Formatting**: Bold, italic, headings, lists, quotes, code, links
+- **Lucide icons**: Professional iconography for all toolbar buttons
+- **DaisyUI styling**: Card, form-control, tooltips, kbd components
+- **Keyboard shortcuts**: Cmd/Ctrl+Enter to submit
+- **Fullscreen mode**: Hides navbar, maximizes editor space
+- **Mobile**: Auto-fullscreen on mobile devices
+- **Centered**: Max-width 768px, centered like Discourse
+- **Theme-aware**: Adapts to all 33+ DaisyUI themes
 
 ### Board View (`/forum/b/:slug`)
 - Thread list with cards showing:
@@ -209,6 +226,9 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - Trust levels with rate limiting
 - Report system
 - Search
+- **Discourse-style composer** (bottom-anchored, resizable)
+- **WYSIWYG editor** (Tiptap with markdown toggle)
+- **Auto-dismiss flash** (5 second timeout)
 
 ### Not Implemented ❌
 - Email notifications
@@ -262,7 +282,29 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - System auto-creates mention records
 - (Notifications for mentions can be wired up)
 
+## Technology Stack
+
+### Frontend
+- **Svelte 5.18**: Modern reactive UI framework
+- **Tiptap**: WYSIWYG rich text editor (MIT licensed, free)
+- **Lucide Svelte**: 1000+ icons for UI elements
+- **DaisyUI 5.5.8**: Component library with 33+ themes
+- **Tailwind CSS v4**: Utility-first styling
+- **Markdown-it**: Markdown rendering with syntax highlighting
+
+### Backend
+- **Phoenix 1.8.1**: Web framework
+- **Phoenix LiveView 1.1.0**: Real-time server-rendered UI
+- **Ecto**: Database ORM
+- **PostgreSQL**: Primary database with full-text search
+
+### Integration
+- **LiveSvelte 0.16.0**: Seamless Phoenix + Svelte integration
+- **Custom event bus**: Component communication via window events
+- **Background workers**: GenServer for scheduled tasks
+
 ---
 **Last Updated**: December 19, 2025
 **Status**: ✅ Production-Ready
-**Features**: 15 major features shipped in one session
+**Session Stats**: 16 major features + Discourse-style composer
+**Code Quality**: DaisyUI components, full theme support, accessibility compliant
