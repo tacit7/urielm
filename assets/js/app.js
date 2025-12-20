@@ -33,7 +33,7 @@
       }
       setTheme(savedTheme)
     } catch (_) {
-      setTheme("system")
+      setTheme("dark")
     }
   }
   window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"))

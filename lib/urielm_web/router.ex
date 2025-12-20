@@ -57,6 +57,7 @@ defmodule UrielmWeb.Router do
       live "/signup/email", SignupEmailLive
       live "/romanov-prompts", ReferencesLive
       live "/prompts/:id", PromptLive
+      live "/courses", CoursesLive
       live "/courses/:course_slug", CourseLive
       live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
       live "/themes", ThemesLive

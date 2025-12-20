@@ -29,19 +29,16 @@ defmodule UrielmWeb.HomeLive do
     <section id="hero" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
       <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
         <!-- Badge -->
-        <div
-          id="hero-badge"
-          class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up"
-        >
+        <.link navigate={~p"/blog/building-an-ai-learning-platform"} class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up hover:bg-base-300/70 transition-colors">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75">
             </span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
           </span>
           <span class="text-[10px] uppercase tracking-wider font-semibold text-base-content/70">
-            New Video: Claude 3.5 Opus Workflow
+            New Post: Building an AI Learning Platform
           </span>
-        </div>
+        </.link>
         
     <!-- Headline -->
         <h1
