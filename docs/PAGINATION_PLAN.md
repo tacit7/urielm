@@ -88,24 +88,41 @@ Counts:
 
 ## Rollout Status
 
-Implemented:
-- Board listing: Flop pagination for all filters (all/latest/top/unread/new)
-- Saved threads: Flop pagination
-- Search results: Flop pagination
-- User profile: Flop pagination for threads and comments
+### Completed (2025-12-20)
 
-Removed:
-- Infinite scroll hooks/handlers in these views
+**Pagination UI:**
+- ✅ Custom pagination component with daisyUI styling (join/btn classes)
+- ✅ Compact layout (current ± 2 pages with ellipsis)
+- ✅ Applied to all primary views: Board, Search, Saved, UserProfile
 
-## Next Steps
+**Stability improvements:**
+- ✅ Added `:id` to Thread and Comment Flop.Schema sortable fields
+- ✅ Added `id DESC` tie-breakers to all 6 pagination functions:
+  - paginate_threads (via BoardLive params)
+  - paginate_search_threads
+  - paginate_unread_threads
+  - paginate_new_threads
+  - paginate_threads_by_author
+  - paginate_comments_by_author
+- ✅ paginate_saved_threads (already had tie-breaker)
 
-- Add tie-breakers (`id DESC`) explicitly to all Flop orderings for perfect stability
-- Add DB migration for indexes listed above
-- (Optional) Replace any remaining manual pagers with `<.pagination />` (done for current scope)
-- (Optional) Apply Flop to notifications and moderation queue for consistency
+**Performance:**
+- ✅ Created migration `20251220164543_add_pagination_indexes.exs` with 5 composite indexes
+- ⚠️ Migration ready but not applied (requires database superuser permissions)
 
-## Testing Plan
+**Removed:**
+- ✅ Infinite scroll hooks/handlers from all views
+- ✅ Flop.Phoenix import (using custom component)
 
-- LiveView tests: pager render, navigation updates, params retained, empty states, clamped pages
-- Context tests: Flop queries return expected order/meta and honor filters
+### In Progress
+
+**Testing:**
+- ⏳ LiveView tests: pager render, navigation, params, empty states, clamping
+- ⏳ Context tests: Flop query ordering and filtering
+
+### Optional Next Steps
+
+- Apply Flop pagination to notifications
+- Apply Flop pagination to moderation queue
+- Run pagination indexes migration in production (requires elevated DB permissions)
 

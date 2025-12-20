@@ -25,6 +25,16 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - **Rich Text Editor**: Tiptap WYSIWYG editor with markdown toggle
 - **Reply Composer**: Discourse-style bottom-anchored composer with grippie resize
 
+### File Uploads
+- **Generic Upload Library**: Polymorphic file attachments for any entity (threads, comments, posts, lectures, courses)
+- **Cloudflare R2 Storage**: Integrated at media.urielm.dev
+- **UUID v7 IDs**: Sortable file identifiers with timestamp prefix
+- **File Types**: Images (JPG, PNG, GIF, WebP), Documents (PDF, DOC, DOCX, TXT)
+- **Size Limit**: 10 MB configurable maximum
+- **Visibility Control**: Public, private, participants permissions
+- **Soft Deletes**: Preserve file records with deleted_at timestamp
+- **Metadata Tracking**: Original filename, content type, byte size, storage key, dimensions
+
 ### User Features
 - **User Profiles**: Bio, location, website, avatar
 - **Following System**: Follow users, view follower/following counts
@@ -80,6 +90,9 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - `forum_reports`: User-submitted reports
 - `mentions`: @username mention tracking
 - `post_revisions`: Edit history with diffs
+
+### File Storage Tables
+- `files`: Polymorphic file attachments with UUID v7, entity_type/entity_id associations, R2 metadata
 
 ### Social Tables
 - `user_follows`: User following relationships
@@ -229,6 +242,7 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - **Discourse-style composer** (bottom-anchored, resizable)
 - **WYSIWYG editor** (Tiptap with markdown toggle)
 - **Auto-dismiss flash** (5 second timeout)
+- **Generic file upload library** (R2 storage, polymorphic attachments, UUID v7)
 
 ### Not Implemented ❌
 - Email notifications
@@ -303,8 +317,13 @@ The forum system is fully functional with comprehensive moderation tools, user e
 - **Custom event bus**: Component communication via window events
 - **Background workers**: GenServer for scheduled tasks
 
+### Storage
+- **Cloudflare R2**: S3-compatible object storage for file uploads
+- **ExAws**: AWS/R2 SDK integration
+- **UUID v7**: Sortable identifiers via uniq library
+
 ---
-**Last Updated**: December 19, 2025
+**Last Updated**: December 20, 2025
 **Status**: ✅ Production-Ready
-**Session Stats**: 16 major features + Discourse-style composer
+**Session Stats**: 17 major features + Discourse-style composer + Generic upload library
 **Code Quality**: DaisyUI components, full theme support, accessibility compliant

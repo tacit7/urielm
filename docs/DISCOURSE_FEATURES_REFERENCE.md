@@ -25,7 +25,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Draft sequences** - Multiple drafts per user
 - ✅ **Preview** - See rendered output
 - ❌ **Side-by-side** - Editor + preview split view
-- ❌ **Uploads** - Image/file uploads
+- ✅ **Uploads** - Generic upload library with R2 (backend complete, UI pending)
 - ❌ **Drag-drop** - Drag files into composer
 - ✅ **Keyboard shortcuts** - Cmd+Enter, formatting shortcuts
 
@@ -238,9 +238,11 @@ Comprehensive list of Discourse features for comparison and implementation track
 ## Implementation Status Summary
 
 **Total Discourse Features**: ~150+
-**Implemented**: ~40 (27%)
+**Implemented**: ~41 (27%)
 **Core Features Implemented**: ~90%
 **Advanced Features**: ~10%
+
+**Recent Addition**: Generic file upload library (Cloudflare R2, polymorphic, UUID v7)
 
 ## Feature Priority for Remaining Work
 
@@ -266,6 +268,6 @@ Comprehensive list of Discourse features for comparison and implementation track
 15. Advanced moderation (IP bans, etc.)
 
 ---
-**Last Updated**: December 19, 2025
+**Last Updated**: December 20, 2025
 **Purpose**: Feature comparison and roadmap planning
 **Status**: Living document
