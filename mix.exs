@@ -20,7 +20,7 @@ defmodule Urielm.MixProject do
   def application do
     [
       mod: {Urielm.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :hackney]
     ]
   end
 
@@ -73,7 +73,14 @@ defmodule Urielm.MixProject do
       {:floki, "~> 0.36"},
       # Pagination
       {:flop, "~> 0.25"},
-      {:flop_phoenix, "~> 0.22"}
+      {:flop_phoenix, "~> 0.22"},
+      # File uploads with Cloudflare R2 (S3-compatible)
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7"},
+      {:hackney, "~> 1.20"},
+      # UUID v7 generation
+      {:uniq, "~> 0.6"}
     ]
   end
 

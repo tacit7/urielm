@@ -26,6 +26,24 @@ if System.get_env("PHX_SERVER") do
   config :urielm, UrielmWeb.Endpoint, server: true
 end
 
+# Configure database for dev environment (reads from .env)
+if config_env() == :dev do
+  database_url = env!("DATABASE_URL", :string, "ecto://postgres:postgres@localhost/urielm_dev")
+
+  config :urielm, Urielm.Repo,
+    url: database_url,
+    stacktrace: true,
+    show_sensitive_data_on_connection_error: true,
+    pool_size: 10,
+    queue_target: 5000,
+    queue_interval: 1000,
+    timeout: 30_000,
+    connect_timeout: 30_000,
+    handshake_timeout: 30_000,
+    ssl: true,
+    ssl_opts: [verify: :verify_none]
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
@@ -116,6 +134,24 @@ if config_env() == :prod do
   config :ueberauth, Ueberauth.Strategy.Google.OAuth,
     client_id: System.get_env("GOOGLE_CLIENT_ID"),
     client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+
+  # Cloudflare R2 configuration (production)
+  r2_endpoint_prod =
+    (System.get_env("R2_ENDPOINT") || "")
+    |> String.replace(~r/^https?:\/\//, "")
+
+  config :ex_aws, :s3,
+    access_key_id: System.get_env("R2_ACCESS_KEY_ID"),
+    secret_access_key: System.get_env("R2_SECRET_ACCESS_KEY"),
+    region: "auto",
+    host: r2_endpoint_prod,
+    scheme: "https://",
+    bucket: System.get_env("R2_BUCKET")
+
+  config :urielm, :uploads,
+    bucket: System.get_env("R2_BUCKET"),
+    public_url: System.get_env("R2_PUBLIC_URL"),
+    max_file_size: 10_485_760  # 10 MB in bytes
 end
 
 # OAuth provider secrets (dev/test)
@@ -123,4 +159,21 @@ if config_env() in [:dev, :test] do
   config :ueberauth, Ueberauth.Strategy.Google.OAuth,
     client_id: env!("GOOGLE_CLIENT_ID", :string),
     client_secret: env!("GOOGLE_CLIENT_SECRET", :string)
+
+  # Cloudflare R2 configuration (dev/test)
+  r2_endpoint = env!("R2_ENDPOINT", :string) |> String.replace(~r/^https?:\/\//, "")
+
+  config :ex_aws, :s3,
+    access_key_id: env!("R2_ACCESS_KEY_ID", :string),
+    secret_access_key: env!("R2_SECRET_ACCESS_KEY", :string),
+    region: "auto",
+    host: r2_endpoint,
+    scheme: "https://",
+    # Cloudflare R2 requires path_style for S3 compatibility
+    bucket: env!("R2_BUCKET", :string)
+
+  config :urielm, :uploads,
+    bucket: env!("R2_BUCKET", :string),
+    public_url: env!("R2_PUBLIC_URL", :string),
+    max_file_size: 10_485_760  # 10 MB in bytes
 end

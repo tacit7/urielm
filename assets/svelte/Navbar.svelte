@@ -71,13 +71,10 @@
       </button>
       {#if isMenuOpen}
         <ul id="mobile-nav" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-          <li><a href="/" class:active={currentPage === 'home'} onclick={closeMenu}>Home</a></li>
+          <li><a href="/lessons" class:active={currentPage === 'videos'} onclick={closeMenu}>Videos</a></li>
           <li><a href="/blog" class:active={currentPage === 'blog'} onclick={closeMenu}>Blog</a></li>
-          <li><a href="/romanov-prompts?category=coding" onclick={closeMenu}>Coding</a></li>
-          <li><a href="/romanov-prompts?category=ai" onclick={closeMenu}>AI</a></li>
-          <li><a href="/romanov-prompts?category=n8n" onclick={closeMenu}>n8n</a></li>
-          <li><a href="/romanov-prompts?category=tools" onclick={closeMenu}>Tools</a></li>
-          <li><a href="/romanov-prompts" class:active={currentPage === 'references'} onclick={closeMenu}>Prompts</a></li>
+          <li><a href="/romanov-prompts" class:active={currentPage === 'prompts'} onclick={closeMenu}>Prompts</a></li>
+          <li><a href="/forum" class:active={currentPage === 'community'} onclick={closeMenu}>Community</a></li>
         </ul>
       {/if}
     </div>
@@ -92,10 +89,10 @@
   <div class="navbar-center hidden lg:flex">
     <div class="flex items-center gap-8">
       <a
-        href="/"
-        class={`font-medium transition-colors ${currentPage === 'home' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
+        href="/lessons"
+        class={`font-medium transition-colors ${currentPage === 'videos' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
-        Home
+        Videos
       </a>
       <a
         href="/blog"
@@ -104,34 +101,16 @@
         Blog
       </a>
       <a
-        href="/romanov-prompts?category=coding"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        Coding
-      </a>
-      <a
-        href="/romanov-prompts?category=ai"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        AI
-      </a>
-      <a
-        href="/romanov-prompts?category=n8n"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        n8n
-      </a>
-      <a
-        href="/romanov-prompts?category=tools"
-        class="font-medium text-base-content hover:text-primary transition-colors"
-      >
-        Tools
-      </a>
-      <a
         href="/romanov-prompts"
-        class={`font-medium transition-colors ${currentPage === 'references' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
+        class={`font-medium transition-colors ${currentPage === 'prompts' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
         Prompts
+      </a>
+      <a
+        href="/forum"
+        class={`font-medium transition-colors ${currentPage === 'community' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
+      >
+        Community
       </a>
     </div>
   </div>
@@ -141,6 +120,12 @@
     {#if currentUser}
       <UserMenu {currentUser} />
     {:else}
+      <a
+        href="/signin"
+        class="btn btn-sm btn-ghost"
+      >
+        Sign In
+      </a>
       <a
         href="/signup"
         class="btn btn-sm btn-primary rounded-full px-6"

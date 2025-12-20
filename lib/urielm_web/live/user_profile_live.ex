@@ -22,6 +22,8 @@ defmodule UrielmWeb.UserProfileLive do
         current_user = socket.assigns.current_user
         is_following = current_user && Accounts.is_following?(current_user.id, user.id)
 
+        changeset = Accounts.change_user_profile(user)
+
         {:ok,
          socket
          |> assign(:page_title, "@#{user.username}")
@@ -32,7 +34,12 @@ defmodule UrielmWeb.UserProfileLive do
          |> assign(:threads, [])
          |> assign(:comments, [])
          |> assign(:threads_meta, nil)
-         |> assign(:comments_meta, nil)}
+         |> assign(:comments_meta, nil)
+         |> assign(:preferences_section, "account")
+         |> assign(:form, to_form(changeset))
+         |> assign(:editing_username, false)
+         |> assign(:editing_display_name, false)
+         |> assign(:show_delete_confirm, false)}
     end
   end
 
@@ -40,12 +47,18 @@ defmodule UrielmWeb.UserProfileLive do
   def handle_params(params, _uri, socket) do
     tab = Map.get(params, "tab", "threads")
     page = Map.get(params, "page", "1") |> String.to_integer()
+    section = Map.get(params, "section", "account")
     user_id = socket.assigns.user.id
 
-    socket = assign(socket, :active_tab, tab)
+    socket = socket
+      |> assign(:active_tab, tab)
+      |> assign(:preferences_section, section)
 
     socket =
       case tab do
+        "preferences" ->
+          socket
+
         "threads" ->
           case Forum.paginate_threads_by_author(user_id, %{
                  page: page,
@@ -122,8 +135,160 @@ defmodule UrielmWeb.UserProfileLive do
   @impl true
   def handle_event("switch_tab", %{"tab" => tab}, socket) do
     username = socket.assigns.user.username
-    page = 1
-    {:noreply, push_patch(socket, to: ~p"/u/#{username}?tab=#{tab}&page=#{page}")}
+
+    path = if tab == "preferences" do
+      ~p"/u/#{username}?tab=preferences&section=account"
+    else
+      ~p"/u/#{username}?tab=#{tab}&page=1"
+    end
+
+    {:noreply, push_patch(socket, to: path)}
+  end
+
+  @impl true
+  def handle_event("switch_preferences_section", %{"section" => section}, socket) do
+    username = socket.assigns.user.username
+    {:noreply, push_patch(socket, to: ~p"/u/#{username}?tab=preferences&section=#{section}")}
+  end
+
+  @impl true
+  def handle_event("edit_username", _params, socket) do
+    {:noreply, assign(socket, :editing_username, true)}
+  end
+
+  @impl true
+  def handle_event("cancel_edit_username", _params, socket) do
+    changeset = Accounts.change_user_profile(socket.assigns.user)
+    {:noreply, socket |> assign(:editing_username, false) |> assign(:form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("update_username", %{"user" => %{"username" => username}}, socket) do
+    current_user = socket.assigns.current_user
+    profile_user = socket.assigns.user
+
+    if current_user && current_user.id == profile_user.id do
+      case Accounts.update_user(current_user, %{username: username}) do
+        {:ok, updated_user} ->
+          changeset = Accounts.change_user_profile(updated_user)
+
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> assign(:form, to_form(changeset))
+           |> assign(:editing_username, false)
+           |> put_flash(:info, "Username updated successfully")}
+
+        {:error, changeset} ->
+          {:noreply, assign(socket, :form, to_form(changeset))}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  @impl true
+  def handle_event("edit_display_name", _params, socket) do
+    {:noreply, assign(socket, :editing_display_name, true)}
+  end
+
+  @impl true
+  def handle_event("cancel_edit_display_name", _params, socket) do
+    changeset = Accounts.change_user_profile(socket.assigns.user)
+    {:noreply, socket |> assign(:editing_display_name, false) |> assign(:form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("update_display_name", %{"user" => %{"display_name" => display_name}}, socket) do
+    current_user = socket.assigns.current_user
+    profile_user = socket.assigns.user
+
+    if current_user && current_user.id == profile_user.id do
+      case Accounts.update_user(current_user, %{display_name: display_name}) do
+        {:ok, updated_user} ->
+          changeset = Accounts.change_user_profile(updated_user)
+
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> assign(:form, to_form(changeset))
+           |> assign(:editing_display_name, false)
+           |> put_flash(:info, "Display name updated successfully")}
+
+        {:error, changeset} ->
+          {:noreply, assign(socket, :form, to_form(changeset))}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  @impl true
+  def handle_event("show_delete_confirm", _params, socket) do
+    {:noreply, assign(socket, :show_delete_confirm, true)}
+  end
+
+  @impl true
+  def handle_event("cancel_delete", _params, socket) do
+    {:noreply, assign(socket, :show_delete_confirm, false)}
+  end
+
+  @impl true
+  def handle_event("delete_account", _params, socket) do
+    current_user = socket.assigns.current_user
+
+    if current_user do
+      case Accounts.delete_user(current_user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Account deleted successfully")
+           |> redirect(to: ~p"/auth/logout")}
+
+        {:error, _} ->
+          {:noreply,
+           socket
+           |> assign(:show_delete_confirm, false)
+           |> put_flash(:error, "Failed to delete account")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  @impl true
+  def handle_event("validate_profile", %{"user" => user_params}, socket) do
+    changeset =
+      socket.assigns.user
+      |> Accounts.change_user_profile(user_params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("update_profile", %{"user" => user_params}, socket) do
+    current_user = socket.assigns.current_user
+    profile_user = socket.assigns.user
+
+    # Only allow users to update their own profile
+    if current_user && current_user.id == profile_user.id do
+      case Accounts.update_user(current_user, user_params) do
+        {:ok, updated_user} ->
+          changeset = Accounts.change_user_profile(updated_user)
+
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> assign(:form, to_form(changeset))
+           |> put_flash(:info, "Profile updated successfully")}
+
+        {:error, changeset} ->
+          {:noreply, assign(socket, :form, to_form(changeset))}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
   end
 
   # pagination handled via handle_params; no incremental loaders
@@ -239,6 +404,15 @@ defmodule UrielmWeb.UserProfileLive do
         
     <!-- Tabs -->
         <div class="tabs tabs-bordered mb-6">
+          <%= if @current_user && @current_user.id == @user.id do %>
+            <a
+              class={["tab", @active_tab == "preferences" && "tab-active"]}
+              phx-click="switch_tab"
+              phx-value-tab="preferences"
+            >
+              Preferences
+            </a>
+          <% end %>
           <a
             class={["tab", @active_tab == "threads" && "tab-active"]}
             phx-click="switch_tab"
@@ -254,7 +428,7 @@ defmodule UrielmWeb.UserProfileLive do
             Comments
           </a>
         </div>
-        
+
     <!-- Content -->
         <div id="profile-content">
           <%= if @active_tab == "threads" do %>
@@ -301,7 +475,9 @@ defmodule UrielmWeb.UserProfileLive do
                 <% end %>
               </div>
             </div>
-          <% else %>
+          <% end %>
+
+          <%= if @active_tab == "comments" do %>
             <!-- Comments Tab -->
             <div class="space-y-4">
               <%= if Enum.empty?(@comments) do %>
@@ -340,6 +516,207 @@ defmodule UrielmWeb.UserProfileLive do
                   />
                 <% end %>
               </div>
+            </div>
+          <% end %>
+
+          <%= if @active_tab == "preferences" do %>
+            <!-- Preferences Tab -->
+            <div class="space-y-6">
+              <!-- Sub-navigation -->
+              <div class="flex gap-2 overflow-x-auto pb-2 border-b border-base-300">
+                <button
+                  phx-click="switch_preferences_section"
+                  phx-value-section="account"
+                  class={[
+                    "btn btn-sm",
+                    if(@preferences_section == "account", do: "btn-primary", else: "btn-ghost")
+                  ]}
+                >
+                  Account
+                </button>
+                <button
+                  phx-click="switch_preferences_section"
+                  phx-value-section="profile"
+                  class={[
+                    "btn btn-sm",
+                    if(@preferences_section == "profile", do: "btn-primary", else: "btn-ghost")
+                  ]}
+                >
+                  Profile
+                </button>
+              </div>
+
+              <%= if @preferences_section == "account" do %>
+                <!-- Account Section -->
+                <div class="space-y-6">
+                  <div>
+                    <h3 class="text-xl font-semibold mb-2">Username</h3>
+
+                    <%= if @editing_username do %>
+                      <.form for={@form} id="username-form" phx-submit="update_username">
+                        <.input
+                          field={@form[:username]}
+                          type="text"
+                          class="w-full input input-bordered bg-base-200"
+                        />
+                        <div class="flex gap-2 mt-4">
+                          <button type="submit" class="btn btn-primary btn-sm">
+                            change
+                          </button>
+                          <button
+                            type="button"
+                            phx-click="cancel_edit_username"
+                            class="btn btn-ghost btn-sm text-primary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </.form>
+                    <% else %>
+                      <div class="flex items-center gap-2">
+                        <p class="text-base-content/80">{@user.username}</p>
+                        <button
+                          type="button"
+                          phx-click="edit_username"
+                          class="btn btn-ghost btn-xs"
+                          aria-label="Edit username"
+                        >
+                          <.um_icon name="hero-pencil-square" class="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p class="text-sm text-base-content/60 mt-1">
+                        People can mention you as @{@user.username}
+                      </p>
+                    <% end %>
+                  </div>
+
+                  <div>
+                    <h3 class="text-xl font-semibold mb-2">Display Name</h3>
+
+                    <%= if @editing_display_name do %>
+                      <.form for={@form} id="display-name-form" phx-submit="update_display_name">
+                        <.input
+                          field={@form[:display_name]}
+                          type="text"
+                          class="w-full input input-bordered bg-base-200"
+                        />
+                        <div class="flex gap-2 mt-4">
+                          <button type="submit" class="btn btn-primary btn-sm">
+                            change
+                          </button>
+                          <button
+                            type="button"
+                            phx-click="cancel_edit_display_name"
+                            class="btn btn-ghost btn-sm text-primary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </.form>
+                    <% else %>
+                      <div class="flex items-center gap-2">
+                        <p class="text-base-content/80">{@user.display_name || "Not set"}</p>
+                        <button
+                          type="button"
+                          phx-click="edit_display_name"
+                          class="btn btn-ghost btn-xs"
+                          aria-label="Edit display name"
+                        >
+                          <.um_icon name="hero-pencil-square" class="w-4 h-4" />
+                        </button>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <div>
+                    <h3 class="text-xl font-semibold mb-2">Email</h3>
+                    <p class="text-base-content/80">{@user.email}</p>
+                    <p class="text-sm text-base-content/60 mt-1">Never shown to the public</p>
+                  </div>
+
+                  <!-- Danger Zone -->
+                  <div class="pt-8 mt-8 border-t border-error/20">
+                    <h3 class="text-xl font-semibold mb-2 text-error">Danger Zone</h3>
+                    <p class="text-sm text-base-content/60 mb-4">
+                      Once you delete your account, there is no going back. Please be certain.
+                    </p>
+                    <button
+                      type="button"
+                      phx-click="show_delete_confirm"
+                      class="btn btn-error btn-outline btn-sm"
+                    >
+                      Delete My Account
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <%= if @show_delete_confirm do %>
+                  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" phx-click="cancel_delete">
+                    <div class="modal-box bg-base-200" onclick="event.stopPropagation()">
+                      <h3 class="font-bold text-lg text-error">Delete Account</h3>
+                      <p class="py-4">
+                        Are you absolutely sure you want to delete your account? This action cannot be undone.
+                        All your posts, comments, and data will be permanently deleted.
+                      </p>
+                      <div class="modal-action">
+                        <button
+                          type="button"
+                          phx-click="cancel_delete"
+                          class="btn btn-ghost"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          phx-click="delete_account"
+                          class="btn btn-error"
+                        >
+                          Yes, Delete My Account
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+
+              <%= if @preferences_section == "profile" do %>
+                <!-- Profile Section -->
+                <.form for={@form} id="profile-form" phx-change="validate_profile" phx-submit="update_profile">
+                  <div class="space-y-4">
+                    <.input
+                      field={@form[:bio]}
+                      type="textarea"
+                      label="About me"
+                      placeholder="Tell us about yourself..."
+                      class="w-full textarea textarea-bordered bg-base-200 h-32"
+                    />
+                    <p class="text-sm text-base-content/60 -mt-2">Max 1000 characters</p>
+
+                    <.input
+                      field={@form[:location]}
+                      type="text"
+                      label="Location"
+                      placeholder="Your location"
+                      class="w-full input input-bordered bg-base-200"
+                    />
+
+                    <.input
+                      field={@form[:website]}
+                      type="url"
+                      label="Website"
+                      placeholder="https://example.com"
+                      class="w-full input input-bordered bg-base-200"
+                    />
+
+                    <div class="pt-4">
+                      <button type="submit" class="btn btn-primary">
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
+                </.form>
+              <% end %>
             </div>
           <% end %>
         </div>

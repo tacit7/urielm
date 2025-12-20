@@ -1,14 +1,6 @@
 import Config
 
-# Configure your database
-config :urielm, Urielm.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "urielm_dev",
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 1
+# Database is configured in config/runtime.exs to use .env variables
 
 # Configure Cloudflare R2 for blog images
 config :urielm, :r2,

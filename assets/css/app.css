@@ -30,23 +30,25 @@
    Tailwind gray-900 has minimal drift (±2 units) and matches auth pages. */
 @plugin "daisyui/theme" {
   name: "midnight";
-  color-scheme: dark;
+  color-scheme: "dark";
+
+  /* Elevation Stack: 10% Lightness increments */
+  --color-base-100: #111827; /* Page background: Bottom */
+  --color-base-200: #1B2334; /* Containers/Cards: Middle */
+  --color-base-300: #2A3449; /* Active/Hover elements: Top */
+
+  /* Content Colors */
+  --color-base-content: oklch(80.71% 0.038 265.68);
+
+  /* Depth Highlight: For the 'Shiny' top edge */
+  --surface-glow: #3D4963;
+
+  /* Your existing OKLCH brand colors */
   --color-primary: oklch(74.84% 0.149 263.94);
   --color-primary-content: oklch(12.51% 0.01 247.36);
   --color-secondary: oklch(75.12% 0.176 284.26);
-  --color-secondary-content: oklch(12.51% 0.01 247.36);
   --color-accent: oklch(76.83% 0.146 168.48);
-  --color-accent-content: oklch(12.51% 0.01 247.36);
-  /* Use Tailwind gray-900 to minimize color drift across pages */
-  --color-neutral: #1F2335;
-  --color-neutral-content: oklch(80.71% 0.038 265.68);
-  --color-base-100: #111827; /* main app background (Tailwind gray-900) */
-  --color-base-200: #1F2335; /* elevated surfaces (slightly lighter) */
-  --color-base-300: #2F334D; /* higher elevation (lighter) */
-  --color-base-content: oklch(80.71% 0.038 265.68);
-  --color-info: oklch(79.68% 0.152 201.73);
   --color-success: oklch(80.95% 0.174 133.4);
-  --color-warning: oklch(82.21% 0.17 74.49);
   --color-error: oklch(70.18% 0.22 15.48);
 }
 

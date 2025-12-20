@@ -119,6 +119,13 @@ defmodule Urielm.Accounts do
   end
 
   @doc """
+  Returns a changeset for tracking user profile changes.
+  """
+  def change_user_profile(%User{} = user, attrs \\ %{}) do
+    User.changeset(user, attrs)
+  end
+
+  @doc """
   Updates a user's profile information.
   """
   def update_user(%User{} = user, attrs) do

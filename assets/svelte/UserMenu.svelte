@@ -97,15 +97,15 @@
       </a>
     </li>
     <li>
-      <a href="/profile">
+      <a href={`/u/${currentUser.username}`}>
         <User class="w-4 h-4" />
         Profile
       </a>
     </li>
     <li>
-      <a href="/settings">
+      <a href={`/u/${currentUser.username}?tab=preferences&section=account`}>
         <Settings class="w-4 h-4" />
-        Settings
+        Preferences
       </a>
     </li>
     <li><div class="divider my-0"></div></li>

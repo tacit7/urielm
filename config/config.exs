@@ -64,6 +64,11 @@ config :ueberauth, Ueberauth,
     google: {Ueberauth.Strategy.Google, [default_scope: "email profile"]}
   ]
 
+# Configure ExAws for Cloudflare R2 (S3-compatible)
+config :ex_aws,
+  json_codec: Jason,
+  http_client: ExAws.Request.Hackney
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
