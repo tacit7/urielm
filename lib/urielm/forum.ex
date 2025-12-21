@@ -125,19 +125,41 @@ defmodule Urielm.Forum do
     Flop.validate_and_run(base, params, for: Thread, repo: Repo)
   end
 
-  def get_thread!(id) do
-    thread = Repo.get!(Thread, id)
-    comments = list_comments_with_authors(id)
+  @doc """
+  Fetches a thread by ID with optional comments preloading.
 
-    # Increment view count
-    increment_view_count(id)
+  ## Options
+  - `:include_comments?` - Whether to preload comments (default: false)
 
-    thread
-    |> preload_thread_meta()
-    |> Map.put(:comments, comments)
+  ## Examples
+
+      # Fetch thread without comments (for cards/metadata)
+      get_thread!(123)
+
+      # Fetch thread with all comments (for thread page)
+      get_thread!(123, include_comments?: true)
+  """
+  def get_thread!(id, opts \\ []) do
+    include_comments? = Keyword.get(opts, :include_comments?, false)
+
+    thread =
+      Repo.get!(Thread, id)
+      |> preload_thread_meta()
+
+    if include_comments? do
+      comments = list_comments_with_authors(id)
+      Map.put(thread, :comments, comments)
+    else
+      thread
+    end
   end
 
-  defp increment_view_count(thread_id) do
+  @doc """
+  Increments the view count for a thread.
+  This is a command-style function with a side effect and should be called explicitly
+  only when a real page view occurs (not during metadata fetching or refresh actions).
+  """
+  def increment_thread_view_count(thread_id) do
     from(t in Thread, where: t.id == ^thread_id)
     |> Repo.update_all(inc: [view_count: 1])
   end
@@ -164,7 +186,9 @@ defmodule Urielm.Forum do
     attrs = Urielm.Params.normalize(attrs)
 
     case %Thread{}
-         |> Thread.changeset(Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id}))
+         |> Thread.changeset(
+           Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id})
+         )
          |> Repo.insert() do
       {:ok, thread} ->
         # Process mentions
@@ -1261,7 +1285,15 @@ defmodule Urielm.Forum do
 
   # Post Revisions
 
-  defp save_revision(target_type, target_id, editor_id, body_before, body_after, title_before, title_after) do
+  defp save_revision(
+         target_type,
+         target_id,
+         editor_id,
+         body_before,
+         body_after,
+         title_before,
+         title_after
+       ) do
     # Get current revision count
     revision_number = count_revisions(target_type, target_id) + 1
 

@@ -119,6 +119,31 @@ defmodule Urielm.Fixtures do
     Repo.get_by(Vote, user_id: user.id, target_type: target_type, target_id: target_id)
   end
 
+  def video_fixture(attrs \\ %{}) do
+    unique_suffix = random_string()
+
+    {:ok, video} =
+      attrs
+      |> Enum.into(%{
+        title: "Test Video #{unique_suffix}",
+        slug: "test-video-#{unique_suffix}",
+        youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        visibility: "public",
+        description_md: "Test description"
+      })
+      |> Urielm.Content.create_video()
+
+    video
+  end
+
+  def subscription_fixture(user, attrs \\ %{}) do
+    Repo.insert!(%Urielm.Billing.Subscription{
+      user_id: user.id,
+      status: attrs[:status] || "active",
+      current_period_end: attrs[:current_period_end]
+    })
+  end
+
   # Generate cryptographically random string for guaranteed uniqueness
   defp random_string(length \\ 12) do
     :crypto.strong_rand_bytes(length)

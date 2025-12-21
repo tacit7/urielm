@@ -47,6 +47,7 @@ defmodule UrielmWeb.NewThreadLive do
 
     # Auto-generate slug from title
     params = Params.normalize(thread_params0)
+
     params_with_slug =
       if params["slug"] && params["slug"] != "" do
         params

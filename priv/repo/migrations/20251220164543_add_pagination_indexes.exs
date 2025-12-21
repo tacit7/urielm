@@ -15,7 +15,7 @@ defmodule Urielm.Repo.Migrations.AddPaginationIndexes do
     # Supports: saved threads pagination (inserted_at DESC on saved_threads join)
     create index(:saved_threads, [:user_id, :inserted_at])
 
-    # Supports: unread threads filter (LEFT JOIN topic_reads WHERE tr.id IS NULL)
-    create index(:topic_reads, [:user_id, :thread_id])
+    # Note: Index on forum_topic_reads [:user_id, :thread_id] already exists
+    # as a unique index from create_topic_reads migration
   end
 end

@@ -7,17 +7,21 @@ defmodule UrielmWeb.SettingsLive do
   def mount(_params, _session, socket) do
     user = socket.assigns.current_user
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Settings")
-     |> assign(:user, user)
-     |> assign(:profile_form, to_form(Accounts.User.changeset(user, %{})))
-     |> assign(
-       :password_form,
-       to_form(%{"current_password" => "", "new_password" => "", "confirm_password" => ""},
-         as: :password
-       )
-     )}
+    if is_nil(user) do
+      {:ok, redirect(socket, to: ~p"/signup")}
+    else
+      {:ok,
+       socket
+       |> assign(:page_title, "Settings")
+       |> assign(:user, user)
+       |> assign(:profile_form, to_form(Accounts.User.changeset(user, %{})))
+       |> assign(
+         :password_form,
+         to_form(%{"current_password" => "", "new_password" => "", "confirm_password" => ""},
+           as: :password
+         )
+       )}
+    end
   end
 
   @impl true

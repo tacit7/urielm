@@ -39,9 +39,7 @@ if config_env() == :dev do
     queue_interval: 1000,
     timeout: 30_000,
     connect_timeout: 30_000,
-    handshake_timeout: 30_000,
-    ssl: true,
-    ssl_opts: [verify: :verify_none]
+    handshake_timeout: 30_000
 end
 
 if config_env() == :prod do
@@ -159,7 +157,8 @@ if config_env() == :prod do
   config :urielm, :uploads,
     bucket: System.get_env("R2_BUCKET"),
     public_url: System.get_env("R2_PUBLIC_URL"),
-    max_file_size: 10_485_760  # 10 MB in bytes
+    # 10 MB in bytes
+    max_file_size: 10_485_760
 end
 
 # OAuth provider secrets (dev/test)
@@ -183,5 +182,6 @@ if config_env() in [:dev, :test] do
   config :urielm, :uploads,
     bucket: env!("R2_BUCKET", :string),
     public_url: env!("R2_PUBLIC_URL", :string),
-    max_file_size: 10_485_760  # 10 MB in bytes
+    # 10 MB in bytes
+    max_file_size: 10_485_760
 end

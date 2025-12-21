@@ -70,12 +70,12 @@
   }
 </script>
 
-<div class="ghost-actions-bar">
+<div class="flex items-center justify-between gap-1 mt-3 pt-2 border-t border-base-300/30">
   <!-- Left: Reply button (text) -->
   <button
     on:click={handleReply}
     disabled={!canReply || isLoading}
-    class="btn-ghost-icon"
+    class="bg-transparent text-base-content/60 hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary h-9 w-9 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     title="Reply to this comment"
   >
     <span class="hero hero-arrow-uturn-left"></span>
@@ -87,7 +87,7 @@
     <button
       on:click={toggleLike}
       disabled={isLoading}
-      class="btn-ghost-icon group"
+      class="bg-transparent text-base-content/60 hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary h-9 w-9 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 group"
       title={currentLiked ? 'Unlike' : 'Like'}
     >
       {#if currentLiked}
@@ -106,7 +106,7 @@
     <button
       on:click={handleBookmark}
       disabled={isLoading}
-      class="btn-ghost-icon"
+      class="bg-transparent text-base-content/60 hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary h-9 w-9 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
       title={currentSaved ? 'Remove bookmark' : 'Bookmark comment'}
     >
       {#if currentSaved}
@@ -120,7 +120,7 @@
     <button
       on:click={copyLink}
       disabled={isLoading}
-      class="btn-ghost-icon"
+      class="bg-transparent text-base-content/60 hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary h-9 w-9 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
       title="Copy link to this comment"
     >
       <span class="hero hero-link"></span>

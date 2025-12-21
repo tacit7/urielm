@@ -4,6 +4,8 @@ defmodule Urielm.EmbedParser do
   """
 
   @youtube_regex ~r/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  @youtube_shorts_regex ~r/(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+  @youtube_embed_regex ~r/(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
   @image_regex ~r/https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?/i
   @tweet_regex ~r/https?:\/\/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/
 
@@ -22,11 +24,14 @@ defmodule Urielm.EmbedParser do
 
   @doc """
   Extract YouTube video ID from URL.
+  Handles multiple YouTube URL formats using pattern matching.
   """
   def extract_youtube_id(url) do
-    case Regex.run(@youtube_regex, url) do
-      [_full, video_id] -> video_id
-      _ -> nil
+    cond do
+      match = Regex.run(@youtube_regex, url) -> Enum.at(match, 1)
+      match = Regex.run(@youtube_shorts_regex, url) -> Enum.at(match, 1)
+      match = Regex.run(@youtube_embed_regex, url) -> Enum.at(match, 1)
+      true -> nil
     end
   end
 

@@ -565,4 +565,185 @@ defmodule Urielm.Content do
     prompt = Repo.get!(Prompt, prompt_id)
     update_prompt(prompt, %{comments_count: count})
   end
+
+  # Video functions
+
+  alias Urielm.Content.Video
+  alias Urielm.Content.VideoCompletion
+
+  @doc """
+  Gets a single video by slug.
+
+  Raises `Ecto.NoResultsError` if the Video does not exist.
+
+  ## Examples
+
+      iex> get_video_by_slug!("intro-to-elixir")
+      %Video{}
+
+  """
+  def get_video_by_slug!(slug) do
+    Repo.get_by!(Video, slug: slug)
+    |> Repo.preload(:thread)
+  end
+
+  @doc """
+  Returns the list of published videos.
+
+  ## Examples
+
+      iex> list_published_videos()
+      [%Video{}, ...]
+
+  """
+  def list_published_videos do
+    from(v in Video,
+      where: not is_nil(v.published_at),
+      order_by: [desc: v.published_at, desc: v.id]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Checks if a video is published.
+
+  ## Examples
+
+      iex> video_published?(%Video{published_at: ~U[2024-01-01 00:00:00Z]})
+      true
+
+      iex> video_published?(%Video{published_at: nil})
+      false
+
+  """
+  def video_published?(%Video{published_at: nil}), do: false
+  def video_published?(%Video{published_at: _}), do: true
+
+  @doc """
+  Creates a video.
+
+  ## Examples
+
+      iex> create_video(%{title: "My Video", slug: "my-video", ...})
+      {:ok, %Video{}}
+
+      iex> create_video(%{title: nil})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_video(attrs \\ %{}) do
+    %Video{}
+    |> Video.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a video.
+
+  ## Examples
+
+      iex> update_video(video, %{title: "New Title"})
+      {:ok, %Video{}}
+
+  """
+  def update_video(%Video{} = video, attrs) do
+    video
+    |> Video.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Checks if a user can view a video based on visibility and user status.
+
+  Rules:
+  - public: anyone can view
+  - signed_in: requires authenticated user
+  - subscriber: requires active subscription or admin
+  - admins can always view
+
+  ## Examples
+
+      iex> can_view_video?(nil, %Video{visibility: "public"})
+      true
+
+      iex> can_view_video?(nil, %Video{visibility: "signed_in"})
+      false
+
+  """
+  def can_view_video?(_user, %Video{visibility: "public"}), do: true
+
+  def can_view_video?(%{is_admin: true}, _video), do: true
+
+  def can_view_video?(%{} = _user, %Video{visibility: "signed_in"}), do: true
+
+  def can_view_video?(%{} = user, %Video{visibility: "subscriber"}) do
+    Urielm.Billing.active_subscription?(user)
+  end
+
+  def can_view_video?(nil, _video), do: false
+
+  # Video completion functions
+
+  @doc """
+  Checks if a user has completed a video.
+
+  ## Examples
+
+      iex> completed_video?(%User{id: 1}, %Video{id: "abc"})
+      true
+
+  """
+  def completed_video?(%{id: user_id}, %Video{id: video_id}) do
+    Repo.exists?(
+      from vc in VideoCompletion,
+        where: vc.user_id == ^user_id and vc.video_id == ^video_id
+    )
+  end
+
+  def completed_video?(nil, _video), do: false
+
+  @doc """
+  Marks a video as complete for a user.
+
+  Upserts completion record with current timestamp.
+
+  ## Examples
+
+      iex> mark_video_complete(%User{id: 1}, %Video{id: "abc"})
+      {:ok, %VideoCompletion{}}
+
+  """
+  def mark_video_complete(%{id: user_id}, %Video{id: video_id}) do
+    attrs = %{
+      user_id: user_id,
+      video_id: video_id,
+      completed_at: DateTime.utc_now()
+    }
+
+    %VideoCompletion{}
+    |> VideoCompletion.changeset(attrs)
+    |> Repo.insert(
+      on_conflict: {:replace, [:completed_at]},
+      conflict_target: [:user_id, :video_id]
+    )
+  end
+
+  @doc """
+  Removes completion mark for a video.
+
+  ## Examples
+
+      iex> unmark_video_complete(%User{id: 1}, %Video{id: "abc"})
+      {:ok, 1}
+
+  """
+  def unmark_video_complete(%{id: user_id}, %Video{id: video_id}) do
+    {count, _} =
+      from(vc in VideoCompletion,
+        where: vc.user_id == ^user_id and vc.video_id == ^video_id
+      )
+      |> Repo.delete_all()
+
+    {:ok, count}
+  end
 end

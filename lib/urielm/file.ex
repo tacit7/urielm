@@ -7,23 +7,23 @@ defmodule Urielm.File do
 
   schema "files" do
     # Polymorphic association
-    field :entity_type, :string
-    field :entity_id, :binary_id
+    field(:entity_type, :string)
+    field(:entity_id, :binary_id)
 
     # Storage metadata (required)
-    field :storage_key, :string
-    field :original_filename, :string
-    field :content_type, :string
-    field :byte_size, :integer
+    field(:storage_key, :string)
+    field(:original_filename, :string)
+    field(:content_type, :string)
+    field(:byte_size, :integer)
 
     # Optional metadata
-    field :visibility, :string, default: "public"
-    field :checksum_sha256, :binary
-    field :width, :integer
-    field :height, :integer
-    field :deleted_at, :utc_datetime
+    field(:visibility, :string, default: "public")
+    field(:checksum_sha256, :binary)
+    field(:width, :integer)
+    field(:height, :integer)
+    field(:deleted_at, :utc_datetime)
 
-    belongs_to :user, Urielm.Accounts.User
+    belongs_to(:user, Urielm.Accounts.User)
 
     timestamps(type: :utc_datetime)
   end

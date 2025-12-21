@@ -125,11 +125,14 @@ defmodule UrielmWeb.LiveHelpers do
   end
 
   @doc """
-  Fetch latest thread, serialize, and stream_insert into the given stream.
+  Fetch latest thread metadata, serialize, and stream_insert into the given stream.
   Returns the updated socket.
+
+  This does NOT load comments and does NOT increment view count.
   """
   def update_thread_in_stream(socket, stream_name, thread_id, current_user) do
-    thread = Forum.get_thread!(thread_id) |> Repo.preload(:author)
+    # Fetch thread without comments (author and board already preloaded)
+    thread = Forum.get_thread!(thread_id)
     serialized = serialize_thread_card(thread, current_user)
     Phoenix.LiveView.stream_insert(socket, stream_name, serialized)
   end

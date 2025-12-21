@@ -160,7 +160,8 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                           Reported by
                           <span class="font-medium text-base-content">
                             {report.reporter_username}
-                          </span> {LiveHelpers.format_short(report.inserted_at)}
+                          </span>
+                          {LiveHelpers.format_short(report.inserted_at)}
                         </p>
                       </div>
 
@@ -276,6 +277,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
         case report.target_type do
           "thread" ->
             try do
+              # Fetch thread metadata only (no comments needed for moderation queue)
               thread = Forum.get_thread!(report.target_id)
               thread.title
             rescue

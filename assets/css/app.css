@@ -397,26 +397,7 @@
     transparent 70%);
 }
 
-/* Ghost button styles for post actions (Discourse-inspired) */
-.btn-ghost-text {
-  @apply bg-transparent text-base-content/60 transition-colors duration-200;
-  @apply hover:text-base-content;
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary;
-  @apply px-2 h-9 rounded-md;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.btn-ghost-icon {
-  @apply bg-transparent text-base-content/60 transition-colors duration-200;
-  @apply hover:text-base-content;
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary;
-  @apply h-9 w-9 rounded-md flex items-center justify-center;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.ghost-actions-bar {
-  @apply flex items-center justify-between gap-1 mt-3 pt-2 border-t border-base-300/30;
-}
+/* Ghost button styles removed - use utility classes directly in markup per Tailwind v4 guidelines */
 
 /* EasyMDE Markdown Editor Styling */
 :global(.CodeMirror) {

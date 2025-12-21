@@ -111,11 +111,22 @@ defmodule Urielm.ForumTest do
       refute Enum.any?(threads, &(&1.id == thread2.id))
     end
 
-    test "get_thread!/1 returns thread with preloaded data" do
+    test "get_thread!/1 returns thread with preloaded metadata (no comments by default)" do
       thread = thread_fixture()
-      comment = comment_fixture(thread)
 
       fetched = Forum.get_thread!(thread.id)
+
+      assert fetched.id == thread.id
+      assert fetched.author.id == thread.author_id
+      # Comments association not loaded by default
+      assert %Ecto.Association.NotLoaded{} = fetched.comments
+    end
+
+    test "get_thread!/2 with include_comments?: true returns thread with comments" do
+      thread = thread_fixture()
+      _comment = comment_fixture(thread)
+
+      fetched = Forum.get_thread!(thread.id, include_comments?: true)
 
       assert fetched.id == thread.id
       assert fetched.author.id == thread.author_id
@@ -139,6 +150,48 @@ defmodule Urielm.ForumTest do
       assert thread.author_id == author.id
       assert thread.score == 0
       assert thread.comment_count == 0
+    end
+
+    test "get_thread!/1 does NOT increment view count (pure read)" do
+      thread = thread_fixture()
+
+      # Get initial view count
+      initial_count = thread.view_count || 0
+
+      # Fetch thread multiple times
+      Forum.get_thread!(thread.id)
+      Forum.get_thread!(thread.id)
+      Forum.get_thread!(thread.id, include_comments?: true)
+
+      # Reload from DB and verify view count unchanged
+      reloaded = Repo.get!(Forum.Thread, thread.id)
+      assert reloaded.view_count == initial_count
+    end
+
+    test "increment_thread_view_count/1 increments view count by 1" do
+      thread = thread_fixture()
+      initial_count = thread.view_count || 0
+
+      # Increment view count
+      {1, _} = Forum.increment_thread_view_count(thread.id)
+
+      # Reload and verify it increased by 1
+      reloaded = Repo.get!(Forum.Thread, thread.id)
+      assert reloaded.view_count == initial_count + 1
+    end
+
+    test "increment_thread_view_count/1 can be called multiple times" do
+      thread = thread_fixture()
+      initial_count = thread.view_count || 0
+
+      # Increment 3 times
+      Forum.increment_thread_view_count(thread.id)
+      Forum.increment_thread_view_count(thread.id)
+      Forum.increment_thread_view_count(thread.id)
+
+      # Reload and verify it increased by 3
+      reloaded = Repo.get!(Forum.Thread, thread.id)
+      assert reloaded.view_count == initial_count + 3
     end
   end
 

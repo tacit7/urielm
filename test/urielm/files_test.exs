@@ -133,13 +133,19 @@ defmodule Urielm.FilesTest do
 
     test "allows access to public files", %{owner: owner, other_user: other_user, thread: thread} do
       upload = create_upload_fixture("public.jpg", "image/jpeg")
-      {:ok, file} = Files.create_file(upload, owner.id, "thread", thread.id, %{visibility: "public"})
+
+      {:ok, file} =
+        Files.create_file(upload, owner.id, "thread", thread.id, %{visibility: "public"})
 
       assert Files.can_access_file?(other_user, file)
       assert Files.can_access_file?(owner, file)
     end
 
-    test "restricts private files to owner only", %{owner: owner, other_user: other_user, thread: thread} do
+    test "restricts private files to owner only", %{
+      owner: owner,
+      other_user: other_user,
+      thread: thread
+    } do
       upload = create_upload_fixture("private.jpg", "image/jpeg")
 
       {:ok, file} =

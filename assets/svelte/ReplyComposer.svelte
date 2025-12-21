@@ -5,6 +5,7 @@
   export let isOpen = false
   export let replyText = ""
   export let placeholder = "Write your reply..."
+  export let submitLabel = "Reply"
   export let onSubmit = null
   export let onDiscard = null
 
@@ -350,7 +351,7 @@
             Discard
           </button>
           <button type="button" on:click={handleSubmit} disabled={!replyText.trim()} class="btn btn-primary btn-sm">
-            Reply
+            {submitLabel}
           </button>
         </div>
       </div>

@@ -381,6 +381,70 @@ defmodule UrielmWeb.ForumLiveTest do
       assert html =~ "Root comment"
       assert html =~ "Reply to root"
     end
+
+    test "viewing thread increments view count exactly once", %{thread: thread} do
+      # Get initial view count
+      initial_count = thread.view_count || 0
+
+      # Visit thread page (includes both disconnected and connected mounts)
+      {:ok, _live, _html} = live(build_conn(), ~p"/forum/t/#{thread.id}")
+
+      # Reload thread and verify view count increased by exactly 1
+      updated_thread = Urielm.Repo.get!(Forum.Thread, thread.id)
+      assert updated_thread.view_count == initial_count + 1
+    end
+
+    test "voting on thread does NOT increment view count", %{thread: thread, user: user} do
+      # Visit thread page first to establish baseline
+      {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
+
+      # Get view count after initial visit
+      after_visit = Urielm.Repo.get!(Forum.Thread, thread.id)
+      count_after_visit = after_visit.view_count || 0
+
+      # Cast a vote
+      render_click(live, "vote", %{
+        "target_type" => "thread",
+        "target_id" => to_string(thread.id),
+        "value" => "1"
+      })
+
+      # Verify view count did NOT change due to voting
+      after_vote = Urielm.Repo.get!(Forum.Thread, thread.id)
+      assert after_vote.view_count == count_after_visit
+    end
+
+    test "saving thread does NOT increment view count", %{thread: thread, user: user} do
+      # Visit thread page first
+      {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
+
+      # Get view count after initial visit
+      after_visit = Urielm.Repo.get!(Forum.Thread, thread.id)
+      count_after_visit = after_visit.view_count || 0
+
+      # Save the thread
+      render_click(live, "save_thread", %{})
+
+      # Verify view count did NOT change due to saving
+      after_save = Urielm.Repo.get!(Forum.Thread, thread.id)
+      assert after_save.view_count == count_after_visit
+    end
+
+    test "posting comment does NOT increment view count", %{thread: thread, user: user} do
+      # Visit thread page first
+      {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
+
+      # Get view count after initial visit
+      after_visit = Urielm.Repo.get!(Forum.Thread, thread.id)
+      count_after_visit = after_visit.view_count || 0
+
+      # Post a comment
+      render_submit(live, "create_comment", %{"body" => "Test comment"})
+
+      # Verify view count did NOT change due to comment creation
+      after_comment = Urielm.Repo.get!(Forum.Thread, thread.id)
+      assert after_comment.view_count == count_after_visit
+    end
   end
 
   # Helper functions

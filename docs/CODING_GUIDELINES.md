@@ -1,5 +1,7 @@
 # Coding Guidelines: Svelte 5 + Phoenix LiveView + daisyUI
 
+This document is **Svelte-focused**. For repo-wide conventions (routing, LiveView, streams, testing, deployment), start with `docs/CODE_GUIDELINES.md`.
+
 ## Table of Contents
 1. [Tech Stack Overview](#tech-stack-overview)
 2. [Svelte 5 Guidelines](#svelte-5-guidelines)
@@ -18,11 +20,17 @@
 
 ### Versions
 - **Phoenix**: 1.8.1
-- **Phoenix LiveView**: 1.1.0
-- **Svelte**: 5.18.3
+- **Phoenix LiveView**: 1.1.x (currently 1.1.18 in `mix.lock`)
+- **Svelte**: 5.18.0
 - **live_svelte**: 0.16.0
-- **daisyUI**: 5.0.35
-- **Tailwind CSS**: v4.1.7
+- **daisyUI**: 5.5.8
+- **Tailwind CSS**: v4 (via Phoenix Tailwind integration)
+
+### House Style (Project Conventions)
+- Prefer minimal diffs: match the existing file’s formatting and patterns; don’t reformat unrelated code.
+- Avoid inline JS in HEEx and in generated HTML strings; put behavior in hooks/components and wire it through `assets/js/app.js`.
+- LiveView `mount/3` runs twice (disconnected + connected). Only perform DB writes / side effects when `connected?(socket)` is true.
+- If you render raw HTML via Svelte `{@html ...}`, the content must be sanitized and any interpolated attributes must be escaped (never emit `onclick=` or other inline handlers).
 
 ### Architecture
 ```

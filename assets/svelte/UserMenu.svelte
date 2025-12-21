@@ -72,7 +72,7 @@
     </div>
   </button>
 
-  <ul tabindex="0" class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow mt-3">
+  <ul tabindex="0" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow mt-3">
     <li class="menu-title">
       <span>{currentUser.name || 'User'}</span>
       <span class="text-xs opacity-50">@{currentUser.username || currentUser.email?.split('@')[0] || 'user'}</span>
@@ -91,7 +91,7 @@
       </a>
     </li>
     <li>
-      <a href="/romanov-prompts">
+      <a href="/prompts">
         <Bookmark class="w-4 h-4" />
         Saved
       </a>

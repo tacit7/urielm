@@ -48,9 +48,8 @@
   }
 
   function handleReport(commentId) {
-    const modal = document.getElementById(`report_comment_modal_${commentId}`)
-    if (modal) {
-      modal.showModal()
+    if (live) {
+      live.pushEvent("open_report_comment", { comment_id: commentId })
     }
   }
 
@@ -157,28 +156,15 @@
               </div>
 
               {#if editingId === comment.id}
-                <div class="mb-3 space-y-2">
-                  <textarea
-                    bind:value={editText}
+                <div class="mb-3">
+                  <ReplyComposer
+                    isOpen={true}
+                    bind:replyText={editText}
                     placeholder="Edit your comment..."
-                    class="textarea textarea-bordered w-full bg-base-200 text-base-content"
-                    rows="4"
-                  ></textarea>
-                  <div class="flex gap-2 justify-end">
-                    <button
-                      onclick={cancelEdit}
-                      class="btn btn-sm btn-ghost"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onclick={() => submitEdit(comment.id)}
-                      disabled={!editText.trim()}
-                      class="btn btn-sm btn-primary"
-                    >
-                      Save
-                    </button>
-                  </div>
+                    onSubmit={() => submitEdit(comment.id)}
+                    onDiscard={cancelEdit}
+                    submitLabel="Save"
+                  />
                 </div>
               {:else}
                 <p class="text-base-content mb-3">
@@ -200,62 +186,64 @@
               </div>
             </div>
 
-            <div class="flex gap-2">
-              {#if canMarkSolved() && comment.id === solved_comment_id}
-                <span class="badge badge-success badge-sm gap-1">
-                  ✓ Solution
-                </span>
-              {/if}
-              {#if canMarkSolved() && comment.id !== solved_comment_id && !solved_comment_id}
-                <button
-                  onclick={() => handleMarkSolved(comment.id)}
-                  class="btn btn-xs btn-success btn-outline"
-                  title="Mark as solution"
-                >
-                  ✓ Solution
+            <!-- Action buttons - Discourse style -->
+            <div class="flex items-center justify-between mt-3 pb-3">
+              <!-- Vote on left -->
+              <div class="flex items-center gap-2 text-base-content/60">
+                <button class="btn btn-ghost btn-xs btn-square" title="Like">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                  </svg>
                 </button>
-              {/if}
-              {#if canEdit(comment.author?.id) && editingId !== comment.id}
-                <button
-                  onclick={() => startEdit(comment.id, comment.body)}
-                  class="btn btn-xs btn-ghost text-info"
-                >
-                  Edit
-                </button>
-              {/if}
-              {#if canDelete(comment.author?.id)}
-                <button
-                  onclick={() => handleDelete(comment.id)}
-                  class="btn btn-xs btn-ghost text-error"
-                >
-                  Delete
-                </button>
-              {/if}
-              {#if current_user_id}
-                <button
-                  onclick={() => handleReport(comment.id)}
-                  class="btn btn-xs btn-ghost text-warning"
-                  title="Report this comment"
-                >
-                  Report
-                </button>
-              {/if}
+                <span class="text-sm">0</span>
+              </div>
+
+              <!-- Actions on right -->
+              <div class="flex items-center gap-1">
+                {#if canEdit(comment.author?.id) && editingId !== comment.id}
+                  <button
+                    onclick={() => startEdit(comment.id, comment.body)}
+                    class="btn btn-ghost btn-xs text-base-content/60 hover:text-base-content"
+                  >
+                    Edit
+                  </button>
+                {/if}
+
+                {#if canDelete(comment.author?.id)}
+                  <button
+                    onclick={() => handleDelete(comment.id)}
+                    class="btn btn-ghost btn-xs text-base-content/60 hover:text-error"
+                  >
+                    Delete
+                  </button>
+                {/if}
+
+                {#if current_user_id}
+                  <button
+                    onclick={() => handleReport(comment.id)}
+                    class="btn btn-ghost btn-xs text-base-content/60 hover:text-base-content"
+                  >
+                    Report
+                  </button>
+                {/if}
+
+                {#if current_user_id && depth < MAX_DEPTH}
+                  <button
+                    onclick={() => startReply(comment.id)}
+                    class="btn btn-ghost btn-xs gap-1 text-primary hover:text-primary-focus"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                    </svg>
+                    Reply
+                  </button>
+                {/if}
+              </div>
             </div>
           </div>
 
-          <!-- Post Actions (reply, like, bookmark, copy link) -->
-          {#if current_user_id}
-            <PostActions
-              postId={comment.id}
-              liked={false}
-              likeCount={0}
-              is_saved={comment.is_saved || false}
-              canReply={depth < MAX_DEPTH}
-              onReply={() => startReply(comment.id)}
-              {live}
-            />
-          {/if}
-
+          <!-- Border below entire comment -->
+          <div class="border-b border-base-300"></div>
 
           <!-- Nested replies -->
           {#if comment.replies && comment.replies.length > 0 && depth < MAX_DEPTH}

@@ -146,5 +146,19 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
       # Attempt to access moderation page - should redirect
       assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/admin/moderation")
     end
+
+    test "non-admins cannot access trust-levels admin page", %{conn: conn} do
+      user = Fixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
+      # Attempt to access trust-levels page - should redirect
+      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/admin/trust-levels")
+    end
+
+    test "anonymous users are redirected to signup from admin pages", %{conn: conn} do
+      # Attempt to access admin pages without being logged in
+      assert {:error, {:redirect, %{to: "/signup"}}} = live(conn, "/admin/moderation")
+      assert {:error, {:redirect, %{to: "/signup"}}} = live(conn, "/admin/trust-levels")
+    end
   end
 end

@@ -31,7 +31,14 @@ defmodule Urielm.Forum.PostRevision do
       :title_after,
       :revision_number
     ])
-    |> validate_required([:target_type, :target_id, :editor_id, :body_before, :body_after, :revision_number])
+    |> validate_required([
+      :target_type,
+      :target_id,
+      :editor_id,
+      :body_before,
+      :body_after,
+      :revision_number
+    ])
     |> validate_inclusion(:target_type, ["thread", "comment"])
     |> foreign_key_constraint(:editor_id)
   end

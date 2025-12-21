@@ -13,6 +13,7 @@ defmodule Urielm.Forum.Thread do
     field(:title, :string)
     field(:slug, :string)
     field(:body, :string)
+    field(:kind, :string, default: "forum")
     field(:score, :integer, default: 0)
     field(:comment_count, :integer, default: 0)
     field(:view_count, :integer, default: 0)
@@ -31,7 +32,11 @@ defmodule Urielm.Forum.Thread do
     belongs_to(:solved_comment, Urielm.Forum.Comment, type: :binary_id)
     belongs_to(:solved_by, Urielm.Accounts.User, foreign_key: :solved_by_id, type: :id)
     belongs_to(:pinned_by, Urielm.Accounts.User, foreign_key: :pinned_by_id, type: :id)
-    belongs_to(:close_timer_set_by, Urielm.Accounts.User, foreign_key: :close_timer_set_by_id, type: :id)
+
+    belongs_to(:close_timer_set_by, Urielm.Accounts.User,
+      foreign_key: :close_timer_set_by_id,
+      type: :id
+    )
 
     has_many(:comments, Urielm.Forum.Comment)
     has_many(:votes, Urielm.Forum.Vote, foreign_key: :target_id)
@@ -60,6 +65,7 @@ defmodule Urielm.Forum.Thread do
       :title,
       :slug,
       :body,
+      :kind,
       :is_locked,
       :is_removed,
       :removed_by_id,
@@ -73,6 +79,7 @@ defmodule Urielm.Forum.Thread do
       :pinned_by_id
     ])
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
+    |> validate_inclusion(:kind, ["forum", "video"])
     |> validate_length(:title, min: 3, max: 300)
     |> validate_length(:body, min: 10, max: 10000)
     |> sanitize_body()
