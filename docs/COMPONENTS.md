@@ -327,6 +327,199 @@ When modifying ShellLive or adding new routes:
 
 ---
 
+## UnderlineNav - Reusable GitHub-Style Navigation
+
+**File:** `assets/svelte/UnderlineNav.svelte`
+**First Introduced:** Commit `62e2902` - "Add standalone videos feature"
+**Created:** 2025-12-21
+
+### Purpose
+
+UnderlineNav provides a reusable GitHub-style underline navigation component for tabbed interfaces. Supports both LiveView event-based tab switching and native anchor link scrolling.
+
+### Problem It Solves
+
+**Before UnderlineNav:**
+- Custom tab implementations per page (DaisyUI tabs, manual styling)
+- Inconsistent tab UI across features
+- No reusable pattern for section navigation
+
+**After UnderlineNav:**
+- Single component for all tabbed interfaces
+- Consistent GitHub-style design
+- Flexible usage (events or anchors)
+- Easy to implement: just pass items array
+
+### How It Works
+
+#### Basic Usage (LiveView Events)
+
+```elixir
+# In LiveView
+<.svelte
+  name="UnderlineNav"
+  props={%{
+    items: [
+      %{key: "overview", label: "Overview"},
+      %{key: "files", label: "Files", count: 23},
+      %{key: "settings", label: "Settings"}
+    ],
+    activeKey: @active_tab,
+    showCounts: true,
+    size: "md"
+  }}
+  socket={@socket}
+/>
+```
+
+```elixir
+# Handle tab change
+def handle_event("tab_change", %{"key" => key}, socket) do
+  {:noreply, assign(socket, :active_tab, key)}
+end
+```
+
+#### Advanced Usage (With Icons)
+
+```elixir
+items: [
+  %{
+    key: "code",
+    label: "Code",
+    icon: "m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06...",  # SVG path
+    count: nil
+  },
+  %{
+    key: "issues",
+    label: "Issues",
+    icon: "M8 9.5a1.5 1.5 0 1 0 0-3...",
+    count: 8
+  }
+]
+```
+
+#### Size Variants
+
+```elixir
+size: "sm"  # px-3 py-1.5 text-xs - Compact
+size: "md"  # px-4 py-2 text-sm - Default
+size: "lg"  # px-5 py-3 text-base - Large
+```
+
+### Props Reference
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `items` | `Array<Item>` | `[]` | Tab configuration objects |
+| `activeKey` | `string` | `''` | Currently active tab key |
+| `onTabChange` | `Function` | `() => {}` | Callback (non-LiveView) |
+| `showCounts` | `boolean` | `true` | Show count badges |
+| `size` | `'sm'\|'md'\|'lg'` | `'md'` | Size variant |
+| `live` | `LiveSocket` | - | Auto-injected |
+
+**Item Object:**
+```javascript
+{
+  key: string,        // Unique identifier (required)
+  label: string,      // Display text (required)
+  icon?: string,      // SVG path data (16x16 viewBox)
+  count?: number      // Badge count (optional)
+}
+```
+
+### Styling
+
+Uses Tailwind + DaisyUI:
+- `border-primary` - Active tab underline
+- `text-base-content` - Active text
+- `text-base-content/60` - Inactive text
+- Smooth transitions on hover/active states
+
+### Real-World Examples
+
+#### Video Page Sections (Tabbed Content)
+
+```elixir
+# VideoLive - switches between Description/Resources/Author
+defp build_nav_items(video, _thread) do
+  [
+    if video.description_md != "",
+      do: %{key: "description", label: "Description"},
+    if video.resources_md != "",
+      do: %{key: "resources", label: "Resources"},
+    if video.author_name,
+      do: %{key: "author", label: "About the Author"}
+  ]
+  |> Enum.filter(& &1)
+end
+
+# Only show active section
+<%= if @active_section == "description" do %>
+  <div id="description">...</div>
+<% end %>
+```
+
+#### Prompts Page (Category Filters)
+
+The old `SubNav` component can be replaced with UnderlineNav:
+
+```elixir
+# Before (SubNav - DaisyUI tabs)
+<.SubNav activeFilter={@current_filter} categories={@categories} />
+
+# After (UnderlineNav - GitHub style)
+<.svelte
+  name="UnderlineNav"
+  props={%{
+    items: Enum.map(["all" | @categories], fn cat ->
+      %{key: cat, label: String.capitalize(cat)}
+    end),
+    activeKey: @current_filter
+  }}
+  socket={@socket}
+/>
+```
+
+### Component Architecture
+
+**Button vs Anchor:**
+- Uses `<button>` by default - sends LiveView events
+- Can be customized to use `<a href="#anchor">` for scroll navigation
+- Handles both interaction patterns seamlessly
+
+**Responsive:**
+- Horizontal scroll on mobile (`overflow-x-auto`)
+- Hidden scrollbar (`scrollbar-hide`)
+- `whitespace-nowrap` prevents text wrapping
+
+**Accessibility:**
+- Proper ARIA roles (`tablist`, `tab`)
+- `aria-selected` state
+- `aria-controls` linking
+- Keyboard navigation (browser default)
+
+### Files Involved
+
+**Component:**
+- `assets/svelte/UnderlineNav.svelte` - Main component
+- `assets/js/app.js` - Registration in getHooks
+
+**Documentation:**
+- `docs/UnderlineNav.md` - Detailed usage guide with examples
+- `docs/COMPONENTS.md` - This file
+
+**Using It:**
+- `lib/urielm_web/live/video_live.ex` - Video page sections
+- Can replace `SubNav` in `lib/urielm_web/live/prompts_live.ex`
+
+### Related Documentation
+
+- `docs/UnderlineNav.md` - Complete API reference and examples
+- `docs/CODING_GUIDELINES.md` - Svelte component conventions
+- GitHub Primer - [Underline Nav](https://primer.style/components/underline-nav)
+
+---
+
 ## Future Components
 
 Additional component documentation will be added here as needed.

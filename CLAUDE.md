@@ -309,4 +309,5 @@ end
 - `README.md` - Setup instructions and examples
 - `AGENTS.md` - Phoenix usage rules and guidelines
 - `SESSION_CONTEXT.md` - Current session state and TODO items
+- `docs/COMPONENTS.md` - Component architecture patterns and debugging guides
 - `docs/svelte-phoenix-integration.md` - Comprehensive Svelte integration guide
