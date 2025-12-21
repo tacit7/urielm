@@ -51,26 +51,31 @@ defmodule UrielmWeb.Router do
   scope "/", UrielmWeb do
     pipe_through :browser
 
-    live_session :default do
-      live "/", HomeLive
+    # Auth pages - outside shell, use their own layout
+    live_session :auth do
+      live "/signin", SigninLive
       live "/signup", SignupLive
       live "/signup/email", SignupEmailLive
-      live "/romanov-prompts", ReferencesLive
-      live "/prompts/:id", PromptLive
-      live "/courses", CoursesLive
-      live "/courses/:course_slug", CourseLive
-      live "/courses/:course_slug/lessons/:lesson_slug", LessonLive
-      live "/themes", ThemesLive
-      live "/settings", SettingsLive
-      live "/forum", ForumLive
-      live "/forum/b/:board_slug", BoardLive
-      live "/forum/t/:thread_id", ThreadLive
-      live "/forum/search", SearchLive
-      live "/u/:username", UserProfileLive
     end
 
-    get "/blog", PostController, :index
-    get "/blog/:slug", PostController, :show
+    # Main app pages - routed through persistent ShellLive
+    live_session :default do
+      live "/", ShellLive, :home
+      live "/blog", ShellLive, :blog_index
+      live "/blog/:slug", ShellLive, :blog_show
+      live "/prompts", ShellLive, :prompts
+      live "/prompts/:id", ShellLive, :prompt_show
+      live "/courses", ShellLive, :courses
+      live "/courses/:course_slug", ShellLive, :course
+      live "/courses/:course_slug/lessons/:lesson_slug", ShellLive, :lesson
+      live "/videos/:slug", ShellLive, :video
+      live "/themes", ShellLive, :themes
+      live "/forum", ShellLive, :forum
+      live "/forum/b/:board_slug", ShellLive, :board
+      live "/forum/t/:thread_id", ShellLive, :thread
+      live "/forum/search", ShellLive, :search
+      live "/u/:username", ShellLive, :user_profile
+    end
 
     live_session :authenticated,
       on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}] do
@@ -85,7 +90,10 @@ defmodule UrielmWeb.Router do
     end
 
     live_session :admin,
-      on_mount: [{UrielmWeb.UserAuth, :ensure_authenticated}] do
+      on_mount: [
+        {UrielmWeb.UserAuth, :ensure_authenticated},
+        {UrielmWeb.UserAuth, :ensure_admin}
+      ] do
       live "/admin/trust-levels", Admin.TrustLevelSettingsLive
       live "/admin/moderation", Admin.ModerationQueueLive
     end

@@ -10,17 +10,12 @@ defmodule UrielmWeb.HomeLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app
-      flash={@flash}
-      current_user={@current_user}
-      current_page={@current_page}
-      socket={@socket}
-    >
+    <div>
       <.hero socket={@socket} />
       <.tech_stack />
       <.bento_grid />
       <.footer />
-    </Layouts.app>
+    </div>
     """
   end
 
@@ -29,7 +24,10 @@ defmodule UrielmWeb.HomeLive do
     <section id="hero" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
       <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
         <!-- Badge -->
-        <.link navigate={~p"/blog/building-an-ai-learning-platform"} class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up hover:bg-base-300/70 transition-colors">
+        <.link
+          navigate={~p"/blog/building-an-ai-learning-platform"}
+          class="inline-flex items-center space-x-2 bg-base-300/50 backdrop-blur-sm border border-base-300 px-3 py-1 rounded-full mb-8 animate-fade-in-up hover:bg-base-300/70 transition-colors"
+        >
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75">
             </span>
@@ -251,10 +249,16 @@ defmodule UrielmWeb.HomeLive do
         </div>
 
         <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-12 text-sm text-base-content/60">
-          <a href="#" class="hover:text-base-content transition-colors">Projects</a>
-          <a href="#" class="hover:text-base-content transition-colors">Blog</a>
-          <a href="#" class="hover:text-base-content transition-colors">Twitter/X</a>
-          <a href="#" class="hover:text-base-content transition-colors">GitHub</a>
+          <.link navigate={~p"/prompts"} class="hover:text-base-content transition-colors">
+            Prompts
+          </.link>
+          <.link navigate={~p"/blog"} class="hover:text-base-content transition-colors">Blog</.link>
+          <.link navigate={~p"/forum"} class="hover:text-base-content transition-colors">
+            Community
+          </.link>
+          <.link navigate={~p"/chat"} class="hover:text-base-content transition-colors">
+            Consultation
+          </.link>
         </div>
       </div>
       <div class="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t border-base-300 text-center text-xs text-base-content/50">

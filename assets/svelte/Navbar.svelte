@@ -1,4 +1,5 @@
 <script>
+  import AuthModal from './AuthModal.svelte';
   import UserMenu from './UserMenu.svelte';
 
   let { currentPage = '', currentUser = null } = $props()
@@ -6,6 +7,7 @@
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
   let hideNavbar = $state(false)
+  let showAuthModal = $state(false)
   let dropdownRef
 
 
@@ -71,16 +73,16 @@
       </button>
       {#if isMenuOpen}
         <ul id="mobile-nav" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-          <li><a href="/lessons" class:active={currentPage === 'videos'} onclick={closeMenu}>Videos</a></li>
-          <li><a href="/blog" class:active={currentPage === 'blog'} onclick={closeMenu}>Blog</a></li>
-          <li><a href="/romanov-prompts" class:active={currentPage === 'prompts'} onclick={closeMenu}>Prompts</a></li>
-          <li><a href="/forum" class:active={currentPage === 'community'} onclick={closeMenu}>Community</a></li>
+          <li><a href="/courses" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'videos'} onclick={closeMenu}>Videos</a></li>
+          <li><a href="/blog" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'blog'} onclick={closeMenu}>Blog</a></li>
+          <li><a href="/prompts" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'prompts'} onclick={closeMenu}>Prompts</a></li>
+          <li><a href="/forum" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'community'} onclick={closeMenu}>Community</a></li>
         </ul>
       {/if}
     </div>
 
     <!-- Logo -->
-    <a href="/" class="btn btn-ghost text-xl font-semibold tracking-tight">
+    <a href="/" data-phx-link="patch" data-phx-link-state="push" class="btn btn-ghost text-xl font-semibold tracking-tight">
       UrielM<span class="text-base-content/50">.dev</span>
     </a>
   </div>
@@ -89,25 +91,33 @@
   <div class="navbar-center hidden lg:flex">
     <div class="flex items-center gap-8">
       <a
-        href="/lessons"
+        href="/courses"
+        data-phx-link="patch"
+        data-phx-link-state="push"
         class={`font-medium transition-colors ${currentPage === 'videos' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
         Videos
       </a>
       <a
         href="/blog"
+        data-phx-link="patch"
+        data-phx-link-state="push"
         class={`font-medium transition-colors ${currentPage === 'blog' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
         Blog
       </a>
       <a
-        href="/romanov-prompts"
+        href="/prompts"
+        data-phx-link="patch"
+        data-phx-link-state="push"
         class={`font-medium transition-colors ${currentPage === 'prompts' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
         Prompts
       </a>
       <a
         href="/forum"
+        data-phx-link="patch"
+        data-phx-link-state="push"
         class={`font-medium transition-colors ${currentPage === 'community' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
       >
         Community

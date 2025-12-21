@@ -40,11 +40,13 @@ defmodule UrielmWeb.Layouts do
   def app(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
-      <.Navbar
-        socket={@socket}
-        currentPage={@current_page || "home"}
-        currentUser={serialize_user(@current_user)}
-      />
+      <div id="navbar-container" phx-update="ignore">
+        <.Navbar
+          socket={@socket}
+          currentPage={@current_page || "home"}
+          currentUser={serialize_user(@current_user)}
+        />
+      </div>
 
       <main class="pt-16">
         {if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block)}

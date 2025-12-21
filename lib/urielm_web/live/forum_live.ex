@@ -18,8 +18,7 @@ defmodule UrielmWeb.ForumLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
-      <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories}>
+    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories}>
         <!-- Header -->
         <div class="mb-8">
           <h1 class="text-3xl font-bold text-base-content mb-2">Categories</h1>
@@ -76,8 +75,7 @@ defmodule UrielmWeb.ForumLive do
             <p>No forum categories available yet.</p>
           </div>
         <% end %>
-      </UrielmWeb.Components.ForumLayout.forum_layout>
-    </Layouts.app>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end
 

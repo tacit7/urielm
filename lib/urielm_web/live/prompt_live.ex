@@ -134,16 +134,10 @@ defmodule UrielmWeb.PromptLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app
-      flash={@flash}
-      current_user={@current_user}
-      current_page="references"
-      socket={@socket}
-    >
-      <div class="min-h-screen bg-base-100 text-base-content pt-20">
+    <div class="min-h-screen bg-base-100 text-base-content pt-20">
         <div class="container mx-auto px-4 py-8">
           <div class="mb-8">
-            <.link navigate={~p"/romanov-prompts"} class="link link-hover text-sm mb-4">
+            <.link navigate={~p"/prompts"} class="link link-hover text-sm mb-4">
               ← Back to Prompts
             </.link>
 
@@ -281,8 +275,7 @@ defmodule UrielmWeb.PromptLive do
             </div>
           </div>
         </div>
-      </div>
-    </Layouts.app>
+    </div>
     """
   end
 end

@@ -7,12 +7,18 @@ defmodule UrielmWeb.ThreadLive do
 
   @impl true
   def mount(%{"thread_id" => id}, _session, socket) do
-    thread = Forum.get_thread!(id)
+    # Fetch thread with comments for the thread page
+    thread = Forum.get_thread!(id, include_comments?: true)
     comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
 
-    # Mark thread as read
-    if socket.assigns.current_user do
-      Forum.mark_thread_read(socket.assigns.current_user.id, thread.id)
+    # Only track view count when connected (real page view)
+    if connected?(socket) do
+      Forum.increment_thread_view_count(thread.id)
+
+      # Mark thread as read (only when connected to avoid double DB write)
+      if socket.assigns.current_user do
+        Forum.mark_thread_read(socket.assigns.current_user.id, thread.id)
+      end
     end
 
     is_saved =
@@ -37,7 +43,8 @@ defmodule UrielmWeb.ThreadLive do
      |> assign(:comment_tree, comment_tree)
      |> assign(:thread_is_saved, is_saved)
      |> assign(:thread_is_subscribed, is_subscribed)
-     |> assign(:notification_level, notification_level)}
+     |> assign(:notification_level, notification_level)
+     |> assign(:reporting_comment_id, nil)}
   end
 
   @impl true
@@ -87,7 +94,7 @@ defmodule UrielmWeb.ThreadLive do
         %{"target_type" => target_type, "target_id" => target_id, "value" => value},
         socket
       ) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    %{current_user: user} = socket.assigns
 
     case user do
       nil ->
@@ -115,6 +122,7 @@ defmodule UrielmWeb.ThreadLive do
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
+        # Fetch thread metadata only (no comments needed for deletion)
         thread = Forum.get_thread!(thread_data.id)
 
         case Forum.remove_thread(thread, user) do
@@ -143,6 +151,7 @@ defmodule UrielmWeb.ThreadLive do
 
       user ->
         thread_id = thread_data.id
+        # Fetch thread metadata only (no comments needed for mark as solved)
         thread = Forum.get_thread!(thread_id)
 
         case Forum.mark_as_solved(thread, comment_id, user) do
@@ -171,6 +180,7 @@ defmodule UrielmWeb.ThreadLive do
 
       user ->
         thread_id = thread_data.id
+        # Fetch thread metadata only (no comments needed for unmark solved)
         thread = Forum.get_thread!(thread_id)
 
         case Forum.unmark_as_solved(thread, user) do
@@ -196,8 +206,9 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "save threads", fn socket, user ->
       case Forum.toggle_save_thread(user.id, thread_data.id) do
         {:ok, _} ->
-          thread = Forum.get_thread!(thread_data.id)
-          {:noreply, assign(socket, :thread_is_saved, Forum.is_thread_saved?(user.id, thread.id))}
+          # No need to refetch thread; just update the saved status
+          {:noreply,
+           assign(socket, :thread_is_saved, Forum.is_thread_saved?(user.id, thread_data.id))}
 
         {:error, _} ->
           {:noreply, put_flash(socket, :error, "Failed to save thread")}
@@ -237,7 +248,7 @@ defmodule UrielmWeb.ThreadLive do
 
   @impl true
   def handle_event("edit_comment", %{"id" => comment_id, "body" => body}, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    %{current_user: user} = socket.assigns
 
     case user do
       nil ->
@@ -264,7 +275,7 @@ defmodule UrielmWeb.ThreadLive do
 
   @impl true
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    %{current_user: user} = socket.assigns
 
     case user do
       nil ->
@@ -329,6 +340,7 @@ defmodule UrielmWeb.ThreadLive do
     %{current_user: user, thread: thread_data} = socket.assigns
 
     if user && (user.is_admin || user.is_moderator) do
+      # Fetch thread metadata only (no comments needed for locking)
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.lock_thread(thread, user) do
@@ -354,6 +366,7 @@ defmodule UrielmWeb.ThreadLive do
     %{current_user: user, thread: thread_data} = socket.assigns
 
     if user && (user.is_admin || user.is_moderator) do
+      # Fetch thread metadata only (no comments needed for unlocking)
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.unlock_thread(thread, user) do
@@ -379,6 +392,7 @@ defmodule UrielmWeb.ThreadLive do
     %{current_user: user, thread: thread_data} = socket.assigns
 
     if user && (user.is_admin || user.is_moderator) do
+      # Fetch thread metadata only (no comments needed for pinning)
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.pin_thread(thread, user) do
@@ -404,6 +418,7 @@ defmodule UrielmWeb.ThreadLive do
     %{current_user: user, thread: thread_data} = socket.assigns
 
     if user && (user.is_admin || user.is_moderator) do
+      # Fetch thread metadata only (no comments needed for unpinning)
       thread = Forum.get_thread!(thread_data.id)
 
       case Forum.unpin_thread(thread, user) do
@@ -461,6 +476,14 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   @impl true
+  def handle_event("open_report_comment", %{"comment_id" => comment_id}, socket) do
+    {:noreply,
+     socket
+     |> assign(:reporting_comment_id, comment_id)
+     |> push_event("open_modal", %{"id" => "report_comment_modal"})}
+  end
+
+  @impl true
   def handle_event(
         "report_comment",
         %{"comment_id" => comment_id, "reason" => reason, "description" => description},
@@ -480,8 +503,9 @@ defmodule UrielmWeb.ThreadLive do
           {:ok, _} ->
             {:noreply,
              socket
+             |> assign(:reporting_comment_id, nil)
              |> put_flash(:info, "Report submitted successfully")
-             |> push_event("close_modal", %{"id" => "report_comment_modal_#{comment_id}"})}
+             |> push_event("close_modal", %{"id" => "report_comment_modal"})}
 
           {:error, :unique_constraint} ->
             {:noreply, put_flash(socket, :error, "You've already reported this")}
@@ -519,8 +543,7 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
-      <div class="min-h-screen bg-base-100">
+    <div class="min-h-screen bg-base-100">
         <div class="container mx-auto px-4 py-8 max-w-6xl">
           <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
             ← Back to {@thread.board_name}
@@ -697,8 +720,7 @@ defmodule UrielmWeb.ThreadLive do
               Comments
               <%= if @thread.is_locked do %>
                 <span class="badge badge-warning badge-sm ml-2">
-                  <.um_icon name="lock_closed" class="w-3 h-3 mr-1" />
-                  Locked
+                  <.um_icon name="lock_closed" class="w-3 h-3 mr-1" /> Locked
                 </span>
               <% end %>
             </h2>
@@ -713,17 +735,17 @@ defmodule UrielmWeb.ThreadLive do
                 <div class="card bg-base-200 border border-base-300 mb-6">
                   <div class="card-body">
                     <form phx-submit="create_comment" class="space-y-4">
-                    <textarea
-                      name="body"
-                      placeholder="Share your thoughts... (Markdown supported)"
-                      required
-                      class="textarea textarea-bordered w-full min-h-24"
-                    >
+                      <textarea
+                        name="body"
+                        placeholder="Share your thoughts... (Markdown supported)"
+                        required
+                        class="textarea textarea-bordered w-full min-h-24"
+                      >
                   </textarea>
-                    <button type="submit" class="btn btn-primary">Post Comment</button>
-                  </form>
+                      <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+                  </div>
                 </div>
-              </div>
               <% else %>
                 <div class="alert alert-info mb-6">
                   <span>
@@ -816,71 +838,70 @@ defmodule UrielmWeb.ThreadLive do
           </form>
         </dialog>
         
-    <!-- Comment Report Modals -->
-        <%= for comment <- flatten_comments(@comment_tree) do %>
-          <dialog
-            id={"report_comment_modal_#{comment.id}"}
-            data-testid="comment-report-modal"
-            class="modal"
-          >
-            <div class="modal-box bg-base-300">
-              <form method="dialog">
-                <button
-                  class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                  aria-label="Close"
-                >
-                  <.um_icon name="close" class="w-4 h-4" />
-                </button>
-              </form>
-              <h3 class="font-bold text-lg mb-4">Report Comment</h3>
-              <form phx-submit="report_comment" class="space-y-4">
-                <input type="hidden" name="comment_id" value={comment.id} />
-
-                <div>
-                  <label class="label">
-                    <span class="label-text">Reason</span>
-                  </label>
-                  <select name="reason" class="select select-bordered w-full" required>
-                    <option value="">Select a reason</option>
-                    <option value="spam">Spam</option>
-                    <option value="abuse">Abuse</option>
-                    <option value="offensive">Offensive</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="label">
-                    <span class="label-text">Description (required)</span>
-                  </label>
-                  <textarea
-                    name="description"
-                    placeholder="Explain why you're reporting this comment..."
-                    class="textarea textarea-bordered w-full min-h-24"
-                    required
-                    minlength="10"
-                    maxlength="5000"
-                  ></textarea>
-                  <p class="text-xs text-base-content/60 mt-1">
-                    Minimum 10 characters • Maximum 5000 characters
-                  </p>
-                </div>
-
-                <div class="modal-action">
-                  <form method="dialog">
-                    <button class="btn btn-ghost">Cancel</button>
-                  </form>
-                  <button type="submit" class="btn btn-warning">Submit Report</button>
-                </div>
-              </form>
-            </div>
-            <form method="dialog" class="modal-backdrop">
-              <button>close</button>
+    <!-- Comment Report Modal (Single Reusable) -->
+        <dialog id="report_comment_modal" data-testid="comment-report-modal" class="modal">
+          <div class="modal-box bg-base-300">
+            <form method="dialog">
+              <button
+                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                aria-label="Close"
+              >
+                <.um_icon name="close" class="w-4 h-4" />
+              </button>
             </form>
-          </dialog>
-        <% end %>
-      </div>
-    </Layouts.app>
+            <h3 class="font-bold text-lg mb-4">Report Comment</h3>
+            <form id="report-comment-form" phx-submit="report_comment" class="space-y-4">
+              <input type="hidden" name="comment_id" value={@reporting_comment_id} />
+
+              <div>
+                <label class="label">
+                  <span class="label-text">Reason</span>
+                </label>
+                <select name="reason" class="select select-bordered w-full" required>
+                  <option value="">Select a reason</option>
+                  <option value="spam">Spam</option>
+                  <option value="abuse">Abuse</option>
+                  <option value="offensive">Offensive</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="label">
+                  <span class="label-text">Description (required)</span>
+                </label>
+                <textarea
+                  name="description"
+                  placeholder="Explain why you're reporting this comment..."
+                  class="textarea textarea-bordered w-full min-h-24"
+                  required
+                  minlength="10"
+                  maxlength="5000"
+                ></textarea>
+                <p class="text-xs text-base-content/60 mt-1">
+                  Minimum 10 characters • Maximum 5000 characters
+                </p>
+              </div>
+
+              <div class="modal-action">
+                <form method="dialog">
+                  <button class="btn btn-ghost">Cancel</button>
+                </form>
+                <button
+                  type="submit"
+                  class="btn btn-warning"
+                  disabled={is_nil(@reporting_comment_id)}
+                >
+                  Submit Report
+                </button>
+              </div>
+            </form>
+          </div>
+          <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+          </form>
+        </dialog>
+    </div>
     """
   end
 
@@ -888,7 +909,8 @@ defmodule UrielmWeb.ThreadLive do
 
   defp refresh_thread(socket, current_user) do
     thread_id = socket.assigns.thread.id
-    thread = Forum.get_thread!(thread_id)
+    # Fetch thread with comments for refresh (no view count increment)
+    thread = Forum.get_thread!(thread_id, include_comments?: true)
     comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)
 
     socket
@@ -897,16 +919,6 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   # comment tree handled by LiveHelpers.build_comment_tree/2
-
-  defp flatten_comments(tree) when is_list(tree) do
-    Enum.flat_map(tree, &flatten_comments/1)
-  end
-
-  defp flatten_comments(%{replies: replies} = comment) do
-    [comment | flatten_comments(replies)]
-  end
-
-  defp flatten_comments(nil), do: []
 
   defp pluralize(count, singular) do
     if count == 1 do

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme={@theme || "midnight"}>
+<html lang="en" data-theme={@theme || "midnight"} class="scroll-smooth overflow-y-scroll">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -7,6 +7,23 @@
     <.live_title default="Urielm" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
+
+    <%= if assigns[:meta_description] do %>
+      <meta name="description" content={@meta_description} />
+    <% end %>
+
+    <%= if assigns[:canonical_url] do %>
+      <link rel="canonical" href={@canonical_url} />
+    <% end %>
+
+    <%= if assigns[:og_title] do %>
+      <meta property="og:title" content={@og_title} />
+      <meta property="og:description" content={@meta_description || "Urielm"} />
+      <meta property="og:url" content={@canonical_url || ""} />
+      <meta property="og:type" content={assigns[:og_type] || "website"} />
+      <meta property="og:site_name" content="Urielm" />
+    <% end %>
+
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>

@@ -78,6 +78,8 @@ import CodeSnippetCard from "../svelte/CodeSnippetCard.svelte"
 import ThemeToggle from "../svelte/ThemeToggle.svelte"
 import ThemeSelector from "../svelte/ThemeSelector.svelte"
 import SubNav from "../svelte/SubNav.svelte"
+import UnderlineNav from "../svelte/UnderlineNav.svelte"
+import YouTubeEmbed from "../svelte/YouTubeEmbed.svelte"
 import AuthModal from "../svelte/AuthModal.svelte"
 import UserMenu from "../svelte/UserMenu.svelte"
 import GoogleSignInButton from "../svelte/GoogleSignInButton.svelte"
@@ -138,6 +140,16 @@ const CopyToClipboard = {
   }
 }
 
+// Open modal hook
+window.addEventListener("phx:open_modal", (e) => {
+  const modalId = e.detail.id
+  const modal = document.getElementById(modalId)
+  if (modal && modal.tagName === "DIALOG") {
+    modal.showModal()
+    modal.classList.add("modal-open")
+  }
+})
+
 // Close modal hook
 window.addEventListener("phx:close_modal", (e) => {
   const modalId = e.detail.id
@@ -175,6 +187,73 @@ document.addEventListener("DOMContentLoaded", () => {
   observer.observe(document.body, { childList: true, subtree: true })
 })
 
+// Custom hooks
+const SigninForm = {
+  mounted() {
+    this.el.addEventListener("submit", async (e) => {
+      e.preventDefault()
+
+      const formData = new FormData(e.target)
+      const email = formData.get("email")
+      const password = formData.get("password")
+
+      try {
+        const response = await fetch("/auth/signin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || ""
+          },
+          body: JSON.stringify({ email, password })
+        })
+
+        if (response.ok) {
+          window.location.href = "/"
+        } else {
+          const data = await response.json()
+          this.pushEvent("signin_error", { error: data.error || "Authentication failed" })
+        }
+      } catch (error) {
+        this.pushEvent("signin_error", { error: "Network error. Please try again." })
+      }
+    })
+  }
+}
+
+const SignupForm = {
+  mounted() {
+    this.el.addEventListener("submit", async (e) => {
+      e.preventDefault()
+
+      const formData = new FormData(e.target)
+      const email = formData.get("email")
+      const password = formData.get("password")
+      const username = formData.get("username")
+      const displayName = formData.get("displayName")
+
+      try {
+        const response = await fetch("/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || ""
+          },
+          body: JSON.stringify({ email, password, username, displayName })
+        })
+
+        if (response.ok) {
+          window.location.href = "/"
+        } else {
+          const data = await response.json()
+          this.pushEvent("signup_error", { error: data.error || "Signup failed" })
+        }
+      } catch (error) {
+        this.pushEvent("signup_error", { error: "Network error. Please try again." })
+      }
+    })
+  }
+}
+
 // Register Svelte components as LiveView hooks
 let Hooks = getHooks({
   Counter,
@@ -183,6 +262,8 @@ let Hooks = getHooks({
   ThemeToggle,
   ThemeSelector,
   SubNav,
+  UnderlineNav,
+  YouTubeEmbed,
   AuthModal,
   UserMenu,
   GoogleSignInButton,
@@ -197,9 +278,72 @@ let Hooks = getHooks({
   MarkdownInput
 })
 
+// Syntax highlighting hook for blog code blocks
+const HighlightCode = {
+  mounted() {
+    this.highlight()
+  },
+  updated() {
+    this.highlight()
+  },
+  highlight() {
+    if (window.hljs) {
+      this.el.querySelectorAll('pre code').forEach((block) => {
+        window.hljs.highlightElement(block)
+      })
+    }
+  }
+}
+
+// Navbar active link updater (works with phx-update="ignore")
+const NavbarActiveLinks = {
+  mounted() {
+    this.updateActiveLinks()
+
+    // Listen for LiveView navigation
+    window.addEventListener('phx:page-loading-stop', () => {
+      this.updateActiveLinks()
+    })
+  },
+
+  updateActiveLinks() {
+    const path = window.location.pathname
+
+    // Map paths to page identifiers
+    let activePage = 'home'
+    if (path.startsWith('/blog')) activePage = 'blog'
+    else if (path.startsWith('/prompts')) activePage = 'prompts'
+    else if (path.startsWith('/forum') || path.startsWith('/u/')) activePage = 'community'
+    else if (path.startsWith('/courses') || path.startsWith('/videos') || path.startsWith('/lessons')) activePage = 'videos'
+
+    // Update all nav links
+    this.el.querySelectorAll('a[href]').forEach(link => {
+      const href = link.getAttribute('href')
+      const isActive =
+        (activePage === 'home' && href === '/') ||
+        (activePage === 'blog' && href === '/blog') ||
+        (activePage === 'prompts' && href === '/prompts') ||
+        (activePage === 'community' && href === '/forum') ||
+        (activePage === 'videos' && href === '/courses')
+
+      if (isActive) {
+        link.classList.add('text-primary', 'font-bold')
+        link.classList.remove('text-base-content')
+      } else {
+        link.classList.remove('text-primary', 'font-bold')
+        link.classList.add('text-base-content')
+      }
+    })
+  }
+}
+
 // Add custom hooks
 Hooks.InfiniteScroll = InfiniteScroll
 Hooks.CopyToClipboard = CopyToClipboard
+Hooks.SigninForm = SigninForm
+Hooks.SignupForm = SignupForm
+Hooks.HighlightCode = HighlightCode
+Hooks.NavbarActiveLinks = NavbarActiveLinks
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
