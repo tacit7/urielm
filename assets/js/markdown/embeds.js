@@ -18,9 +18,9 @@ export function escapeAttr(value) {
 export function processEmbeds(htmlContent) {
   let processed = htmlContent
 
-  // YouTube embeds
+  // YouTube embeds (but not if already inside href, src, or other attributes)
   processed = processed.replace(
-    /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/g,
+    /(?<!["'`=])https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?!["'`])/g,
     (match, videoId) => {
       const safeVideoId = escapeAttr(videoId)
       return `

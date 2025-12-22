@@ -337,9 +337,24 @@ const NavbarActiveLinks = {
   }
 }
 
+// Expanding textarea hook
+const ExpandingTextarea = {
+  mounted() {
+    this.el.addEventListener('focus', () => {
+      this.el.rows = 3
+    })
+    this.el.addEventListener('blur', () => {
+      if (!this.el.value) {
+        this.el.rows = 1
+      }
+    })
+  }
+}
+
 // Add custom hooks
 Hooks.InfiniteScroll = InfiniteScroll
 Hooks.CopyToClipboard = CopyToClipboard
+Hooks.ExpandingTextarea = ExpandingTextarea
 Hooks.SigninForm = SigninForm
 Hooks.SignupForm = SignupForm
 Hooks.HighlightCode = HighlightCode

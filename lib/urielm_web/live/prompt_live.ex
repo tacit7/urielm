@@ -7,7 +7,14 @@ defmodule UrielmWeb.PromptLive do
   alias Urielm.Content.Comment
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
+    id = child_params["id"]
     prompt = Content.get_prompt_with_comments(String.to_integer(id))
 
     {:ok,

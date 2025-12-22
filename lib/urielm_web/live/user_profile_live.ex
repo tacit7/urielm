@@ -7,7 +7,14 @@ defmodule UrielmWeb.UserProfileLive do
   alias UrielmWeb.LiveHelpers
 
   @impl true
-  def mount(%{"username" => username}, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
+    username = child_params["username"]
     user = Accounts.get_user_by_username(username)
 
     case user do

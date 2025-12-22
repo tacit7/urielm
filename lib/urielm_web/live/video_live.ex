@@ -59,6 +59,7 @@ defmodule UrielmWeb.VideoLive do
          |> assign(:comment_tree, comment_tree)
          |> assign(:nav_items, nav_items)
          |> assign(:active_section, "description")
+         |> assign(:reporting_comment_id, nil)
          |> assign_meta_tags(video, slug)}
       end
     end
@@ -276,6 +277,42 @@ defmodule UrielmWeb.VideoLive do
     end
   end
 
+  @impl true
+  def handle_event("open_report_comment", %{"comment_id" => comment_id}, socket) do
+    {:noreply,
+     socket
+     |> assign(:reporting_comment_id, comment_id)
+     |> push_event("open_modal", %{"id" => "report_comment_modal"})}
+  end
+
+  @impl true
+  def handle_event("report_comment", %{"comment_id" => comment_id, "reason" => reason, "description" => description}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to report")}
+
+      user ->
+        case Forum.create_report(user.id, "comment", comment_id, %{
+          reason: reason,
+          description: description
+        }) do
+          {:ok, _report} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Report submitted successfully")
+             |> push_event("close_modal", %{"id" => "report_comment_modal"})}
+
+          {:error, :unique_constraint} ->
+            {:noreply, put_flash(socket, :error, "You've already reported this")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to submit report")}
+        end
+    end
+  end
+
   defp refresh_video_comments(socket, user) do
     thread = Forum.get_thread!(socket.assigns.thread.id, include_comments?: true)
     comment_tree = LiveHelpers.build_comment_tree(thread.comments, user)
@@ -413,13 +450,13 @@ defmodule UrielmWeb.VideoLive do
                   <div class="flex-1">
                     <form phx-submit="create_comment" class="space-y-3">
                       <textarea
+                        id="video-comment-input"
                         name="body"
                         placeholder="Add a comment..."
                         required
+                        phx-hook="ExpandingTextarea"
                         class="textarea textarea-ghost w-full focus:textarea-bordered bg-transparent resize-none"
                         rows="1"
-                        onfocus="this.rows=3"
-                        onblur="if(!this.value) this.rows=1"
                       ></textarea>
                       <div class="flex justify-end gap-2">
                         <button type="submit" class="btn btn-primary btn-sm">Comment</button>
@@ -454,6 +491,55 @@ defmodule UrielmWeb.VideoLive do
               />
             </div>
           <% end %>
+
+          <!-- Report Comment Modal -->
+          <dialog id="report_comment_modal" class="modal">
+            <div class="modal-box bg-base-200">
+              <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+              </form>
+              <h3 class="font-bold text-lg mb-4">Report Comment</h3>
+              <form phx-submit="report_comment" class="space-y-4">
+                <input type="hidden" name="comment_id" value={@reporting_comment_id} />
+
+                <div>
+                  <label class="label">
+                    <span class="label-text">Reason</span>
+                  </label>
+                  <select name="reason" class="select select-bordered w-full" required>
+                    <option value="">Select a reason</option>
+                    <option value="spam">Spam</option>
+                    <option value="abuse">Abuse</option>
+                    <option value="offensive">Offensive</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="label">
+                    <span class="label-text">Description</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    placeholder="Explain why you're reporting this comment..."
+                    class="textarea textarea-bordered w-full min-h-24"
+                    required
+                    minlength="10"
+                  ></textarea>
+                </div>
+
+                <div class="modal-action">
+                  <button type="button" class="btn btn-ghost" onclick="document.getElementById('report_comment_modal').close()">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-error">Submit Report</button>
+                </div>
+              </form>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+              <button>close</button>
+            </form>
+          </dialog>
         </div>
     </div>
     """

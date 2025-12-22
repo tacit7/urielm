@@ -6,7 +6,15 @@ defmodule UrielmWeb.ThreadLive do
   alias UrielmWeb.LiveHelpers
 
   @impl true
-  def mount(%{"thread_id" => id}, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
+    id = child_params["thread_id"]
+
     # Fetch thread with comments for the thread page
     thread = Forum.get_thread!(id, include_comments?: true)
     comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)

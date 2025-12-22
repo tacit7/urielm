@@ -8,25 +8,26 @@ defmodule UrielmWeb.BoardLive do
   @page_size 20
 
   @impl true
-  def mount(%{"board_slug" => slug}, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
+    slug = child_params["board_slug"]
     board = Forum.get_board!(slug)
     categories = Forum.list_categories_with_boards()
 
-    {:ok,
-     socket
-     |> assign(:page_title, board.name)
-     |> assign(:board, board)
-     |> assign(:all_categories, categories)
-     |> assign(:sort, "new")
-     |> assign(:page, 1)}
-  end
+    sort = Map.get(child_params, "sort", "latest")
+    filter = Map.get(child_params, "filter", "all")
+    page = case child_params["page"] do
+      nil -> 1
+      p when is_binary(p) -> String.to_integer(p)
+      p when is_integer(p) -> p
+    end
 
-  @impl true
-  def handle_params(params, _uri, socket) do
-    sort = Map.get(params, "sort", "latest")
-    filter = Map.get(params, "filter", "all")
-    page = Map.get(params, "page", "1") |> String.to_integer()
-    %{board: board, current_user: user} = socket.assigns
+    user = socket.assigns[:current_user]
 
     {threads, meta} =
       case filter do
@@ -69,8 +70,11 @@ defmodule UrielmWeb.BoardLive do
           end
       end
 
-    {:noreply,
+    {:ok,
      socket
+     |> assign(:page_title, board.name)
+     |> assign(:board, board)
+     |> assign(:all_categories, categories)
      |> assign(:sort, sort)
      |> assign(:filter, filter)
      |> assign(:page, page)
