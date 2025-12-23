@@ -51,6 +51,10 @@ defmodule UrielmWeb.Router do
   scope "/", UrielmWeb do
     pipe_through :browser
 
+    # Short URLs for sharing
+    get "/p/:id", ShortUrlController, :prompt
+    get "/v/:id", ShortUrlController, :video
+
     # Auth pages - outside shell, use their own layout
     live_session :auth do
       live "/signin", SigninLive

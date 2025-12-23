@@ -582,6 +582,10 @@ defmodule Urielm.Content do
       %Video{}
 
   """
+  def get_video(id) do
+    Repo.get(Video, id)
+  end
+
   def get_video_by_slug!(slug) do
     Repo.get_by!(Video, slug: slug)
     |> Repo.preload(:thread)
