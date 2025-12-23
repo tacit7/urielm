@@ -68,6 +68,15 @@ defmodule UrielmWeb.PromptsLive do
 
   @impl true
   def handle_event("filter_changed", %{"category" => category}, socket) do
+    handle_filter_change(category, socket)
+  end
+
+  @impl true
+  def handle_event("tab_change", %{"key" => key}, socket) do
+    handle_filter_change(key, socket)
+  end
+
+  defp handle_filter_change(category, socket) do
     %{search_query: query} = socket.assigns
     opts = build_search_opts(category, 0)
 
@@ -233,6 +242,13 @@ defmodule UrielmWeb.PromptsLive do
     end
   end
 
+  defp build_nav_items(categories) do
+    [%{key: "all", label: "All"}] ++
+      Enum.map(categories, fn cat ->
+        %{key: cat, label: cat}
+      end)
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -240,14 +256,25 @@ defmodule UrielmWeb.PromptsLive do
       <input id="prompt-drawer-toggle" type="checkbox" class="drawer-toggle" checked={@selected_prompt != nil} />
 
       <div class="drawer-content min-h-screen bg-base-100 text-base-content">
-        <.SubNav activeFilter={@current_filter} categories={@categories} socket={@socket} />
-
-        <div class="container mx-auto px-4 py-8 pt-16">
-          <div class="mb-8">
+        <div class="container mx-auto px-4 py-8">
+          <div class="mb-6">
             <h1 class="text-4xl font-bold mb-2 text-base-content">Prompts</h1>
             <p class="text-base-content/60">
               Curated collection of AI prompts and templates
             </p>
+          </div>
+
+          <div class="mb-6 border-b border-base-300">
+            <.svelte
+              name="UnderlineNav"
+              props={%{
+                items: build_nav_items(@categories),
+                activeKey: @current_filter,
+                showCounts: false,
+                size: "md"
+              }}
+              socket={@socket}
+            />
           </div>
 
           <div class="mb-6">

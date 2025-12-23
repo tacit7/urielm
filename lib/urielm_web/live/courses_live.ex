@@ -49,10 +49,10 @@ defmodule UrielmWeb.CoursesLive do
       </.swimlane>
 
       <section class="mb-10">
-        <div class="flex items-center justify-between px-4 md:px-8 mb-4">
+        <div class="flex items-center justify-between px-6 md:px-12 lg:px-20 mb-4">
           <h2 class="text-xl font-bold text-base-content">Videos</h2>
         </div>
-        <div id="videos-grid" phx-update="stream" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 md:px-8">
+        <div id="videos-grid" phx-update="stream" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 md:px-12 lg:px-20">
           <.video_card :for={{dom_id, video} <- @streams.videos} id={dom_id} video={video} />
         </div>
         <%= if @has_more_videos do %>
