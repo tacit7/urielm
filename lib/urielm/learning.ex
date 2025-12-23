@@ -11,7 +11,12 @@ defmodule Urielm.Learning do
   Returns the list of courses.
   """
   def list_courses do
-    Repo.all(Course)
+    first_lesson_query = from l in Lesson,
+      where: l.lesson_number == 1
+
+    Course
+    |> preload(lessons: ^first_lesson_query)
+    |> Repo.all()
   end
 
   @doc """

@@ -96,11 +96,12 @@ import MarkdownInput from "../svelte/MarkdownInput.svelte"
 // Infinite scroll hook
 const InfiniteScroll = {
   mounted() {
+    const eventName = this.el.dataset.event || "load_more"
     this.observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
         if (entry.isIntersecting) {
-          this.pushEvent("load_more", {})
+          this.pushEvent(eventName, {})
         }
       },
       {
@@ -359,6 +360,19 @@ Hooks.SigninForm = SigninForm
 Hooks.SignupForm = SignupForm
 Hooks.HighlightCode = HighlightCode
 Hooks.NavbarActiveLinks = NavbarActiveLinks
+
+// Horizontal scroll for carousels/swimlanes
+Hooks.HorizontalScroll = {
+  mounted() {
+    const scrollAmount = 320 // ~1 card width
+    this.el.addEventListener("scroll-left", () => {
+      this.el.scrollBy({ left: -scrollAmount, behavior: "smooth" })
+    })
+    this.el.addEventListener("scroll-right", () => {
+      this.el.scrollBy({ left: scrollAmount, behavior: "smooth" })
+    })
+  }
+}
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

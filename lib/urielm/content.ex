@@ -596,12 +596,19 @@ defmodule Urielm.Content do
       [%Video{}, ...]
 
   """
-  def list_published_videos do
-    from(v in Video,
+  def list_published_videos(opts \\ []) do
+    limit = Keyword.get(opts, :limit)
+    offset = Keyword.get(opts, :offset, 0)
+
+    query = from(v in Video,
       where: not is_nil(v.published_at),
-      order_by: [desc: v.published_at, desc: v.id]
+      order_by: [desc: v.published_at, desc: v.id],
+      offset: ^offset
     )
-    |> Repo.all()
+
+    query = if limit, do: from(q in query, limit: ^limit), else: query
+
+    Repo.all(query)
   end
 
   @doc """
