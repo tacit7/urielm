@@ -25,90 +25,94 @@ defmodule UrielmWeb.UserProfileLive do
         {:ok, socket |> put_flash(:error, "User not found") |> redirect(to: ~p"/")}
 
       user ->
+        tab = Map.get(child_params, "tab", "threads")
+        page = case child_params["page"] do
+          nil -> 1
+          p when is_binary(p) -> String.to_integer(p)
+          p when is_integer(p) -> p
+        end
+        section = Map.get(child_params, "section", "account")
+        user_id = user.id
+
         stats = Accounts.get_user_stats(user.id)
         current_user = socket.assigns.current_user
         is_following = current_user && Accounts.is_following?(current_user.id, user.id)
 
         changeset = Accounts.change_user_profile(user)
 
-        {:ok,
-         socket
-         |> assign(:page_title, "@#{user.username}")
-         |> assign(:user, user)
-         |> assign(:stats, stats)
-         |> assign(:is_following, is_following || false)
-         |> assign(:active_tab, "threads")
-         |> assign(:threads, [])
-         |> assign(:comments, [])
-         |> assign(:threads_meta, nil)
-         |> assign(:comments_meta, nil)
-         |> assign(:preferences_section, "account")
-         |> assign(:form, to_form(changeset))
-         |> assign(:editing_username, false)
-         |> assign(:editing_display_name, false)
-         |> assign(:show_delete_confirm, false)}
+        socket =
+          socket
+          |> assign(:page_title, "@#{user.username}")
+          |> assign(:user, user)
+          |> assign(:stats, stats)
+          |> assign(:is_following, is_following || false)
+          |> assign(:active_tab, tab)
+          |> assign(:preferences_section, section)
+          |> assign(:form, to_form(changeset))
+          |> assign(:editing_username, false)
+          |> assign(:editing_display_name, false)
+          |> assign(:show_delete_confirm, false)
+
+        socket =
+          case tab do
+            "preferences" ->
+              socket
+              |> assign(:threads, [])
+              |> assign(:comments, [])
+              |> assign(:threads_meta, nil)
+              |> assign(:comments_meta, nil)
+
+            "threads" ->
+              case Forum.paginate_threads_by_author(user_id, %{
+                     page: page,
+                     page_size: 20,
+                     order_by: [:inserted_at],
+                     order_directions: [:desc]
+                   }) do
+                {:ok, {threads, meta}} ->
+                  assign(socket,
+                    threads:
+                      Enum.map(
+                        threads,
+                        &LiveHelpers.serialize_thread_card(&1, current_user)
+                      ),
+                    threads_meta: meta,
+                    comments: [],
+                    comments_meta: nil
+                  )
+
+                {:error, _} ->
+                  assign(socket, threads: [], threads_meta: nil, comments: [], comments_meta: nil)
+              end
+
+            "comments" ->
+              case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
+                {:ok, {comments, meta}} ->
+                  assign(socket,
+                    comments:
+                      Enum.map(
+                        comments,
+                        &LiveHelpers.serialize_comment(&1, current_user)
+                      ),
+                    comments_meta: meta,
+                    threads: [],
+                    threads_meta: nil
+                  )
+
+                {:error, _} ->
+                  assign(socket, comments: [], comments_meta: nil, threads: [], threads_meta: nil)
+              end
+
+            _ ->
+              socket
+              |> assign(:threads, [])
+              |> assign(:comments, [])
+              |> assign(:threads_meta, nil)
+              |> assign(:comments_meta, nil)
+          end
+
+        {:ok, socket}
     end
-  end
-
-  @impl true
-  def handle_params(params, _uri, socket) do
-    tab = Map.get(params, "tab", "threads")
-    page = Map.get(params, "page", "1") |> String.to_integer()
-    section = Map.get(params, "section", "account")
-    user_id = socket.assigns.user.id
-
-    socket =
-      socket
-      |> assign(:active_tab, tab)
-      |> assign(:preferences_section, section)
-
-    socket =
-      case tab do
-        "preferences" ->
-          socket
-
-        "threads" ->
-          case Forum.paginate_threads_by_author(user_id, %{
-                 page: page,
-                 page_size: 20,
-                 order_by: [:inserted_at],
-                 order_directions: [:desc]
-               }) do
-            {:ok, {threads, meta}} ->
-              assign(socket,
-                threads:
-                  Enum.map(
-                    threads,
-                    &LiveHelpers.serialize_thread_card(&1, socket.assigns.current_user)
-                  ),
-                threads_meta: meta
-              )
-
-            {:error, _} ->
-              assign(socket, threads: [], threads_meta: nil)
-          end
-
-        "comments" ->
-          case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
-            {:ok, {comments, meta}} ->
-              assign(socket,
-                comments:
-                  Enum.map(
-                    comments,
-                    &LiveHelpers.serialize_comment(&1, socket.assigns.current_user)
-                  ),
-                comments_meta: meta
-              )
-
-            {:error, _} ->
-              assign(socket, comments: [], comments_meta: nil)
-          end
-
-        _ ->
-          socket
-      end
-
-    {:noreply, socket}
   end
 
   @impl true

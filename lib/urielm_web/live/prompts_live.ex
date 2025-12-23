@@ -7,7 +7,13 @@ defmodule UrielmWeb.PromptsLive do
   @page_size 20
 
   @impl true
-  def mount(params, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
     categories = [
       "Analyze Text",
       "Coaching",
@@ -29,7 +35,7 @@ defmodule UrielmWeb.PromptsLive do
     ]
 
     # Get category from URL params if present
-    initial_filter = Map.get(params, "category", "all")
+    initial_filter = Map.get(child_params, "category", "all")
     opts = build_search_opts(initial_filter, 0)
     prompts = Content.search_prompts("", opts)
 
@@ -230,154 +236,152 @@ defmodule UrielmWeb.PromptsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100 text-base-content">
-      <.SubNav activeFilter={@current_filter} categories={@categories} socket={@socket} />
+    <div class={["drawer drawer-end", @selected_prompt && "drawer-open"]}>
+      <input id="prompt-drawer-toggle" type="checkbox" class="drawer-toggle" checked={@selected_prompt != nil} />
 
-      <div class="container mx-auto px-4 py-8 pt-16">
-            <div class="mb-8">
-              <h1 class="text-4xl font-bold mb-2 text-base-content">Prompts</h1>
-              <p class="text-base-content/60">
-                Curated collection of AI prompts and templates
-              </p>
+      <div class="drawer-content min-h-screen bg-base-100 text-base-content">
+        <.SubNav activeFilter={@current_filter} categories={@categories} socket={@socket} />
+
+        <div class="container mx-auto px-4 py-8 pt-16">
+          <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2 text-base-content">Prompts</h1>
+            <p class="text-base-content/60">
+              Curated collection of AI prompts and templates
+            </p>
+          </div>
+
+          <div class="mb-6">
+            <form phx-change="search" phx-submit="search" class="w-full">
+              <.input
+                type="text"
+                name="query"
+                value={@search_query}
+                placeholder="Search prompts, e.g. &quot;tiktok hooks&quot;, &quot;email subject line&quot;"
+                class="input input-bordered w-full"
+                phx-debounce="300"
+              />
+            </form>
+          </div>
+
+          <div id="prompts" phx-update="stream" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              id="empty-state"
+              class="hidden only:block col-span-full text-center py-12 text-base-content/50"
+            >
+              No prompts found.
             </div>
+            <div
+              :for={{id, prompt} <- @streams.prompts}
+              id={id}
+              class="card bg-base-200 border border-base-300 hover:bg-base-300 transition-colors cursor-pointer"
+              phx-click="open_prompt_modal"
+              phx-value-id={prompt.id}
+            >
+              <div class="card-body p-4 gap-3">
+                <h2 class="card-title text-base-content text-lg">
+                  {prompt.title}
+                </h2>
 
-            <div class="mb-6">
-              <form phx-change="search" phx-submit="search" class="w-full">
-                <.input
-                  type="text"
-                  name="query"
-                  value={@search_query}
-                  placeholder="Search prompts, e.g. &quot;tiktok hooks&quot;, &quot;email subject line&quot;"
-                  class="input input-bordered w-full"
-                  phx-debounce="300"
-                />
-              </form>
-            </div>
+                <%= if prompt.tags && prompt.tags != [] do %>
+                  <div class="flex flex-wrap gap-1">
+                    <%= for tag <- prompt.tags do %>
+                      <span class="badge badge-sm badge-secondary">{tag}</span>
+                    <% end %>
+                  </div>
+                <% end %>
 
-            <div id="prompts" phx-update="stream" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div
-                id="empty-state"
-                class="hidden only:block col-span-full text-center py-12 text-base-content/50"
-              >
-                No prompts found.
-              </div>
-              <div
-                :for={{id, prompt} <- @streams.prompts}
-                id={id}
-                class="card bg-base-200 border border-base-300 hover:bg-base-300 transition-colors cursor-pointer"
-                phx-click="open_prompt_modal"
-                phx-value-id={prompt.id}
-              >
-                <div class="card-body p-4 gap-3">
-                  <h2 class="card-title text-base-content text-lg">
-                    {prompt.title}
-                  </h2>
-
-                  <%= if prompt.tags && prompt.tags != [] do %>
-                    <div class="flex flex-wrap gap-1">
-                      <%= for tag <- prompt.tags do %>
-                        <span class="badge badge-sm badge-secondary">{tag}</span>
-                      <% end %>
-                    </div>
-                  <% end %>
-
-                  <p :if={prompt.prompt} class="text-sm text-base-content/60 line-clamp-3">
-                    {prompt.prompt}
-                  </p>
-                </div>
+                <p :if={prompt.prompt} class="text-sm text-base-content/60 line-clamp-3">
+                  {prompt.prompt}
+                </p>
               </div>
             </div>
+          </div>
 
-            <%= if @has_more do %>
-              <div
-                id="infinite-scroll-marker"
-                phx-hook="InfiniteScroll"
-                class="h-20 flex items-center justify-center"
-              >
-                <div class="text-base-content/40 text-sm">Loading more...</div>
-              </div>
-            <% end %>
+          <%= if @has_more do %>
+            <div
+              id="infinite-scroll-marker"
+              phx-hook="InfiniteScroll"
+              class="h-20 flex items-center justify-center"
+            >
+              <div class="text-base-content/40 text-sm">Loading more...</div>
+            </div>
+          <% end %>
+        </div>
       </div>
 
-      <%= if @selected_prompt do %>
-        <dialog class="modal modal-open">
-          <div class="modal-box max-w-3xl bg-base-200">
-            <form method="dialog">
+      <div class="drawer-side z-50">
+        <label
+          for="prompt-drawer-toggle"
+          aria-label="close sidebar"
+          class="drawer-overlay"
+          phx-click="close_prompt_modal"
+        ></label>
+
+        <div class="bg-base-200 min-h-full w-full max-w-2xl">
+          <%= if @selected_prompt do %>
+            <div class="sticky top-0 bg-base-200 border-b border-base-300 p-4 flex items-center justify-between z-10">
+              <h3 class="font-bold text-xl text-base-content truncate pr-4">
+                {@selected_prompt.title}
+              </h3>
               <button
                 phx-click="close_prompt_modal"
-                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                aria-label="Close"
+                class="btn btn-sm btn-circle btn-ghost"
+                aria-label="Close drawer"
               >
-                <.um_icon name="close" class="w-4 h-4" />
+                <.um_icon name="close" class="w-5 h-5" />
               </button>
-            </form>
+            </div>
 
-            <h3 class="font-bold text-2xl text-base-content mb-4">{@selected_prompt.title}</h3>
+            <div class="p-6">
+              <%= if @selected_prompt.tags && @selected_prompt.tags != [] do %>
+                <div class="mb-4 flex flex-wrap gap-2">
+                  <%= for tag <- @selected_prompt.tags do %>
+                    <span class="badge badge-secondary">{tag}</span>
+                  <% end %>
+                </div>
+              <% end %>
 
-            <%= if @selected_prompt.tags && @selected_prompt.tags != [] do %>
-              <div class="mb-4 flex flex-wrap gap-2">
-                <%= for tag <- @selected_prompt.tags do %>
-                  <span class="badge badge-secondary">{tag}</span>
-                <% end %>
-              </div>
-            <% end %>
+              <%= if @selected_prompt.prompt do %>
+                <div class="bg-base-300 rounded-lg p-4 mb-6">
+                  <.svelte
+                    name="MarkdownRenderer"
+                    props={%{content: @selected_prompt.prompt}}
+                    socket={@socket}
+                  />
+                </div>
 
-            <%= if @selected_prompt.prompt do %>
-              <div class="bg-base-300 rounded-lg p-4 mb-4">
-                <.svelte
-                  name="MarkdownRenderer"
-                  props={%{content: @selected_prompt.prompt}}
-                  socket={@socket}
-                />
-              </div>
-              <div class="flex gap-4 items-center">
-                <.svelte
-                  name="PromptActions"
-                  props={
-                    %{
-                      likesCount: Map.get(@selected_prompt, :likes_count, 0),
-                      savesCount: Map.get(@selected_prompt, :saves_count, 0),
-                      userLiked: Map.get(@selected_prompt, :user_liked, false),
-                      userSaved: Map.get(@selected_prompt, :user_saved, false),
-                      promptId: to_string(@selected_prompt.id),
-                      detailUrl: ~p"/prompts/#{@selected_prompt.id}",
-                      live: @socket
+                <div class="flex gap-4 items-center border-t border-base-300 pt-4">
+                  <.svelte
+                    name="PromptActions"
+                    props={
+                      %{
+                        likesCount: Map.get(@selected_prompt, :likes_count, 0),
+                        savesCount: Map.get(@selected_prompt, :saves_count, 0),
+                        userLiked: Map.get(@selected_prompt, :user_liked, false),
+                        userSaved: Map.get(@selected_prompt, :user_saved, false),
+                        promptId: to_string(@selected_prompt.id),
+                        detailUrl: ~p"/prompts/#{@selected_prompt.id}",
+                        live: @socket
+                      }
                     }
-                  }
-                  socket={@socket}
-                >
-                  <button
-                    id="copy-prompt-btn"
-                    phx-hook="CopyToClipboard"
-                    data-text={@selected_prompt.prompt}
-                    class="flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors"
-                    title="Copy to clipboard"
+                    socket={@socket}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                    <button
+                      id="copy-prompt-btn"
+                      phx-hook="CopyToClipboard"
+                      data-text={@selected_prompt.prompt}
+                      class="flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors"
+                      title="Copy to clipboard"
                     >
-                      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
-                      </path>
-                      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                    </svg>
-                  </button>
-                </.svelte>
-              </div>
-            <% end %>
-          </div>
-          <form method="dialog" class="modal-backdrop">
-            <button phx-click="close_prompt_modal">close</button>
-          </form>
-        </dialog>
-      <% end %>
+                      <.um_icon name="hero-clipboard-document" class="w-5 h-5" />
+                    </button>
+                  </.svelte>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
     """
   end

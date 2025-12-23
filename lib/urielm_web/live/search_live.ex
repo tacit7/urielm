@@ -8,39 +8,42 @@ defmodule UrielmWeb.SearchLive do
   @page_size 20
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
+    query = Map.get(child_params, "q", "")
+    page = case child_params["page"] do
+      nil -> 1
+      p when is_binary(p) -> String.to_integer(p)
+      p when is_integer(p) -> p
+    end
+
+    socket =
+      if String.length(String.trim(query)) > 0 do
+        {:ok, {results, meta}} =
+          Forum.paginate_search_threads(query, %{page: page, page_size: @page_size})
+
+        socket
+        |> assign(:query, query)
+        |> assign(:page, page)
+        |> assign(:meta, meta)
+        |> stream(:results, serialize_threads(results, socket.assigns.current_user), reset: true)
+      else
+        socket
+        |> assign(:query, query)
+        |> assign(:page, page)
+        |> assign(:meta, nil)
+        |> stream(:results, [], reset: true)
+      end
+
     {:ok,
      socket
      |> assign(:page_title, "Search Forum")
-     |> assign(:query, "")
-     |> assign(:page, 0)
-     |> assign(:has_more, false)
-     |> stream(:results, [])}
-  end
-
-  @impl true
-  def handle_params(params, _uri, socket) do
-    query = Map.get(params, "q", "")
-    page = Map.get(params, "page", "1") |> String.to_integer()
-
-    if String.length(String.trim(query)) > 0 do
-      {:ok, {results, meta}} =
-        Forum.paginate_search_threads(query, %{page: page, page_size: @page_size})
-
-      {:noreply,
-       socket
-       |> assign(:query, query)
-       |> assign(:page, page)
-       |> assign(:meta, meta)
-       |> stream(:results, serialize_threads(results, socket.assigns.current_user), reset: true)}
-    else
-      {:noreply,
-       socket
-       |> assign(:query, query)
-       |> assign(:page, page)
-       |> assign(:meta, nil)
-       |> stream(:results, [], reset: true)}
-    end
+     |> assign(:has_more, false)}
   end
 
   @impl true

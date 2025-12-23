@@ -9,10 +9,12 @@ defmodule UrielmWeb.VideoLive do
   @impl true
   def mount(params, session, socket) do
     # Handle both direct mount and child mount via live_render
-    slug = case params do
-      %{"slug" => slug} -> slug
-      :not_mounted_at_router -> session["child_params"]["slug"]
+    child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
     end
+
+    slug = child_params["slug"]
 
     video =
       try do

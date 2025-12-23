@@ -3,7 +3,13 @@ defmodule UrielmWeb.CoursesLive do
   alias Urielm.Learning
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, session, socket) do
+    # Handle both direct mount and child mount via live_render
+    _child_params = case params do
+      :not_mounted_at_router -> session["child_params"] || %{}
+      params -> params
+    end
+
     courses = Learning.list_courses()
 
     {:ok,
