@@ -256,7 +256,7 @@ defmodule UrielmWeb.PromptsLive do
                 type="text"
                 name="query"
                 value={@search_query}
-                placeholder="Search prompts, e.g. &quot;tiktok hooks&quot;, &quot;email subject line&quot;"
+                placeholder="Search prompts, e.g. 'tiktok hooks', 'email subject line'"
                 class="input input-bordered w-full"
                 phx-debounce="300"
               />
@@ -320,9 +320,14 @@ defmodule UrielmWeb.PromptsLive do
         <div class="bg-base-200 min-h-full w-full max-w-2xl">
           <%= if @selected_prompt do %>
             <div class="sticky top-0 bg-base-200 border-b border-base-300 p-4 flex items-center justify-between z-10">
-              <h3 class="font-bold text-xl text-base-content truncate pr-4">
-                {@selected_prompt.title}
-              </h3>
+              <div class="flex-1 min-w-0 pr-4">
+                <h3 class="font-bold text-xl text-base-content truncate">
+                  {@selected_prompt.title}
+                </h3>
+                <.link navigate={~p"/prompts/#{@selected_prompt.id}"} class="text-sm link link-primary">
+                  View full page →
+                </.link>
+              </div>
               <button
                 phx-click="close_prompt_modal"
                 class="btn btn-sm btn-circle btn-ghost"
@@ -360,8 +365,7 @@ defmodule UrielmWeb.PromptsLive do
                         userLiked: Map.get(@selected_prompt, :user_liked, false),
                         userSaved: Map.get(@selected_prompt, :user_saved, false),
                         promptId: to_string(@selected_prompt.id),
-                        detailUrl: ~p"/prompts/#{@selected_prompt.id}",
-                        live: @socket
+                        detailUrl: ~p"/prompts/#{@selected_prompt.id}"
                       }
                     }
                     socket={@socket}

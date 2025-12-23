@@ -306,6 +306,11 @@ end
 
 ## Additional Documentation
 
+**Required Reading Before Implementation:**
+- `docs/CODING_GUIDELINES.md` - Svelte 5, LiveView, and daisyUI conventions (READ FIRST)
+- `../docs/daisyui.md` - DaisyUI component reference for specific implementations (drawers, modals, etc.)
+
+**Other Resources:**
 - `README.md` - Setup instructions and examples
 - `AGENTS.md` - Phoenix usage rules and guidelines
 - `SESSION_CONTEXT.md` - Current session state and TODO items

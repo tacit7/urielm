@@ -183,8 +183,7 @@ defmodule UrielmWeb.PromptLive do
                         @current_user && Content.user_liked_prompt?(@current_user.id, @prompt.id),
                       userSaved:
                         @current_user && Content.user_saved_prompt?(@current_user.id, @prompt.id),
-                      promptId: to_string(@prompt.id),
-                      live: @socket
+                      promptId: to_string(@prompt.id)
                     }
                   }
                   socket={@socket}
