@@ -6,6 +6,7 @@ defmodule Urielm.Content.Video do
   @foreign_key_type :binary_id
 
   schema "videos" do
+    field :short_id, :integer, read_after_writes: true
     field :title, :string
     field :slug, :string
     field :youtube_url, :string

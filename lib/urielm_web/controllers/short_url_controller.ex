@@ -8,7 +8,7 @@ defmodule UrielmWeb.ShortUrlController do
   end
 
   def video(conn, %{"id" => id}) do
-    case Content.get_video(id) do
+    case Content.get_video_by_short_id(id) do
       nil ->
         conn
         |> put_flash(:error, "Video not found")

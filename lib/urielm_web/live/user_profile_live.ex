@@ -520,7 +520,7 @@ defmodule UrielmWeb.UserProfileLive do
                           <% end %>
                         </p>
                         <div class="text-xs text-base-content/50">
-                          {Calendar.strftime(comment.created_at, "%b %d, %Y at %l:%M %p")}
+                          {Calendar.strftime(comment.created_at, "%b %d, %Y at %-I:%M %p")}
                         </div>
                       </div>
                     </div>

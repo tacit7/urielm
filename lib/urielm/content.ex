@@ -586,6 +586,17 @@ defmodule Urielm.Content do
     Repo.get(Video, id)
   end
 
+  def get_video_by_short_id(short_id) when is_integer(short_id) do
+    Repo.get_by(Video, short_id: short_id)
+  end
+
+  def get_video_by_short_id(short_id) when is_binary(short_id) do
+    case Integer.parse(short_id) do
+      {id, ""} -> get_video_by_short_id(id)
+      _ -> nil
+    end
+  end
+
   def get_video_by_slug!(slug) do
     Repo.get_by!(Video, slug: slug)
     |> Repo.preload(:thread)
