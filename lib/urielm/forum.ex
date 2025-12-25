@@ -154,10 +154,16 @@ defmodule Urielm.Forum do
   """
   def get_thread!(id, opts \\ []) do
     include_comments? = Keyword.get(opts, :include_comments?, false)
+    allow_removed? = Keyword.get(opts, :allow_removed?, false)
 
     thread =
       Repo.get!(Thread, id)
       |> preload_thread_meta()
+
+    # Block access to soft-deleted threads unless explicitly allowed (admin viewing)
+    if thread.is_removed and not allow_removed? do
+      raise Ecto.NoResultsError, queryable: Thread
+    end
 
     if include_comments? do
       comments = list_comments_with_authors(id)

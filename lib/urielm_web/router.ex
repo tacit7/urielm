@@ -74,11 +74,15 @@ defmodule UrielmWeb.Router do
       live "/courses/:course_slug/lessons/:lesson_slug", ShellLive, :lesson
       live "/videos/:slug", ShellLive, :video
       live "/themes", ShellLive, :themes
-      live "/forum", ShellLive, :forum
-      live "/forum/b/:board_slug", ShellLive, :board
-      live "/forum/t/:thread_id", ShellLive, :thread
-      live "/forum/search", ShellLive, :search
       live "/u/:username", ShellLive, :user_profile
+    end
+
+    # Forum pages - separate layout with sidebar navigation
+    live_session :forum do
+      live "/forum", ForumLive
+      live "/forum/b/:board_slug", BoardLive
+      live "/forum/t/:thread_id", ThreadLive
+      live "/forum/search", SearchLive
     end
 
     live_session :authenticated,

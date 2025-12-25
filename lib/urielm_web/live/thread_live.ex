@@ -6,18 +6,14 @@ defmodule UrielmWeb.ThreadLive do
   alias UrielmWeb.LiveHelpers
 
   @impl true
-  def mount(params, session, socket) do
-    # Handle both direct mount and child mount via live_render
-    child_params =
-      case params do
-        :not_mounted_at_router -> session["child_params"] || %{}
-        params -> params
-      end
-
-    id = child_params["thread_id"]
+  def mount(params, _session, socket) do
+    id = params["thread_id"]
+    user = socket.assigns.current_user
+    is_admin = user && user.is_admin
 
     # Fetch thread with comments for the thread page
-    thread = Forum.get_thread!(id, include_comments?: true)
+    # Admins can view soft-deleted threads; regular users cannot
+    thread = Forum.get_thread!(id, include_comments?: true, allow_removed?: is_admin)
     comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
 
     # Only track view count when connected (real page view)
@@ -553,6 +549,7 @@ defmodule UrielmWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100">
+      <Layouts.flash_group flash={@flash} />
       <div class="container mx-auto px-4 py-8 max-w-6xl">
         <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
           ← Back to {@thread.board_name}
@@ -918,8 +915,9 @@ defmodule UrielmWeb.ThreadLive do
 
   defp refresh_thread(socket, current_user) do
     thread_id = socket.assigns.thread.id
+    is_admin = current_user && current_user.is_admin
     # Fetch thread with comments for refresh (no view count increment)
-    thread = Forum.get_thread!(thread_id, include_comments?: true)
+    thread = Forum.get_thread!(thread_id, include_comments?: true, allow_removed?: is_admin)
     comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)
 
     socket

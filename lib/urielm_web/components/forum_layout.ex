@@ -1,6 +1,13 @@
 defmodule UrielmWeb.Components.ForumLayout do
   use UrielmWeb, :html
 
+  import UrielmWeb.Layouts, only: [flash_group: 1]
+
+  attr :flash, :map, default: %{}, doc: "the map of flash messages"
+  attr :current_user, :map, default: nil, doc: "the current user"
+  attr :categories, :list, default: [], doc: "list of forum categories with boards"
+  slot :inner_block, required: true
+
   def forum_layout(assigns) do
     ~H"""
     <div class="flex h-screen bg-base-100">
@@ -51,6 +58,8 @@ defmodule UrielmWeb.Components.ForumLayout do
           {render_slot(@inner_block)}
         </div>
       </div>
+
+      <.flash_group flash={@flash} />
     </div>
     """
   end

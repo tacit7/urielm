@@ -8,18 +8,11 @@ defmodule UrielmWeb.SearchLive do
   @page_size 20
 
   @impl true
-  def mount(params, session, socket) do
-    # Handle both direct mount and child mount via live_render
-    child_params =
-      case params do
-        :not_mounted_at_router -> session["child_params"] || %{}
-        params -> params
-      end
-
-    query = Map.get(child_params, "q", "")
+  def mount(params, _session, socket) do
+    query = Map.get(params, "q", "")
 
     page =
-      case child_params["page"] do
+      case params["page"] do
         nil -> 1
         p when is_binary(p) -> String.to_integer(p)
         p when is_integer(p) -> p
@@ -142,6 +135,7 @@ defmodule UrielmWeb.SearchLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100">
+      <Layouts.flash_group flash={@flash} />
       <div class="container mx-auto px-4 py-8 max-w-3xl">
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-base-content mb-4">Search Forum</h1>

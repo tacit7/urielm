@@ -33,10 +33,6 @@ defmodule UrielmWeb.ShellLive do
   defp page_name_for_action(:lesson), do: "videos"
   defp page_name_for_action(:video), do: "videos"
   defp page_name_for_action(:themes), do: "home"
-  defp page_name_for_action(:forum), do: "community"
-  defp page_name_for_action(:board), do: "community"
-  defp page_name_for_action(:thread), do: "community"
-  defp page_name_for_action(:search), do: "community"
   defp page_name_for_action(:user_profile), do: "community"
   defp page_name_for_action(_), do: "home"
 
@@ -70,10 +66,6 @@ defmodule UrielmWeb.ShellLive do
   defp child_module(:lesson), do: UrielmWeb.LessonLive
   defp child_module(:video), do: UrielmWeb.VideoLive
   defp child_module(:themes), do: UrielmWeb.ThemesLive
-  defp child_module(:forum), do: UrielmWeb.ForumLive
-  defp child_module(:board), do: UrielmWeb.BoardLive
-  defp child_module(:thread), do: UrielmWeb.ThreadLive
-  defp child_module(:search), do: UrielmWeb.SearchLive
   defp child_module(:user_profile), do: UrielmWeb.UserProfileLive
   defp child_module(_), do: UrielmWeb.HomeLive
 

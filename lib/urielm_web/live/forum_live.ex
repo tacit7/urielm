@@ -18,7 +18,7 @@ defmodule UrielmWeb.ForumLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories}>
+    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories} flash={@flash}>
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-base-content mb-2">Categories</h1>

@@ -129,7 +129,7 @@ defmodule UrielmWeb.ForumLiveTest do
       assert result =~ "Sign in to vote"
     end
 
-    test "load_more pagination works", %{board: board} do
+    test "pagination works with page parameter", %{board: board} do
       # Create multiple threads to trigger pagination
       user = user_fixture()
 
@@ -142,17 +142,14 @@ defmodule UrielmWeb.ForumLiveTest do
         })
       end
 
-      {:ok, live, _html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
-
-      # Verify first page loaded
-      assert has_element?(live, "[id^='thread']")
-
-      # Trigger load more
-      render_click(live, "load_more", %{})
-
-      # Should still render without errors
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
+
+      # Verify first page loaded with threads
       assert html =~ "Thread"
+
+      # Page 2 should also work
+      {:ok, _live, html2} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=2")
+      assert html2 =~ "Thread"
     end
 
     test "sort=top parameter works", %{board: board} do

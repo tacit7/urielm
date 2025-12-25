@@ -8,23 +8,16 @@ defmodule UrielmWeb.BoardLive do
   @page_size 20
 
   @impl true
-  def mount(params, session, socket) do
-    # Handle both direct mount and child mount via live_render
-    child_params =
-      case params do
-        :not_mounted_at_router -> session["child_params"] || %{}
-        params -> params
-      end
-
-    slug = child_params["board_slug"]
+  def mount(params, _session, socket) do
+    slug = params["board_slug"]
     board = Forum.get_board!(slug)
     categories = Forum.list_categories_with_boards()
 
-    sort = Map.get(child_params, "sort", "latest")
-    filter = Map.get(child_params, "filter", "all")
+    sort = Map.get(params, "sort", "latest")
+    filter = Map.get(params, "filter", "all")
 
     page =
-      case child_params["page"] do
+      case params["page"] do
         nil ->
           1
 
@@ -173,7 +166,7 @@ defmodule UrielmWeb.BoardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
+    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []} flash={@flash}>
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center justify-between mb-6">
