@@ -50,10 +50,23 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
-  # Convenience: categories with boards preloaded
+  # Convenience: categories with boards preloaded (includes thread counts)
   def list_categories_with_boards(opts \\ []) do
+    thread_count_subquery =
+      from(t in Thread,
+        where: t.board_id == parent_as(:board).id and t.is_removed == false,
+        select: count(t.id)
+      )
+
+    boards_query =
+      from(b in Board,
+        as: :board,
+        where: b.is_hidden == false,
+        select: %{b | thread_count: subquery(thread_count_subquery)}
+      )
+
     list_categories(opts)
-    |> Repo.preload(:boards)
+    |> Repo.preload(boards: boards_query)
   end
 
   def get_category!(id) do
@@ -173,13 +186,19 @@ defmodule Urielm.Forum do
   end
 
   def create_thread(board_id, author_id, attrs \\ %{}) do
-    user = Repo.get!(Urielm.Accounts.User, author_id)
-    config = TrustLevel.get_config(user.trust_level)
-    max_topics_per_day = config.max_new_topics_per_day
+    board = Repo.get!(Board, board_id)
 
-    with_rate_limit(author_id, "create_thread", max_topics_per_day, 86_400, fn ->
-      insert_thread(board_id, author_id, attrs)
-    end)
+    if board.is_locked do
+      {:error, :board_locked}
+    else
+      user = Repo.get!(Urielm.Accounts.User, author_id)
+      config = TrustLevel.get_config(user.trust_level)
+      max_topics_per_day = config.max_new_topics_per_day
+
+      with_rate_limit(author_id, "create_thread", max_topics_per_day, 86_400, fn ->
+        insert_thread(board_id, author_id, attrs)
+      end)
+    end
   end
 
   defp insert_thread(board_id, author_id, attrs) do
@@ -362,7 +381,8 @@ defmodule Urielm.Forum do
 
       parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
 
-      with :ok <- validate_comment_depth(parent_id) do
+      with :ok <- validate_parent_thread(parent_id, thread_id),
+           :ok <- validate_comment_depth(parent_id) do
         with_rate_limit(author_id, "create_comment", max_posts_per_minute, 60, fn ->
           %Comment{}
           |> Comment.changeset(
@@ -385,8 +405,19 @@ defmodule Urielm.Forum do
           end
         end)
       else
+        {:error, :invalid_parent} -> {:error, :invalid_parent}
         {:error, :max_depth_exceeded} -> {:error, :max_depth_exceeded}
       end
+    end
+  end
+
+  defp validate_parent_thread(nil, _thread_id), do: :ok
+
+  defp validate_parent_thread(parent_id, thread_id) do
+    case Repo.get(Comment, parent_id) do
+      nil -> {:error, :invalid_parent}
+      %Comment{thread_id: ^thread_id} -> :ok
+      %Comment{} -> {:error, :invalid_parent}
     end
   end
 
@@ -502,6 +533,85 @@ defmodule Urielm.Forum do
 
   def get_user_vote(user_id, target_type, target_id) do
     Repo.get_by(Vote, user_id: user_id, target_type: target_type, target_id: target_id)
+  end
+
+  # Bulk Loaders - for eliminating N+1 queries in list serialization
+
+  @doc """
+  Bulk fetch votes for multiple targets. Returns map of target_id => vote_value.
+  """
+  def bulk_get_votes(_user_id, _target_type, []), do: %{}
+
+  def bulk_get_votes(user_id, target_type, target_ids) do
+    from(v in Vote,
+      where:
+        v.user_id == ^user_id and v.target_type == ^target_type and v.target_id in ^target_ids,
+      select: {v.target_id, v.value}
+    )
+    |> Repo.all()
+    |> Map.new()
+  end
+
+  @doc """
+  Bulk check which threads are saved. Returns MapSet of saved thread_ids.
+  """
+  def bulk_saved_thread_ids(_user_id, []), do: MapSet.new()
+
+  def bulk_saved_thread_ids(user_id, thread_ids) do
+    from(st in SavedThread,
+      where: st.user_id == ^user_id and st.thread_id in ^thread_ids,
+      select: st.thread_id
+    )
+    |> Repo.all()
+    |> MapSet.new()
+  end
+
+  @doc """
+  Bulk check which threads user is subscribed to. Returns MapSet of subscribed thread_ids.
+  """
+  def bulk_subscribed_thread_ids(_user_id, []), do: MapSet.new()
+
+  def bulk_subscribed_thread_ids(user_id, thread_ids) do
+    from(s in Subscription,
+      where: s.user_id == ^user_id and s.thread_id in ^thread_ids,
+      select: s.thread_id
+    )
+    |> Repo.all()
+    |> MapSet.new()
+  end
+
+  @doc """
+  Bulk check which threads are unread. Returns MapSet of unread thread_ids.
+  (A thread is unread if there's no TopicRead record for it.)
+  """
+  def bulk_unread_thread_ids(_user_id, []), do: MapSet.new()
+
+  def bulk_unread_thread_ids(user_id, thread_ids) do
+    read_ids =
+      from(tr in TopicRead,
+        where: tr.user_id == ^user_id and tr.thread_id in ^thread_ids,
+        select: tr.thread_id
+      )
+      |> Repo.all()
+      |> MapSet.new()
+
+    thread_ids
+    |> MapSet.new()
+    |> MapSet.difference(read_ids)
+  end
+
+  @doc """
+  Bulk check which comments are saved. Returns MapSet of saved comment_ids.
+  """
+  def bulk_saved_comment_ids(_user_id, []), do: MapSet.new()
+
+  def bulk_saved_comment_ids(user_id, comment_ids) do
+    from(sc in SavedComment,
+      where: sc.user_id == ^user_id and sc.comment_id in ^comment_ids,
+      select: sc.comment_id
+    )
+    |> Repo.all()
+    |> MapSet.new()
   end
 
   # Thread Links

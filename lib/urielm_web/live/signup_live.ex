@@ -5,7 +5,10 @@ defmodule UrielmWeb.SignupLive do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:form, to_form(%{"email" => "", "password" => "", "username" => "", "displayName" => ""}))
+      |> assign(
+        :form,
+        to_form(%{"email" => "", "password" => "", "username" => "", "displayName" => ""})
+      )
       |> assign(:error, nil)
       |> assign(:loading, false)
 
@@ -154,8 +157,7 @@ defmodule UrielmWeb.SignupLive do
                 class="w-full btn btn-primary"
               >
                 <%= if @loading do %>
-                  <span class="loading loading-spinner loading-sm"></span>
-                  Creating account...
+                  <span class="loading loading-spinner loading-sm"></span> Creating account...
                 <% else %>
                   Create account
                 <% end %>

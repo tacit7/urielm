@@ -160,6 +160,19 @@ defmodule UrielmWeb.ForumLiveTest do
 
       assert html =~ board.name
     end
+
+    test "handles invalid page param gracefully", %{board: board} do
+      # Should not crash on garbage page values
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=lol")
+      assert html =~ board.name
+
+      # Negative and zero should default to page 1
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=-5")
+      assert html =~ board.name
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=0")
+      assert html =~ board.name
+    end
   end
 
   describe "NewThreadLive" do
@@ -169,6 +182,16 @@ defmodule UrielmWeb.ForumLiveTest do
 
       # Should redirect to sign in
       assert response.status in [301, 302]
+    end
+
+    test "redirects with error when board is locked", %{user: user} do
+      locked_board = board_fixture(%{is_locked: true})
+
+      {:error, {:redirect, %{to: to, flash: flash}}} =
+        live(build_conn_with_user(user), ~p"/forum/b/#{locked_board.slug}/new")
+
+      assert to == "/forum/b/#{locked_board.slug}"
+      assert flash["error"] =~ "locked"
     end
 
     test "authenticated user can view form", %{board: board, user: user} do

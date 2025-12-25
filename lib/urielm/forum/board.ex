@@ -11,6 +11,7 @@ defmodule Urielm.Forum.Board do
     field(:description, :string)
     field(:is_locked, :boolean, default: false)
     field(:is_hidden, :boolean, default: false)
+    field(:thread_count, :integer, virtual: true, default: 0)
 
     belongs_to(:category, Urielm.Forum.Category)
     has_many(:threads, Urielm.Forum.Thread)

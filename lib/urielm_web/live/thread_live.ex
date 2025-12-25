@@ -8,10 +8,11 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def mount(params, session, socket) do
     # Handle both direct mount and child mount via live_render
-    child_params = case params do
-      :not_mounted_at_router -> session["child_params"] || %{}
-      params -> params
-    end
+    child_params =
+      case params do
+        :not_mounted_at_router -> session["child_params"] || %{}
+        params -> params
+      end
 
     id = child_params["thread_id"]
 
@@ -552,363 +553,363 @@ defmodule UrielmWeb.ThreadLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-6xl">
-          <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
-            ← Back to {@thread.board_name}
-          </.link>
+      <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
+          ← Back to {@thread.board_name}
+        </.link>
 
-          <div class="card bg-base-200 border border-base-300 mb-8">
-            <div class="card-body">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h1 class="text-3xl font-bold text-base-content mb-2">{@thread.title}</h1>
-                  <div class="flex items-center gap-3 text-sm text-base-content/60">
-                    <%= if Map.get(@thread, :author_avatar_url) do %>
-                      <img
-                        src={Map.get(@thread, :author_avatar_url)}
-                        alt={Map.get(@thread, :author_username) || "User"}
-                        class="w-6 h-6 rounded-full object-cover"
-                      />
-                    <% else %>
-                      <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
-                        {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
-                        |> String.upcase()}
-                      </div>
-                    <% end %>
-                    <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
-                    <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
-                  </div>
-                </div>
-
-                <div class="flex gap-2 items-start">
-                  <%= if @current_user do %>
-                    <div class="dropdown dropdown-end">
-                      <button
-                        data-testid="notification-button"
-                        class="btn btn-xs btn-ghost"
-                        title="Notification settings"
-                      >
-                        <.um_icon name="bell" class="w-4 h-4" />
-                      </button>
-                      <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                        <li>
-                          <a
-                            data-testid="notification-watching"
-                            phx-click="set_notification_level"
-                            phx-value-level="watching"
-                            class={(@notification_level == "watching" && "active") || ""}
-                          >
-                            Watching
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            data-testid="notification-tracking"
-                            phx-click="set_notification_level"
-                            phx-value-level="tracking"
-                            class={(@notification_level == "tracking" && "active") || ""}
-                          >
-                            Tracking
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            data-testid="notification-muted"
-                            phx-click="set_notification_level"
-                            phx-value-level="muted"
-                            class={(@notification_level == "muted" && "active") || ""}
-                          >
-                            Muted
-                          </a>
-                        </li>
-                      </ul>
+        <div class="card bg-base-200 border border-base-300 mb-8">
+          <div class="card-body">
+            <div class="flex justify-between items-start">
+              <div>
+                <h1 class="text-3xl font-bold text-base-content mb-2">{@thread.title}</h1>
+                <div class="flex items-center gap-3 text-sm text-base-content/60">
+                  <%= if Map.get(@thread, :author_avatar_url) do %>
+                    <img
+                      src={Map.get(@thread, :author_avatar_url)}
+                      alt={Map.get(@thread, :author_username) || "User"}
+                      class="w-6 h-6 rounded-full object-cover"
+                    />
+                  <% else %>
+                    <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
+                      {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
+                      |> String.upcase()}
                     </div>
-
-                    <button
-                      class="btn btn-xs btn-ghost"
-                      phx-click="save_thread"
-                      title="Save this thread"
-                    >
-                      <.um_icon
-                        name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"}
-                        class="w-4 h-4"
-                      />
-                    </button>
-
-                    <%= if @current_user && (@current_user.is_admin || @current_user.is_moderator) do %>
-                      <%= if @thread.is_pinned do %>
-                        <button
-                          class="btn btn-xs btn-ghost"
-                          phx-click="unpin_thread"
-                          title="Unpin thread"
-                        >
-                          <.um_icon name="bookmark_slash" class="w-4 h-4" />
-                        </button>
-                      <% else %>
-                        <button
-                          class="btn btn-xs btn-ghost text-info"
-                          phx-click="pin_thread"
-                          title="Pin thread to top"
-                        >
-                          <.um_icon name="bookmark" class="w-4 h-4" />
-                        </button>
-                      <% end %>
-
-                      <%= if @thread.is_locked do %>
-                        <button
-                          class="btn btn-xs btn-ghost text-warning"
-                          phx-click="unlock_thread"
-                          title="Unlock thread"
-                        >
-                          <.um_icon name="lock_open" class="w-4 h-4" />
-                        </button>
-                      <% else %>
-                        <button
-                          class="btn btn-xs btn-ghost"
-                          phx-click="lock_thread"
-                          title="Lock thread"
-                        >
-                          <.um_icon name="lock_closed" class="w-4 h-4" />
-                        </button>
-                      <% end %>
-                    <% end %>
-
-                    <button
-                      data-testid="report-button"
-                      class="btn btn-xs btn-ghost text-warning"
-                      onclick="document.getElementById('report_thread_modal').showModal()"
-                      title="Report this thread"
-                    >
-                      <.um_icon name="warning" class="w-4 h-4" />
-                    </button>
                   <% end %>
-
-                  <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
-                    <button
-                      phx-click="delete_thread"
-                      class="btn btn-xs btn-ghost text-error"
-                      data-confirm="Delete this thread?"
-                    >
-                      Delete
-                    </button>
-                  <% end %>
+                  <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
+                  <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
                 </div>
               </div>
 
-              <div class="p-4 my-4">
-                <.svelte
-                  name="MarkdownRenderer"
-                  props={%{content: @thread.body}}
-                  socket={@socket}
-                />
-              </div>
+              <div class="flex gap-2 items-start">
+                <%= if @current_user do %>
+                  <div class="dropdown dropdown-end">
+                    <button
+                      data-testid="notification-button"
+                      class="btn btn-xs btn-ghost"
+                      title="Notification settings"
+                    >
+                      <.um_icon name="bell" class="w-4 h-4" />
+                    </button>
+                    <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                      <li>
+                        <a
+                          data-testid="notification-watching"
+                          phx-click="set_notification_level"
+                          phx-value-level="watching"
+                          class={(@notification_level == "watching" && "active") || ""}
+                        >
+                          Watching
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          data-testid="notification-tracking"
+                          phx-click="set_notification_level"
+                          phx-value-level="tracking"
+                          class={(@notification_level == "tracking" && "active") || ""}
+                        >
+                          Tracking
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          data-testid="notification-muted"
+                          phx-click="set_notification_level"
+                          phx-value-level="muted"
+                          class={(@notification_level == "muted" && "active") || ""}
+                        >
+                          Muted
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
 
-              <div class="flex items-center gap-4">
-                <.svelte
-                  name="VoteButtons"
-                  props={
-                    %{
-                      target_type: "thread",
-                      target_id: @thread.id,
-                      score: @thread.score,
-                      user_vote: @thread.user_vote
-                    }
-                  }
-                  socket={@socket}
-                />
-                <span class="text-sm text-base-content/60">
-                  {pluralize(@thread.comment_count, "comment")}
-                </span>
+                  <button
+                    class="btn btn-xs btn-ghost"
+                    phx-click="save_thread"
+                    title="Save this thread"
+                  >
+                    <.um_icon
+                      name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"}
+                      class="w-4 h-4"
+                    />
+                  </button>
+
+                  <%= if @current_user && (@current_user.is_admin || @current_user.is_moderator) do %>
+                    <%= if @thread.is_pinned do %>
+                      <button
+                        class="btn btn-xs btn-ghost"
+                        phx-click="unpin_thread"
+                        title="Unpin thread"
+                      >
+                        <.um_icon name="bookmark_slash" class="w-4 h-4" />
+                      </button>
+                    <% else %>
+                      <button
+                        class="btn btn-xs btn-ghost text-info"
+                        phx-click="pin_thread"
+                        title="Pin thread to top"
+                      >
+                        <.um_icon name="bookmark" class="w-4 h-4" />
+                      </button>
+                    <% end %>
+
+                    <%= if @thread.is_locked do %>
+                      <button
+                        class="btn btn-xs btn-ghost text-warning"
+                        phx-click="unlock_thread"
+                        title="Unlock thread"
+                      >
+                        <.um_icon name="lock_open" class="w-4 h-4" />
+                      </button>
+                    <% else %>
+                      <button
+                        class="btn btn-xs btn-ghost"
+                        phx-click="lock_thread"
+                        title="Lock thread"
+                      >
+                        <.um_icon name="lock_closed" class="w-4 h-4" />
+                      </button>
+                    <% end %>
+                  <% end %>
+
+                  <button
+                    data-testid="report-button"
+                    class="btn btn-xs btn-ghost text-warning"
+                    onclick="document.getElementById('report_thread_modal').showModal()"
+                    title="Report this thread"
+                  >
+                    <.um_icon name="warning" class="w-4 h-4" />
+                  </button>
+                <% end %>
+
+                <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
+                  <button
+                    phx-click="delete_thread"
+                    class="btn btn-xs btn-ghost text-error"
+                    data-confirm="Delete this thread?"
+                  >
+                    Delete
+                  </button>
+                <% end %>
               </div>
             </div>
-          </div>
 
-          <div class="mb-8">
-            <h2 class="text-2xl font-bold text-base-content mb-4">
-              Comments
-              <%= if @thread.is_locked do %>
-                <span class="badge badge-warning badge-sm ml-2">
-                  <.um_icon name="lock_closed" class="w-3 h-3 mr-1" /> Locked
-                </span>
-              <% end %>
-            </h2>
+            <div class="p-4 my-4">
+              <.svelte
+                name="MarkdownRenderer"
+                props={%{content: @thread.body}}
+                socket={@socket}
+              />
+            </div>
 
-            <%= if @thread.is_locked do %>
-              <div class="alert alert-warning mb-6">
-                <.um_icon name="lock_closed" class="w-5 h-5" />
-                <span>This thread is locked. New comments cannot be added.</span>
-              </div>
-            <% else %>
-              <%= if @current_user do %>
-                <div class="card bg-base-200 border border-base-300 mb-6">
-                  <div class="card-body">
-                    <form phx-submit="create_comment" class="space-y-4">
-                      <textarea
-                        name="body"
-                        placeholder="Share your thoughts... (Markdown supported)"
-                        required
-                        class="textarea textarea-bordered w-full min-h-24"
-                      >
-                  </textarea>
-                      <button type="submit" class="btn btn-primary">Post Comment</button>
-                    </form>
-                  </div>
-                </div>
-              <% else %>
-                <div class="alert alert-info mb-6">
-                  <span>
-                    <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
-                    to comment on this thread
-                  </span>
-                </div>
-              <% end %>
-            <% end %>
-
-            <.svelte
-              name="CommentTree"
-              props={
-                %{
-                  comments: @comment_tree,
-                  current_user_id: (@current_user && @current_user.id) || nil,
-                  current_user_is_admin: (@current_user && @current_user.is_admin) || false,
-                  thread_author_id: @thread.author_id,
-                  solved_comment_id: @thread.solved_comment_id
+            <div class="flex items-center gap-4">
+              <.svelte
+                name="VoteButtons"
+                props={
+                  %{
+                    target_type: "thread",
+                    target_id: @thread.id,
+                    score: @thread.score,
+                    user_vote: @thread.user_vote
+                  }
                 }
-              }
-              socket={@socket}
-            />
+                socket={@socket}
+              />
+              <span class="text-sm text-base-content/60">
+                {pluralize(@thread.comment_count, "comment")}
+              </span>
+            </div>
           </div>
         </div>
-        
+
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-base-content mb-4">
+            Comments
+            <%= if @thread.is_locked do %>
+              <span class="badge badge-warning badge-sm ml-2">
+                <.um_icon name="lock_closed" class="w-3 h-3 mr-1" /> Locked
+              </span>
+            <% end %>
+          </h2>
+
+          <%= if @thread.is_locked do %>
+            <div class="alert alert-warning mb-6">
+              <.um_icon name="lock_closed" class="w-5 h-5" />
+              <span>This thread is locked. New comments cannot be added.</span>
+            </div>
+          <% else %>
+            <%= if @current_user do %>
+              <div class="card bg-base-200 border border-base-300 mb-6">
+                <div class="card-body">
+                  <form phx-submit="create_comment" class="space-y-4">
+                    <textarea
+                      name="body"
+                      placeholder="Share your thoughts... (Markdown supported)"
+                      required
+                      class="textarea textarea-bordered w-full min-h-24"
+                    >
+                  </textarea>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                  </form>
+                </div>
+              </div>
+            <% else %>
+              <div class="alert alert-info mb-6">
+                <span>
+                  <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
+                  to comment on this thread
+                </span>
+              </div>
+            <% end %>
+          <% end %>
+
+          <.svelte
+            name="CommentTree"
+            props={
+              %{
+                comments: @comment_tree,
+                current_user_id: (@current_user && @current_user.id) || nil,
+                current_user_is_admin: (@current_user && @current_user.is_admin) || false,
+                thread_author_id: @thread.author_id,
+                solved_comment_id: @thread.solved_comment_id
+              }
+            }
+            socket={@socket}
+          />
+        </div>
+      </div>
+      
     <!-- Report Modal -->
-        <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
-          <div class="modal-box bg-base-300">
-            <form method="dialog">
-              <button
-                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                aria-label="Close"
-              >
-                <.um_icon name="close" class="w-4 h-4" />
-              </button>
-            </form>
-            <h3 class="font-bold text-lg">Report this thread</h3>
-            <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
-
-            <form phx-submit="report_thread" data-testid="report-form" class="space-y-4">
-              <div>
-                <label class="label">
-                  <span class="label-text">Reason</span>
-                </label>
-                <select
-                  name="reason"
-                  required
-                  data-testid="report-reason"
-                  class="select select-bordered w-full"
-                >
-                  <option disabled selected>Choose a reason</option>
-                  <option value="spam">Spam</option>
-                  <option value="abuse">Abuse</option>
-                  <option value="offensive">Offensive Content</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="label">
-                  <span class="label-text">Description (required)</span>
-                </label>
-                <textarea
-                  name="description"
-                  required
-                  minlength="10"
-                  maxlength="5000"
-                  placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
-                  data-testid="report-description"
-                  class="textarea textarea-bordered w-full h-24"
-                ></textarea>
-                <p class="text-xs text-base-content/50 mt-1">
-                  Minimum 10 characters • Maximum 5000 characters
-                </p>
-              </div>
-
-              <div class="modal-action">
-                <form method="dialog">
-                  <button class="btn">Cancel</button>
-                </form>
-                <button type="submit" data-testid="report-submit" class="btn btn-error">
-                  Submit Report
-                </button>
-              </div>
-            </form>
-          </div>
-          <form method="dialog" class="modal-backdrop">
-            <button>close</button>
+      <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
+        <div class="modal-box bg-base-300">
+          <form method="dialog">
+            <button
+              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              aria-label="Close"
+            >
+              <.um_icon name="close" class="w-4 h-4" />
+            </button>
           </form>
-        </dialog>
-        
+          <h3 class="font-bold text-lg">Report this thread</h3>
+          <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
+
+          <form phx-submit="report_thread" data-testid="report-form" class="space-y-4">
+            <div>
+              <label class="label">
+                <span class="label-text">Reason</span>
+              </label>
+              <select
+                name="reason"
+                required
+                data-testid="report-reason"
+                class="select select-bordered w-full"
+              >
+                <option disabled selected>Choose a reason</option>
+                <option value="spam">Spam</option>
+                <option value="abuse">Abuse</option>
+                <option value="offensive">Offensive Content</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">Description (required)</span>
+              </label>
+              <textarea
+                name="description"
+                required
+                minlength="10"
+                maxlength="5000"
+                placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
+                data-testid="report-description"
+                class="textarea textarea-bordered w-full h-24"
+              ></textarea>
+              <p class="text-xs text-base-content/50 mt-1">
+                Minimum 10 characters • Maximum 5000 characters
+              </p>
+            </div>
+
+            <div class="modal-action">
+              <form method="dialog">
+                <button class="btn">Cancel</button>
+              </form>
+              <button type="submit" data-testid="report-submit" class="btn btn-error">
+                Submit Report
+              </button>
+            </div>
+          </form>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+      
     <!-- Comment Report Modal (Single Reusable) -->
-        <dialog id="report_comment_modal" data-testid="comment-report-modal" class="modal">
-          <div class="modal-box bg-base-300">
-            <form method="dialog">
-              <button
-                class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                aria-label="Close"
-              >
-                <.um_icon name="close" class="w-4 h-4" />
-              </button>
-            </form>
-            <h3 class="font-bold text-lg mb-4">Report Comment</h3>
-            <form id="report-comment-form" phx-submit="report_comment" class="space-y-4">
-              <input type="hidden" name="comment_id" value={@reporting_comment_id} />
-
-              <div>
-                <label class="label">
-                  <span class="label-text">Reason</span>
-                </label>
-                <select name="reason" class="select select-bordered w-full" required>
-                  <option value="">Select a reason</option>
-                  <option value="spam">Spam</option>
-                  <option value="abuse">Abuse</option>
-                  <option value="offensive">Offensive</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="label">
-                  <span class="label-text">Description (required)</span>
-                </label>
-                <textarea
-                  name="description"
-                  placeholder="Explain why you're reporting this comment..."
-                  class="textarea textarea-bordered w-full min-h-24"
-                  required
-                  minlength="10"
-                  maxlength="5000"
-                ></textarea>
-                <p class="text-xs text-base-content/60 mt-1">
-                  Minimum 10 characters • Maximum 5000 characters
-                </p>
-              </div>
-
-              <div class="modal-action">
-                <form method="dialog">
-                  <button class="btn btn-ghost">Cancel</button>
-                </form>
-                <button
-                  type="submit"
-                  class="btn btn-warning"
-                  disabled={is_nil(@reporting_comment_id)}
-                >
-                  Submit Report
-                </button>
-              </div>
-            </form>
-          </div>
-          <form method="dialog" class="modal-backdrop">
-            <button>close</button>
+      <dialog id="report_comment_modal" data-testid="comment-report-modal" class="modal">
+        <div class="modal-box bg-base-300">
+          <form method="dialog">
+            <button
+              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              aria-label="Close"
+            >
+              <.um_icon name="close" class="w-4 h-4" />
+            </button>
           </form>
-        </dialog>
+          <h3 class="font-bold text-lg mb-4">Report Comment</h3>
+          <form id="report-comment-form" phx-submit="report_comment" class="space-y-4">
+            <input type="hidden" name="comment_id" value={@reporting_comment_id} />
+
+            <div>
+              <label class="label">
+                <span class="label-text">Reason</span>
+              </label>
+              <select name="reason" class="select select-bordered w-full" required>
+                <option value="">Select a reason</option>
+                <option value="spam">Spam</option>
+                <option value="abuse">Abuse</option>
+                <option value="offensive">Offensive</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">Description (required)</span>
+              </label>
+              <textarea
+                name="description"
+                placeholder="Explain why you're reporting this comment..."
+                class="textarea textarea-bordered w-full min-h-24"
+                required
+                minlength="10"
+                maxlength="5000"
+              ></textarea>
+              <p class="text-xs text-base-content/60 mt-1">
+                Minimum 10 characters • Maximum 5000 characters
+              </p>
+            </div>
+
+            <div class="modal-action">
+              <form method="dialog">
+                <button class="btn btn-ghost">Cancel</button>
+              </form>
+              <button
+                type="submit"
+                class="btn btn-warning"
+                disabled={is_nil(@reporting_comment_id)}
+              >
+                Submit Report
+              </button>
+            </div>
+          </form>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
     """
   end

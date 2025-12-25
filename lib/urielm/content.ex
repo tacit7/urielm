@@ -615,11 +615,12 @@ defmodule Urielm.Content do
     limit = Keyword.get(opts, :limit)
     offset = Keyword.get(opts, :offset, 0)
 
-    query = from(v in Video,
-      where: not is_nil(v.published_at),
-      order_by: [desc: v.published_at, desc: v.id],
-      offset: ^offset
-    )
+    query =
+      from(v in Video,
+        where: not is_nil(v.published_at),
+        order_by: [desc: v.published_at, desc: v.id],
+        offset: ^offset
+      )
 
     query = if limit, do: from(q in query, limit: ^limit), else: query
 
@@ -717,8 +718,9 @@ defmodule Urielm.Content do
   """
   def completed_video?(%{id: user_id}, %Video{id: video_id}) do
     Repo.exists?(
-      from vc in VideoCompletion,
+      from(vc in VideoCompletion,
         where: vc.user_id == ^user_id and vc.video_id == ^video_id
+      )
     )
   end
 

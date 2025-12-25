@@ -3,7 +3,7 @@
   import hljs from 'highlight.js'
   import { processEmbeds } from '../js/markdown/embeds.js'
 
-  export let content = ''
+  let { content = '', enableEmbeds = true } = $props()
 
   const md = new MarkdownIt({
     highlight: (code, lang) => {
@@ -17,12 +17,15 @@
     }
   })
 
-  let html = ''
+  let html = $derived.by(() => {
+    if (!content) return ''
 
-  $: if (content) {
-    html = md.render(content)
-    html = processEmbeds(html)
-  }
+    let rendered = md.render(content)
+    if (enableEmbeds) {
+      rendered = processEmbeds(rendered)
+    }
+    return rendered
+  })
 </script>
 
 <div class="prose prose-sm md:prose-base max-w-none prose-code:bg-base-300 prose-code:text-base-content prose-code:px-2 prose-code:py-1 prose-code:rounded prose-pre:bg-base-300 prose-pre:border prose-pre:border-base-200">

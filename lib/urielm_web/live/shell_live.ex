@@ -43,27 +43,20 @@ defmodule UrielmWeb.ShellLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
-      <div id="navbar-container" phx-update="ignore" phx-hook="NavbarActiveLinks">
-        <.Navbar
-          socket={@socket}
-          currentPage={@current_page}
-          currentUser={serialize_user(@current_user)}
-        />
-      </div>
-
-      <main class="pt-16">
-        <%= live_render(@socket, child_module(@live_action),
-          id: "page-#{@live_action}",
-          session: %{
-            "current_user_id" => current_user_id(@current_user),
-            "child_params" => @child_params
-          }
-        ) %>
-      </main>
-
-      <UrielmWeb.Layouts.flash_group flash={@flash} />
-    </div>
+    <UrielmWeb.Layouts.app
+      flash={@flash}
+      current_user={@current_user}
+      current_page={@current_page}
+      socket={@socket}
+    >
+      {live_render(@socket, child_module(@live_action),
+        id: "page-#{@live_action}",
+        session: %{
+          "current_user_id" => current_user_id(@current_user),
+          "child_params" => @child_params
+        }
+      )}
+    </UrielmWeb.Layouts.app>
     """
   end
 
@@ -86,17 +79,4 @@ defmodule UrielmWeb.ShellLive do
 
   defp current_user_id(nil), do: nil
   defp current_user_id(user), do: user.id
-
-  defp serialize_user(nil), do: nil
-
-  defp serialize_user(user) do
-    %{
-      id: to_string(user.id),
-      email: user.email,
-      name: user.name,
-      username: user.username,
-      avatarUrl: user.avatar_url,
-      isAdmin: user.is_admin || false
-    }
-  end
 end

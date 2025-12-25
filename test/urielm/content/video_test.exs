@@ -32,6 +32,7 @@ defmodule Urielm.Content.VideoTest do
     test "create_video/1 validates slug format" do
       invalid_slug = %{@valid_attrs | slug: "Bad Slug!"}
       assert {:error, changeset} = Content.create_video(invalid_slug)
+
       assert "must contain only lowercase letters, numbers, and hyphens" in errors_on(changeset).slug
     end
 
@@ -109,16 +110,22 @@ defmodule Urielm.Content.VideoTest do
       assert Content.can_view_video?(user, video) == true
     end
 
-    test "can_view_video?/2 blocks anonymous users from signed_in videos", %{signed_in_video: video} do
+    test "can_view_video?/2 blocks anonymous users from signed_in videos", %{
+      signed_in_video: video
+    } do
       assert Content.can_view_video?(nil, video) == false
     end
 
-    test "can_view_video?/2 allows signed-in users to view signed_in videos", %{signed_in_video: video} do
+    test "can_view_video?/2 allows signed-in users to view signed_in videos", %{
+      signed_in_video: video
+    } do
       user = user_fixture()
       assert Content.can_view_video?(user, video) == true
     end
 
-    test "can_view_video?/2 blocks non-subscribers from subscriber videos", %{subscriber_video: video} do
+    test "can_view_video?/2 blocks non-subscribers from subscriber videos", %{
+      subscriber_video: video
+    } do
       user = user_fixture()
       assert Content.can_view_video?(user, video) == false
     end
@@ -161,19 +168,22 @@ defmodule Urielm.Content.VideoTest do
     test "mark_video_complete/2 upserts on duplicate", %{video: video, user: user} do
       {:ok, _completion1} = Content.mark_video_complete(user, video)
 
-      Process.sleep(1100)  # Sleep > 1 second to ensure timestamp changes
+      # Sleep > 1 second to ensure timestamp changes
+      Process.sleep(1100)
       {:ok, _completion2} = Content.mark_video_complete(user, video)
 
       # Should not create duplicate - verify only one completion exists
       assert Content.completed_video?(user, video) == true
 
       # Verify no duplicate by counting
-      count = Repo.aggregate(
-        from(vc in Urielm.Content.VideoCompletion,
-          where: vc.user_id == ^user.id and vc.video_id == ^video.id
-        ),
-        :count
-      )
+      count =
+        Repo.aggregate(
+          from(vc in Urielm.Content.VideoCompletion,
+            where: vc.user_id == ^user.id and vc.video_id == ^video.id
+          ),
+          :count
+        )
+
       assert count == 1
     end
 

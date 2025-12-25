@@ -3,6 +3,7 @@
   import PostActions from "./PostActions.svelte"
   import CommentTree from "./CommentTree.svelte"
   import ReplyComposer from "./ReplyComposer.svelte"
+  import MarkdownRenderer from "./MarkdownRenderer.svelte"
 
   let {
     comments = [],
@@ -100,11 +101,6 @@
       })
     }
 
-    // Clear draft after successful submission
-    if (editEditorRef?.clearDraft) {
-      editEditorRef.clearDraft()
-    }
-
     editingId = null
     editText = ""
   }
@@ -167,12 +163,12 @@
                   />
                 </div>
               {:else}
-                <p class="text-base-content mb-3">
-                  {comment.body}
+                <div class="text-base-content mb-3">
+                  <MarkdownRenderer content={comment.body} enableEmbeds={false} />
                   {#if comment.edited_at}
                     <span class="text-xs text-base-content/50 ml-2">(edited)</span>
                   {/if}
-                </p>
+                </div>
               {/if}
 
               <div class="flex items-center gap-4">
