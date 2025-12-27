@@ -5,10 +5,11 @@
    * Fetches embed HTML from TikTok's oEmbed API and renders it
    *
    * @param {string} tiktokUrl - TikTok video URL
+   * @param {boolean} fullscreen - Whether to display in fullscreen mode
    */
   import { onMount } from 'svelte'
 
-  let { tiktokUrl = '' } = $props()
+  let { tiktokUrl = '', fullscreen = false } = $props()
 
   let embedHtml = $state('')
   let loading = $state(true)
@@ -63,26 +64,48 @@
   })
 </script>
 
-<div class="flex justify-center">
-  <div class="w-full max-w-[325px]">
+{#if fullscreen}
+  <!-- Fullscreen mode: center and scale to fill viewport -->
+  <div class="fullscreen-container">
     {#if loading}
-      <div
-        class="bg-base-200 rounded-lg animate-pulse flex items-center justify-center"
-        style="aspect-ratio: 9/16; min-height: 580px;"
-      >
-        <span class="loading loading-spinner loading-lg"></span>
+      <div class="flex items-center justify-center h-full">
+        <span class="loading loading-spinner loading-lg text-white"></span>
       </div>
     {:else if error}
-      <div class="alert alert-error">
-        <span>Failed to load TikTok video: {error}</span>
+      <div class="flex items-center justify-center h-full">
+        <div class="alert alert-error max-w-sm">
+          <span>Failed to load TikTok video: {error}</span>
+        </div>
       </div>
     {:else}
-      <div class="tiktok-container" style="aspect-ratio: 9/16;">
+      <div class="tiktok-fullscreen">
         {@html embedHtml}
       </div>
     {/if}
   </div>
-</div>
+{:else}
+  <!-- Standard mode: constrained width -->
+  <div class="flex justify-center">
+    <div class="w-full max-w-[325px]">
+      {#if loading}
+        <div
+          class="bg-base-200 rounded-lg animate-pulse flex items-center justify-center"
+          style="aspect-ratio: 9/16; min-height: 580px;"
+        >
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+      {:else if error}
+        <div class="alert alert-error">
+          <span>Failed to load TikTok video: {error}</span>
+        </div>
+      {:else}
+        <div class="tiktok-container" style="aspect-ratio: 9/16;">
+          {@html embedHtml}
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <style>
   .tiktok-container :global(blockquote) {
@@ -92,5 +115,56 @@
 
   .tiktok-container :global(iframe) {
     border-radius: 0.5rem;
+  }
+
+  /* Fullscreen mode styles */
+  .fullscreen-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: black;
+  }
+
+  .tiktok-fullscreen {
+    /* Use transform to scale the embed to fill viewport */
+    /* TikTok embed is ~325px wide x 739px tall, scale to fill screen */
+    transform: scale(var(--tiktok-scale, 1.5));
+    transform-origin: center center;
+  }
+
+  .tiktok-fullscreen :global(blockquote) {
+    margin: 0;
+  }
+
+  .tiktok-fullscreen :global(iframe) {
+    border-radius: 0;
+  }
+
+  /* Calculate scale based on viewport - use CSS custom properties */
+  @media (min-height: 800px) {
+    .tiktok-fullscreen {
+      --tiktok-scale: 1.3;
+    }
+  }
+
+  @media (min-height: 900px) {
+    .tiktok-fullscreen {
+      --tiktok-scale: 1.4;
+    }
+  }
+
+  @media (min-height: 1000px) {
+    .tiktok-fullscreen {
+      --tiktok-scale: 1.5;
+    }
+  }
+
+  @media (min-height: 1200px) {
+    .tiktok-fullscreen {
+      --tiktok-scale: 1.7;
+    }
   }
 </style>

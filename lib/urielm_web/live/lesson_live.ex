@@ -34,6 +34,7 @@ defmodule UrielmWeb.LessonLive do
           lesson ->
             lessons = Learning.list_lessons(course.id)
             changeset = Learning.change_lesson_comment(%LessonComment{})
+            nav_items = build_nav_items(lesson, course)
 
             {:ok,
              socket
@@ -44,14 +45,58 @@ defmodule UrielmWeb.LessonLive do
              |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))
              |> assign(:current_page, "courses")
              |> assign(:page_title, lesson.title)
-             |> assign(:dock_tab, "home")}
+             |> assign(:dock_tab, "home")
+             |> assign(:active_section, "home")
+             |> assign(:nav_items, nav_items)}
         end
+    end
+  end
+
+  defp build_nav_items(lesson, _course) do
+    items = [%{key: "home", label: "Overview"}]
+
+    items =
+      if lesson.notes_md && lesson.notes_md != "",
+        do: items ++ [%{key: "notes", label: "Notes"}],
+        else: items
+
+    items =
+      if lesson.resources_md && lesson.resources_md != "",
+        do: items ++ [%{key: "resources", label: "Resources"}],
+        else: items
+
+    items =
+      if lesson.timestamps_md && lesson.timestamps_md != "",
+        do: items ++ [%{key: "timestamps", label: "Timestamps"}],
+        else: items
+
+    # Always show comments
+    items ++ [%{key: "comments", label: "Comments", count: length(lesson.comments || [])}]
+  end
+
+  # Visibility helper for mobile dock + desktop tabs
+  # Mobile: show if dock_tab matches
+  # Desktop: show if active_section matches
+  defp section_visibility(dock_tab, active_section, section_key) do
+    mobile_matches = dock_tab == section_key
+    desktop_matches = active_section == section_key
+
+    case {mobile_matches, desktop_matches} do
+      {true, true} -> ""
+      {true, false} -> "lg:hidden"
+      {false, true} -> "hidden lg:block"
+      {false, false} -> "hidden"
     end
   end
 
   @impl true
   def handle_event("set_dock_tab", %{"tab" => tab}, socket) do
     {:noreply, assign(socket, :dock_tab, tab)}
+  end
+
+  @impl true
+  def handle_event("tab_change", %{"key" => key}, socket) do
+    {:noreply, assign(socket, :active_section, key)}
   end
 
   @impl true
@@ -149,11 +194,20 @@ defmodule UrielmWeb.LessonLive do
           
     <!-- Video Title -->
           <h1 class="text-2xl font-bold text-base-content mb-3 hidden lg:block">{@lesson.title}</h1>
-          
+
+    <!-- Desktop: UnderlineNav -->
+          <div class="hidden lg:block mb-6">
+            <.svelte
+              name="UnderlineNav"
+              props={%{items: @nav_items, activeKey: @active_section, showCounts: true, size: "md"}}
+              socket={@socket}
+            />
+          </div>
+
     <!-- Dock Content Sections -->
           <div class="space-y-4 pb-24 lg:pb-0">
             <!-- HOME TAB -->
-            <div class={["space-y-4", if(@dock_tab != "home", do: "hidden lg:block")]}>
+            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "home")]}>
               <!-- Course/Channel Info -->
               <div class="flex items-center gap-3 pb-4 border-b border-base-300 mb-4">
                 <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -193,7 +247,7 @@ defmodule UrielmWeb.LessonLive do
             </div>
             
     <!-- NOTES TAB -->
-            <div class={["space-y-4", if(@dock_tab != "notes", do: "hidden lg:block")]}>
+            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "notes")]}>
               <h3 class="text-lg font-semibold text-base-content">Lesson notes</h3>
               <div :if={@lesson.notes_md} class="bg-base-200 rounded-xl p-4">
                 <p class="text-sm text-base-content/80 whitespace-pre-wrap">{@lesson.notes_md}</p>
@@ -204,7 +258,7 @@ defmodule UrielmWeb.LessonLive do
             </div>
             
     <!-- RESOURCES TAB -->
-            <div class={["space-y-4", if(@dock_tab != "resources", do: "hidden lg:block")]}>
+            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "resources")]}>
               <h3 class="text-lg font-semibold text-base-content">Resources</h3>
               <div :if={@lesson.resources_md} class="prose prose-sm max-w-none">
                 <.svelte
@@ -219,7 +273,7 @@ defmodule UrielmWeb.LessonLive do
             </div>
             
     <!-- TIMESTAMPS TAB -->
-            <div class={["space-y-4", if(@dock_tab != "timestamps", do: "hidden lg:block")]}>
+            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "timestamps")]}>
               <h3 class="text-lg font-semibold text-base-content">Timestamps</h3>
               <div :if={@lesson.timestamps_md} class="prose prose-sm max-w-none">
                 <.svelte
@@ -232,57 +286,57 @@ defmodule UrielmWeb.LessonLive do
                 No timestamps available for this lesson.
               </div>
             </div>
-          </div>
-          
-    <!-- Comments Section -->
-          <section class="mt-8 space-y-4">
-            <h2 class="text-xl font-semibold text-base-content">Comments</h2>
 
-            <%= if @lesson.comments == [] do %>
-              <p class="text-sm text-base-content/60 text-center py-8">
-                No comments yet. Be the first to share your thoughts!
-              </p>
-            <% end %>
+    <!-- COMMENTS TAB -->
+            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "comments")]}>
+              <h3 class="text-lg font-semibold text-base-content">Comments</h3>
 
-            <ul class="space-y-3">
-              <%= for comment <- @lesson.comments do %>
-                <li class="bg-base-200 rounded-xl p-4">
-                  <p class="text-sm text-base-content whitespace-pre-line mb-3">
-                    {comment.body}
-                  </p>
-                  <p class="text-xs text-base-content/60">
-                    <%= if comment.user do %>
-                      <span class="font-medium">{comment.user.name || comment.user.email}</span>
-                    <% else %>
-                      <span class="font-medium">Anonymous</span>
-                    <% end %>
-                    · {Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M")}
-                  </p>
-                </li>
+              <%= if @lesson.comments == [] do %>
+                <p class="text-sm text-base-content/60 text-center py-8">
+                  No comments yet. Be the first to share your thoughts!
+                </p>
               <% end %>
-            </ul>
 
-            <.form
-              for={@comment_form}
-              id="lesson-comment-form"
-              phx-submit="save_comment"
-              class="mt-6"
-            >
-              <div class="space-y-2">
-                <textarea
-                  name="comment[body]"
-                  placeholder="Add a comment..."
-                  phx-focus="comment_focus"
-                  class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                  rows="3"
-                />
-                <div class="flex justify-end gap-2">
-                  <button type="reset" class="btn btn-ghost btn-sm">Cancel</button>
-                  <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+              <ul class="space-y-3">
+                <%= for comment <- @lesson.comments do %>
+                  <li class="bg-base-200 rounded-xl p-4">
+                    <p class="text-sm text-base-content whitespace-pre-line mb-3">
+                      {comment.body}
+                    </p>
+                    <p class="text-xs text-base-content/60">
+                      <%= if comment.user do %>
+                        <span class="font-medium">{comment.user.name || comment.user.email}</span>
+                      <% else %>
+                        <span class="font-medium">Anonymous</span>
+                      <% end %>
+                      · {Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M")}
+                    </p>
+                  </li>
+                <% end %>
+              </ul>
+
+              <.form
+                for={@comment_form}
+                id="lesson-comment-form"
+                phx-submit="save_comment"
+                class="mt-6"
+              >
+                <div class="space-y-2">
+                  <textarea
+                    name="comment[body]"
+                    placeholder="Add a comment..."
+                    phx-focus="comment_focus"
+                    class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    rows="3"
+                  />
+                  <div class="flex justify-end gap-2">
+                    <button type="reset" class="btn btn-ghost btn-sm">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+                  </div>
                 </div>
-              </div>
-            </.form>
-          </section>
+              </.form>
+            </div>
+          </div>
         </div>
         
     <!-- Mobile Lesson Dock -->
@@ -358,9 +412,27 @@ defmodule UrielmWeb.LessonLive do
             </svg>
             <span class="dock-label text-xs">Times</span>
           </button>
+
+          <button
+            type="button"
+            phx-click="set_dock_tab"
+            phx-value-tab="comments"
+            class={["dock-item", if(@dock_tab == "comments", do: "dock-active", else: "")]}
+            aria-label="Comments tab"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <span class="dock-label text-xs">Comments</span>
+          </button>
         </div>
       </div>
-      
+
     <!-- Drawer Side (Up Next) -->
       <div class="drawer-side">
         <label for="lesson-drawer" class="drawer-overlay"></label>

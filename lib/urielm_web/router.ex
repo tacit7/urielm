@@ -60,6 +60,7 @@ defmodule UrielmWeb.Router do
       live "/signin", SigninLive
       live "/signup", SignupLive
       live "/signup/email", SignupEmailLive
+      live "/suspended", SuspendedLive
     end
 
     # Main app pages - routed through persistent ShellLive

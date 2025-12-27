@@ -127,16 +127,26 @@ defmodule Urielm.Forum do
   @doc """
   Flop-powered pagination for threads. Returns {:ok, results, meta} or {:error, meta}.
   Accepts Flop params such as page/page_size and order_by/order_directions.
+
+  ## Options
+  - `:solved` - Filter by solved status: true (only solved), false (only unsolved), nil (all)
   """
-  def paginate_threads(board_id, params \\ %{}) do
+  def paginate_threads(board_id, params \\ %{}, opts \\ []) do
+    solved_filter = Keyword.get(opts, :solved)
+
     base =
       from(t in Thread)
       |> where([t], t.board_id == ^board_id and t.is_removed == false)
+      |> maybe_filter_solved(solved_filter)
       |> order_by([t], desc: t.is_pinned)
       |> thread_preloads()
 
     Flop.validate_and_run(base, params, for: Thread, repo: Repo)
   end
+
+  defp maybe_filter_solved(query, nil), do: query
+  defp maybe_filter_solved(query, true), do: where(query, [t], t.is_solved == true)
+  defp maybe_filter_solved(query, false), do: where(query, [t], t.is_solved == false)
 
   @doc """
   Fetches a thread by ID with optional comments preloading.

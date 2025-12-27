@@ -6,6 +6,7 @@ defmodule UrielmWeb.LiveHelpers do
   user vote lookup.
   """
 
+  alias Urielm.Accounts.User
   alias Urielm.Forum
   alias Urielm.Repo
 
@@ -275,7 +276,11 @@ defmodule UrielmWeb.LiveHelpers do
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Sign in to #{action_name}")}
 
       user ->
-        fun.(socket, user)
+        if User.silenced?(user) do
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Your account is silenced and cannot #{action_name}")}
+        else
+          fun.(socket, user)
+        end
     end
   end
 

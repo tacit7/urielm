@@ -50,6 +50,20 @@ defmodule UrielmWeb.BoardLive do
             {:error, _meta} -> {[], nil}
           end
 
+        "solved" ->
+          flop_params = %{page: page, page_size: @page_size, order_by: [:updated_at], order_directions: [:desc]}
+          case Forum.paginate_threads(board.id, flop_params, solved: true) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
+          end
+
+        "unsolved" ->
+          flop_params = %{page: page, page_size: @page_size, order_by: [:updated_at], order_directions: [:desc]}
+          case Forum.paginate_threads(board.id, flop_params, solved: false) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
+          end
+
         _ ->
           flop_order =
             case sort do
@@ -166,7 +180,11 @@ defmodule UrielmWeb.BoardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []} flash={@flash}>
+    <UrielmWeb.Components.ForumLayout.forum_layout
+      categories={@all_categories || []}
+      flash={@flash}
+      current_board={@board.slug}
+    >
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center justify-between mb-6">
@@ -235,6 +253,31 @@ defmodule UrielmWeb.BoardLive do
             ]}
           >
             Top
+          </a>
+          <span class="border-l border-base-300 mx-2"></span>
+          <a
+            href={~p"/forum/b/#{@board.slug}?filter=solved"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "solved",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Solved
+          </a>
+          <a
+            href={~p"/forum/b/#{@board.slug}?filter=unsolved"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "unsolved",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Unsolved
           </a>
         </div>
       </div>

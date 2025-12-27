@@ -140,8 +140,8 @@ defmodule UrielmWeb.CourseLive do
                   <h3 class="font-semibold text-base-content group-hover:text-primary transition-colors mb-1 line-clamp-2">
                     {lesson.title}
                   </h3>
-                  <p :if={lesson.body} class="text-sm text-base-content/70 line-clamp-2 mb-2">
-                    {lesson.body}
+                  <p :if={lesson.notes_md} class="text-sm text-base-content/70 line-clamp-2 mb-2">
+                    {lesson.notes_md}
                   </p>
                   <div class="flex items-center gap-2 text-xs text-base-content/60">
                     <span>Lesson {lesson.lesson_number}</span>

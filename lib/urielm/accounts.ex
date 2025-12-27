@@ -336,6 +336,116 @@ defmodule Urielm.Accounts do
 
   def revoke_moderator(_user, _non_admin), do: {:error, :unauthorized}
 
+  ## User Suspension (Admin/Mod only)
+
+  @doc """
+  Suspends a user. Suspended users cannot login.
+
+  Options:
+  - :reason - Required reason for suspension
+  - :until - DateTime when suspension expires (nil = permanent)
+  """
+  def suspend_user(%User{} = user, %{is_admin: true} = _admin, opts) do
+    do_suspend_user(user, opts)
+  end
+
+  def suspend_user(%User{} = user, %{is_moderator: true} = _moderator, opts) do
+    do_suspend_user(user, opts)
+  end
+
+  def suspend_user(_user, _non_mod, _opts), do: {:error, :unauthorized}
+
+  defp do_suspend_user(user, opts) do
+    reason = Keyword.fetch!(opts, :reason)
+    until = Keyword.get(opts, :until)
+
+    user
+    |> User.suspension_changeset(%{
+      suspended_at: DateTime.utc_now(),
+      suspended_until: until,
+      suspended_reason: reason
+    })
+    |> Repo.update()
+  end
+
+  @doc """
+  Removes suspension from a user.
+  """
+  def unsuspend_user(%User{} = user, %{is_admin: true} = _admin) do
+    do_unsuspend_user(user)
+  end
+
+  def unsuspend_user(%User{} = user, %{is_moderator: true} = _moderator) do
+    do_unsuspend_user(user)
+  end
+
+  def unsuspend_user(_user, _non_mod), do: {:error, :unauthorized}
+
+  defp do_unsuspend_user(user) do
+    user
+    |> User.suspension_changeset(%{
+      suspended_at: nil,
+      suspended_until: nil,
+      suspended_reason: nil
+    })
+    |> Repo.update()
+  end
+
+  ## User Silencing (Admin/Mod only)
+
+  @doc """
+  Silences a user. Silenced users can read but cannot post/vote/interact.
+
+  Options:
+  - :reason - Required reason for silencing
+  - :until - DateTime when silencing expires (nil = permanent)
+  """
+  def silence_user(%User{} = user, %{is_admin: true} = _admin, opts) do
+    do_silence_user(user, opts)
+  end
+
+  def silence_user(%User{} = user, %{is_moderator: true} = _moderator, opts) do
+    do_silence_user(user, opts)
+  end
+
+  def silence_user(_user, _non_mod, _opts), do: {:error, :unauthorized}
+
+  defp do_silence_user(user, opts) do
+    reason = Keyword.fetch!(opts, :reason)
+    until = Keyword.get(opts, :until)
+
+    user
+    |> User.silencing_changeset(%{
+      silenced_at: DateTime.utc_now(),
+      silenced_until: until,
+      silenced_reason: reason
+    })
+    |> Repo.update()
+  end
+
+  @doc """
+  Removes silencing from a user.
+  """
+  def unsilence_user(%User{} = user, %{is_admin: true} = _admin) do
+    do_unsilence_user(user)
+  end
+
+  def unsilence_user(%User{} = user, %{is_moderator: true} = _moderator) do
+    do_unsilence_user(user)
+  end
+
+  def unsilence_user(_user, _non_mod), do: {:error, :unauthorized}
+
+  defp do_unsilence_user(user) do
+    user
+    |> User.silencing_changeset(%{
+      silenced_at: nil,
+      silenced_until: nil,
+      silenced_reason: nil
+    })
+    |> Repo.update()
+  end
+
   ## Counter helpers
 
   defp increment_prompt_counter(prompt_id, counter_field) do

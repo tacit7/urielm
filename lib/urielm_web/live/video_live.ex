@@ -133,6 +133,21 @@ defmodule UrielmWeb.VideoLive do
     items
   end
 
+  # Visibility helper for mobile dock + desktop tabs
+  # Mobile: show if dock_tab matches
+  # Desktop: show if active_section matches
+  defp section_visibility(dock_tab, active_section, mobile_key, desktop_key) do
+    mobile_matches = dock_tab == mobile_key
+    desktop_matches = active_section == desktop_key
+
+    case {mobile_matches, desktop_matches} do
+      {true, true} -> ""
+      {true, false} -> "lg:hidden"
+      {false, true} -> "hidden lg:block"
+      {false, false} -> "hidden"
+    end
+  end
+
   defp assign_meta_tags(socket, video, slug) do
     description = strip_markdown_and_truncate(video.description_md, 160)
     canonical_url = url(~p"/videos/#{slug}")
@@ -361,13 +376,230 @@ defmodule UrielmWeb.VideoLive do
 
   @impl true
   def render(assigns) do
+    if assigns.video.format == "short" do
+      render_short(assigns)
+    else
+      render_standard(assigns)
+    end
+  end
+
+  defp render_short(assigns) do
+    ~H"""
+    <!-- DaisyUI Drawer wrapper for comments -->
+    <div class="drawer drawer-end">
+      <input id="comments-drawer" type="checkbox" class="drawer-toggle" />
+
+      <!-- Main content -->
+      <div class="drawer-content">
+        <!-- Full-screen vertical snap feed -->
+        <div class="h-screen w-screen overflow-y-scroll snap-y snap-mandatory overscroll-contain bg-black text-white">
+          <!-- Feed item (single video for now) -->
+          <section class="relative h-screen w-screen snap-start">
+            <!-- Video container - full bleed -->
+            <div class="absolute inset-0">
+              <%= if @video.tiktok_url && @video.tiktok_url != "" do %>
+                <.svelte
+                  name="TikTokEmbed"
+                  props={%{tiktokUrl: @video.tiktok_url, fullscreen: true}}
+                  socket={@socket}
+                  class="h-full w-full object-cover"
+                />
+              <% else %>
+                <.svelte
+                  name="YouTubePlayer"
+                  props={%{videoId: extract_youtube_id(@video.youtube_url), controls: true, shorts: true}}
+                  socket={@socket}
+                  class="h-full w-full object-cover"
+                />
+              <% end %>
+
+              <!-- Gradient overlay for legibility -->
+              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20"></div>
+            </div>
+
+            <!-- Right action rail -->
+            <aside class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3">
+              <!-- Like -->
+              <button class="btn btn-ghost btn-circle text-white hover:text-primary" aria-label="Like">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 21s-7-4.4-10-9c-2.1-3.3.2-7.8 4.2-8.3 2.1-.3 3.9.7 4.8 2 1-1.3 2.8-2.3 4.8-2 4 .5 6.3 5 4.2 8.3-3 4.6-10 9-10 9z"/>
+                </svg>
+              </button>
+              <span class="text-xs opacity-80">Like</span>
+
+              <!-- Comments drawer trigger -->
+              <%= if @thread do %>
+                <label for="comments-drawer" class="btn btn-ghost btn-circle text-white hover:text-primary cursor-pointer" aria-label="Comments">
+                  <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-width="2" d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                  </svg>
+                </label>
+                <span class="text-xs opacity-80">{@thread.comment_count}</span>
+              <% end %>
+
+              <!-- Share -->
+              <button class="btn btn-ghost btn-circle text-white hover:text-primary" aria-label="Share">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-width="2" d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>
+                  <path stroke-width="2" d="M16 6l-4-4-4 4"/>
+                  <path stroke-width="2" d="M12 2v14"/>
+                </svg>
+              </button>
+              <span class="text-xs opacity-80">Share</span>
+            </aside>
+
+            <!-- Bottom metadata -->
+            <div class="absolute left-0 right-16 bottom-0 z-10 p-4 pb-6">
+              <div class="max-w-[85%] space-y-2">
+                <!-- Author info -->
+                <%= if @video.author_name do %>
+                  <div class="flex items-center gap-2">
+                    <div class="avatar placeholder">
+                      <div class="w-10 rounded-full bg-primary text-primary-content">
+                        <span class="text-sm font-semibold">
+                          {String.upcase(String.slice(@video.author_name, 0, 1))}
+                        </span>
+                      </div>
+                    </div>
+                    <%= if @video.author_url do %>
+                      <a href={@video.author_url} target="_blank" rel="noopener" class="font-semibold hover:underline">
+                        @{@video.author_name}
+                      </a>
+                    <% else %>
+                      <span class="font-semibold">@{@video.author_name}</span>
+                    <% end %>
+                    <button class="btn btn-xs btn-outline btn-white">Follow</button>
+                  </div>
+                <% end %>
+
+                <!-- Title/Caption -->
+                <p class="text-sm leading-snug line-clamp-3">{@video.title}</p>
+
+                <!-- Description if exists -->
+                <%= if @video.description_md && @video.description_md != "" do %>
+                  <p class="text-sm opacity-80 line-clamp-2">{@video.description_md}</p>
+                <% end %>
+
+                <!-- Tags/metadata -->
+                <div class="flex items-center gap-2 text-xs opacity-80">
+                  <span class="badge badge-ghost badge-sm">Short</span>
+                  <%= if @video.visibility != "public" do %>
+                    <span class="badge badge-ghost badge-sm">{@video.visibility}</span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Comments Drawer (slides in from right) -->
+      <div class="drawer-side z-50">
+        <label for="comments-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+
+        <div class="menu w-full max-w-md bg-base-100 text-base-content min-h-full p-0">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-4 border-b border-base-300">
+            <h2 class="text-lg font-semibold">
+              Comments <%= if @thread, do: @thread.comment_count, else: 0 %>
+            </h2>
+            <label for="comments-drawer" class="btn btn-sm btn-ghost btn-circle">✕</label>
+          </div>
+
+          <!-- Comments list -->
+          <div class="flex-1 overflow-y-auto p-4 max-h-[calc(100vh-140px)]">
+            <%= if @thread do %>
+              <.svelte
+                name="CommentTree"
+                props={
+                  %{
+                    comments: @comment_tree,
+                    current_user_id: (@current_user && @current_user.id) || nil,
+                    current_user_is_admin: (@current_user && @current_user.is_admin) || false,
+                    thread_author_id: @thread.author_id,
+                    solved_comment_id: nil,
+                    compact: true
+                  }
+                }
+                socket={@socket}
+              />
+            <% else %>
+              <p class="text-sm text-base-content/60 text-center py-8">
+                Comments not enabled for this video.
+              </p>
+            <% end %>
+          </div>
+
+          <!-- Add comment input -->
+          <div class="p-4 border-t border-base-300">
+            <%= if @current_user do %>
+              <form phx-submit="create_comment" class="flex gap-2">
+                <input
+                  type="text"
+                  name="body"
+                  placeholder="Add a comment..."
+                  required
+                  class="input input-bordered flex-1"
+                />
+                <button type="submit" class="btn btn-primary">Send</button>
+              </form>
+            <% else %>
+              <p class="text-sm text-base-content/60 text-center">
+                <.link navigate={~p"/signin"} class="link link-primary">Sign in</.link> to comment
+              </p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Comment Modal -->
+    <dialog id="report_comment_modal" class="modal">
+      <div class="modal-box bg-base-200">
+        <form method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 class="font-bold text-lg mb-4">Report Comment</h3>
+        <form phx-submit="report_comment" class="space-y-4">
+          <input type="hidden" name="comment_id" value={@reporting_comment_id} />
+          <div>
+            <label class="label"><span class="label-text">Reason</span></label>
+            <select name="reason" class="select select-bordered w-full" required>
+              <option value="">Select a reason</option>
+              <option value="spam">Spam</option>
+              <option value="abuse">Abuse</option>
+              <option value="offensive">Offensive</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">Description</span></label>
+            <textarea
+              name="description"
+              placeholder="Explain why you're reporting this comment..."
+              class="textarea textarea-bordered w-full min-h-24"
+              required
+              minlength="10"
+            ></textarea>
+          </div>
+          <div class="modal-action">
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('report_comment_modal').close()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-error">Submit Report</button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+    """
+  end
+
+  defp render_standard(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 text-base-content pt-16">
-      <!-- Video Embed - Full width for shorts, contained for standard -->
-      <div class={[
-        "w-full",
-        if(@video.format == "short", do: "max-w-md mx-auto", else: "max-w-[1800px] mx-auto")
-      ]}>
+      <!-- Video Embed -->
+      <div class="w-full max-w-[1800px] mx-auto">
         <%= if @video.tiktok_url && @video.tiktok_url != "" do %>
           <.svelte
             name="TikTokEmbed"
@@ -375,12 +607,7 @@ defmodule UrielmWeb.VideoLive do
             socket={@socket}
           />
         <% else %>
-          <div class={
-            if(@video.format == "short",
-              do: "",
-              else: "aspect-video bg-base-content overflow-hidden lg:rounded-xl"
-            )
-          }>
+          <div class="aspect-video bg-base-content overflow-hidden lg:rounded-xl">
             <.svelte
               name="YouTubePlayer"
               props={%{videoId: extract_youtube_id(@video.youtube_url), controls: true}}
@@ -390,7 +617,7 @@ defmodule UrielmWeb.VideoLive do
           </div>
         <% end %>
       </div>
-      
+
     <!-- Main Content -->
       <div class="max-w-4xl mx-auto px-4 py-6 pb-24 lg:pb-6">
         <!-- Video Title -->
@@ -445,7 +672,7 @@ defmodule UrielmWeb.VideoLive do
           <!-- HOME/DESCRIPTION TAB -->
           <div class={[
             "space-y-4",
-            if(@dock_tab != "home" && @active_section != "description", do: "hidden lg:block")
+            section_visibility(@dock_tab, @active_section, "home", "description")
           ]}>
             <%= if @video.description_md && @video.description_md != "" do %>
               <div class="bg-base-200 rounded-xl p-4">
@@ -463,7 +690,7 @@ defmodule UrielmWeb.VideoLive do
     <!-- RESOURCES TAB -->
           <div class={[
             "space-y-4",
-            if(@dock_tab != "resources" && @active_section != "resources", do: "hidden lg:block")
+            section_visibility(@dock_tab, @active_section, "resources", "resources")
           ]}>
             <%= if @video.resources_md && @video.resources_md != "" do %>
               <h3 class="text-lg font-semibold text-base-content">Resources</h3>
@@ -486,7 +713,7 @@ defmodule UrielmWeb.VideoLive do
     <!-- AUTHOR TAB -->
           <div class={[
             "space-y-4",
-            if(@dock_tab != "author" && @active_section != "author", do: "hidden lg:block")
+            section_visibility(@dock_tab, @active_section, "author", "author")
           ]}>
             <%= if @video.author_name do %>
               <h3 class="text-lg font-semibold text-base-content">About the Author</h3>
@@ -519,7 +746,7 @@ defmodule UrielmWeb.VideoLive do
     <!-- COMMENTS TAB -->
           <div class={[
             "space-y-4",
-            if(@dock_tab != "comments" && @active_section != "comments", do: "hidden lg:block")
+            section_visibility(@dock_tab, @active_section, "comments", "comments")
           ]}>
             <%= if @thread do %>
               <div class="flex items-center justify-between">

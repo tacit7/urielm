@@ -3,6 +3,7 @@ defmodule UrielmWeb.UserProfileLive do
   use LiveSvelte.Components
 
   alias Urielm.Accounts
+  alias Urielm.Accounts.User
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
 
@@ -56,6 +57,10 @@ defmodule UrielmWeb.UserProfileLive do
           |> assign(:editing_username, false)
           |> assign(:editing_display_name, false)
           |> assign(:show_delete_confirm, false)
+          |> assign(:show_suspend_modal, false)
+          |> assign(:show_silence_modal, false)
+          |> assign(:mod_reason, "")
+          |> assign(:mod_duration, "forever")
 
         socket =
           case tab do
@@ -314,6 +319,139 @@ defmodule UrielmWeb.UserProfileLive do
 
   # comment serialization moved to LiveHelpers.serialize_comment/2
 
+  ## Moderation actions
+
+  @impl true
+  def handle_event("show_suspend_modal", _params, socket) do
+    {:noreply, assign(socket, show_suspend_modal: true, mod_reason: "", mod_duration: "forever")}
+  end
+
+  @impl true
+  def handle_event("show_silence_modal", _params, socket) do
+    {:noreply, assign(socket, show_silence_modal: true, mod_reason: "", mod_duration: "forever")}
+  end
+
+  @impl true
+  def handle_event("close_mod_modal", _params, socket) do
+    {:noreply, assign(socket, show_suspend_modal: false, show_silence_modal: false)}
+  end
+
+  @impl true
+  def handle_event("update_mod_form", %{"reason" => reason, "duration" => duration}, socket) do
+    {:noreply, assign(socket, mod_reason: reason, mod_duration: duration)}
+  end
+
+  @impl true
+  def handle_event("suspend_user", _params, socket) do
+    current_user = socket.assigns.current_user
+    target_user = socket.assigns.user
+    reason = socket.assigns.mod_reason
+    duration = socket.assigns.mod_duration
+
+    if can_moderate?(current_user, target_user) && reason != "" do
+      until = duration_to_datetime(duration)
+
+      case Accounts.suspend_user(target_user, current_user, reason: reason, until: until) do
+        {:ok, updated_user} ->
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> assign(:show_suspend_modal, false)
+           |> put_flash(:info, "User suspended successfully")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to suspend user")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized or missing reason")}
+    end
+  end
+
+  @impl true
+  def handle_event("unsuspend_user", _params, socket) do
+    current_user = socket.assigns.current_user
+    target_user = socket.assigns.user
+
+    if can_moderate?(current_user, target_user) do
+      case Accounts.unsuspend_user(target_user, current_user) do
+        {:ok, updated_user} ->
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> put_flash(:info, "User unsuspended successfully")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unsuspend user")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  @impl true
+  def handle_event("silence_user", _params, socket) do
+    current_user = socket.assigns.current_user
+    target_user = socket.assigns.user
+    reason = socket.assigns.mod_reason
+    duration = socket.assigns.mod_duration
+
+    if can_moderate?(current_user, target_user) && reason != "" do
+      until = duration_to_datetime(duration)
+
+      case Accounts.silence_user(target_user, current_user, reason: reason, until: until) do
+        {:ok, updated_user} ->
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> assign(:show_silence_modal, false)
+           |> put_flash(:info, "User silenced successfully")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to silence user")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized or missing reason")}
+    end
+  end
+
+  @impl true
+  def handle_event("unsilence_user", _params, socket) do
+    current_user = socket.assigns.current_user
+    target_user = socket.assigns.user
+
+    if can_moderate?(current_user, target_user) do
+      case Accounts.unsilence_user(target_user, current_user) do
+        {:ok, updated_user} ->
+          {:noreply,
+           socket
+           |> assign(:user, updated_user)
+           |> put_flash(:info, "User unsilenced successfully")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unsilence user")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  defp can_moderate?(current_user, target_user) do
+    current_user &&
+      current_user.id != target_user.id &&
+      (current_user.is_admin || current_user.is_moderator)
+  end
+
+  defp duration_to_datetime("forever"), do: nil
+  defp duration_to_datetime("1h"), do: DateTime.add(DateTime.utc_now(), 1, :hour)
+  defp duration_to_datetime("1d"), do: DateTime.add(DateTime.utc_now(), 1, :day)
+  defp duration_to_datetime("3d"), do: DateTime.add(DateTime.utc_now(), 3, :day)
+  defp duration_to_datetime("1w"), do: DateTime.add(DateTime.utc_now(), 7, :day)
+  defp duration_to_datetime("1m"), do: DateTime.add(DateTime.utc_now(), 30, :day)
+  defp duration_to_datetime("3m"), do: DateTime.add(DateTime.utc_now(), 90, :day)
+  defp duration_to_datetime("6m"), do: DateTime.add(DateTime.utc_now(), 180, :day)
+  defp duration_to_datetime("1y"), do: DateTime.add(DateTime.utc_now(), 365, :day)
+  defp duration_to_datetime(_), do: nil
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -346,6 +484,12 @@ defmodule UrielmWeb.UserProfileLive do
                 <% end %>
                 <%= if @user.is_moderator && !@user.is_admin do %>
                   <span class="badge badge-warning">Moderator</span>
+                <% end %>
+                <%= if User.suspended?(@user) do %>
+                  <span class="badge badge-error badge-outline">Suspended</span>
+                <% end %>
+                <%= if User.silenced?(@user) do %>
+                  <span class="badge badge-warning badge-outline">Silenced</span>
                 <% end %>
               </div>
 
@@ -407,19 +551,62 @@ defmodule UrielmWeb.UserProfileLive do
               </div>
 
               <%= if @current_user && @current_user.id != @user.id do %>
-                <button
-                  phx-click="toggle_follow"
-                  class={[
-                    "btn btn-sm",
-                    if(@is_following, do: "btn-outline", else: "btn-primary")
-                  ]}
-                >
-                  <%= if @is_following do %>
-                    Following
-                  <% else %>
-                    Follow
+                <div class="flex items-center gap-2">
+                  <button
+                    phx-click="toggle_follow"
+                    class={[
+                      "btn btn-sm",
+                      if(@is_following, do: "btn-outline", else: "btn-primary")
+                    ]}
+                  >
+                    <%= if @is_following do %>
+                      Following
+                    <% else %>
+                      Follow
+                    <% end %>
+                  </button>
+
+                  <!-- Moderation Actions -->
+                  <%= if @current_user.is_admin || @current_user.is_moderator do %>
+                    <div class="dropdown dropdown-end">
+                      <label tabindex="0" class="btn btn-sm btn-ghost">
+                        <.um_icon name="hero-ellipsis-vertical" class="w-5 h-5" />
+                      </label>
+                      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
+                        <%= if User.suspended?(@user) do %>
+                          <li>
+                            <button phx-click="unsuspend_user" class="text-success">
+                              <.um_icon name="hero-check-circle" class="w-4 h-4" />
+                              Unsuspend User
+                            </button>
+                          </li>
+                        <% else %>
+                          <li>
+                            <button phx-click="show_suspend_modal" class="text-error">
+                              <.um_icon name="hero-no-symbol" class="w-4 h-4" />
+                              Suspend User
+                            </button>
+                          </li>
+                        <% end %>
+                        <%= if User.silenced?(@user) do %>
+                          <li>
+                            <button phx-click="unsilence_user" class="text-success">
+                              <.um_icon name="hero-check-circle" class="w-4 h-4" />
+                              Unsilence User
+                            </button>
+                          </li>
+                        <% else %>
+                          <li>
+                            <button phx-click="show_silence_modal" class="text-warning">
+                              <.um_icon name="hero-speaker-x-mark" class="w-4 h-4" />
+                              Silence User
+                            </button>
+                          </li>
+                        <% end %>
+                      </ul>
+                    </div>
                   <% end %>
-                </button>
+                </div>
               <% end %>
             </div>
           </div>
@@ -752,6 +939,124 @@ defmodule UrielmWeb.UserProfileLive do
           <% end %>
         </div>
       </div>
+
+      <!-- Suspend Modal -->
+      <%= if @show_suspend_modal do %>
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" phx-click="close_mod_modal">
+          <div class="modal-box bg-base-200" phx-click-away="close_mod_modal">
+            <h3 class="font-bold text-lg text-error">Suspend {@user.username}</h3>
+            <p class="py-2 text-sm text-base-content/70">
+              Suspended users cannot login or access the site.
+            </p>
+            <div class="space-y-4 mt-4">
+              <div>
+                <label class="label">
+                  <span class="label-text">Reason (required)</span>
+                </label>
+                <textarea
+                  class="textarea textarea-bordered w-full bg-base-300"
+                  placeholder="Why is this user being suspended?"
+                  phx-change="update_mod_form"
+                  name="reason"
+                  rows="3"
+                ><%= @mod_reason %></textarea>
+              </div>
+              <div>
+                <label class="label">
+                  <span class="label-text">Duration</span>
+                </label>
+                <select
+                  class="select select-bordered w-full bg-base-300"
+                  phx-change="update_mod_form"
+                  name="duration"
+                >
+                  <option value="1h" selected={@mod_duration == "1h"}>1 hour</option>
+                  <option value="1d" selected={@mod_duration == "1d"}>1 day</option>
+                  <option value="3d" selected={@mod_duration == "3d"}>3 days</option>
+                  <option value="1w" selected={@mod_duration == "1w"}>1 week</option>
+                  <option value="1m" selected={@mod_duration == "1m"}>1 month</option>
+                  <option value="3m" selected={@mod_duration == "3m"}>3 months</option>
+                  <option value="6m" selected={@mod_duration == "6m"}>6 months</option>
+                  <option value="1y" selected={@mod_duration == "1y"}>1 year</option>
+                  <option value="forever" selected={@mod_duration == "forever"}>Forever</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-action">
+              <button type="button" phx-click="close_mod_modal" class="btn btn-ghost">
+                Cancel
+              </button>
+              <button
+                type="button"
+                phx-click="suspend_user"
+                class="btn btn-error"
+                disabled={@mod_reason == ""}
+              >
+                Suspend User
+              </button>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Silence Modal -->
+      <%= if @show_silence_modal do %>
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" phx-click="close_mod_modal">
+          <div class="modal-box bg-base-200" phx-click-away="close_mod_modal">
+            <h3 class="font-bold text-lg text-warning">Silence {@user.username}</h3>
+            <p class="py-2 text-sm text-base-content/70">
+              Silenced users can browse but cannot post, comment, or vote.
+            </p>
+            <div class="space-y-4 mt-4">
+              <div>
+                <label class="label">
+                  <span class="label-text">Reason (required)</span>
+                </label>
+                <textarea
+                  class="textarea textarea-bordered w-full bg-base-300"
+                  placeholder="Why is this user being silenced?"
+                  phx-change="update_mod_form"
+                  name="reason"
+                  rows="3"
+                ><%= @mod_reason %></textarea>
+              </div>
+              <div>
+                <label class="label">
+                  <span class="label-text">Duration</span>
+                </label>
+                <select
+                  class="select select-bordered w-full bg-base-300"
+                  phx-change="update_mod_form"
+                  name="duration"
+                >
+                  <option value="1h" selected={@mod_duration == "1h"}>1 hour</option>
+                  <option value="1d" selected={@mod_duration == "1d"}>1 day</option>
+                  <option value="3d" selected={@mod_duration == "3d"}>3 days</option>
+                  <option value="1w" selected={@mod_duration == "1w"}>1 week</option>
+                  <option value="1m" selected={@mod_duration == "1m"}>1 month</option>
+                  <option value="3m" selected={@mod_duration == "3m"}>3 months</option>
+                  <option value="6m" selected={@mod_duration == "6m"}>6 months</option>
+                  <option value="1y" selected={@mod_duration == "1y"}>1 year</option>
+                  <option value="forever" selected={@mod_duration == "forever"}>Forever</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-action">
+              <button type="button" phx-click="close_mod_modal" class="btn btn-ghost">
+                Cancel
+              </button>
+              <button
+                type="button"
+                phx-click="silence_user"
+                class="btn btn-warning"
+                disabled={@mod_reason == ""}
+              >
+                Silence User
+              </button>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </div>
     """
   end

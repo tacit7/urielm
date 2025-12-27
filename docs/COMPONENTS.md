@@ -509,7 +509,8 @@ The old `SubNav` component can be replaced with UnderlineNav:
 - `docs/COMPONENTS.md` - This file
 
 **Using It:**
-- `lib/urielm_web/live/video_live.ex` - Video page sections
+- `lib/urielm_web/live/video_live.ex` - Video page sections (standard layout)
+- `lib/urielm_web/live/lesson_live.ex` - Lesson page sections
 - Can replace `SubNav` in `lib/urielm_web/live/prompts_live.ex`
 
 ### Related Documentation
@@ -517,6 +518,109 @@ The old `SubNav` component can be replaced with UnderlineNav:
 - `docs/UnderlineNav.md` - Complete API reference and examples
 - `docs/CODING_GUIDELINES.md` - Svelte component conventions
 - GitHub Primer - [Underline Nav](https://primer.style/components/underline-nav)
+
+---
+
+## VideoLive - Dual Layout (Standard & Shorts)
+
+**File:** `lib/urielm_web/live/video_live.ex`
+**Updated:** 2025-12-26
+
+### Purpose
+
+VideoLive renders videos in two distinct layouts based on the `format` field:
+- **Standard** (`format: "standard"`) - Traditional YouTube-style horizontal layout
+- **Shorts** (`format: "short"`) - TikTok/YouTube Shorts-style vertical full-screen layout
+
+### Shorts Layout Features
+
+The shorts layout (`render_short/1`) implements a TikTok-style experience:
+
+1. **Full-screen video** - Uses CSS `h-screen w-screen` with scroll snapping
+2. **Gradient overlay** - `bg-gradient-to-t from-black/70 via-black/10 to-black/20` for text legibility
+3. **Right action rail** - Vertical Like, Comments, Share buttons
+4. **Bottom metadata** - Author avatar, @handle, title, description, tags
+5. **Comments drawer** - DaisyUI drawer slides in from right
+
+```elixir
+# Layout is determined by video.format
+def render(assigns) do
+  if assigns.video.format == "short" do
+    render_short(assigns)
+  else
+    render_standard(assigns)
+  end
+end
+```
+
+### Section Visibility Pattern
+
+Both video and lesson pages use a `section_visibility/4` helper for mobile/desktop tab coordination:
+
+```elixir
+# Mobile: show if dock_tab matches
+# Desktop: show if active_section matches
+defp section_visibility(dock_tab, active_section, mobile_key, desktop_key) do
+  mobile_matches = dock_tab == mobile_key
+  desktop_matches = active_section == desktop_key
+
+  case {mobile_matches, desktop_matches} do
+    {true, true} -> ""              # visible everywhere
+    {true, false} -> "lg:hidden"    # mobile only
+    {false, true} -> "hidden lg:block"  # desktop only
+    {false, false} -> "hidden"      # hidden everywhere
+  end
+end
+```
+
+### Files Involved
+
+- `lib/urielm_web/live/video_live.ex` - Main video page (both layouts)
+- `lib/urielm_web/live/lesson_live.ex` - Uses same visibility pattern
+- `assets/svelte/TikTokEmbed.svelte` - TikTok video embed with fullscreen mode
+
+---
+
+## TikTokEmbed - Full-Screen Video Embed
+
+**File:** `assets/svelte/TikTokEmbed.svelte`
+**Updated:** 2025-12-26
+
+### Purpose
+
+Embeds TikTok videos with support for standard and fullscreen modes.
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `tiktokUrl` | string | `''` | TikTok video URL |
+| `fullscreen` | boolean | `false` | Enable fullscreen mode |
+
+### Usage
+
+```elixir
+# Standard embed (constrained width)
+<.svelte
+  name="TikTokEmbed"
+  props={%{tiktokUrl: @video.tiktok_url}}
+  socket={@socket}
+/>
+
+# Fullscreen embed (for shorts layout)
+<.svelte
+  name="TikTokEmbed"
+  props={%{tiktokUrl: @video.tiktok_url, fullscreen: true}}
+  socket={@socket}
+/>
+```
+
+### Fullscreen Mode
+
+When `fullscreen: true`, the embed:
+- Uses CSS transform to scale video to fill viewport
+- Applies responsive scaling based on viewport height
+- Removes border radius for seamless full-bleed appearance
 
 ---
 
