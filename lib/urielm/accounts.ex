@@ -6,7 +6,8 @@ defmodule Urielm.Accounts do
   import Ecto.Query, warn: false
   alias Urielm.Repo
   alias Urielm.Accounts.{User, OAuthIdentity, SavedPrompt, UserFollow}
-  alias Urielm.Content.{Like, Prompt}
+  alias Urielm.Content.Prompt
+  alias Urielm.Engagement
 
   ## User functions
 
@@ -207,19 +208,18 @@ defmodule Urielm.Accounts do
     |> Enum.map(& &1.prompt)
   end
 
-  ## Likes
+  ## Likes (using unified Engagement.Vote system)
 
   @doc """
-  Likes a prompt for a user.
+  Likes a prompt for a user. Uses +1 vote value.
   """
   def like_prompt(%User{id: user_id}, prompt_id) do
-    %Like{}
-    |> Like.changeset(%{user_id: user_id, prompt_id: prompt_id})
-    |> Repo.insert()
-    |> case do
-      {:ok, like} ->
+    target_id = to_string(prompt_id)
+
+    case Engagement.cast_vote(user_id, "prompt", target_id, 1) do
+      {:ok, vote} ->
         increment_prompt_counter(prompt_id, :likes_count)
-        {:ok, like}
+        {:ok, vote}
 
       error ->
         error
@@ -230,14 +230,18 @@ defmodule Urielm.Accounts do
   Unlikes a prompt for a user.
   """
   def unlike_prompt(%User{id: user_id}, prompt_id) do
-    case Repo.get_by(Like, user_id: user_id, prompt_id: prompt_id) do
-      nil ->
+    target_id = to_string(prompt_id)
+
+    case Engagement.unvote(user_id, "prompt", target_id) do
+      {:ok, nil} ->
         {:error, :not_found}
 
-      like ->
-        Repo.delete(like)
+      {:ok, _vote} ->
         decrement_prompt_counter(prompt_id, :likes_count)
-        {:ok, like}
+        {:ok, :unliked}
+
+      error ->
+        error
     end
   end
 

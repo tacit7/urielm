@@ -3,6 +3,7 @@ defmodule UrielmWeb.LessonLive do
   alias Urielm.Learning
   alias Urielm.Params
   alias Urielm.Learning.LessonComment
+  alias Urielm.Engagement
 
   @impl true
   def mount(params, session, socket) do
@@ -36,6 +37,11 @@ defmodule UrielmWeb.LessonLive do
             changeset = Learning.change_lesson_comment(%LessonComment{})
             nav_items = build_nav_items(lesson, course)
 
+            # Load vote data
+            %{current_user: user} = socket.assigns
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("lesson", lesson.id)
+            user_vote = if user, do: Engagement.get_vote(user.id, "lesson", lesson.id), else: nil
+
             {:ok,
              socket
              |> assign(:course, course)
@@ -47,7 +53,10 @@ defmodule UrielmWeb.LessonLive do
              |> assign(:page_title, lesson.title)
              |> assign(:dock_tab, "home")
              |> assign(:active_section, "home")
-             |> assign(:nav_items, nav_items)}
+             |> assign(:nav_items, nav_items)
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)}
         end
     end
   end
@@ -97,6 +106,34 @@ defmodule UrielmWeb.LessonLive do
   @impl true
   def handle_event("tab_change", %{"key" => key}, socket) do
     {:noreply, assign(socket, :active_section, key)}
+  end
+
+  @impl true
+  def handle_event("vote", %{"target_type" => "lesson", "target_id" => id, "value" => value}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to vote")}
+
+      user ->
+        value_int = String.to_integer(value)
+
+        case Engagement.toggle_vote(user.id, "lesson", id, value_int) do
+          {:ok, _} ->
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("lesson", id)
+            user_vote = Engagement.get_vote(user.id, "lesson", id)
+
+            {:noreply,
+             socket
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to vote")}
+        end
+    end
   end
 
   @impl true
@@ -192,8 +229,26 @@ defmodule UrielmWeb.LessonLive do
             <h1 class="text-lg font-bold text-base-content truncate flex-1">{@lesson.title}</h1>
           </div>
           
-    <!-- Video Title -->
-          <h1 class="text-2xl font-bold text-base-content mb-3 hidden lg:block">{@lesson.title}</h1>
+    <!-- Video Title & Actions -->
+          <div class="hidden lg:flex items-start justify-between gap-4 mb-3">
+            <h1 class="text-2xl font-bold text-base-content">{@lesson.title}</h1>
+            <!-- Vote Buttons -->
+            <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
+              <.svelte
+                name="VoteButtons"
+                props={%{
+                  target_type: "lesson",
+                  target_id: @lesson.id,
+                  upvotes: @upvotes,
+                  downvotes: @downvotes,
+                  user_vote: @user_vote,
+                  layout: "horizontal",
+                  size: "sm"
+                }}
+                socket={@socket}
+              />
+            </div>
+          </div>
 
     <!-- Desktop: UnderlineNav -->
           <div class="hidden lg:block mb-6">

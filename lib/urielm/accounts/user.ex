@@ -33,13 +33,12 @@ defmodule Urielm.Accounts.User do
     has_many(:oauth_identities, Urielm.Accounts.OAuthIdentity)
     has_many(:saved_prompts, Urielm.Accounts.SavedPrompt)
     has_many(:comments, Urielm.Content.Comment)
-    has_many(:likes, Urielm.Content.Like)
     has_many(:room_memberships, Urielm.Chat.RoomMembership)
     has_many(:rooms, through: [:room_memberships, :room])
     has_many(:messages, Urielm.Chat.Message)
     has_many(:forum_threads, Urielm.Forum.Thread, foreign_key: :author_id)
     has_many(:forum_comments, Urielm.Forum.Comment, foreign_key: :author_id)
-    has_many(:forum_votes, Urielm.Forum.Vote, foreign_key: :user_id)
+    has_many(:votes, Urielm.Engagement.Vote, foreign_key: :user_id)
 
     timestamps(type: :utc_datetime)
   end

@@ -7,9 +7,9 @@ defmodule Urielm.Content do
   alias Urielm.Repo
   alias Urielm.Content.Prompt
   alias Urielm.Content.Post
-  alias Urielm.Content.Like
   alias Urielm.Content.Comment
   alias Urielm.Accounts.SavedPrompt
+  alias Urielm.Engagement
 
   @doc """
   Returns the list of prompts.
@@ -400,27 +400,23 @@ defmodule Urielm.Content do
     Post.changeset(post, attrs)
   end
 
-  # Like functions
+  # Like functions (now uses unified Engagement.Vote system)
 
   @doc """
   Creates or deletes a like for a prompt by a user.
+  Uses the unified vote system with +1 for likes.
   Returns :ok and updated prompt if successful.
   """
   def toggle_like(user_id, prompt_id) do
-    case Repo.get_by(Like, user_id: user_id, prompt_id: prompt_id) do
-      nil ->
-        # Create like
-        with {:ok, _} <- Repo.insert(%Like{user_id: user_id, prompt_id: prompt_id}),
-             {:ok, prompt} <- update_prompt_likes_count(prompt_id) do
-          {:ok, prompt}
-        end
+    # Convert prompt_id to string for binary_id field
+    target_id = to_string(prompt_id)
 
-      like ->
-        # Delete like
-        with {:ok, _} <- Repo.delete(like),
-             {:ok, prompt} <- update_prompt_likes_count(prompt_id) do
-          {:ok, prompt}
-        end
+    case Engagement.toggle_vote(user_id, "prompt", target_id, 1) do
+      {:ok, _} ->
+        update_prompt_likes_count(prompt_id)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -428,7 +424,12 @@ defmodule Urielm.Content do
   Checks if a user has liked a prompt.
   """
   def user_liked_prompt?(user_id, prompt_id) do
-    Repo.exists?(from(l in Like, where: l.user_id == ^user_id and l.prompt_id == ^prompt_id))
+    target_id = to_string(prompt_id)
+
+    case Engagement.get_vote(user_id, "prompt", target_id) do
+      %{value: 1} -> true
+      _ -> false
+    end
   end
 
   # Save functions
@@ -542,7 +543,16 @@ defmodule Urielm.Content do
   # Helper functions
 
   defp update_prompt_likes_count(prompt_id) do
-    count = Repo.aggregate(from(l in Like, where: l.prompt_id == ^prompt_id), :count)
+    target_id = to_string(prompt_id)
+    alias Urielm.Engagement.Vote
+
+    count =
+      Repo.aggregate(
+        from(v in Vote,
+          where: v.target_type == "prompt" and v.target_id == ^target_id and v.value == 1
+        ),
+        :count
+      )
 
     prompt = Repo.get!(Prompt, prompt_id)
     update_prompt(prompt, %{likes_count: count})

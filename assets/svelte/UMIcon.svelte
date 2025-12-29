@@ -27,7 +27,16 @@
     adjustments_vertical: 'adjustments-vertical',
     chevron_up: 'chevron-up',
     chevron_down: 'chevron-down',
-    building: 'building-office-2'
+    building: 'building-office-2',
+    // forum icons
+    bars_3: 'bars-3',
+    envelope: 'envelope',
+    envelope_solid: 'envelope-solid',
+    lock_closed: 'lock-closed',
+    check_circle: 'check-circle',
+    arrow_up: 'arrow-up',
+    pin: 'map-pin',
+    reply: 'arrow-uturn-left'
   }
 
   function resolve(n, v) {

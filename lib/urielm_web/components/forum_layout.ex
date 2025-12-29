@@ -23,21 +23,10 @@ defmodule UrielmWeb.Components.ForumLayout do
             for="forum-drawer"
             class="btn btn-ghost btn-sm btn-square"
             aria-label="Open sidebar"
+            role="button"
+            tabindex="0"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="w-5 h-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-              />
-            </svg>
+            <.um_icon name="bars_3" class="w-5 h-5" />
           </label>
           <a href="/forum" class="font-semibold text-base-content">Forum</a>
         </header>
@@ -52,7 +41,7 @@ defmodule UrielmWeb.Components.ForumLayout do
 
       <!-- Sidebar -->
       <aside class="drawer-side z-40">
-        <label for="forum-drawer" class="drawer-overlay" aria-label="Close sidebar"></label>
+        <label for="forum-drawer" class="drawer-overlay" aria-label="Close sidebar" role="button" tabindex="-1"></label>
         <nav class="w-64 min-h-screen bg-base-200 border-r border-base-300">
           <div class="p-4">
             <!-- Logo/Home -->

@@ -285,18 +285,34 @@ defmodule UrielmWeb.BoardLive do
     <!-- Threads Table -->
       <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
         <!-- Table Header -->
-        <div class="grid grid-cols-12 gap-4 px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
-          <div class="col-span-7">Topic</div>
-          <div class="col-span-2 text-right">Replies</div>
-          <div class="col-span-3 text-right">Activity</div>
+        <div class="flex items-center gap-4 px-4 sm:px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
+          <div class="flex-1">Topic</div>
+          <div class="hidden md:block w-12 text-center">Replies</div>
+          <div class="hidden md:block w-12 text-center">Views</div>
+          <div class="hidden lg:block w-28 text-right">Activity</div>
         </div>
         
     <!-- Threads List -->
         <div id="threads" phx-update="stream" class="">
           <div id="empty-state" class="hidden only:flex justify-center py-12">
             <div class="text-center text-base-content/50">
-              <p class="text-lg font-medium mb-2">No topics yet</p>
-              <p class="text-sm">Be the first to start a discussion!</p>
+              <%= case @filter do %>
+                <% "solved" -> %>
+                  <p class="text-lg font-medium mb-2">No solved topics</p>
+                  <p class="text-sm">Topics marked as solved will appear here</p>
+                <% "unsolved" -> %>
+                  <p class="text-lg font-medium mb-2">No unsolved topics</p>
+                  <p class="text-sm">All topics have been resolved!</p>
+                <% "unread" -> %>
+                  <p class="text-lg font-medium mb-2">All caught up!</p>
+                  <p class="text-sm">No unread topics in this board</p>
+                <% "new" -> %>
+                  <p class="text-lg font-medium mb-2">No new topics</p>
+                  <p class="text-sm">Check back later for fresh discussions</p>
+                <% _ -> %>
+                  <p class="text-lg font-medium mb-2">No topics yet</p>
+                  <p class="text-sm">Be the first to start a discussion!</p>
+              <% end %>
             </div>
           </div>
           <div

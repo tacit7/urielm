@@ -51,7 +51,16 @@ defmodule UrielmWeb.Components.UMIcon do
         "play" => "play",
         "bolt" => "bolt",
         "briefcase" => "briefcase",
-        "adjustments_vertical" => "adjustments-vertical"
+        "adjustments_vertical" => "adjustments-vertical",
+        # forum icons
+        "bars_3" => "bars-3",
+        "envelope" => "envelope",
+        "envelope_solid" => "envelope-solid",
+        "lock_closed" => "lock-closed",
+        "check_circle" => "check-circle",
+        "arrow_up" => "arrow-up",
+        "pin" => "map-pin",
+        "reply" => "arrow-uturn-left"
       }
       |> Map.get(name, name)
 

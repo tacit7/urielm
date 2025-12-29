@@ -19,7 +19,6 @@ defmodule Urielm.Forum do
     Board,
     Thread,
     Comment,
-    Vote,
     ThreadLink,
     SavedThread,
     SavedComment,
@@ -31,9 +30,11 @@ defmodule Urielm.Forum do
     TopicRead,
     TopicNotificationSetting,
     CategoryWatch,
-    Mention,
     PostRevision
   }
+
+  # Vote moved to Engagement context
+  alias Urielm.Engagement.Vote
 
   alias Urielm.MentionParser
 

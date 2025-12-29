@@ -21,7 +21,6 @@ defmodule Urielm.Content.Prompt do
 
     # Associations
     has_many(:comments, Urielm.Content.Comment)
-    has_many(:likes, Urielm.Content.Like)
     has_many(:saved_prompts, Urielm.Accounts.SavedPrompt)
     many_to_many(:tag_records, Urielm.Content.Tag, join_through: "prompt_tags")
 

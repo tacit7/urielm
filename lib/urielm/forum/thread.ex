@@ -39,7 +39,7 @@ defmodule Urielm.Forum.Thread do
     )
 
     has_many(:comments, Urielm.Forum.Comment)
-    has_many(:votes, Urielm.Forum.Vote, foreign_key: :target_id)
+    # Votes queried via Engagement context (target_type: "thread", target_id: id)
 
     timestamps(type: :utc_datetime_usec)
   end

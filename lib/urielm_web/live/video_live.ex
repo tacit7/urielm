@@ -4,6 +4,7 @@ defmodule UrielmWeb.VideoLive do
 
   alias Urielm.Content
   alias Urielm.Forum
+  alias Urielm.Engagement
   alias UrielmWeb.LiveHelpers
 
   @impl true
@@ -52,6 +53,10 @@ defmodule UrielmWeb.VideoLive do
 
           nav_items = build_nav_items(video, thread)
 
+          # Load vote data
+          {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", video.id)
+          user_vote = if user, do: Engagement.get_vote(user.id, "video", video.id), else: nil
+
           {:ok,
            socket
            |> assign(:page_title, video.title)
@@ -63,6 +68,9 @@ defmodule UrielmWeb.VideoLive do
            |> assign(:active_section, "description")
            |> assign(:dock_tab, "home")
            |> assign(:reporting_comment_id, nil)
+           |> assign(:upvotes, upvotes)
+           |> assign(:downvotes, downvotes)
+           |> assign(:user_vote, user_vote && user_vote.value)
            |> assign_meta_tags(video, slug)}
         end
       end
@@ -200,6 +208,35 @@ defmodule UrielmWeb.VideoLive do
   @impl true
   def handle_event("set_dock_tab", %{"tab" => tab}, socket) do
     {:noreply, assign(socket, :dock_tab, tab)}
+  end
+
+  @impl true
+  def handle_event("vote", %{"target_type" => "video", "target_id" => id, "value" => value}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to vote")}
+
+      user ->
+        value_int = String.to_integer(value)
+
+        case Engagement.toggle_vote(user.id, "video", id, value_int) do
+          {:ok, _} ->
+            # Refresh vote counts
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", id)
+            user_vote = Engagement.get_vote(user.id, "video", id)
+
+            {:noreply,
+             socket
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to vote")}
+        end
+    end
   end
 
   @impl true
@@ -418,14 +455,21 @@ defmodule UrielmWeb.VideoLive do
             </div>
 
             <!-- Right action rail -->
-            <aside class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3">
-              <!-- Like -->
-              <button class="btn btn-ghost btn-circle text-white hover:text-primary" aria-label="Like">
-                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 21s-7-4.4-10-9c-2.1-3.3.2-7.8 4.2-8.3 2.1-.3 3.9.7 4.8 2 1-1.3 2.8-2.3 4.8-2 4 .5 6.3 5 4.2 8.3-3 4.6-10 9-10 9z"/>
-                </svg>
-              </button>
-              <span class="text-xs opacity-80">Like</span>
+            <aside class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3 text-white">
+              <!-- Vote Buttons (vertical layout for shorts) -->
+              <.svelte
+                name="VoteButtons"
+                props={%{
+                  target_type: "video",
+                  target_id: @video.id,
+                  upvotes: @upvotes,
+                  downvotes: @downvotes,
+                  user_vote: @user_vote,
+                  layout: "vertical",
+                  size: "lg"
+                }}
+                socket={@socket}
+              />
 
               <!-- Comments drawer trigger -->
               <%= if @thread do %>
@@ -620,9 +664,27 @@ defmodule UrielmWeb.VideoLive do
 
     <!-- Main Content -->
       <div class="max-w-4xl mx-auto px-4 py-6 pb-24 lg:pb-6">
-        <!-- Video Title -->
-        <h1 class="text-2xl font-bold text-base-content mb-4">{@video.title}</h1>
-        
+        <!-- Video Title & Actions -->
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+          <h1 class="text-2xl font-bold text-base-content">{@video.title}</h1>
+          <!-- Vote Buttons -->
+          <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
+            <.svelte
+              name="VoteButtons"
+              props={%{
+                target_type: "video",
+                target_id: @video.id,
+                upvotes: @upvotes,
+                downvotes: @downvotes,
+                user_vote: @user_vote,
+                layout: "horizontal",
+                size: "sm"
+              }}
+              socket={@socket}
+            />
+          </div>
+        </div>
+
     <!-- Author Info (if available) -->
         <%= if @video.author_name do %>
           <div class="flex items-center gap-3 pb-4 border-b border-base-300 mb-4">

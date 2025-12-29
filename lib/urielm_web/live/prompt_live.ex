@@ -5,6 +5,7 @@ defmodule UrielmWeb.PromptLive do
   alias Urielm.Content
   alias Urielm.Params
   alias Urielm.Content.Comment
+  alias Urielm.Engagement
 
   @impl true
   def mount(params, session, socket) do
@@ -18,12 +19,21 @@ defmodule UrielmWeb.PromptLive do
     id = child_params["id"]
     prompt = Content.get_prompt_with_comments(String.to_integer(id))
 
+    # Load vote data
+    %{current_user: user} = socket.assigns
+    target_id = to_string(prompt.id)
+    {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+    user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+
     {:ok,
      socket
      |> assign(:page_title, prompt.title)
      |> assign(:prompt, prompt)
      |> assign(:comment_changeset, Content.change_comment(%Comment{}))
-     |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))}
+     |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
+     |> assign(:upvotes, upvotes)
+     |> assign(:downvotes, downvotes)
+     |> assign(:user_vote, user_vote && user_vote.value)}
   end
 
   @impl true
@@ -90,6 +100,35 @@ defmodule UrielmWeb.PromptLive do
     end
   end
 
+  @impl true
+  def handle_event("vote", %{"target_type" => "prompt", "target_id" => id, "value" => value}, socket) do
+    %{current_user: user} = socket.assigns
+
+    case user do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to vote")}
+
+      user ->
+        value_int = String.to_integer(value)
+
+        case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
+          {:ok, _} ->
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
+            user_vote = Engagement.get_vote(user.id, "prompt", id)
+
+            {:noreply,
+             socket
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to vote")}
+        end
+    end
+  end
+
+  # Keep toggle_like for backwards compatibility
   @impl true
   def handle_event("toggle_like", %{"id" => _id}, socket) do
     %{current_user: user, prompt: prompt} = socket.assigns
@@ -178,10 +217,10 @@ defmodule UrielmWeb.PromptLive do
                 name="PromptActions"
                 props={
                   %{
-                    likesCount: @prompt.likes_count,
+                    upvotes: @upvotes,
+                    downvotes: @downvotes,
                     savesCount: @prompt.saves_count,
-                    userLiked:
-                      @current_user && Content.user_liked_prompt?(@current_user.id, @prompt.id),
+                    userVote: @user_vote,
                     userSaved:
                       @current_user && Content.user_saved_prompt?(@current_user.id, @prompt.id),
                     promptId: to_string(@prompt.id)
