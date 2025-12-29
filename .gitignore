@@ -46,3 +46,6 @@ bin/docker-deploy.sh
 # Deployment directory copies
 /deploy@*/
 .env
+
+# macOS
+.DS_Store
