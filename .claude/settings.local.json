@@ -17,7 +17,8 @@
       "Bash(psql:*)",
       "Bash(mix seed_prompts:*)",
       "Bash(mix compile:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mix run:*)"
     ],
     "deny": [],
     "ask": []
