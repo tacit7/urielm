@@ -325,7 +325,7 @@ defmodule UrielmWeb.ForumLiveTest do
       _html = render_click(live, "delete_thread", %{})
 
       # Verify thread was marked as removed
-      updated_thread = Forum.get_thread!(thread.id)
+      updated_thread = Forum.get_thread!(thread.id, allow_removed?: true)
       assert updated_thread.is_removed
     end
 
@@ -336,7 +336,7 @@ defmodule UrielmWeb.ForumLiveTest do
       _html = render_click(live, "delete_thread", %{})
 
       # Verify thread was marked as removed
-      updated_thread = Forum.get_thread!(thread.id)
+      updated_thread = Forum.get_thread!(thread.id, allow_removed?: true)
       assert updated_thread.is_removed
     end
 

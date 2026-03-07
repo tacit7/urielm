@@ -51,7 +51,7 @@ defmodule Urielm.Content.Video do
     |> validate_inclusion(:visibility, ["public", "signed_in", "subscriber"])
     |> validate_inclusion(:format, ["standard", "short"])
     |> validate_video_url()
-    |> unique_constraint(:slug, name: :videos_slug_key)
+    |> unique_constraint(:slug, name: :videos_slug_index)
   end
 
   defp validate_video_url(changeset) do

@@ -4,7 +4,8 @@ defmodule Urielm.ForumTest do
   import Urielm.Fixtures
 
   alias Urielm.Forum
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote}
+  alias Urielm.Forum.{Thread, Comment}
+  alias Urielm.Engagement.Vote
 
   describe "categories" do
     test "list_categories/1 returns all non-hidden categories" do
