@@ -2,6 +2,10 @@ defmodule Urielm.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Flop.Schema,
+           filterable: [:username, :email, :trust_level],
+           sortable: [:username, :email, :trust_level, :inserted_at, :is_moderator, :is_admin]}
+
   schema "users" do
     field(:email, :string)
     field(:name, :string)

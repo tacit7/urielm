@@ -17,6 +17,50 @@ defmodule Urielm.Accounts do
   def get_user(id), do: Repo.get(User, id)
 
   @doc """
+  Paginates users with Flop. Supports search by username/email and filtering
+  by status (active/suspended/silenced).
+
+  Returns `{:ok, users, meta}` or `{:error, meta}`.
+
+  ## Options
+  - `:status` - "active" | "suspended" | "silenced"
+  - `:search` - string to match against username or email (ilike)
+  """
+  def paginate_users(params \\ %{}, opts \\ []) do
+    status = Keyword.get(opts, :status)
+    search = Keyword.get(opts, :search)
+
+    base =
+      from(u in User)
+      |> maybe_filter_user_status(status)
+      |> maybe_search_users(search)
+
+    Flop.validate_and_run(base, params, for: User, repo: Repo)
+  end
+
+  defp maybe_filter_user_status(query, nil), do: query
+
+  defp maybe_filter_user_status(query, "suspended") do
+    where(query, [u], not is_nil(u.suspended_at))
+  end
+
+  defp maybe_filter_user_status(query, "silenced") do
+    where(query, [u], not is_nil(u.silenced_at))
+  end
+
+  defp maybe_filter_user_status(query, "active") do
+    where(query, [u], is_nil(u.suspended_at) and is_nil(u.silenced_at))
+  end
+
+  defp maybe_search_users(query, nil), do: query
+  defp maybe_search_users(query, ""), do: query
+
+  defp maybe_search_users(query, search) do
+    term = "%#{search}%"
+    where(query, [u], ilike(u.username, ^term) or ilike(u.email, ^term))
+  end
+
+  @doc """
   Gets a user by email.
   """
   def get_user_by_email(email) when is_binary(email) do
@@ -323,6 +367,15 @@ defmodule Urielm.Accounts do
   end
 
   ## Moderator Management (Admin only)
+
+  def update_trust_level(%User{} = user, trust_level, %{is_admin: true} = _admin)
+      when trust_level in 0..4 do
+    user
+    |> Ecto.Changeset.change(trust_level: trust_level)
+    |> Repo.update()
+  end
+
+  def update_trust_level(_user, _level, _non_admin), do: {:error, :unauthorized}
 
   def grant_moderator(%User{} = user, %{is_admin: true} = _admin) do
     user

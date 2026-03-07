@@ -105,6 +105,8 @@ defmodule UrielmWeb.Router do
       ] do
       live "/admin/trust-levels", Admin.TrustLevelSettingsLive
       live "/admin/moderation", Admin.ModerationQueueLive
+      live "/admin/users", Admin.UserManagementLive
+      live "/admin/users/:id", Admin.UserDetailLive
     end
   end
 
