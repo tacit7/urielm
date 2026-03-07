@@ -11,18 +11,25 @@ defmodule UrielmWeb.NewThreadLive do
     board = Forum.get_board!(slug)
     user = socket.assigns.current_user
 
-    # Check if user needs a handle before posting
-    if is_nil(user.username) do
-      {:ok,
-       socket
-       |> put_flash(:info, "Please set a username before creating a thread")
-       |> redirect(to: ~p"/signup/set-handle")}
-    else
-      {:ok,
-       socket
-       |> assign(:page_title, "New Thread")
-       |> assign(:board, board)
-       |> assign(:thread_form, to_form(Thread.changeset(%Thread{}, %{})))}
+    cond do
+      board.is_locked ->
+        {:ok,
+         socket
+         |> put_flash(:error, "This board is locked and not accepting new threads")
+         |> redirect(to: ~p"/forum/b/#{board.slug}")}
+
+      is_nil(user.username) ->
+        {:ok,
+         socket
+         |> put_flash(:info, "Please set a username before creating a thread")
+         |> redirect(to: ~p"/signup/set-handle")}
+
+      true ->
+        {:ok,
+         socket
+         |> assign(:page_title, "New Thread")
+         |> assign(:board, board)
+         |> assign(:thread_form, to_form(Thread.changeset(%Thread{}, %{})))}
     end
   end
 
@@ -61,6 +68,12 @@ defmodule UrielmWeb.NewThreadLive do
          socket
          |> put_flash(:info, "Thread created successfully")
          |> redirect(to: ~p"/forum/t/#{thread.id}")}
+
+      {:error, :board_locked} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "This board is locked and not accepting new threads")
+         |> redirect(to: ~p"/forum/b/#{board.slug}")}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :thread_form, to_form(changeset))}

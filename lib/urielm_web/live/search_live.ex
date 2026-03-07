@@ -8,19 +8,15 @@ defmodule UrielmWeb.SearchLive do
   @page_size 20
 
   @impl true
-  def mount(params, session, socket) do
-    # Handle both direct mount and child mount via live_render
-    child_params = case params do
-      :not_mounted_at_router -> session["child_params"] || %{}
-      params -> params
-    end
+  def mount(params, _session, socket) do
+    query = Map.get(params, "q", "")
 
-    query = Map.get(child_params, "q", "")
-    page = case child_params["page"] do
-      nil -> 1
-      p when is_binary(p) -> String.to_integer(p)
-      p when is_integer(p) -> p
-    end
+    page =
+      case params["page"] do
+        nil -> 1
+        p when is_binary(p) -> String.to_integer(p)
+        p when is_integer(p) -> p
+      end
 
     socket =
       if String.length(String.trim(query)) > 0 do
@@ -139,47 +135,48 @@ defmodule UrielmWeb.SearchLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-3xl">
-          <div class="mb-8">
-            <h1 class="text-4xl font-bold text-base-content mb-4">Search Forum</h1>
+      <Layouts.flash_group flash={@flash} />
+      <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <div class="mb-8">
+          <h1 class="text-4xl font-bold text-base-content mb-4">Search Forum</h1>
 
-            <form phx-submit="search" class="flex gap-2">
-              <input
-                type="text"
-                name="query"
-                value={@query}
-                placeholder="Search threads by title, content, or tags..."
-                class="input input-bordered flex-1"
+          <form phx-submit="search" class="flex gap-2">
+            <input
+              type="text"
+              name="query"
+              value={@query}
+              placeholder="Search threads by title, content, or tags..."
+              class="input input-bordered flex-1"
+            />
+            <button type="submit" class="btn btn-primary">Search</button>
+          </form>
+        </div>
+
+        <%= if String.length(String.trim(@query)) == 0 do %>
+          <div class="text-center py-12 text-base-content/50">
+            <p>Enter a search query to find threads</p>
+          </div>
+        <% else %>
+          <div id="results" phx-update="stream" class="space-y-4">
+            <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
+              No threads found matching your search.
+            </div>
+            <div :for={{id, result} <- @streams.results} id={id}>
+              <.svelte
+                name="ThreadCard"
+                props={result}
+                socket={@socket}
               />
-              <button type="submit" class="btn btn-primary">Search</button>
-            </form>
+            </div>
           </div>
 
-          <%= if String.length(String.trim(@query)) == 0 do %>
-            <div class="text-center py-12 text-base-content/50">
-              <p>Enter a search query to find threads</p>
-            </div>
-          <% else %>
-            <div id="results" phx-update="stream" class="space-y-4">
-              <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
-                No threads found matching your search.
-              </div>
-              <div :for={{id, result} <- @streams.results} id={id}>
-                <.svelte
-                  name="ThreadCard"
-                  props={result}
-                  socket={@socket}
-                />
-              </div>
-            </div>
-
-            <div class="flex items-center justify-center gap-2 mt-8">
-              <%= if @meta do %>
-                <.pagination meta={@meta} path={fn n -> ~p"/forum/search?q=#{@query}&page=#{n}" end} />
-              <% end %>
-            </div>
-          <% end %>
-        </div>
+          <div class="flex items-center justify-center gap-2 mt-8">
+            <%= if @meta do %>
+              <.pagination meta={@meta} path={fn n -> ~p"/forum/search?q=#{@query}&page=#{n}" end} />
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     </div>
     """
   end

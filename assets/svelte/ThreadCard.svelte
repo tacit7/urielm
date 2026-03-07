@@ -63,112 +63,110 @@
   }
 </script>
 
-<div class="grid grid-cols-12 gap-4 items-center px-5 py-4 hover:bg-base-200/30 transition-colors">
-  <!-- Topic Column (7 cols) -->
-  <div class="col-span-7">
+<div class="flex items-center gap-4 px-4 sm:px-5 py-4 hover:bg-base-200/30 transition-colors">
+  <!-- Topic Column (flexible) -->
+  <div class="flex-1 min-w-0">
     <a href="/forum/t/{id}" class="block group">
-      <div class="flex items-center gap-2">
-        <h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h3 class="text-base font-semibold text-base-content group-hover:text-primary transition-colors truncate max-w-full">
           {title}
         </h3>
         {#if is_pinned}
-          <span class="badge badge-info badge-sm gap-1">
+          <span class="badge badge-info badge-xs gap-1 flex-shrink-0">
             <UMIcon name="arrow_up" className="w-3 h-3" />
             pinned
           </span>
         {/if}
         {#if is_locked}
-          <span class="badge badge-warning badge-sm gap-1">
+          <span class="badge badge-warning badge-xs gap-1 flex-shrink-0">
             <UMIcon name="lock_closed" className="w-3 h-3" />
             locked
           </span>
         {/if}
         {#if is_solved}
-          <span class="badge badge-success badge-sm gap-1">
+          <span class="badge badge-success badge-xs gap-1 flex-shrink-0">
             <UMIcon name="check_circle" className="w-3 h-3" />
             solved
           </span>
         {/if}
         {#if is_unread}
-          <span class="badge badge-info badge-sm">new</span>
+          <span class="badge badge-info badge-xs flex-shrink-0">new</span>
         {/if}
       </div>
       <p class="text-sm text-base-content/60 mt-1 line-clamp-1">
         {body}
       </p>
-      <div class="flex items-center gap-3 text-xs text-base-content/50 mt-2">
+      <div class="flex items-center gap-2 text-xs text-base-content/50 mt-2 flex-wrap">
         <span>by {author?.username || "Unknown"}</span>
-        <span>•</span>
-        <span>{formatDate(created_at)}</span>
-        {#if view_count > 0}
-          <span>•</span>
-          <span>{view_count} {view_count === 1 ? "view" : "views"}</span>
-        {/if}
+        <span class="hidden sm:inline">•</span>
+        <span class="hidden sm:inline">{formatDate(created_at)}</span>
+        <!-- Mobile: show replies inline -->
+        <span class="sm:hidden">• {comment_count} {comment_count === 1 ? "reply" : "replies"}</span>
       </div>
     </a>
   </div>
 
-  <!-- Replies Column (2 cols) -->
-  <div class="col-span-2 text-right">
-    <div class="flex flex-col items-end">
-      <span class="text-sm font-semibold text-base-content">
-        {comment_count}
-      </span>
-      <span class="text-xs text-base-content/50">
-        {comment_count === 1 ? "reply" : "replies"}
-      </span>
-    </div>
+  <!-- Replies Column (desktop only) -->
+  <div class="hidden md:flex items-center justify-center w-12 flex-shrink-0">
+    <span class="text-sm font-medium text-base-content/70">
+      {comment_count}
+    </span>
   </div>
 
-  <!-- Activity Column (3 cols) -->
-  <div class="col-span-3 text-right">
-    <div class="flex items-center justify-end gap-3">
-      <!-- Vote Score -->
-      <div class="flex flex-col items-center gap-1 min-w-12">
-        <button
-          on:click|preventDefault={() => handleVote(1)}
-          class="text-base-content/50 hover:text-primary transition-colors text-sm"
-          class:text-primary={user_vote === 1}
-          title="Upvote"
-        >
-          <UMIcon name="chevron_up" className="w-3 h-3" />
-        </button>
-        <span class="text-sm font-semibold text-base-content min-w-6 text-center">
-          {score}
-        </span>
-        <button
-          on:click|preventDefault={() => handleVote(-1)}
-          class="text-base-content/50 hover:text-error transition-colors text-sm"
-          class:text-error={user_vote === -1}
-          title="Downvote"
-        >
-          <UMIcon name="chevron_down" className="w-3 h-3" />
-        </button>
-      </div>
+  <!-- Views Column (desktop only) -->
+  <div class="hidden md:flex items-center justify-center w-12 flex-shrink-0">
+    <span class="text-sm font-medium text-base-content/70">
+      {view_count}
+    </span>
+  </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-2">
-        <button
-          on:click|preventDefault={handleSubscribe}
-          class="btn btn-ghost btn-sm px-2 rounded"
-          class:btn-primary={is_subscribed}
-          title={is_subscribed ? "Unsubscribe" : "Subscribe"}
-        >
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M15 5H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 4l-7 4.5L3 9V7l7 4.5L15 7v2z" />
-          </svg>
-        </button>
-        <button
-          on:click|preventDefault={handleSave}
-          class="btn btn-ghost btn-sm px-2 rounded"
-          class:btn-primary={is_saved}
-          title={is_saved ? "Unsave" : "Save"}
-        >
-          <svg class="w-4 h-4" fill={is_saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v16l-8-4-8 4V5z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
-          </svg>
-        </button>
-      </div>
+  <!-- Activity Column (desktop only) -->
+  <div class="hidden lg:flex items-center justify-end gap-3 w-28 flex-shrink-0">
+    <!-- Vote Score -->
+    <div class="flex flex-col items-center gap-1 min-w-12" role="group" aria-label="Vote on this topic">
+      <button
+        on:click|preventDefault={() => handleVote(1)}
+        class="text-base-content/50 hover:text-primary transition-colors text-sm"
+        class:text-primary={user_vote === 1}
+        aria-label="Upvote"
+        aria-pressed={user_vote === 1}
+      >
+        <UMIcon name="chevron_up" className="w-3 h-3" />
+      </button>
+      <span class="text-sm font-semibold text-base-content min-w-6 text-center" aria-label="{score} votes">
+        {score}
+      </span>
+      <button
+        on:click|preventDefault={() => handleVote(-1)}
+        class="text-base-content/50 hover:text-error transition-colors text-sm"
+        class:text-error={user_vote === -1}
+        aria-label="Downvote"
+        aria-pressed={user_vote === -1}
+      >
+        <UMIcon name="chevron_down" className="w-3 h-3" />
+      </button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-2">
+      <button
+        on:click|preventDefault={handleSubscribe}
+        class="btn btn-ghost btn-sm px-2 rounded"
+        class:btn-primary={is_subscribed}
+        aria-label={is_subscribed ? "Unsubscribe from notifications" : "Subscribe to notifications"}
+        aria-pressed={is_subscribed}
+      >
+        <UMIcon name={is_subscribed ? "envelope_solid" : "envelope"} className="w-4 h-4" />
+      </button>
+      <button
+        on:click|preventDefault={handleSave}
+        class="btn btn-ghost btn-sm px-2 rounded"
+        class:btn-primary={is_saved}
+        aria-label={is_saved ? "Remove from saved" : "Save this topic"}
+        aria-pressed={is_saved}
+      >
+        <UMIcon name={is_saved ? "bookmark_solid" : "bookmark"} className="w-4 h-4" />
+      </button>
     </div>
   </div>
 </div>

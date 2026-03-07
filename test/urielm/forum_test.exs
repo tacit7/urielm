@@ -4,7 +4,8 @@ defmodule Urielm.ForumTest do
   import Urielm.Fixtures
 
   alias Urielm.Forum
-  alias Urielm.Forum.{Category, Board, Thread, Comment, Vote}
+  alias Urielm.Forum.{Thread, Comment}
+  alias Urielm.Engagement.Vote
 
   describe "categories" do
     test "list_categories/1 returns all non-hidden categories" do
@@ -65,6 +66,38 @@ defmodule Urielm.ForumTest do
 
       assert board.name == "Test Board"
       assert board.category_id == category.id
+    end
+
+    test "list_categories_with_boards/1 includes correct thread counts" do
+      category = category_fixture()
+      board = board_fixture(%{category_id: category.id})
+
+      # Create some threads
+      thread_fixture(%{board_id: board.id})
+      thread_fixture(%{board_id: board.id})
+      removed_thread = thread_fixture(%{board_id: board.id})
+
+      # Remove one thread - should not be counted
+      admin = admin_fixture()
+      Forum.remove_thread(removed_thread, admin)
+
+      # Fetch and verify count
+      [cat] = Forum.list_categories_with_boards()
+      [fetched_board] = cat.boards
+
+      assert fetched_board.id == board.id
+      assert fetched_board.thread_count == 2
+    end
+
+    test "list_categories_with_boards/1 returns zero for empty boards" do
+      category = category_fixture()
+      board = board_fixture(%{category_id: category.id})
+
+      [cat] = Forum.list_categories_with_boards()
+      [fetched_board] = cat.boards
+
+      assert fetched_board.id == board.id
+      assert fetched_board.thread_count == 0
     end
   end
 
@@ -150,6 +183,23 @@ defmodule Urielm.ForumTest do
       assert thread.author_id == author.id
       assert thread.score == 0
       assert thread.comment_count == 0
+    end
+
+    test "create_thread/3 rejects thread on locked board" do
+      board = board_fixture(%{is_locked: true})
+      author = user_fixture()
+
+      attrs = %{
+        "title" => "Should Fail",
+        "slug" => "should-fail",
+        "body" => "This thread should not be created"
+      }
+
+      assert {:error, :board_locked} = Forum.create_thread(board.id, author.id, attrs)
+
+      # Verify no thread was created
+      threads = Forum.list_threads(board.id)
+      refute Enum.any?(threads, &(&1.title == "Should Fail"))
     end
 
     test "get_thread!/1 does NOT increment view count (pure read)" do
@@ -257,6 +307,30 @@ defmodule Urielm.ForumTest do
       {:ok, comment} = Forum.create_comment(thread.id, author.id, attrs)
 
       assert comment.parent_id == parent.id
+    end
+
+    test "create_comment/3 rejects parent_id from different thread" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      parent_in_thread1 = comment_fixture(thread1)
+      author = user_fixture()
+
+      # Try to create comment in thread2 with parent from thread1
+      attrs = %{"body" => "Cross-thread reply", "parent_id" => parent_in_thread1.id}
+      assert {:error, :invalid_parent} = Forum.create_comment(thread2.id, author.id, attrs)
+
+      # Verify no comment was created
+      comments = Forum.list_comments(thread2.id)
+      refute Enum.any?(comments, &(&1.body == "Cross-thread reply"))
+    end
+
+    test "create_comment/3 rejects non-existent parent_id" do
+      thread = thread_fixture()
+      author = user_fixture()
+
+      fake_uuid = Ecto.UUID.generate()
+      attrs = %{"body" => "Orphan reply", "parent_id" => fake_uuid}
+      assert {:error, :invalid_parent} = Forum.create_comment(thread.id, author.id, attrs)
     end
   end
 
@@ -376,6 +450,93 @@ defmodule Urielm.ForumTest do
 
       assert length(votes) == 1
       assert votes |> List.first() |> Map.get(:value) == 1
+    end
+  end
+
+  describe "bulk loaders" do
+    test "bulk_get_votes/3 returns map of target_id to vote value" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      thread3 = thread_fixture()
+      user = user_fixture()
+
+      {:ok, {:ok, _}} = Forum.cast_vote(user.id, "thread", thread1.id, 1)
+      {:ok, {:ok, _}} = Forum.cast_vote(user.id, "thread", thread2.id, -1)
+      # thread3 has no vote
+
+      votes = Forum.bulk_get_votes(user.id, "thread", [thread1.id, thread2.id, thread3.id])
+
+      assert votes[thread1.id] == 1
+      assert votes[thread2.id] == -1
+      refute Map.has_key?(votes, thread3.id)
+    end
+
+    test "bulk_get_votes/3 returns empty map for empty list" do
+      user = user_fixture()
+      assert Forum.bulk_get_votes(user.id, "thread", []) == %{}
+    end
+
+    test "bulk_saved_thread_ids/2 returns MapSet of saved thread IDs" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      thread3 = thread_fixture()
+      user = user_fixture()
+
+      Forum.save_thread(user.id, thread1.id)
+      Forum.save_thread(user.id, thread3.id)
+      # thread2 not saved
+
+      saved = Forum.bulk_saved_thread_ids(user.id, [thread1.id, thread2.id, thread3.id])
+
+      assert MapSet.member?(saved, thread1.id)
+      refute MapSet.member?(saved, thread2.id)
+      assert MapSet.member?(saved, thread3.id)
+    end
+
+    test "bulk_subscribed_thread_ids/2 returns MapSet of subscribed thread IDs" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      user = user_fixture()
+
+      Forum.subscribe_to_thread(user.id, thread1.id)
+      # thread2 not subscribed
+
+      subscribed = Forum.bulk_subscribed_thread_ids(user.id, [thread1.id, thread2.id])
+
+      assert MapSet.member?(subscribed, thread1.id)
+      refute MapSet.member?(subscribed, thread2.id)
+    end
+
+    test "bulk_unread_thread_ids/2 returns MapSet of unread thread IDs" do
+      thread1 = thread_fixture()
+      thread2 = thread_fixture()
+      thread3 = thread_fixture()
+      user = user_fixture()
+
+      # Mark thread1 as read
+      Forum.mark_thread_read(user.id, thread1.id)
+      # thread2 and thread3 remain unread
+
+      unread = Forum.bulk_unread_thread_ids(user.id, [thread1.id, thread2.id, thread3.id])
+
+      refute MapSet.member?(unread, thread1.id)
+      assert MapSet.member?(unread, thread2.id)
+      assert MapSet.member?(unread, thread3.id)
+    end
+
+    test "bulk_saved_comment_ids/2 returns MapSet of saved comment IDs" do
+      thread = thread_fixture()
+      comment1 = comment_fixture(thread)
+      comment2 = comment_fixture(thread)
+      user = user_fixture()
+
+      Forum.save_comment(user.id, comment1.id)
+      # comment2 not saved
+
+      saved = Forum.bulk_saved_comment_ids(user.id, [comment1.id, comment2.id])
+
+      assert MapSet.member?(saved, comment1.id)
+      refute MapSet.member?(saved, comment2.id)
     end
   end
 

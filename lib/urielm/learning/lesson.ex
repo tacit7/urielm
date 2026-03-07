@@ -5,7 +5,9 @@ defmodule Urielm.Learning.Lesson do
   schema "lessons" do
     field(:slug, :string)
     field(:title, :string)
-    field(:body, :string)
+    field(:notes_md, :string)
+    field(:resources_md, :string)
+    field(:timestamps_md, :string)
     field(:lesson_number, :integer)
     field(:youtube_video_id, :string)
 
@@ -18,7 +20,16 @@ defmodule Urielm.Learning.Lesson do
   @doc false
   def changeset(lesson, attrs) do
     lesson
-    |> cast(attrs, [:course_id, :title, :slug, :body, :lesson_number, :youtube_video_id])
+    |> cast(attrs, [
+      :course_id,
+      :title,
+      :slug,
+      :notes_md,
+      :resources_md,
+      :timestamps_md,
+      :lesson_number,
+      :youtube_video_id
+    ])
     |> validate_required([:course_id, :title, :lesson_number])
     |> unique_constraint([:course_id, :slug])
     |> unique_constraint([:course_id, :lesson_number])

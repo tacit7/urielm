@@ -178,7 +178,8 @@ defmodule UrielmWeb.Layouts do
       name: user.name,
       email: user.email,
       username: user.username,
-      avatarUrl: user.avatar_url
+      avatarUrl: user.avatar_url,
+      isAdmin: user.is_admin || false
     }
   end
 end

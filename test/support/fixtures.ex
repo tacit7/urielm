@@ -4,7 +4,7 @@ defmodule Urielm.Fixtures do
   """
 
   alias Urielm.Repo
-  alias Urielm.Forum.Vote
+  alias Urielm.Engagement.Vote
 
   def user_fixture(attrs \\ %{}) do
     unique_suffix = random_string()

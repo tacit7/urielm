@@ -20,16 +20,25 @@ defmodule Urielm.Accounts.User do
     field(:trust_level, :integer, default: 0)
     field(:trust_level_locked, :boolean, default: false)
 
+    # Suspension (cannot login)
+    field(:suspended_at, :utc_datetime)
+    field(:suspended_until, :utc_datetime)
+    field(:suspended_reason, :string)
+
+    # Silencing (can read, cannot post)
+    field(:silenced_at, :utc_datetime)
+    field(:silenced_until, :utc_datetime)
+    field(:silenced_reason, :string)
+
     has_many(:oauth_identities, Urielm.Accounts.OAuthIdentity)
     has_many(:saved_prompts, Urielm.Accounts.SavedPrompt)
     has_many(:comments, Urielm.Content.Comment)
-    has_many(:likes, Urielm.Content.Like)
     has_many(:room_memberships, Urielm.Chat.RoomMembership)
     has_many(:rooms, through: [:room_memberships, :room])
     has_many(:messages, Urielm.Chat.Message)
     has_many(:forum_threads, Urielm.Forum.Thread, foreign_key: :author_id)
     has_many(:forum_comments, Urielm.Forum.Comment, foreign_key: :author_id)
-    has_many(:forum_votes, Urielm.Forum.Vote, foreign_key: :user_id)
+    has_many(:votes, Urielm.Engagement.Vote, foreign_key: :user_id)
 
     timestamps(type: :utc_datetime)
   end
@@ -124,4 +133,44 @@ defmodule Urielm.Accounts.User do
   end
 
   def valid_password?(_, _), do: false
+
+  @doc """
+  Check if user is currently suspended.
+  Returns true if suspended_at is set and suspension hasn't expired.
+  """
+  def suspended?(%__MODULE__{suspended_at: nil}), do: false
+
+  def suspended?(%__MODULE__{suspended_until: nil}), do: true
+
+  def suspended?(%__MODULE__{suspended_until: until}) do
+    DateTime.compare(DateTime.utc_now(), until) == :lt
+  end
+
+  @doc """
+  Check if user is currently silenced.
+  Returns true if silenced_at is set and silencing hasn't expired.
+  """
+  def silenced?(%__MODULE__{silenced_at: nil}), do: false
+
+  def silenced?(%__MODULE__{silenced_until: nil}), do: true
+
+  def silenced?(%__MODULE__{silenced_until: until}) do
+    DateTime.compare(DateTime.utc_now(), until) == :lt
+  end
+
+  @doc """
+  Changeset for suspending a user.
+  """
+  def suspension_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:suspended_at, :suspended_until, :suspended_reason])
+  end
+
+  @doc """
+  Changeset for silencing a user.
+  """
+  def silencing_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:silenced_at, :silenced_until, :silenced_reason])
+  end
 end

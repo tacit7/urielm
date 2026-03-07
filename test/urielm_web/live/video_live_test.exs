@@ -7,20 +7,23 @@ defmodule UrielmWeb.VideoLiveTest do
 
   describe "VideoLive" do
     setup do
-      public_video = video_fixture(%{
-        visibility: "public",
-        published_at: DateTime.utc_now()
-      })
+      public_video =
+        video_fixture(%{
+          visibility: "public",
+          published_at: DateTime.utc_now()
+        })
 
-      signed_in_video = video_fixture(%{
-        visibility: "signed_in",
-        published_at: DateTime.utc_now()
-      })
+      signed_in_video =
+        video_fixture(%{
+          visibility: "signed_in",
+          published_at: DateTime.utc_now()
+        })
 
-      subscriber_video = video_fixture(%{
-        visibility: "subscriber",
-        published_at: DateTime.utc_now()
-      })
+      subscriber_video =
+        video_fixture(%{
+          visibility: "subscriber",
+          published_at: DateTime.utc_now()
+        })
 
       %{
         public_video: public_video,
@@ -33,7 +36,7 @@ defmodule UrielmWeb.VideoLiveTest do
       {:ok, _view, html} = live(conn, ~p"/videos/#{video.slug}")
 
       assert html =~ video.title
-      assert html =~ "YouTubeEmbed"
+      assert html =~ "YouTubePlayer"
     end
 
     test "public video shows description section", %{conn: conn, public_video: video} do
@@ -110,10 +113,12 @@ defmodule UrielmWeb.VideoLiveTest do
       user = user_fixture()
       board = board_fixture()
       thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
-      video = video_fixture(%{
-        published_at: DateTime.utc_now(),
-        thread_id: thread.id
-      })
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: thread.id
+        })
 
       {:ok, _view, html} = live(conn, ~p"/videos/#{video.slug}")
 
@@ -130,10 +135,12 @@ defmodule UrielmWeb.VideoLiveTest do
       user = user_fixture()
       board = board_fixture()
       thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
-      video = video_fixture(%{
-        published_at: DateTime.utc_now(),
-        thread_id: thread.id
-      })
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: thread.id
+        })
 
       conn = log_in_user(build_conn(), user)
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")

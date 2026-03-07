@@ -5,10 +5,10 @@ defmodule Urielm.Billing.Subscription do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   schema "subscriptions" do
-    belongs_to :user, Urielm.Accounts.User, type: :id
+    belongs_to(:user, Urielm.Accounts.User, type: :id)
 
-    field :status, :string, default: "active"
-    field :current_period_end, :utc_datetime
+    field(:status, :string, default: "active")
+    field(:current_period_end, :utc_datetime)
 
     timestamps(type: :utc_datetime)
   end

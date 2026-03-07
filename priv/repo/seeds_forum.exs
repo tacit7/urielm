@@ -1,4 +1,4 @@
-# Create forum test data
+# Create forum categories and boards matching the action plan
 alias Urielm.Repo
 alias Urielm.Forum
 alias Urielm.Accounts
@@ -30,60 +30,146 @@ user3 = Repo.get_by(Accounts.User, email: "charlie@example.com") ||
 
 IO.puts("Created users: alice, bob, charlie")
 
-# Create categories and boards
-category = Repo.get_by(Forum.Category, slug: "general-discussion") ||
-  (case Forum.create_category(%{
-    "name" => "General Discussion",
-    "slug" => "general-discussion",
-    "description" => "General discussions about anything"
-  }) do
-    {:ok, cat} -> cat
-    {:error, _} -> Repo.get_by(Forum.Category, slug: "general-discussion")
-  end)
+# Helper to get or create category
+defmodule SeedHelpers do
+  def get_or_create_category(attrs) do
+    alias Urielm.{Repo, Forum}
+    case Repo.get_by(Forum.Category, slug: attrs["slug"]) do
+      nil ->
+        case Forum.create_category(attrs) do
+          {:ok, cat} -> cat
+          {:error, _} -> Repo.get_by(Forum.Category, slug: attrs["slug"])
+        end
+      existing -> existing
+    end
+  end
 
-board1 = Repo.get_by(Forum.Board, slug: "general") ||
-  (case Forum.create_board(%{
-    "name" => "General",
-    "slug" => "general",
-    "description" => "Off-topic discussions and announcements",
-    "category_id" => category.id
-  }) do
-    {:ok, b} -> b
-    {:error, _} -> Repo.get_by(Forum.Board, slug: "general")
-  end)
+  def get_or_create_board(attrs) do
+    alias Urielm.{Repo, Forum}
+    case Repo.get_by(Forum.Board, slug: attrs["slug"]) do
+      nil ->
+        case Forum.create_board(attrs) do
+          {:ok, board} -> board
+          {:error, _} -> Repo.get_by(Forum.Board, slug: attrs["slug"])
+        end
+      existing -> existing
+    end
+  end
+end
 
-board2 = Repo.get_by(Forum.Board, slug: "help-support") ||
-  (case Forum.create_board(%{
-    "name" => "Help & Support",
-    "slug" => "help-support",
-    "description" => "Get help with common issues",
-    "category_id" => category.id
-  }) do
-    {:ok, b} -> b
-    {:error, _} -> Repo.get_by(Forum.Board, slug: "help-support")
-  end)
+# Create categories (groupings)
+cat_essentials = SeedHelpers.get_or_create_category(%{
+  "name" => "Essentials",
+  "slug" => "essentials"
+})
 
-board3 = Repo.get_by(Forum.Board, slug: "feature-requests") ||
-  (case Forum.create_board(%{
-    "name" => "Feature Requests",
-    "slug" => "feature-requests",
-    "description" => "Suggest new features and improvements",
-    "category_id" => category.id
-  }) do
-    {:ok, b} -> b
-    {:error, _} -> Repo.get_by(Forum.Board, slug: "feature-requests")
-  end)
+cat_general = SeedHelpers.get_or_create_category(%{
+  "name" => "General",
+  "slug" => "general"
+})
 
-IO.puts("Boards ready: general, help-support, feature-requests")
+cat_community = SeedHelpers.get_or_create_category(%{
+  "name" => "Community",
+  "slug" => "community"
+})
 
-# Create threads
+IO.puts("Created categories: Essentials, General, Community")
+
+# Create boards matching action plan
+boards_config = [
+  # Essentials
+  {cat_essentials, %{
+    "name" => "Start Here",
+    "slug" => "start-here",
+    "description" => "New to the community? Start here for guides and introductions"
+  }},
+  {cat_essentials, %{
+    "name" => "Announcements",
+    "slug" => "announcements",
+    "description" => "Official announcements and updates"
+  }},
+
+  # General
+  {cat_general, %{
+    "name" => "Q&A Help Desk",
+    "slug" => "qa",
+    "description" => "Ask questions and get help from the community"
+  }},
+  {cat_general, %{
+    "name" => "Prompting and Workflows",
+    "slug" => "prompting",
+    "description" => "Share and discuss prompts, workflows, and techniques"
+  }},
+  {cat_general, %{
+    "name" => "Building with AI",
+    "slug" => "building",
+    "description" => "Projects, code, and technical discussions"
+  }},
+  {cat_general, %{
+    "name" => "Model and Tool Talk",
+    "slug" => "models-tools",
+    "description" => "Discuss AI models, tools, and comparisons"
+  }},
+
+  # Community
+  {cat_community, %{
+    "name" => "Show and Tell",
+    "slug" => "show-and-tell",
+    "description" => "Share what you've built or discovered"
+  }},
+  {cat_community, %{
+    "name" => "Feedback and Ideas",
+    "slug" => "feedback",
+    "description" => "Suggest improvements and share ideas"
+  }},
+  {cat_community, %{
+    "name" => "Off-topic",
+    "slug" => "off-topic",
+    "description" => "Casual conversations and everything else"
+  }}
+]
+
+boards = Enum.map(boards_config, fn {category, attrs} ->
+  board = SeedHelpers.get_or_create_board(Map.put(attrs, "category_id", category.id))
+  IO.puts("  Board: #{board.name}")
+  board
+end)
+
+IO.puts("Created #{length(boards)} boards")
+
+# Get specific boards for seeding threads
+board_start_here = Enum.find(boards, &(&1.slug == "start-here"))
+board_qa = Enum.find(boards, &(&1.slug == "qa"))
+board_prompting = Enum.find(boards, &(&1.slug == "prompting"))
+board_building = Enum.find(boards, &(&1.slug == "building"))
+board_show_tell = Enum.find(boards, &(&1.slug == "show-and-tell"))
+board_feedback = Enum.find(boards, &(&1.slug == "feedback"))
+
+# Create sample threads
 thread_data = [
-  {board1, user1, "Welcome to the Forum!", "This is the general discussion board. Feel free to post about anything you'd like. This is a great place to connect with other members of our community and share your thoughts, ideas, and experiences."},
-  {board2, user2, "How do I get started with Phoenix?", "I'm new to Phoenix and want to learn how to build web applications with it. Can anyone recommend good resources or tutorials? I already know Elixir but haven't used Phoenix yet."},
-  {board1, user3, "LiveView is amazing!", "Just finished my first Phoenix LiveView project and I have to say, it's incredibly productive. The ability to build real-time features without JavaScript is a game changer. Highly recommend it to anyone building interactive web apps."},
-  {board3, user1, "Feature Request: Dark Mode", "It would be great to have a dark mode option. Many users prefer dark interfaces for reduced eye strain, especially when working at night. This could be toggled in user settings."},
-  {board2, user2, "How to handle errors in Elixir?", "I'm trying to understand Elixir's approach to error handling. Should I use try/catch or return tuples? What's the idiomatic way? Looking for examples and best practices."},
-  {board1, user3, "Ecto queries are powerful", "Been working with Ecto for a while now and I'm impressed by how expressive the query API is. Being able to build complex queries in Elixir without raw SQL is fantastic. Anyone else love Ecto as much as I do?"}
+  {board_start_here, user1, "Welcome to the Community!",
+   "Welcome! This is your new home for discussing AI, prompts, and building cool things. Take a look around and introduce yourself."},
+
+  {board_qa, user2, "How do I write better prompts?",
+   "I'm new to prompting and want to improve. What are some techniques for getting better responses from LLMs? Looking for practical tips."},
+
+  {board_qa, user3, "Best practices for system prompts?",
+   "What makes a good system prompt? Should I be specific or general? How long should they be? Would love to see examples."},
+
+  {board_prompting, user1, "My favorite prompt patterns",
+   "After months of experimenting, here are the prompt patterns that work best for me:\n\n1. **Role + Task + Context** - Always specify who the AI should be\n2. **Few-shot examples** - Show don't tell\n3. **Chain of thought** - Ask it to think step by step\n\nWhat patterns work for you?"},
+
+  {board_building, user2, "Built a CLI tool with Claude",
+   "Just finished building a CLI tool that uses Claude for code review. It scans your git diff and provides feedback. Would love your thoughts on the approach."},
+
+  {board_building, user3, "Phoenix + LiveView + AI = Amazing",
+   "Been integrating AI into my Phoenix app and the developer experience is incredible. LiveView streams work perfectly for streaming responses. Here's what I learned..."},
+
+  {board_show_tell, user1, "Created an AI-powered resume reviewer",
+   "Sharing my weekend project: an app that reviews resumes using AI and provides actionable feedback. Built with Elixir and Claude. Link in comments!"},
+
+  {board_feedback, user2, "Suggestion: Dark mode toggle",
+   "Would love to have a quick dark mode toggle in the navbar. Currently have to go to settings each time."}
 ]
 
 created_threads = Enum.map(thread_data, fn {board, user, title, body} ->
@@ -91,70 +177,71 @@ created_threads = Enum.map(thread_data, fn {board, user, title, body} ->
     |> String.downcase()
     |> String.replace(~r/[^a-z0-9]+/, "-")
     |> String.trim("-")
+    |> String.slice(0, 50)
 
-  {:ok, thread} = Forum.create_thread(board.id, user.id, %{
+  case Forum.create_thread(board.id, user.id, %{
     "title" => title,
     "body" => body,
     "slug" => slug
-  })
-  thread
+  }) do
+    {:ok, thread} ->
+      # Note: mark_as_solved skipped due to params normalization bug
+      thread
+    {:error, _} ->
+      IO.puts("  Skipping duplicate thread: #{title}")
+      nil
+  end
 end)
+|> Enum.reject(&is_nil/1)
 
 IO.puts("Created #{length(created_threads)} threads")
 
-# Add some comments to threads
-{:ok, _comment1} = Forum.create_comment(
-  List.first(created_threads).id,
-  user2.id,
-  %{"body" => "Great to be here! Looking forward to great discussions."}
-)
+# Add comments
+if length(created_threads) > 0 do
+  Enum.each(Enum.take(created_threads, 3), fn thread ->
+    Forum.create_comment(thread.id, user2.id, %{
+      "body" => "Great post! Thanks for sharing."
+    })
+    Forum.create_comment(thread.id, user3.id, %{
+      "body" => "This is really helpful. I had the same question."
+    })
+  end)
+  IO.puts("Added comments to threads")
 
-{:ok, _comment2} = Forum.create_comment(
-  Enum.at(created_threads, 1).id,
-  user1.id,
-  %{"body" => "Check out the official Phoenix guides on phoenixframework.org - they're excellent!"}
-)
+  # Add votes
+  Enum.each(created_threads, fn thread ->
+    Forum.cast_vote(user1.id, "thread", thread.id, 1)
+    Forum.cast_vote(user2.id, "thread", thread.id, 1)
+    Forum.cast_vote(user3.id, "thread", thread.id, 1)
+  end)
+  IO.puts("Added votes to threads")
+end
 
-{:ok, _comment3} = Forum.create_comment(
-  Enum.at(created_threads, 2).id,
-  user2.id,
-  %{"body" => "Completely agree! The developer experience is top notch."}
-)
+# Create tags
+tags = [
+  %{"name" => "Beginner", "slug" => "beginner"},
+  %{"name" => "Advanced", "slug" => "advanced"},
+  %{"name" => "Tutorial", "slug" => "tutorial"},
+  %{"name" => "Discussion", "slug" => "discussion"},
+  %{"name" => "Claude", "slug" => "claude"},
+  %{"name" => "GPT", "slug" => "gpt"},
+  %{"name" => "Elixir", "slug" => "elixir"},
+  %{"name" => "Phoenix", "slug" => "phoenix"}
+]
 
-IO.puts("Created comments")
-
-# Add some votes
-Enum.each(created_threads, fn thread ->
-  {:ok, _} = Forum.cast_vote(user2.id, "thread", thread.id, 1)
-  {:ok, _} = Forum.cast_vote(user3.id, "thread", thread.id, 1)
+Enum.each(tags, fn attrs ->
+  case Forum.create_tag(attrs) do
+    {:ok, _} -> :ok
+    {:error, _} -> :ok
+  end
 end)
-
-IO.puts("Added votes to threads")
-
-# Create some tags
-{:ok, tag1} = Forum.create_tag(%{"name" => "Phoenix", "slug" => "phoenix"})
-{:ok, tag2} = Forum.create_tag(%{"name" => "Elixir", "slug" => "elixir"})
-{:ok, tag3} = Forum.create_tag(%{"name" => "Help", "slug" => "help"})
-{:ok, tag4} = Forum.create_tag(%{"name" => "Feature", "slug" => "feature"})
-
 IO.puts("Created tags")
 
-# Tag some threads
-Forum.add_tag_to_thread(Enum.at(created_threads, 1).id, tag1.id)
-Forum.add_tag_to_thread(Enum.at(created_threads, 1).id, tag2.id)
-Forum.add_tag_to_thread(Enum.at(created_threads, 1).id, tag3.id)
-
-Forum.add_tag_to_thread(Enum.at(created_threads, 2).id, tag1.id)
-Forum.add_tag_to_thread(Enum.at(created_threads, 2).id, tag2.id)
-
-Forum.add_tag_to_thread(Enum.at(created_threads, 3).id, tag4.id)
-
-Forum.add_tag_to_thread(Enum.at(created_threads, 4).id, tag2.id)
-Forum.add_tag_to_thread(Enum.at(created_threads, 4).id, tag3.id)
-
-IO.puts("Tagged threads")
-
 IO.puts("\n✅ Forum seed data created successfully!")
+IO.puts("\nCategories:")
+IO.puts("  - Essentials (Start Here, Announcements)")
+IO.puts("  - General (Q&A, Prompting, Building, Models & Tools)")
+IO.puts("  - Community (Show and Tell, Feedback, Off-topic)")
 IO.puts("\nTest Accounts:")
 IO.puts("  alice@example.com / password123")
 IO.puts("  bob@example.com / password123")

@@ -109,7 +109,7 @@
       {/if}
     </div>
     <div class="badge" class:badge-success={isConnected} class:badge-error={!isConnected}>
-      <span class="inline-block w-2 h-2 rounded-full mr-2" class:bg-success={isConnected} class:bg-error={!isConnected} />
+      <span class="inline-block w-2 h-2 rounded-full mr-2" class:bg-success={isConnected} class:bg-error={!isConnected}></span>
       {isConnected ? "Online" : "Offline"}
     </div>
   </div>
@@ -135,7 +135,7 @@
                 {(msg.username || "?").charAt(0).toUpperCase()}
               </div>
             {:else}
-              <div class="w-8 h-8" />
+              <div class="w-8 h-8"></div>
             {/if}
           </div>
 
@@ -160,21 +160,21 @@
       <textarea
         bind:this={textareaElement}
         bind:value={newMessage}
-        on:keydown={(e) => {
+        onkeydown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault()
             sendMessage()
           }
         }}
-        on:input={handleInput}
+        oninput={handleInput}
         placeholder="Message #{room.name}"
         disabled={!isConnected}
         autocomplete="off"
         rows="1"
         class="textarea textarea-bordered-0 flex-1 bg-base-200 text-base-content placeholder-base-content/50 focus:outline-none resize-none max-h-[120px] p-0 border-0"
-      />
+      ></textarea>
       <button
-        on:click={sendMessage}
+        onclick={sendMessage}
         disabled={!isConnected || !newMessage.trim()}
         class="btn btn-primary btn-sm btn-circle flex-shrink-0"
         aria-label="Send message"

@@ -9,10 +9,11 @@ defmodule UrielmWeb.PromptsLive do
   @impl true
   def mount(params, session, socket) do
     # Handle both direct mount and child mount via live_render
-    child_params = case params do
-      :not_mounted_at_router -> session["child_params"] || %{}
-      params -> params
-    end
+    child_params =
+      case params do
+        :not_mounted_at_router -> session["child_params"] || %{}
+        params -> params
+      end
 
     categories = [
       "Analyze Text",
@@ -74,20 +75,6 @@ defmodule UrielmWeb.PromptsLive do
   @impl true
   def handle_event("tab_change", %{"key" => key}, socket) do
     handle_filter_change(key, socket)
-  end
-
-  defp handle_filter_change(category, socket) do
-    %{search_query: query} = socket.assigns
-    opts = build_search_opts(category, 0)
-
-    prompts = Content.search_prompts(query, opts)
-
-    {:noreply,
-     socket
-     |> assign(:current_filter, category)
-     |> assign(:page, 1)
-     |> assign(:has_more, length(prompts) == @page_size)
-     |> stream(:prompts, serialize_prompts(prompts), reset: true)}
   end
 
   @impl true
@@ -232,6 +219,20 @@ defmodule UrielmWeb.PromptsLive do
     end
   end
 
+  defp handle_filter_change(category, socket) do
+    %{search_query: query} = socket.assigns
+    opts = build_search_opts(category, 0)
+
+    prompts = Content.search_prompts(query, opts)
+
+    {:noreply,
+     socket
+     |> assign(:current_filter, category)
+     |> assign(:page, 1)
+     |> assign(:has_more, length(prompts) == @page_size)
+     |> stream(:prompts, serialize_prompts(prompts), reset: true)}
+  end
+
   defp build_search_opts(category, offset) do
     opts = %{limit: @page_size, offset: offset}
 
@@ -253,7 +254,12 @@ defmodule UrielmWeb.PromptsLive do
   def render(assigns) do
     ~H"""
     <div class={["drawer drawer-end", @selected_prompt && "drawer-open"]}>
-      <input id="prompt-drawer-toggle" type="checkbox" class="drawer-toggle" checked={@selected_prompt != nil} />
+      <input
+        id="prompt-drawer-toggle"
+        type="checkbox"
+        class="drawer-toggle"
+        checked={@selected_prompt != nil}
+      />
 
       <div class="drawer-content min-h-screen bg-base-100 text-base-content">
         <div class="container mx-auto px-4 py-8">
@@ -267,12 +273,14 @@ defmodule UrielmWeb.PromptsLive do
           <div class="mb-6 border-b border-base-300">
             <.svelte
               name="UnderlineNav"
-              props={%{
-                items: build_nav_items(@categories),
-                activeKey: @current_filter,
-                showCounts: false,
-                size: "md"
-              }}
+              props={
+                %{
+                  items: build_nav_items(@categories),
+                  activeKey: @current_filter,
+                  showCounts: false,
+                  size: "md"
+                }
+              }
               socket={@socket}
             />
           </div>
@@ -342,7 +350,8 @@ defmodule UrielmWeb.PromptsLive do
           aria-label="close sidebar"
           class="drawer-overlay"
           phx-click="close_prompt_modal"
-        ></label>
+        >
+        </label>
 
         <div class="bg-base-200 min-h-full w-full max-w-2xl">
           <%= if @selected_prompt do %>
@@ -351,7 +360,10 @@ defmodule UrielmWeb.PromptsLive do
                 <h3 class="font-bold text-xl text-base-content truncate">
                   {@selected_prompt.title}
                 </h3>
-                <.link navigate={~p"/prompts/#{@selected_prompt.id}"} class="text-sm link link-primary">
+                <.link
+                  navigate={~p"/prompts/#{@selected_prompt.id}"}
+                  class="text-sm link link-primary"
+                >
                   View full page →
                 </.link>
               </div>

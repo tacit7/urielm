@@ -8,24 +8,28 @@ defmodule UrielmWeb.BoardLive do
   @page_size 20
 
   @impl true
-  def mount(params, session, socket) do
-    # Handle both direct mount and child mount via live_render
-    child_params = case params do
-      :not_mounted_at_router -> session["child_params"] || %{}
-      params -> params
-    end
-
-    slug = child_params["board_slug"]
+  def mount(params, _session, socket) do
+    slug = params["board_slug"]
     board = Forum.get_board!(slug)
     categories = Forum.list_categories_with_boards()
 
-    sort = Map.get(child_params, "sort", "latest")
-    filter = Map.get(child_params, "filter", "all")
-    page = case child_params["page"] do
-      nil -> 1
-      p when is_binary(p) -> String.to_integer(p)
-      p when is_integer(p) -> p
-    end
+    sort = Map.get(params, "sort", "latest")
+    filter = Map.get(params, "filter", "all")
+
+    page =
+      case params["page"] do
+        nil ->
+          1
+
+        p when is_binary(p) ->
+          case Integer.parse(p) do
+            {n, ""} when n >= 1 -> n
+            _ -> 1
+          end
+
+        p when is_integer(p) ->
+          max(p, 1)
+      end
 
     user = socket.assigns[:current_user]
 
@@ -42,6 +46,20 @@ defmodule UrielmWeb.BoardLive do
 
         "new" ->
           case Forum.paginate_new_threads(board.id, %{page: page, page_size: @page_size}) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
+          end
+
+        "solved" ->
+          flop_params = %{page: page, page_size: @page_size, order_by: [:updated_at], order_directions: [:desc]}
+          case Forum.paginate_threads(board.id, flop_params, solved: true) do
+            {:ok, {data, meta}} -> {data, meta}
+            {:error, _meta} -> {[], nil}
+          end
+
+        "unsolved" ->
+          flop_params = %{page: page, page_size: @page_size, order_by: [:updated_at], order_directions: [:desc]}
+          case Forum.paginate_threads(board.id, flop_params, solved: false) do
             {:ok, {data, meta}} -> {data, meta}
             {:error, _meta} -> {[], nil}
           end
@@ -96,9 +114,17 @@ defmodule UrielmWeb.BoardLive do
 
       user ->
         target_id_binary = target_id
-        value_int = String.to_integer(value)
 
-        case Forum.cast_vote(user.id, target_type, target_id_binary, value_int) do
+        value_int =
+          case Integer.parse(value) do
+            {n, ""} when n in [-1, 0, 1] -> n
+            _ -> nil
+          end
+
+        case value_int && Forum.cast_vote(user.id, target_type, target_id_binary, value_int) do
+          nil ->
+            {:noreply, socket}
+
           {:ok, _vote} ->
             # Fetch updated thread and serialize
             {:noreply,
@@ -154,119 +180,164 @@ defmodule UrielmWeb.BoardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <UrielmWeb.Components.ForumLayout.forum_layout categories={@all_categories || []}>
-        <!-- Header -->
-        <div class="mb-8">
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
-              <p class="text-base-content/60 mt-2">{@board.description}</p>
-            </div>
-            <%= if @current_user do %>
-              <a
-                href={~p"/forum/b/#{@board.slug}/new"}
-                class="btn btn-primary"
-              >
-                New Topic
-              </a>
-            <% end %>
+    <UrielmWeb.Components.ForumLayout.forum_layout
+      categories={@all_categories || []}
+      flash={@flash}
+      current_board={@board.slug}
+    >
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
+            <p class="text-base-content/60 mt-2">{@board.description}</p>
           </div>
-          
-    <!-- Filter Tabs -->
-          <div class="flex gap-4 border-b border-base-300 pb-0">
-            <%= if @current_user do %>
-              <a
-                href={~p"/forum/b/#{@board.slug}?filter=unread"}
-                class={[
-                  "px-4 py-3 font-medium border-b-2 transition-colors",
-                  if(@filter == "unread",
-                    do: "border-primary text-primary",
-                    else: "border-transparent text-base-content/60 hover:text-base-content"
-                  )
-                ]}
-              >
-                Unread
-              </a>
-            <% end %>
+          <%= if @current_user do %>
             <a
-              href={~p"/forum/b/#{@board.slug}?filter=new"}
-              class={[
-                "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@filter == "new",
-                  do: "border-primary text-primary",
-                  else: "border-transparent text-base-content/60 hover:text-base-content"
-                )
-              ]}
+              href={~p"/forum/b/#{@board.slug}/new"}
+              class="btn btn-primary"
             >
-              New
+              New Topic
             </a>
-            <a
-              href={~p"/forum/b/#{@board.slug}"}
-              class={[
-                "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@filter == "all",
-                  do: "border-primary text-primary",
-                  else: "border-transparent text-base-content/60 hover:text-base-content"
-                )
-              ]}
-            >
-              Latest
-            </a>
-            <a
-              href={~p"/forum/b/#{@board.slug}?sort=top&filter=all"}
-              class={[
-                "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@sort == "top",
-                  do: "border-primary text-primary",
-                  else: "border-transparent text-base-content/60 hover:text-base-content"
-                )
-              ]}
-            >
-              Top
-            </a>
-          </div>
-        </div>
-        
-    <!-- Threads Table -->
-        <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
-          <!-- Table Header -->
-          <div class="grid grid-cols-12 gap-4 px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
-            <div class="col-span-7">Topic</div>
-            <div class="col-span-2 text-right">Replies</div>
-            <div class="col-span-3 text-right">Activity</div>
-          </div>
-          
-    <!-- Threads List -->
-          <div id="threads" phx-update="stream" class="">
-            <div id="empty-state" class="hidden only:flex justify-center py-12">
-              <div class="text-center text-base-content/50">
-                <p class="text-lg font-medium mb-2">No topics yet</p>
-                <p class="text-sm">Be the first to start a discussion!</p>
-              </div>
-            </div>
-            <div
-              :for={{id, thread} <- @streams.threads}
-              id={id}
-              class="border-t border-base-300 first:border-t-0"
-            >
-              <.svelte
-                name="ThreadCard"
-                props={thread}
-                socket={@socket}
-              />
-            </div>
-          </div>
-        </div>
-        
-    <!-- Pager -->
-        <div class="flex items-center justify-center gap-2 mt-8">
-          <%= if @meta do %>
-            <.pagination
-              meta={@meta}
-              path={fn n -> ~p"/forum/b/#{@board.slug}?sort=#{@sort}&filter=#{@filter}&page=#{n}" end}
-            />
           <% end %>
         </div>
+        
+    <!-- Filter Tabs -->
+        <div class="flex gap-4 border-b border-base-300 pb-0">
+          <%= if @current_user do %>
+            <a
+              href={~p"/forum/b/#{@board.slug}?filter=unread"}
+              class={[
+                "px-4 py-3 font-medium border-b-2 transition-colors",
+                if(@filter == "unread",
+                  do: "border-primary text-primary",
+                  else: "border-transparent text-base-content/60 hover:text-base-content"
+                )
+              ]}
+            >
+              Unread
+            </a>
+          <% end %>
+          <a
+            href={~p"/forum/b/#{@board.slug}?filter=new"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "new",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            New
+          </a>
+          <a
+            href={~p"/forum/b/#{@board.slug}"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "all",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Latest
+          </a>
+          <a
+            href={~p"/forum/b/#{@board.slug}?sort=top&filter=all"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@sort == "top",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Top
+          </a>
+          <span class="border-l border-base-300 mx-2"></span>
+          <a
+            href={~p"/forum/b/#{@board.slug}?filter=solved"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "solved",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Solved
+          </a>
+          <a
+            href={~p"/forum/b/#{@board.slug}?filter=unsolved"}
+            class={[
+              "px-4 py-3 font-medium border-b-2 transition-colors",
+              if(@filter == "unsolved",
+                do: "border-primary text-primary",
+                else: "border-transparent text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            Unsolved
+          </a>
+        </div>
+      </div>
+      
+    <!-- Threads Table -->
+      <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
+        <!-- Table Header -->
+        <div class="flex items-center gap-4 px-4 sm:px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
+          <div class="flex-1">Topic</div>
+          <div class="hidden md:block w-12 text-center">Replies</div>
+          <div class="hidden md:block w-12 text-center">Views</div>
+          <div class="hidden lg:block w-28 text-right">Activity</div>
+        </div>
+        
+    <!-- Threads List -->
+        <div id="threads" phx-update="stream" class="">
+          <div id="empty-state" class="hidden only:flex justify-center py-12">
+            <div class="text-center text-base-content/50">
+              <%= case @filter do %>
+                <% "solved" -> %>
+                  <p class="text-lg font-medium mb-2">No solved topics</p>
+                  <p class="text-sm">Topics marked as solved will appear here</p>
+                <% "unsolved" -> %>
+                  <p class="text-lg font-medium mb-2">No unsolved topics</p>
+                  <p class="text-sm">All topics have been resolved!</p>
+                <% "unread" -> %>
+                  <p class="text-lg font-medium mb-2">All caught up!</p>
+                  <p class="text-sm">No unread topics in this board</p>
+                <% "new" -> %>
+                  <p class="text-lg font-medium mb-2">No new topics</p>
+                  <p class="text-sm">Check back later for fresh discussions</p>
+                <% _ -> %>
+                  <p class="text-lg font-medium mb-2">No topics yet</p>
+                  <p class="text-sm">Be the first to start a discussion!</p>
+              <% end %>
+            </div>
+          </div>
+          <div
+            :for={{id, thread} <- @streams.threads}
+            id={id}
+            class="border-t border-base-300 first:border-t-0"
+          >
+            <.svelte
+              name="ThreadCard"
+              props={thread}
+              socket={@socket}
+            />
+          </div>
+        </div>
+      </div>
+      
+    <!-- Pager -->
+      <div class="flex items-center justify-center gap-2 mt-8">
+        <%= if @meta do %>
+          <.pagination
+            meta={@meta}
+            path={fn n -> ~p"/forum/b/#{@board.slug}?sort=#{@sort}&filter=#{@filter}&page=#{n}" end}
+          />
+        <% end %>
+      </div>
     </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end

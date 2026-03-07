@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@tiptap/core": "^3.14.0",
+    "@tiptap/extension-link": "^3.14.0",
     "@tiptap/pm": "^3.14.0",
     "@tiptap/starter-kit": "^3.14.0",
     "daisyui": "^5.5.8",
+    "dompurify": "^3.3.1",
     "easymde": "^2.20.0",
     "highlight.js": "^11.11.1",
     "live_svelte": "file:../deps/live_svelte",

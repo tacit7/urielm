@@ -4,26 +4,27 @@ defmodule UrielmWeb.BlogLive do
   alias Urielm.Content
 
   @impl true
-  def mount(params, session, socket) do
+  def mount(_params, session, socket) do
     # Get params from session (passed by ShellLive)
     child_params = session["child_params"] || %{}
 
     socket =
       if slug = child_params["slug"] do
         # Show individual post
-        case Content.get_post_by_slug(slug) do
-          nil ->
+        try do
+          post = Content.get_post_by_slug!(slug)
+
+          socket
+          |> assign(:post, post)
+          |> assign(:posts, nil)
+          |> assign(:page_title, post.title)
+          |> assign(:meta_description, post.excerpt || String.slice(post.body, 0, 160))
+        rescue
+          Ecto.NoResultsError ->
             socket
             |> assign(:posts, nil)
             |> assign(:post, nil)
             |> assign(:page_title, "Post not found")
-
-          post ->
-            socket
-            |> assign(:post, post)
-            |> assign(:posts, nil)
-            |> assign(:page_title, post.title)
-            |> assign(:meta_description, post.excerpt || String.slice(post.body, 0, 160))
         end
       else
         # Show blog index

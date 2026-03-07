@@ -1,9 +1,39 @@
 <script>
   import MarkdownIt from 'markdown-it'
   import hljs from 'highlight.js'
+  import DOMPurify from 'dompurify'
   import { processEmbeds } from '../js/markdown/embeds.js'
 
-  export let content = ''
+  let { content = '', enableEmbeds = false } = $props()
+
+  // Configure DOMPurify to allow safe markdown tags but block XSS vectors
+  const purifyConfig = {
+    ALLOWED_TAGS: [
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'p', 'br', 'hr',
+      'ul', 'ol', 'li',
+      'blockquote', 'pre', 'code',
+      'a', 'strong', 'em', 'del', 's', 'u',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'img', 'span', 'div',
+      // Embed containers (only used when enableEmbeds=true)
+      'iframe'
+    ],
+    ALLOWED_ATTR: [
+      'href', 'src', 'alt', 'title', 'class', 'id',
+      'target', 'rel',
+      // For code highlighting
+      'lang',
+      // For iframes (YouTube embeds)
+      'width', 'height', 'frameborder', 'allow', 'allowfullscreen'
+    ],
+    // Block javascript: and data: URLs
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    // Add rel="noopener noreferrer" to all links
+    ADD_ATTR: ['target'],
+    // Forbid dangerous protocols
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+  }
 
   const md = new MarkdownIt({
     highlight: (code, lang) => {
@@ -17,12 +47,16 @@
     }
   })
 
-  let html = ''
+  let html = $derived.by(() => {
+    if (!content) return ''
 
-  $: if (content) {
-    html = md.render(content)
-    html = processEmbeds(html)
-  }
+    let rendered = md.render(content)
+    if (enableEmbeds) {
+      rendered = processEmbeds(rendered)
+    }
+    // Sanitize HTML to prevent XSS
+    return DOMPurify.sanitize(rendered, purifyConfig)
+  })
 </script>
 
 <div class="prose prose-sm md:prose-base max-w-none prose-code:bg-base-300 prose-code:text-base-content prose-code:px-2 prose-code:py-1 prose-code:rounded prose-pre:bg-base-300 prose-pre:border prose-pre:border-base-200">

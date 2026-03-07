@@ -20,7 +20,7 @@ defmodule Urielm.Forum.Comment do
     belongs_to(:removed_by, Urielm.Accounts.User, foreign_key: :removed_by_id, type: :id)
 
     has_many(:replies, Urielm.Forum.Comment, foreign_key: :parent_id)
-    has_many(:votes, Urielm.Forum.Vote, foreign_key: :target_id)
+    # Votes queried via Engagement context (target_type: "comment", target_id: id)
 
     timestamps(type: :utc_datetime_usec)
   end

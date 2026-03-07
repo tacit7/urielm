@@ -1,6 +1,5 @@
 defmodule UrielmWeb.SigninLive do
   use UrielmWeb, :live_view
-  alias Urielm.Accounts
 
   @impl true
   def mount(_params, _session, socket) do
@@ -123,8 +122,7 @@ defmodule UrielmWeb.SigninLive do
                 class="w-full btn btn-primary"
               >
                 <%= if @loading do %>
-                  <span class="loading loading-spinner loading-sm"></span>
-                  Signing in...
+                  <span class="loading loading-spinner loading-sm"></span> Signing in...
                 <% else %>
                   Sign in
                 <% end %>

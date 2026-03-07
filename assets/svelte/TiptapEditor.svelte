@@ -1,15 +1,28 @@
 <script>
   import { Editor } from '@tiptap/core'
   import StarterKit from '@tiptap/starter-kit'
+  import TiptapLink from '@tiptap/extension-link'
   import { onMount, onDestroy } from 'svelte'
 
-  export let content = ''
-  export let placeholder = 'Write something...'
-  export let onUpdate = null
-  export let onSelectionUpdate = null
+  let {
+    content = '',
+    placeholder = 'Write something...',
+    onUpdate = null,
+    onSelectionUpdate = null
+  } = $props()
 
   let editorElement
   let editor
+  let showLinkPopover = $state(false)
+  let linkUrl = $state('')
+  let linkInputRef = $state()
+
+  // Focus input when popover opens
+  $effect(() => {
+    if (showLinkPopover && linkInputRef) {
+      setTimeout(() => linkInputRef?.focus(), 50)
+    }
+  })
 
   onMount(() => {
     editor = new Editor({
@@ -23,6 +36,14 @@
             HTMLAttributes: {
               class: 'bg-base-300 p-4 rounded-lg text-sm'
             }
+          },
+          // Disable Link from StarterKit to avoid duplicate
+          link: false
+        }),
+        TiptapLink.configure({
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'link link-primary'
           }
         })
       ],
@@ -115,17 +136,68 @@
   }
 
   export function setLink() {
-    const url = window.prompt('Enter URL')
-    if (url) {
-      editor?.chain().focus().setLink({ href: url }).run()
+    showLinkPopover = true
+  }
+
+  function insertLink() {
+    if (linkUrl.trim()) {
+      editor?.chain().focus().setLink({ href: linkUrl }).run()
+      showLinkPopover = false
+      linkUrl = ''
     }
+  }
+
+  function cancelLink() {
+    showLinkPopover = false
+    linkUrl = ''
+    editor?.chain().focus().run()
   }
 </script>
 
-<div
-  bind:this={editorElement}
-  class="tiptap-editor w-full h-full bg-transparent"
-></div>
+<div class="relative">
+  <div
+    bind:this={editorElement}
+    class="tiptap-editor w-full h-full bg-transparent"
+  ></div>
+
+  {#if showLinkPopover}
+    <div class="absolute top-0 left-0 mt-2 z-50 bg-base-200 border border-base-300 rounded-lg shadow-xl p-4 w-80">
+      <div class="space-y-3">
+        <div>
+          <label for="link-url-input" class="label pb-1">
+            <span class="label-text text-sm font-medium">Enter URL</span>
+          </label>
+          <input
+            id="link-url-input"
+            type="url"
+            bind:this={linkInputRef}
+            bind:value={linkUrl}
+            placeholder="https://example.com"
+            class="input input-bordered input-sm w-full"
+            onkeydown={(e) => e.key === 'Enter' && insertLink()}
+          />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            onclick={cancelLink}
+            class="btn btn-ghost btn-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onclick={insertLink}
+            class="btn btn-primary btn-sm"
+            disabled={!linkUrl.trim()}
+          >
+            Insert Link
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+</div>
 
 <style>
   :global(.tiptap-editor .ProseMirror) {

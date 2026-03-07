@@ -6,6 +6,7 @@ defmodule UrielmWeb.Plugs.Auth do
   import Plug.Conn
   import Phoenix.Controller
   alias Urielm.Accounts
+  alias Urielm.Accounts.User
 
   def init(opts), do: opts
 
@@ -26,7 +27,15 @@ defmodule UrielmWeb.Plugs.Auth do
 
     cond do
       user = user_id && Accounts.get_user(user_id) ->
-        assign(conn, :current_user, user)
+        # Check if user is suspended
+        if User.suspended?(user) do
+          conn
+          |> configure_session(drop: true)
+          |> assign(:current_user, nil)
+          |> assign(:suspended_user, user)
+        else
+          assign(conn, :current_user, user)
+        end
 
       true ->
         assign(conn, :current_user, nil)

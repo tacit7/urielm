@@ -129,7 +129,7 @@ defmodule UrielmWeb.ForumLiveTest do
       assert result =~ "Sign in to vote"
     end
 
-    test "load_more pagination works", %{board: board} do
+    test "pagination works with page parameter", %{board: board} do
       # Create multiple threads to trigger pagination
       user = user_fixture()
 
@@ -142,22 +142,32 @@ defmodule UrielmWeb.ForumLiveTest do
         })
       end
 
-      {:ok, live, _html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
-
-      # Verify first page loaded
-      assert has_element?(live, "[id^='thread']")
-
-      # Trigger load more
-      render_click(live, "load_more", %{})
-
-      # Should still render without errors
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
+
+      # Verify first page loaded with threads
       assert html =~ "Thread"
+
+      # Page 2 should also work
+      {:ok, _live, html2} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=2")
+      assert html2 =~ "Thread"
     end
 
     test "sort=top parameter works", %{board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?sort=top")
 
+      assert html =~ board.name
+    end
+
+    test "handles invalid page param gracefully", %{board: board} do
+      # Should not crash on garbage page values
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=lol")
+      assert html =~ board.name
+
+      # Negative and zero should default to page 1
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=-5")
+      assert html =~ board.name
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=0")
       assert html =~ board.name
     end
   end
@@ -169,6 +179,16 @@ defmodule UrielmWeb.ForumLiveTest do
 
       # Should redirect to sign in
       assert response.status in [301, 302]
+    end
+
+    test "redirects with error when board is locked", %{user: user} do
+      locked_board = board_fixture(%{is_locked: true})
+
+      {:error, {:redirect, %{to: to, flash: flash}}} =
+        live(build_conn_with_user(user), ~p"/forum/b/#{locked_board.slug}/new")
+
+      assert to == "/forum/b/#{locked_board.slug}"
+      assert flash["error"] =~ "locked"
     end
 
     test "authenticated user can view form", %{board: board, user: user} do
@@ -305,7 +325,7 @@ defmodule UrielmWeb.ForumLiveTest do
       _html = render_click(live, "delete_thread", %{})
 
       # Verify thread was marked as removed
-      updated_thread = Forum.get_thread!(thread.id)
+      updated_thread = Forum.get_thread!(thread.id, allow_removed?: true)
       assert updated_thread.is_removed
     end
 
@@ -316,7 +336,7 @@ defmodule UrielmWeb.ForumLiveTest do
       _html = render_click(live, "delete_thread", %{})
 
       # Verify thread was marked as removed
-      updated_thread = Forum.get_thread!(thread.id)
+      updated_thread = Forum.get_thread!(thread.id, allow_removed?: true)
       assert updated_thread.is_removed
     end
 

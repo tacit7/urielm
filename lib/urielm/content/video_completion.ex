@@ -5,10 +5,10 @@ defmodule Urielm.Content.VideoCompletion do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   schema "video_completions" do
-    belongs_to :user, Urielm.Accounts.User, type: :id
-    belongs_to :video, Urielm.Content.Video, type: :binary_id
+    belongs_to(:user, Urielm.Accounts.User, type: :id)
+    belongs_to(:video, Urielm.Content.Video, type: :binary_id)
 
-    field :completed_at, :utc_datetime
+    field(:completed_at, :utc_datetime)
   end
 
   @doc false

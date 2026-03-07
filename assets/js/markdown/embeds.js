@@ -1,6 +1,15 @@
 /**
  * HTML attribute value escaping to prevent XSS
- * Escapes characters that could break out of attribute quotes
+ *
+ * Escapes characters that could break out of HTML attribute quotes.
+ * Use this before interpolating any user-provided content into HTML attributes.
+ *
+ * @param {string|null|undefined} value - The value to escape
+ * @returns {string} Escaped string safe for HTML attributes
+ *
+ * @example
+ * const safe = escapeAttr('user"input')
+ * // Returns: 'user&quot;input'
  */
 export function escapeAttr(value) {
   return String(value ?? "")
@@ -12,8 +21,23 @@ export function escapeAttr(value) {
 }
 
 /**
- * Process markdown HTML to add embeds for YouTube, images, and Twitter
- * All URLs are properly escaped before interpolation
+ * Process markdown-rendered HTML to add rich embeds
+ *
+ * Transforms standalone URLs in HTML into interactive embeds:
+ * - YouTube/Shorts URLs → 16:9 iframe players
+ * - Image URLs → clickable images with lazy loading
+ * - Twitter/X URLs → preview cards with links
+ *
+ * Uses negative lookbehind/lookahead to avoid corrupting URLs already
+ * inside markdown links, code blocks, or HTML attributes.
+ *
+ * @param {string} htmlContent - HTML output from markdown renderer
+ * @returns {string} HTML with embedded content
+ *
+ * @example
+ * const html = '<p>Check out https://youtube.com/watch?v=abc</p>'
+ * const result = processEmbeds(html)
+ * // Returns: '<p>Check out <div class="youtube-embed">...</div></p>'
  */
 export function processEmbeds(htmlContent) {
   let processed = htmlContent

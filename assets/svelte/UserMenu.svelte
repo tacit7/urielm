@@ -72,6 +72,7 @@
     </div>
   </button>
 
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <ul tabindex="0" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow mt-3">
     <li class="menu-title">
       <span>{currentUser.name || 'User'}</span>

@@ -8,10 +8,11 @@ defmodule UrielmWeb.CoursesLive do
 
   @impl true
   def mount(params, session, socket) do
-    _child_params = case params do
-      :not_mounted_at_router -> session["child_params"] || %{}
-      params -> params
-    end
+    _child_params =
+      case params do
+        :not_mounted_at_router -> session["child_params"] || %{}
+        params -> params
+      end
 
     courses = Learning.list_courses()
     videos = Content.list_published_videos(limit: @page_size, offset: 0)
@@ -52,7 +53,11 @@ defmodule UrielmWeb.CoursesLive do
         <div class="flex items-center justify-between px-6 md:px-12 lg:px-20 mb-4">
           <h2 class="text-xl font-bold text-base-content">Videos</h2>
         </div>
-        <div id="videos-grid" phx-update="stream" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 md:px-12 lg:px-20">
+        <div
+          id="videos-grid"
+          phx-update="stream"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 md:px-12 lg:px-20"
+        >
           <.video_card :for={{dom_id, video} <- @streams.videos} id={dom_id} video={video} />
         </div>
         <%= if @has_more_videos do %>
@@ -79,7 +84,11 @@ defmodule UrielmWeb.CoursesLive do
     <section class="mb-10 group/swimlane">
       <div class="flex items-center justify-between px-4 md:px-8 mb-4">
         <h2 class="text-xl font-bold text-base-content">{@title}</h2>
-        <.link :if={@show_all_link} navigate={@show_all_link} class="text-sm text-primary hover:underline">
+        <.link
+          :if={@show_all_link}
+          navigate={@show_all_link}
+          class="text-sm text-primary hover:underline"
+        >
           Show all
         </.link>
       </div>
@@ -157,7 +166,13 @@ defmodule UrielmWeb.CoursesLive do
 
   defp video_card(assigns) do
     assigns = assign(assigns, :video_id, extract_youtube_id(assigns.video.youtube_url))
-    assigns = assign(assigns, :time_ago, time_ago(assigns.video.published_at || assigns.video.inserted_at))
+
+    assigns =
+      assign(
+        assigns,
+        :time_ago,
+        time_ago(assigns.video.published_at || assigns.video.inserted_at)
+      )
 
     ~H"""
     <.link id={@id} navigate={~p"/videos/#{@video.slug}"} class="group">
@@ -191,18 +206,22 @@ defmodule UrielmWeb.CoursesLive do
   end
 
   defp extract_youtube_id(nil), do: nil
+
   defp extract_youtube_id(url) do
     cond do
       String.contains?(url, "v=") ->
         url |> String.split("v=") |> List.last() |> String.split("&") |> List.first()
+
       String.contains?(url, "youtu.be/") ->
         url |> String.split("youtu.be/") |> List.last() |> String.split("?") |> List.first()
+
       true ->
         nil
     end
   end
 
   defp time_ago(nil), do: ""
+
   defp time_ago(datetime) do
     now = DateTime.utc_now()
     diff = DateTime.diff(now, datetime, :second)

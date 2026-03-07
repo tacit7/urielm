@@ -6,6 +6,7 @@ defmodule UrielmWeb.LiveHelpers do
   user vote lookup.
   """
 
+  alias Urielm.Accounts.User
   alias Urielm.Forum
   alias Urielm.Repo
 
@@ -65,10 +66,54 @@ defmodule UrielmWeb.LiveHelpers do
 
   @doc """
   Preload authors and serialize a list of threads into ThreadCard maps.
+  Uses bulk queries to avoid N+1 for user state (saved, subscribed, unread, votes).
   """
   def serialize_thread_list(threads, current_user) do
     threads = Repo.preload(threads, :author)
-    Enum.map(threads, &serialize_thread_card(&1, current_user))
+    thread_ids = Enum.map(threads, & &1.id)
+
+    # Bulk load user state if logged in
+    bulk_state = load_bulk_thread_state(current_user, thread_ids)
+
+    Enum.map(threads, &serialize_thread_card_bulk(&1, current_user, bulk_state))
+  end
+
+  defp load_bulk_thread_state(nil, _thread_ids) do
+    %{saved: MapSet.new(), subscribed: MapSet.new(), unread: MapSet.new(), votes: %{}}
+  end
+
+  defp load_bulk_thread_state(user, thread_ids) do
+    %{
+      saved: Forum.bulk_saved_thread_ids(user.id, thread_ids),
+      subscribed: Forum.bulk_subscribed_thread_ids(user.id, thread_ids),
+      unread: Forum.bulk_unread_thread_ids(user.id, thread_ids),
+      votes: Forum.bulk_get_votes(user.id, "thread", thread_ids)
+    }
+  end
+
+  defp serialize_thread_card_bulk(thread, current_user, bulk_state) do
+    thread_id_string = to_string(thread.id)
+
+    %{
+      id: thread_id_string,
+      title: thread.title,
+      body: String.slice(thread.body, 0, 150),
+      score: thread.score,
+      comment_count: thread.comment_count,
+      view_count: thread.view_count || 0,
+      is_solved: thread.is_solved || false,
+      is_locked: thread.is_locked || false,
+      is_pinned: thread.is_pinned || false,
+      author: %{
+        id: thread.author.id,
+        username: thread.author.username
+      },
+      created_at: thread.inserted_at,
+      user_vote: if(current_user, do: Map.get(bulk_state.votes, thread.id), else: nil),
+      is_saved: MapSet.member?(bulk_state.saved, thread.id),
+      is_subscribed: MapSet.member?(bulk_state.subscribed, thread.id),
+      is_unread: MapSet.member?(bulk_state.unread, thread.id)
+    }
   end
 
   @doc """
@@ -95,17 +140,33 @@ defmodule UrielmWeb.LiveHelpers do
   @doc """
   Build a nested comment tree with votes for the current user.
   Accepts a flat list of Comment structs (author must be loadable).
+  Uses bulk queries to avoid N+1 for saved status and votes.
   """
   def build_comment_tree(comments, current_user) do
     comments = Repo.preload(comments, :author)
+    comment_ids = Enum.map(comments, & &1.id)
+
+    # Bulk load user state
+    bulk_state = load_bulk_comment_state(current_user, comment_ids)
+
     grouped = Enum.group_by(comments, & &1.parent_id)
     root_comments = grouped[nil] || []
-    Enum.map(root_comments, &build_comment_node(&1, grouped, current_user))
+    Enum.map(root_comments, &build_comment_node(&1, grouped, current_user, bulk_state))
   end
 
-  defp build_comment_node(comment, grouped, current_user) do
+  defp load_bulk_comment_state(nil, _comment_ids) do
+    %{saved: MapSet.new(), votes: %{}}
+  end
+
+  defp load_bulk_comment_state(user, comment_ids) do
+    %{
+      saved: Forum.bulk_saved_comment_ids(user.id, comment_ids),
+      votes: Forum.bulk_get_votes(user.id, "comment", comment_ids)
+    }
+  end
+
+  defp build_comment_node(comment, grouped, current_user, bulk_state) do
     children = grouped[comment.id] || []
-    is_saved = current_user && Forum.is_comment_saved?(current_user.id, comment.id)
 
     %{
       id: to_string(comment.id),
@@ -118,9 +179,9 @@ defmodule UrielmWeb.LiveHelpers do
       score: comment.score,
       inserted_at: comment.inserted_at,
       edited_at: comment.edited_at,
-      user_vote: get_user_vote(current_user, "comment", comment.id),
-      is_saved: is_saved || false,
-      replies: Enum.map(children, &build_comment_node(&1, grouped, current_user))
+      user_vote: if(current_user, do: Map.get(bulk_state.votes, comment.id), else: nil),
+      is_saved: MapSet.member?(bulk_state.saved, comment.id),
+      replies: Enum.map(children, &build_comment_node(&1, grouped, current_user, bulk_state))
     }
   end
 
@@ -215,7 +276,11 @@ defmodule UrielmWeb.LiveHelpers do
         {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Sign in to #{action_name}")}
 
       user ->
-        fun.(socket, user)
+        if User.silenced?(user) do
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Your account is silenced and cannot #{action_name}")}
+        else
+          fun.(socket, user)
+        end
     end
   end
 

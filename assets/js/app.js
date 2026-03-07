@@ -80,6 +80,7 @@ import ThemeSelector from "../svelte/ThemeSelector.svelte"
 import SubNav from "../svelte/SubNav.svelte"
 import UnderlineNav from "../svelte/UnderlineNav.svelte"
 import YouTubeEmbed from "../svelte/YouTubeEmbed.svelte"
+import TikTokEmbed from "../svelte/TikTokEmbed.svelte"
 import AuthModal from "../svelte/AuthModal.svelte"
 import UserMenu from "../svelte/UserMenu.svelte"
 import GoogleSignInButton from "../svelte/GoogleSignInButton.svelte"
@@ -265,6 +266,7 @@ let Hooks = getHooks({
   SubNav,
   UnderlineNav,
   YouTubeEmbed,
+  TikTokEmbed,
   AuthModal,
   UserMenu,
   GoogleSignInButton,
