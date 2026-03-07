@@ -111,14 +111,7 @@ defmodule UrielmWeb.HomeLive do
                   <div class="w-3 h-3 rounded-full bg-success"></div>
                   <span class="ml-2 text-xs text-base-content/50 font-mono">claude_agent.py</span>
                 </div>
-                <pre class="text-xs font-mono text-base-content/80 overflow-hidden"><code><span class="text-secondary">from</span> anthropic <span class="text-secondary">import</span> Anthropic
-
-client = Anthropic()
-response = client.messages.create(
-    model=<span class="text-success">"claude-3-5-sonnet"</span>,
-    max_tokens=<span class="text-warning">1024</span>,
-    messages=[...]
-)</code></pre>
+                <pre class="text-xs font-mono text-base-content/80 overflow-hidden"><code><span class="text-secondary">from</span> anthropic <span class="text-secondary">import</span> Anthropic&#10;&#10;client = Anthropic()&#10;response = client.messages.create(&#10;    model=<span class="text-success">"claude-3-5-sonnet"</span>,&#10;    max_tokens=<span class="text-warning">1024</span>,&#10;    messages=[...]&#10;)</code></pre>
               </div>
 
               <!-- Card 2: Prompt Card -->
@@ -182,7 +175,7 @@ response = client.messages.create(
               <p class="text-base-content/50 text-sm">Quick AI tips under 60 seconds</p>
             </div>
           </div>
-          <.link navigate={~p"/videos"} class="btn btn-ghost btn-sm gap-2">
+          <.link navigate={~p"/courses"} class="btn btn-ghost btn-sm gap-2">
             View All
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -547,7 +540,6 @@ response = client.messages.create(
               <li><.link navigate={~p"/courses"} class="text-base-content/60 hover:text-primary transition-colors">Courses</.link></li>
               <li><.link navigate={~p"/blog"} class="text-base-content/60 hover:text-primary transition-colors">Blog</.link></li>
               <li><.link navigate={~p"/prompts"} class="text-base-content/60 hover:text-primary transition-colors">Prompts</.link></li>
-              <li><.link navigate={~p"/videos"} class="text-base-content/60 hover:text-primary transition-colors">Videos</.link></li>
             </ul>
           </div>
 

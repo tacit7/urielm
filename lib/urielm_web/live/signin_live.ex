@@ -1,6 +1,5 @@
 defmodule UrielmWeb.SigninLive do
   use UrielmWeb, :live_view
-  alias Urielm.Accounts
 
   @impl true
   def mount(_params, _session, socket) do

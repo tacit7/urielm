@@ -41,7 +41,7 @@ defmodule Urielm.Upload do
          url: build_public_url(key),
          filename: file.filename,
          content_type: file.content_type,
-         size: file.size,
+         size: File.stat!(file.path).size,
          key: key
        }}
     end
@@ -66,7 +66,7 @@ defmodule Urielm.Upload do
   defp validate_file(%Plug.Upload{} = file) do
     with :ok <- validate_extension(file.filename),
          :ok <- validate_mime_type(file.content_type),
-         :ok <- validate_size(file.size) do
+         :ok <- validate_size(File.stat!(file.path).size) do
       :ok
     end
   end

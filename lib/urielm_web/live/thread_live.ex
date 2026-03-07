@@ -90,9 +90,6 @@ defmodule UrielmWeb.ThreadLive do
     end
   end
 
-  defp maybe_put_parent_id(attrs, parent_id) when parent_id in [nil, ""], do: attrs
-  defp maybe_put_parent_id(attrs, parent_id), do: Map.put(attrs, "parent_id", parent_id)
-
   @impl true
   def handle_event(
         "vote",
@@ -912,6 +909,9 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   # full thread serialization handled by LiveHelpers.serialize_thread_full/2
+
+  defp maybe_put_parent_id(attrs, parent_id) when parent_id in [nil, ""], do: attrs
+  defp maybe_put_parent_id(attrs, parent_id), do: Map.put(attrs, "parent_id", parent_id)
 
   defp refresh_thread(socket, current_user) do
     thread_id = socket.assigns.thread.id

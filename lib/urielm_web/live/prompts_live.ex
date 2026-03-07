@@ -77,20 +77,6 @@ defmodule UrielmWeb.PromptsLive do
     handle_filter_change(key, socket)
   end
 
-  defp handle_filter_change(category, socket) do
-    %{search_query: query} = socket.assigns
-    opts = build_search_opts(category, 0)
-
-    prompts = Content.search_prompts(query, opts)
-
-    {:noreply,
-     socket
-     |> assign(:current_filter, category)
-     |> assign(:page, 1)
-     |> assign(:has_more, length(prompts) == @page_size)
-     |> stream(:prompts, serialize_prompts(prompts), reset: true)}
-  end
-
   @impl true
   def handle_event("load_more", _params, socket) do
     %{current_filter: filter, search_query: query, page: page} = socket.assigns
@@ -231,6 +217,20 @@ defmodule UrielmWeb.PromptsLive do
             {:noreply, put_flash(socket, :error, "Failed to save prompt")}
         end
     end
+  end
+
+  defp handle_filter_change(category, socket) do
+    %{search_query: query} = socket.assigns
+    opts = build_search_opts(category, 0)
+
+    prompts = Content.search_prompts(query, opts)
+
+    {:noreply,
+     socket
+     |> assign(:current_filter, category)
+     |> assign(:page, 1)
+     |> assign(:has_more, length(prompts) == @page_size)
+     |> stream(:prompts, serialize_prompts(prompts), reset: true)}
   end
 
   defp build_search_opts(category, offset) do

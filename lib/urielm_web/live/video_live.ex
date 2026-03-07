@@ -267,13 +267,8 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, socket}
 
       user ->
-        case Content.unmark_video_complete(user, video) do
-          {:ok, _count} ->
-            {:noreply, assign(socket, :completed, false)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to unmark")}
-        end
+        {:ok, _count} = Content.unmark_video_complete(user, video)
+        {:noreply, assign(socket, :completed, false)}
     end
   end
 
