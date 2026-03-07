@@ -21,6 +21,12 @@ config :urielm, UrielmWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "5000")],
+  https: [
+    port: 5443,
+    cipher_suite: :strong,
+    keyfile: "priv/certs/localhost+2-key.pem",
+    certfile: "priv/certs/localhost+2.pem"
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

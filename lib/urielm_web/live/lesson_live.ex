@@ -39,8 +39,8 @@ defmodule UrielmWeb.LessonLive do
 
             # Load vote data
             %{current_user: user} = socket.assigns
-            {upvotes, downvotes, _score} = Engagement.get_vote_counts("lesson", lesson.id)
-            user_vote = if user, do: Engagement.get_vote(user.id, "lesson", lesson.id), else: nil
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("lesson", to_string(lesson.id))
+            user_vote = if user, do: Engagement.get_vote(user.id, "lesson", to_string(lesson.id)), else: nil
 
             {:ok,
              socket
@@ -238,7 +238,7 @@ defmodule UrielmWeb.LessonLive do
                 name="VoteButtons"
                 props={%{
                   target_type: "lesson",
-                  target_id: @lesson.id,
+                  target_id: to_string(@lesson.id),
                   upvotes: @upvotes,
                   downvotes: @downvotes,
                   user_vote: @user_vote,
