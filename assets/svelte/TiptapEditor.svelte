@@ -15,7 +15,7 @@
   let editor
   let showLinkPopover = $state(false)
   let linkUrl = $state('')
-  let linkInputRef
+  let linkInputRef = $state()
 
   // Focus input when popover opens
   $effect(() => {
@@ -164,29 +164,30 @@
     <div class="absolute top-0 left-0 mt-2 z-50 bg-base-200 border border-base-300 rounded-lg shadow-xl p-4 w-80">
       <div class="space-y-3">
         <div>
-          <label class="label pb-1">
+          <label for="link-url-input" class="label pb-1">
             <span class="label-text text-sm font-medium">Enter URL</span>
           </label>
           <input
+            id="link-url-input"
             type="url"
             bind:this={linkInputRef}
             bind:value={linkUrl}
             placeholder="https://example.com"
             class="input input-bordered input-sm w-full"
-            on:keydown={(e) => e.key === 'Enter' && insertLink()}
+            onkeydown={(e) => e.key === 'Enter' && insertLink()}
           />
         </div>
         <div class="flex justify-end gap-2">
           <button
             type="button"
-            on:click={cancelLink}
+            onclick={cancelLink}
             class="btn btn-ghost btn-sm"
           >
             Cancel
           </button>
           <button
             type="button"
-            on:click={insertLink}
+            onclick={insertLink}
             class="btn btn-primary btn-sm"
             disabled={!linkUrl.trim()}
           >
