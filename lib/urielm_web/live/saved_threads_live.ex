@@ -68,7 +68,7 @@ defmodule UrielmWeb.SavedThreadsLive do
 
     case Forum.toggle_save_thread(user.id, thread_id) do
       {:ok, _} ->
-        {:noreply, stream_delete(socket, :threads, thread_id)}
+        {:noreply, stream_delete(socket, :threads, %{id: thread_id})}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to unsave thread")}

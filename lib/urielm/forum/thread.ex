@@ -76,7 +76,9 @@ defmodule Urielm.Forum.Thread do
       :solved_by_id,
       :is_pinned,
       :pinned_at,
-      :pinned_by_id
+      :pinned_by_id,
+      :close_at,
+      :close_timer_set_by_id
     ])
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
     |> validate_inclusion(:kind, ["forum", "video"])

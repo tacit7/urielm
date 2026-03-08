@@ -8,7 +8,19 @@ defmodule UrielmWeb.SearchLive do
   @page_size 20
 
   @impl true
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
+    {:ok,
+     socket
+     |> assign(:page_title, "Search Forum")
+     |> assign(:query, "")
+     |> assign(:page, 1)
+     |> assign(:meta, nil)
+     |> assign(:has_more, false)
+     |> stream(:results, [])}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
     query = Map.get(params, "q", "")
 
     page =
@@ -36,10 +48,7 @@ defmodule UrielmWeb.SearchLive do
         |> stream(:results, [], reset: true)
       end
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Search Forum")
-     |> assign(:has_more, false)}
+    {:noreply, socket}
   end
 
   @impl true

@@ -1,10 +1,6 @@
 defmodule UrielmWeb.CoursesLive do
   use UrielmWeb, :live_view
-  alias Phoenix.LiveView.JS
   alias Urielm.Learning
-  alias Urielm.Content
-
-  @page_size 20
 
   @impl true
   def mount(params, session, socket) do
@@ -15,225 +11,205 @@ defmodule UrielmWeb.CoursesLive do
       end
 
     courses = Learning.list_courses()
-    videos = Content.list_published_videos(limit: @page_size, offset: 0)
 
     {:ok,
      socket
      |> assign(:courses, courses)
-     |> assign(:video_page, 1)
-     |> assign(:has_more_videos, length(videos) == @page_size)
      |> assign(:current_page, "courses")
-     |> assign(:page_title, "Courses")
-     |> stream(:videos, videos, reset: true)}
-  end
-
-  @impl true
-  def handle_event("load_more_videos", _params, socket) do
-    %{video_page: page} = socket.assigns
-    offset = page * @page_size
-
-    new_videos = Content.list_published_videos(limit: @page_size, offset: offset)
-
-    {:noreply,
-     socket
-     |> assign(:video_page, page + 1)
-     |> assign(:has_more_videos, length(new_videos) == @page_size)
-     |> stream(:videos, new_videos)}
+     |> assign(:page_title, "Courses")}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="py-8">
-      <.swimlane title="Courses" show_all_link={~p"/courses"}>
-        <.course_card :for={course <- @courses} course={course} />
-      </.swimlane>
-
-      <section class="mb-10">
-        <div class="flex items-center justify-between px-6 md:px-12 lg:px-20 mb-4">
-          <h2 class="text-xl font-bold text-base-content">Videos</h2>
-        </div>
-        <div
-          id="videos-grid"
-          phx-update="stream"
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 md:px-12 lg:px-20"
-        >
-          <.video_card :for={{dom_id, video} <- @streams.videos} id={dom_id} video={video} />
-        </div>
-        <%= if @has_more_videos do %>
-          <div
-            id="videos-infinite-scroll"
-            phx-hook="InfiniteScroll"
-            data-event="load_more_videos"
-            class="h-20 flex items-center justify-center"
-          >
-            <span class="loading loading-spinner loading-md text-primary"></span>
+    <div class="min-h-screen">
+      <!-- Header -->
+      <div class="px-6 md:px-12 lg:px-16 pt-12 pb-10">
+        <div class="flex items-end justify-between">
+          <div>
+            <p class="text-xs font-mono tracking-widest text-base-content/40 uppercase mb-2">
+              Learning / Courses
+            </p>
+            <h1 class="text-5xl font-black tracking-tight text-base-content leading-none">
+              Courses
+            </h1>
           </div>
-        <% end %>
-      </section>
+          <p class="text-sm font-mono text-base-content/40 pb-1">
+            {length(@courses)} {if length(@courses) == 1, do: "course", else: "courses"}
+          </p>
+        </div>
+        <div class="mt-6 h-px bg-base-content/10" />
+      </div>
+
+      <!-- Content -->
+      <div class="px-6 md:px-12 lg:px-16 pb-16">
+        <!-- Empty state -->
+        <div :if={@courses == []} class="flex flex-col items-center justify-center py-36">
+          <p class="font-mono font-black text-8xl text-base-content/10 select-none mb-6">00</p>
+          <p class="text-base-content/40 text-xs font-mono tracking-[0.3em] uppercase">
+            No courses yet
+          </p>
+        </div>
+
+        <!-- Featured first + grid -->
+        <div :if={@courses != []}>
+          <.featured_course course={hd(@courses)} index={1} />
+
+          <div :if={tl(@courses) != []} class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <.course_card
+              :for={{course, i} <- Enum.with_index(tl(@courses), 2)}
+              course={course}
+              index={i}
+            />
+          </div>
+        </div>
+      </div>
     </div>
     """
   end
 
-  attr :title, :string, required: true
-  attr :show_all_link, :string, default: nil
-  slot :inner_block, required: true
-
-  defp swimlane(assigns) do
-    ~H"""
-    <section class="mb-10 group/swimlane">
-      <div class="flex items-center justify-between px-4 md:px-8 mb-4">
-        <h2 class="text-xl font-bold text-base-content">{@title}</h2>
-        <.link
-          :if={@show_all_link}
-          navigate={@show_all_link}
-          class="text-sm text-primary hover:underline"
-        >
-          Show all
-        </.link>
-      </div>
-      <div class="relative">
-        <button
-          type="button"
-          phx-click={JS.dispatch("scroll-left", to: "#swimlane-#{slug(@title)}")}
-          class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-base-100/90 hover:bg-base-200 rounded-full shadow-lg opacity-0 group-hover/swimlane:opacity-100 transition-opacity"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div
-          id={"swimlane-#{slug(@title)}"}
-          phx-hook="HorizontalScroll"
-          class="flex gap-4 overflow-x-auto px-4 md:px-8 pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth"
-        >
-          {render_slot(@inner_block)}
-        </div>
-        <button
-          type="button"
-          phx-click={JS.dispatch("scroll-right", to: "#swimlane-#{slug(@title)}")}
-          class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-base-100/90 hover:bg-base-200 rounded-full shadow-lg opacity-0 group-hover/swimlane:opacity-100 transition-opacity"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-    </section>
-    """
-  end
-
-  defp slug(title) do
-    title |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-")
-  end
-
   attr :course, :map, required: true
+  attr :index, :integer, required: true
 
-  defp course_card(assigns) do
+  defp featured_course(assigns) do
+    assigns =
+      assigns
+      |> assign(:thumb, get_thumb(assigns.course))
+      |> assign(:num, String.pad_leading(to_string(assigns.index), 2, "0"))
+      |> assign(:lesson_count, length(assigns.course.lessons))
+
     ~H"""
     <.link
       navigate={~p"/courses/#{@course.slug}"}
-      class="flex-none w-72 md:w-80 group snap-start"
+      class="group block relative rounded-2xl overflow-hidden h-[400px] md:h-[480px]"
     >
-      <div class="relative aspect-video rounded-xl overflow-hidden bg-base-300 mb-2">
-        <%= if first_lesson = List.first(@course.lessons) do %>
-          <img
-            src={"https://img.youtube.com/vi/#{first_lesson.youtube_video_id}/mqdefault.jpg"}
-            alt={@course.title}
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        <% else %>
-          <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-            <svg class="w-12 h-12 text-primary/50" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-        <% end %>
-        <div class="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
-          {length(@course.lessons)} videos
+      <div class="absolute inset-0">
+        <img
+          :if={@thumb}
+          src={@thumb}
+          alt={@course.title}
+          class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
+        />
+        <div :if={!@thumb} class="w-full h-full bg-base-300" />
+      </div>
+
+      <div class="absolute inset-0 bg-gradient-to-t from-base-content/90 via-base-content/30 to-base-content/5" />
+
+      <div class="absolute top-4 right-6 font-mono font-black text-[8rem] leading-none select-none text-base-100/10 group-hover:text-primary/20 transition-colors duration-500">
+        {@num}
+      </div>
+
+      <div class="absolute inset-0 flex flex-col justify-end p-8">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="font-mono text-xs tracking-widest uppercase text-base-100/50">
+            Course {@num}
+          </span>
+          <span class="w-1 h-1 rounded-full bg-base-100/30" />
+          <span class="font-mono text-xs text-base-100/50">
+            {@lesson_count} {if @lesson_count == 1, do: "lesson", else: "lessons"}
+          </span>
+        </div>
+
+        <h2 class="text-3xl md:text-4xl font-black text-base-100 leading-tight mb-3 group-hover:text-primary transition-colors duration-300">
+          {@course.title}
+        </h2>
+
+        <p
+          :if={@course.description}
+          class="text-base-100/70 text-sm leading-relaxed max-w-xl line-clamp-2 mb-6"
+        >
+          {@course.description}
+        </p>
+
+        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+          <span class="text-sm font-bold text-primary">Start watching</span>
+          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
+          </svg>
         </div>
       </div>
-      <h3 class="font-medium text-base-content line-clamp-2 group-hover:text-primary transition-colors">
-        {@course.title}
-      </h3>
-      <p class="text-sm text-base-content/60 mt-1">Course</p>
     </.link>
     """
   end
 
-  attr :video, :map, required: true
-  attr :id, :string, default: nil
+  attr :course, :map, required: true
+  attr :index, :integer, required: true
 
-  defp video_card(assigns) do
-    assigns = assign(assigns, :video_id, extract_youtube_id(assigns.video.youtube_url))
-
+  defp course_card(assigns) do
     assigns =
-      assign(
-        assigns,
-        :time_ago,
-        time_ago(assigns.video.published_at || assigns.video.inserted_at)
-      )
+      assigns
+      |> assign(:thumb, get_thumb(assigns.course))
+      |> assign(:num, String.pad_leading(to_string(assigns.index), 2, "0"))
+      |> assign(:lesson_count, length(assigns.course.lessons))
 
     ~H"""
-    <.link id={@id} navigate={~p"/videos/#{@video.slug}"} class="group">
-      <div class="relative aspect-video rounded-xl overflow-hidden bg-base-300 mb-3">
+    <.link
+      navigate={~p"/courses/#{@course.slug}"}
+      class="group block relative rounded-2xl overflow-hidden h-[260px] md:h-[300px]"
+    >
+      <div class="absolute inset-0">
         <img
-          src={"https://img.youtube.com/vi/#{@video_id}/mqdefault.jpg"}
-          alt={@video.title}
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+          :if={@thumb}
+          src={@thumb}
+          alt={@course.title}
+          class="w-full h-full object-cover scale-100 group-hover:scale-105 transition-transform duration-700 ease-out"
         />
+        <div :if={!@thumb} class="w-full h-full bg-base-300" />
       </div>
-      <div class="flex gap-3">
-        <div class="flex-shrink-0">
-          <div class="w-9 h-9 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold text-base-content/70">
-            {String.first(@video.author_name || "U")}
-          </div>
+
+      <div class="absolute inset-0 bg-gradient-to-t from-base-content/88 via-base-content/20 to-transparent" />
+
+      <div class="absolute top-3 right-5 font-mono font-black text-[5rem] leading-none select-none text-base-100/10 group-hover:text-primary/20 transition-colors duration-500">
+        {@num}
+      </div>
+
+      <div class="absolute inset-0 flex flex-col justify-end p-5">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="font-mono text-xs tracking-widest uppercase text-base-100/50">
+            {@num}
+          </span>
+          <span class="w-1 h-1 rounded-full bg-base-100/30" />
+          <span class="font-mono text-xs text-base-100/50">
+            {@lesson_count} {if @lesson_count == 1, do: "lesson", else: "lessons"}
+          </span>
         </div>
-        <div class="flex-1 min-w-0">
-          <h3 class="font-medium text-base-content line-clamp-2 text-sm leading-tight group-hover:text-primary transition-colors">
-            {@video.title}
-          </h3>
-          <p class="text-xs text-base-content/60 mt-1">
-            {@video.author_name || "Unknown"}
-          </p>
-          <p class="text-xs text-base-content/60">
-            {@time_ago}
-          </p>
+
+        <h2 class="text-xl font-black text-base-100 leading-tight mb-1 group-hover:text-primary transition-colors duration-300 line-clamp-2">
+          {@course.title}
+        </h2>
+
+        <p
+          :if={@course.description}
+          class="text-base-100/60 text-xs leading-relaxed line-clamp-1 mb-4"
+        >
+          {@course.description}
+        </p>
+
+        <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-1.5 group-hover:translate-y-0 transition-all duration-300">
+          <span class="text-xs font-bold text-primary">View course</span>
+          <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2.5"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
+          </svg>
         </div>
       </div>
     </.link>
     """
   end
 
-  defp extract_youtube_id(nil), do: nil
-
-  defp extract_youtube_id(url) do
-    cond do
-      String.contains?(url, "v=") ->
-        url |> String.split("v=") |> List.last() |> String.split("&") |> List.first()
-
-      String.contains?(url, "youtu.be/") ->
-        url |> String.split("youtu.be/") |> List.last() |> String.split("?") |> List.first()
-
-      true ->
-        nil
-    end
-  end
-
-  defp time_ago(nil), do: ""
-
-  defp time_ago(datetime) do
-    now = DateTime.utc_now()
-    diff = DateTime.diff(now, datetime, :second)
-
-    cond do
-      diff < 60 -> "just now"
-      diff < 3600 -> "#{div(diff, 60)} minutes ago"
-      diff < 86400 -> "#{div(diff, 3600)} hours ago"
-      diff < 604_800 -> "#{div(diff, 86400)} days ago"
-      diff < 2_592_000 -> "#{div(diff, 604_800)} weeks ago"
-      diff < 31_536_000 -> "#{div(diff, 2_592_000)} months ago"
-      true -> "#{div(diff, 31_536_000)} years ago"
+  defp get_thumb(course) do
+    case List.first(course.lessons) do
+      nil -> nil
+      lesson -> "https://img.youtube.com/vi/#{lesson.youtube_video_id}/mqdefault.jpg"
     end
   end
 end

@@ -45,6 +45,7 @@ defmodule UrielmWeb.LiveHelpers do
         username: thread.author.username
       },
       created_at: thread.inserted_at,
+      updated_at: thread.updated_at,
       user_vote: get_user_vote(current_user, "thread", thread.id),
       is_saved: is_saved || false,
       is_subscribed: is_subscribed || false,

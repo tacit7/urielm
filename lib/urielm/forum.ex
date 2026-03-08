@@ -51,7 +51,7 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
-  # Convenience: categories with boards preloaded (includes thread counts)
+  # Convenience: categories with boards preloaded (includes thread counts and last activity)
   def list_categories_with_boards(opts \\ []) do
     thread_count_subquery =
       from(t in Thread,
@@ -59,11 +59,48 @@ defmodule Urielm.Forum do
         select: count(t.id)
       )
 
+    post_count_subquery =
+      from(t in Thread,
+        where: t.board_id == parent_as(:board).id and t.is_removed == false,
+        select: sum(t.comment_count)
+      )
+
+    last_activity_subquery =
+      from(t in Thread,
+        where: t.board_id == parent_as(:board).id and t.is_removed == false,
+        order_by: [desc: t.updated_at],
+        limit: 1,
+        select: t.updated_at
+      )
+
+    latest_title_subquery =
+      from(t in Thread,
+        where: t.board_id == parent_as(:board).id and t.is_removed == false,
+        order_by: [desc: t.updated_at],
+        limit: 1,
+        select: t.title
+      )
+
+    latest_slug_subquery =
+      from(t in Thread,
+        where: t.board_id == parent_as(:board).id and t.is_removed == false,
+        order_by: [desc: t.updated_at],
+        limit: 1,
+        select: t.slug
+      )
+
     boards_query =
       from(b in Board,
         as: :board,
         where: b.is_hidden == false,
-        select: %{b | thread_count: subquery(thread_count_subquery)}
+        select: %{
+          b
+          | thread_count: subquery(thread_count_subquery),
+            post_count: subquery(post_count_subquery),
+            last_activity_at: subquery(last_activity_subquery),
+            latest_thread_title: subquery(latest_title_subquery),
+            latest_thread_slug: subquery(latest_slug_subquery)
+        }
       )
 
     list_categories(opts)
@@ -1117,7 +1154,7 @@ defmodule Urielm.Forum do
         |> order_by([t],
           desc:
             fragment(
-              "ts_rank(?, plainto_tsquery('english', ?)) DESC",
+              "ts_rank(?, plainto_tsquery('english', ?))",
               t.search_vector,
               ^query_string
             ),

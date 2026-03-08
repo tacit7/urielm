@@ -1,9 +1,24 @@
 <script>
-  import { LayoutDashboard, BookOpen, Bookmark, User, Settings, LogOut, Loader2 } from 'lucide-svelte'
+  import { LayoutDashboard, BookOpen, Bookmark, User, Settings, LogOut, Loader2, Sun, Moon } from 'lucide-svelte'
 
   let { currentUser } = $props()
 
   let isLoggingOut = $state(false)
+  let currentTheme = $state('light')
+
+  $effect(() => {
+    const stored = localStorage.getItem('phx:theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    currentTheme = stored || (prefersDark ? 'dark' : 'light')
+  })
+
+  function toggleTheme() {
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light'
+    currentTheme = newTheme
+    document.documentElement.setAttribute('data-theme', newTheme)
+    localStorage.setItem('phx:theme', newTheme)
+    window.dispatchEvent(new CustomEvent('phx:set-theme', { detail: { theme: newTheme } }))
+  }
 
   function getUserInitials() {
     if (currentUser.name) {
@@ -108,6 +123,17 @@
         <Settings class="w-4 h-4" />
         Preferences
       </a>
+    </li>
+    <li>
+      <button onclick={toggleTheme}>
+        {#if currentTheme === 'light'}
+          <Moon class="w-4 h-4" />
+          Dark mode
+        {:else}
+          <Sun class="w-4 h-4" />
+          Light mode
+        {/if}
+      </button>
     </li>
     <li><div class="divider my-0"></div></li>
     <li>

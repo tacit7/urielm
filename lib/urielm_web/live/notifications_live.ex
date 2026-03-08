@@ -83,7 +83,7 @@ defmodule UrielmWeb.NotificationsLive do
         {:noreply,
          socket
          |> assign(:unread_count, Forum.count_unread_notifications(user.id))
-         |> stream_delete(:notifications, notif_id)}
+         |> stream_delete(:notifications, %{id: notif_id})}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to mark as read")}
@@ -95,14 +95,14 @@ defmodule UrielmWeb.NotificationsLive do
     %{current_user: user} = socket.assigns
 
     case Forum.mark_all_notifications_as_read(user.id) do
-      {:ok, _} ->
+      {_count, nil} ->
         {:noreply,
          socket
          |> assign(:unread_count, 0)
          |> put_flash(:info, "All notifications marked as read")
          |> push_patch(to: ~p"/notifications")}
 
-      {:error, _} ->
+      _ ->
         {:noreply, put_flash(socket, :error, "Failed to mark notifications as read")}
     end
   end

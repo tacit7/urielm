@@ -186,145 +186,81 @@ defmodule UrielmWeb.BoardLive do
       current_board={@board.slug}
     >
       <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h1 class="text-3xl font-bold text-base-content">{@board.name}</h1>
-            <p class="text-base-content/60 mt-2">{@board.description}</p>
+      <div class="mb-6">
+        <h1 class="text-2xl font-black tracking-tight text-base-content mb-0.5">{@board.name}</h1>
+        <p :if={@board.description} class="text-sm text-base-content/50 mb-4">{@board.description}</p>
+
+        <!-- Tabs + New Topic button inline -->
+        <div class="flex items-center justify-between border-b border-base-300">
+          <div class="flex items-center overflow-x-auto">
+            <.tab_link
+              href={~p"/forum/b/#{@board.slug}"}
+              active={@filter == "all" && @sort != "top"}
+              label="Latest"
+            />
+            <.tab_link
+              href={~p"/forum/b/#{@board.slug}?sort=top"}
+              active={@sort == "top"}
+              label="Top"
+            />
+            <.tab_link
+              href={~p"/forum/b/#{@board.slug}?filter=new"}
+              active={@filter == "new"}
+              label="New"
+            />
+            <%= if @current_user do %>
+              <.tab_link
+                href={~p"/forum/b/#{@board.slug}?filter=unread"}
+                active={@filter == "unread"}
+                label="Unread"
+              />
+            <% end %>
+            <.tab_link
+              href={~p"/forum/b/#{@board.slug}?filter=solved"}
+              active={@filter == "solved"}
+              label="Solved"
+            />
           </div>
+
           <%= if @current_user do %>
             <a
               href={~p"/forum/b/#{@board.slug}/new"}
-              class="btn btn-primary"
+              class="btn btn-primary btn-sm rounded-full px-4 mb-1 flex-shrink-0"
             >
-              New Topic
+              + New Topic
             </a>
           <% end %>
-        </div>
-        
-    <!-- Filter Tabs -->
-        <div class="flex gap-4 border-b border-base-300 pb-0">
-          <%= if @current_user do %>
-            <a
-              href={~p"/forum/b/#{@board.slug}?filter=unread"}
-              class={[
-                "px-4 py-3 font-medium border-b-2 transition-colors",
-                if(@filter == "unread",
-                  do: "border-primary text-primary",
-                  else: "border-transparent text-base-content/60 hover:text-base-content"
-                )
-              ]}
-            >
-              Unread
-            </a>
-          <% end %>
-          <a
-            href={~p"/forum/b/#{@board.slug}?filter=new"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@filter == "new",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            New
-          </a>
-          <a
-            href={~p"/forum/b/#{@board.slug}"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@filter == "all",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            Latest
-          </a>
-          <a
-            href={~p"/forum/b/#{@board.slug}?sort=top&filter=all"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@sort == "top",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            Top
-          </a>
-          <span class="border-l border-base-300 mx-2"></span>
-          <a
-            href={~p"/forum/b/#{@board.slug}?filter=solved"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@filter == "solved",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            Solved
-          </a>
-          <a
-            href={~p"/forum/b/#{@board.slug}?filter=unsolved"}
-            class={[
-              "px-4 py-3 font-medium border-b-2 transition-colors",
-              if(@filter == "unsolved",
-                do: "border-primary text-primary",
-                else: "border-transparent text-base-content/60 hover:text-base-content"
-              )
-            ]}
-          >
-            Unsolved
-          </a>
         </div>
       </div>
       
-    <!-- Threads Table -->
-      <div class="border border-base-300 rounded-lg overflow-hidden bg-base-200/20">
-        <!-- Table Header -->
-        <div class="flex items-center gap-4 px-4 sm:px-5 py-3 bg-base-300/30 border-b border-base-300 text-sm font-semibold text-base-content/70">
-          <div class="flex-1">Topic</div>
-          <div class="hidden md:block w-12 text-center">Replies</div>
-          <div class="hidden md:block w-12 text-center">Views</div>
-          <div class="hidden lg:block w-28 text-right">Activity</div>
+      <!-- Threads table -->
+      <div class="rounded-xl border border-base-300/60 overflow-hidden">
+        <!-- Column headers -->
+        <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
+          <div class="w-2" />
+          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider">Topic</span>
+          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">Replies</span>
+          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">Views</span>
+          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-right">Activity</span>
         </div>
-        
-    <!-- Threads List -->
-        <div id="threads" phx-update="stream" class="">
-          <div id="empty-state" class="hidden only:flex justify-center py-12">
-            <div class="text-center text-base-content/50">
-              <%= case @filter do %>
-                <% "solved" -> %>
-                  <p class="text-lg font-medium mb-2">No solved topics</p>
-                  <p class="text-sm">Topics marked as solved will appear here</p>
-                <% "unsolved" -> %>
-                  <p class="text-lg font-medium mb-2">No unsolved topics</p>
-                  <p class="text-sm">All topics have been resolved!</p>
-                <% "unread" -> %>
-                  <p class="text-lg font-medium mb-2">All caught up!</p>
-                  <p class="text-sm">No unread topics in this board</p>
-                <% "new" -> %>
-                  <p class="text-lg font-medium mb-2">No new topics</p>
-                  <p class="text-sm">Check back later for fresh discussions</p>
-                <% _ -> %>
-                  <p class="text-lg font-medium mb-2">No topics yet</p>
-                  <p class="text-sm">Be the first to start a discussion!</p>
-              <% end %>
+
+        <!-- Threads stream -->
+        <div id="threads" phx-update="stream">
+          <div id="empty-state" class="hidden only:flex justify-center py-16">
+            <div class="text-center">
+              <p class="font-mono font-black text-6xl text-base-content/10 mb-3">0</p>
+              <p class="font-mono text-xs tracking-widest uppercase text-base-content/30">
+                <%= case @filter do %>
+                  <% "solved" -> %>No solved topics
+                  <% "unread" -> %>All caught up
+                  <% "new" -> %>No new topics
+                  <% _ -> %>No topics yet
+                <% end %>
+              </p>
             </div>
           </div>
-          <div
-            :for={{id, thread} <- @streams.threads}
-            id={id}
-            class="border-t border-base-300 first:border-t-0"
-          >
-            <.svelte
-              name="ThreadCard"
-              props={thread}
-              socket={@socket}
-            />
+          <div :for={{id, thread} <- @streams.threads} id={id}>
+            <.svelte name="ThreadCard" props={thread} socket={@socket} />
           </div>
         </div>
       </div>
@@ -345,5 +281,24 @@ defmodule UrielmWeb.BoardLive do
   defp serialize_threads(threads, current_user),
     do: LiveHelpers.serialize_thread_list(threads, current_user)
 
-  # per-ThreadCard serialization and vote lookups now live in LiveHelpers
+  attr :href, :string, required: true
+  attr :active, :boolean, default: false
+  attr :label, :string, required: true
+
+  defp tab_link(assigns) do
+    ~H"""
+    <a
+      href={@href}
+      class={[
+        "px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+        if(@active,
+          do: "border-primary text-primary",
+          else: "border-transparent text-base-content/50 hover:text-base-content"
+        )
+      ]}
+    >
+      {@label}
+    </a>
+    """
+  end
 end

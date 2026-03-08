@@ -10,6 +10,8 @@ defmodule Urielm.Params do
   """
   def normalize(params), do: do_normalize(params)
 
+  defp do_normalize(%{__struct__: _} = struct), do: struct
+
   defp do_normalize(%{} = map) do
     map
     |> Enum.map(fn {k, v} -> {to_string(k), do_normalize(v)} end)
