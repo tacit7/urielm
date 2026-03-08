@@ -81,12 +81,12 @@ defmodule Urielm.Forum do
         select: t.title
       )
 
-    latest_slug_subquery =
+    latest_id_subquery =
       from(t in Thread,
         where: t.board_id == parent_as(:board).id and t.is_removed == false,
         order_by: [desc: t.updated_at],
         limit: 1,
-        select: t.slug
+        select: fragment("?::text", t.id)
       )
 
     boards_query =
@@ -99,7 +99,7 @@ defmodule Urielm.Forum do
             post_count: subquery(post_count_subquery),
             last_activity_at: subquery(last_activity_subquery),
             latest_thread_title: subquery(latest_title_subquery),
-            latest_thread_slug: subquery(latest_slug_subquery)
+            latest_thread_id: subquery(latest_id_subquery)
         }
       )
 
@@ -169,6 +169,15 @@ defmodule Urielm.Forum do
   ## Options
   - `:solved` - Filter by solved status: true (only solved), false (only unsolved), nil (all)
   """
+  def paginate_latest_threads(params \\ %{}) do
+    base =
+      from(t in Thread)
+      |> where([t], t.is_removed == false)
+      |> thread_preloads()
+
+    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+  end
+
   def paginate_threads(board_id, params \\ %{}, opts \\ []) do
     solved_filter = Keyword.get(opts, :solved)
 

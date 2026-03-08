@@ -15,6 +15,8 @@
   export let is_locked = false
   export let is_pinned = false
 
+  export let board = null
+
   export let live
 
   function relativeTime(date) {
@@ -79,6 +81,12 @@
     </div>
     <div class="flex items-center gap-2 mt-0.5 text-xs text-base-content/40 font-mono">
       <span>{author?.username || "unknown"}</span>
+      {#if board}
+        <span class="text-base-content/20">·</span>
+        <a href="/forum/b/{board.slug}" class="hover:text-primary transition-colors" on:click|stopPropagation>
+          {board.name}
+        </a>
+      {/if}
     </div>
   </a>
 

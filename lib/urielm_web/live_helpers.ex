@@ -72,11 +72,19 @@ defmodule UrielmWeb.LiveHelpers do
   def serialize_thread_list(threads, current_user) do
     threads = Repo.preload(threads, :author)
     thread_ids = Enum.map(threads, & &1.id)
+    bulk_state = load_bulk_thread_state(current_user, thread_ids)
+    Enum.map(threads, &serialize_thread_card_bulk(&1, current_user, bulk_state))
+  end
 
-    # Bulk load user state if logged in
+  def serialize_thread_list_with_board(threads, current_user) do
+    threads = Repo.preload(threads, [:author, :board])
+    thread_ids = Enum.map(threads, & &1.id)
     bulk_state = load_bulk_thread_state(current_user, thread_ids)
 
-    Enum.map(threads, &serialize_thread_card_bulk(&1, current_user, bulk_state))
+    Enum.map(threads, fn thread ->
+      base = serialize_thread_card_bulk(thread, current_user, bulk_state)
+      Map.put(base, :board, %{name: thread.board.name, slug: thread.board.slug})
+    end)
   end
 
   defp load_bulk_thread_state(nil, _thread_ids) do

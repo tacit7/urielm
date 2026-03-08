@@ -108,12 +108,9 @@ defmodule UrielmWeb.ForumLive do
       assign(assigns, :color, Map.get(@board_colors, assigns.board.slug, "bg-base-content/15"))
 
     ~H"""
-    <a
-      href={~p"/forum/b/#{@board.slug}"}
-      class="group grid grid-cols-1 md:grid-cols-[1fr_220px_72px] items-center px-4 py-4 hover:bg-base-200/40 transition-colors duration-150 gap-y-2 gap-x-4"
-    >
+    <div class="group grid grid-cols-1 md:grid-cols-[1fr_220px_72px] items-center px-4 py-4 hover:bg-base-200/40 transition-colors duration-150 gap-y-2 gap-x-4">
       <!-- Board info -->
-      <div class="flex items-center gap-3 min-w-0">
+      <a href={~p"/forum/b/#{@board.slug}"} class="flex items-center gap-3 min-w-0">
         <div class={[
           "w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm font-bold select-none",
           @color
@@ -131,15 +128,14 @@ defmodule UrielmWeb.ForumLive do
             {@board.description}
           </p>
         </div>
-      </div>
+      </a>
 
       <!-- Latest thread -->
       <div class="md:block min-w-0 pl-12 md:pl-0">
         <%= if @board.latest_thread_title do %>
           <a
-            href={~p"/forum/t/#{@board.latest_thread_slug}"}
+            href={~p"/forum/t/#{@board.latest_thread_id}"}
             class="block text-xs text-base-content/65 hover:text-primary truncate leading-snug transition-colors"
-            phx-click={JS.navigate(~p"/forum/t/#{@board.latest_thread_slug}")}
           >
             {@board.latest_thread_title}
           </a>
@@ -157,7 +153,7 @@ defmodule UrielmWeb.ForumLive do
           {@board.thread_count}
         </span>
       </div>
-    </a>
+    </div>
     """
   end
 
@@ -201,7 +197,7 @@ defmodule UrielmWeb.ForumLive do
         post_count: board.post_count || 0,
         last_activity_at: board.last_activity_at,
         latest_thread_title: board.latest_thread_title,
-        latest_thread_slug: board.latest_thread_slug
+        latest_thread_id: board.latest_thread_id
       }
     end)
   end

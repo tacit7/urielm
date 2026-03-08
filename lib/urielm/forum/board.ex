@@ -15,7 +15,7 @@ defmodule Urielm.Forum.Board do
     field(:post_count, :integer, virtual: true, default: 0)
     field(:last_activity_at, :utc_datetime_usec, virtual: true)
     field(:latest_thread_title, :string, virtual: true)
-    field(:latest_thread_slug, :string, virtual: true)
+    field(:latest_thread_id, :string, virtual: true)
 
     belongs_to(:category, Urielm.Forum.Category)
     has_many(:threads, Urielm.Forum.Thread)
