@@ -187,9 +187,6 @@ defmodule UrielmWeb.BoardLive do
     >
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-2xl font-black tracking-tight text-base-content mb-0.5">{@board.name}</h1>
-        <p :if={@board.description} class="text-sm text-base-content/50 mb-4">{@board.description}</p>
-
         <!-- Tabs + New Topic button inline -->
         <div class="flex items-center justify-between border-b border-base-300">
           <div class="flex items-center overflow-x-auto">
@@ -232,16 +229,16 @@ defmodule UrielmWeb.BoardLive do
           <% end %>
         </div>
       </div>
-      
+
       <!-- Threads table -->
       <div class="rounded-xl border border-base-300/60 overflow-hidden">
         <!-- Column headers -->
         <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
           <div class="w-2" />
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider">Topic</span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">Replies</span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">Views</span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-right">Activity</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">Replies</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">Views</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-right">Activity</span>
         </div>
 
         <!-- Threads stream -->
@@ -264,7 +261,7 @@ defmodule UrielmWeb.BoardLive do
           </div>
         </div>
       </div>
-      
+
     <!-- Pager -->
       <div class="flex items-center justify-center gap-2 mt-8">
         <%= if @meta do %>

@@ -80,8 +80,8 @@ defmodule UrielmWeb.Router do
 
     # Forum pages - separate layout with sidebar navigation
     live_session :forum do
-      live "/forum", ForumLive
-      live "/forum/latest", LatestLive
+      live "/forum", LatestLive
+      live "/forum/categories", ForumLive
       live "/forum/b/:board_slug", BoardLive
       live "/forum/t/:thread_id", ThreadLive
       live "/forum/search", SearchLive

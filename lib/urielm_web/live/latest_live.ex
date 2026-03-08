@@ -99,34 +99,17 @@ defmodule UrielmWeb.LatestLive do
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
       flash={@flash}
-      current_path="/forum/latest"
+      current_path="/forum"
     >
-      <!-- Header -->
-      <div class="mb-6">
-        <p class="font-mono text-xs tracking-widest uppercase text-base-content/40 mb-2">
-          Community / Latest
-        </p>
-        <h1 class="text-4xl font-black tracking-tight text-base-content leading-none mb-4">
-          Latest
-        </h1>
-        <div class="h-px bg-base-content/10" />
-      </div>
-
       <!-- Thread table -->
       <div class="rounded-xl border border-base-300/60 overflow-hidden">
         <!-- Column headers -->
         <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
           <div class="w-2" />
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider">Topic</span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">
-            Replies
-          </span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">
-            Views
-          </span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-right">
-            Activity
-          </span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">Replies</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">Views</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-right">Activity</span>
         </div>
 
         <!-- Threads -->
@@ -150,7 +133,7 @@ defmodule UrielmWeb.LatestLive do
         <%= if @meta do %>
           <.pagination
             meta={@meta}
-            path={fn n -> ~p"/forum/latest?page=#{n}" end}
+            path={fn n -> ~p"/forum?page=#{n}" end}
           />
         <% end %>
       </div>

@@ -93,13 +93,11 @@
   <!-- Replies (desktop) -->
   <div class="hidden md:flex flex-col items-center justify-center flex-shrink-0">
     <span class="text-sm font-mono text-base-content/70 tabular-nums">{comment_count}</span>
-    <span class="text-xs text-base-content/30 font-mono">replies</span>
   </div>
 
   <!-- Views (desktop) -->
   <div class="hidden md:flex flex-col items-center justify-center flex-shrink-0">
     <span class="text-sm font-mono text-base-content/70 tabular-nums">{formatViews(view_count)}</span>
-    <span class="text-xs text-base-content/30 font-mono">views</span>
   </div>
 
   <!-- Activity + actions -->

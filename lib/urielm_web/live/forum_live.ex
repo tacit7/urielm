@@ -5,16 +5,16 @@ defmodule UrielmWeb.ForumLive do
   alias Urielm.Forum
 
   @board_colors %{
-    "start-here" => "bg-primary",
-    "announcements" => "bg-secondary",
-    "qa" => "bg-accent",
-    "prompting" => "bg-info",
-    "building" => "bg-success",
-    "models-tools" => "bg-warning",
-    "show-and-tell" => "bg-neutral",
-    "feedback" => "bg-error",
-    "off-topic" => "bg-base-content/20",
-    "ai-development" => "bg-primary"
+    "start-here"     => "#1B4F8A",
+    "announcements"  => "#B03A2E",
+    "qa"             => "#1A7A5E",
+    "prompting"      => "#5B3A9E",
+    "building"       => "#2D6A4F",
+    "models-tools"   => "#8B4513",
+    "show-and-tell"  => "#962D4A",
+    "feedback"       => "#9A6B10",
+    "off-topic"      => "#4A5568",
+    "ai-development" => "#1A3A7A"
   }
 
   @impl true
@@ -34,7 +34,7 @@ defmodule UrielmWeb.ForumLive do
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
       flash={@flash}
-      current_path="/forum"
+      current_path="/forum/categories"
     >
       <!-- Page header -->
       <div class="mb-8">
@@ -104,17 +104,19 @@ defmodule UrielmWeb.ForumLive do
   attr :board, :map, required: true
 
   defp board_row(assigns) do
+    hex = Map.get(@board_colors, assigns.board.slug, "#4A5568")
+
     assigns =
-      assign(assigns, :color, Map.get(@board_colors, assigns.board.slug, "bg-base-content/15"))
+      assign(assigns, :icon_style, "background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%), #{hex};")
 
     ~H"""
     <div class="group grid grid-cols-1 md:grid-cols-[1fr_220px_72px] items-center px-4 py-4 hover:bg-base-200/40 transition-colors duration-150 gap-y-2 gap-x-4">
       <!-- Board info -->
       <a href={~p"/forum/b/#{@board.slug}"} class="flex items-center gap-3 min-w-0">
-        <div class={[
-          "w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm font-bold select-none",
-          @color
-        ]}>
+        <div
+          class="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm font-bold select-none"
+          style={@icon_style}
+        >
           {String.first(@board.name)}
         </div>
         <div class="min-w-0">
