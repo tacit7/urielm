@@ -114,6 +114,69 @@ defmodule UrielmWeb.UserProfileLive do
   end
 
   @impl true
+  def handle_params(params, _uri, socket) do
+    tab = Map.get(params, "tab", "threads")
+
+    page =
+      case params["page"] do
+        nil -> 1
+        p when is_binary(p) -> String.to_integer(p)
+        p when is_integer(p) -> p
+      end
+
+    user = socket.assigns.user
+    current_user = socket.assigns.current_user
+    user_id = user.id
+
+    socket = assign(socket, :active_tab, tab)
+
+    socket =
+      case tab do
+        "threads" ->
+          case Forum.paginate_threads_by_author(user_id, %{
+                 page: page,
+                 page_size: 20,
+                 order_by: [:inserted_at],
+                 order_directions: [:desc]
+               }) do
+            {:ok, {threads, meta}} ->
+              assign(socket,
+                threads: Enum.map(threads, &LiveHelpers.serialize_thread_card(&1, current_user)),
+                threads_meta: meta,
+                comments: [],
+                comments_meta: nil
+              )
+
+            {:error, _} ->
+              assign(socket, threads: [], threads_meta: nil, comments: [], comments_meta: nil)
+          end
+
+        "comments" ->
+          case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
+            {:ok, {comments, meta}} ->
+              assign(socket,
+                comments: Enum.map(comments, &LiveHelpers.serialize_comment(&1, current_user)),
+                comments_meta: meta,
+                threads: [],
+                threads_meta: nil
+              )
+
+            {:error, _} ->
+              assign(socket, comments: [], comments_meta: nil, threads: [], threads_meta: nil)
+          end
+
+        _ ->
+          socket
+          |> assign(:threads, [])
+          |> assign(:comments, [])
+          |> assign(:threads_meta, nil)
+          |> assign(:comments_meta, nil)
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("toggle_follow", _params, socket) do
     current_user = socket.assigns.current_user
     profile_user = socket.assigns.user
@@ -138,9 +201,6 @@ defmodule UrielmWeb.UserProfileLive do
         end
     end
   end
-
-  @impl true
-  def handle_event("load_more", _params, socket), do: {:noreply, socket}
 
   @impl true
   def handle_event("switch_tab", %{"tab" => tab}, socket) do
@@ -701,16 +761,19 @@ defmodule UrielmWeb.UserProfileLive do
 
             <!-- Delete Confirmation Modal -->
             <%= if @show_delete_confirm do %>
-              <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" phx-click="cancel_delete">
-                <div class="modal-box" onclick="event.stopPropagation()">
-                  <h3 class="font-bold text-lg text-error">Delete Account</h3>
-                  <p class="py-4">
-                    Are you sure you want to delete your account? This action cannot be undone.
-                    All your data will be permanently deleted.
-                  </p>
-                  <div class="modal-action">
-                    <button type="button" phx-click="cancel_delete" class="btn">Cancel</button>
-                    <button type="button" phx-click="delete_account" class="btn btn-error">Yes, Delete</button>
+              <div class="fixed inset-0 z-50">
+                <div class="absolute inset-0 bg-black/50" phx-click="cancel_delete"></div>
+                <div class="relative flex items-center justify-center h-full pointer-events-none">
+                  <div class="modal-box pointer-events-auto">
+                    <h3 class="font-bold text-lg text-error">Delete Account</h3>
+                    <p class="py-4">
+                      Are you sure you want to delete your account? This action cannot be undone.
+                      All your data will be permanently deleted.
+                    </p>
+                    <div class="modal-action">
+                      <button type="button" phx-click="cancel_delete" class="btn">Cancel</button>
+                      <button type="button" phx-click="delete_account" class="btn btn-error">Yes, Delete</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -803,8 +866,10 @@ defmodule UrielmWeb.UserProfileLive do
 
       <!-- Suspend Modal -->
       <%= if @show_suspend_modal do %>
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" phx-click="close_mod_modal">
-          <div class="modal-box bg-base-200" phx-click-away="close_mod_modal">
+        <div class="fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/50" phx-click="close_mod_modal"></div>
+          <div class="relative flex items-center justify-center h-full pointer-events-none">
+          <div class="modal-box bg-base-200 pointer-events-auto">
             <h3 class="font-bold text-lg text-error">Suspend {@user.username}</h3>
             <p class="py-2 text-sm text-base-content/70">
               Suspended users cannot login or access the site.
@@ -857,13 +922,16 @@ defmodule UrielmWeb.UserProfileLive do
               </button>
             </div>
           </div>
+          </div>
         </div>
       <% end %>
 
       <!-- Silence Modal -->
       <%= if @show_silence_modal do %>
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" phx-click="close_mod_modal">
-          <div class="modal-box bg-base-200" phx-click-away="close_mod_modal">
+        <div class="fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/50" phx-click="close_mod_modal"></div>
+          <div class="relative flex items-center justify-center h-full pointer-events-none">
+          <div class="modal-box bg-base-200 pointer-events-auto">
             <h3 class="font-bold text-lg text-warning">Silence {@user.username}</h3>
             <p class="py-2 text-sm text-base-content/70">
               Silenced users can browse but cannot post, comment, or vote.
@@ -915,6 +983,7 @@ defmodule UrielmWeb.UserProfileLive do
                 Silence User
               </button>
             </div>
+          </div>
           </div>
         </div>
       <% end %>
