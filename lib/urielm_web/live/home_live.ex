@@ -4,7 +4,7 @@ defmodule UrielmWeb.HomeLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :current_page, "home")}
+    {:ok, socket}
   end
 
   @impl true
@@ -38,17 +38,6 @@ defmodule UrielmWeb.HomeLive do
         <div class="grid lg:grid-cols-2 gap-16 items-center">
           <!-- Left: Text Content -->
           <div class="space-y-8">
-            <!-- Status Badge -->
-            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-base-200/80 backdrop-blur border border-base-300">
-              <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-              </span>
-              <span class="text-xs font-medium tracking-wide text-base-content/70">
-                New: Claude 3.5 Sonnet Deep Dive
-              </span>
-            </div>
-
             <!-- Main Headline -->
             <h1 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95]">
               <span class="text-base-content">Master</span>
@@ -548,7 +537,7 @@ defmodule UrielmWeb.HomeLive do
             <h4 class="font-semibold text-base-content mb-4">Community</h4>
             <ul class="space-y-3">
               <li><.link navigate={~p"/forum"} class="text-base-content/60 hover:text-primary transition-colors">Forum</.link></li>
-              <li><.link navigate={~p"/chat"} class="text-base-content/60 hover:text-primary transition-colors">Discord</.link></li>
+              <li><.link navigate={~p"/chat"} class="text-base-content/60 hover:text-primary transition-colors">Chat</.link></li>
               <li><a href="https://github.com/tacit7" target="_blank" class="text-base-content/60 hover:text-primary transition-colors">GitHub</a></li>
             </ul>
           </div>
@@ -557,12 +546,8 @@ defmodule UrielmWeb.HomeLive do
         <!-- Bottom Bar -->
         <div class="border-t border-base-300 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p class="text-sm text-base-content/50">
-            © 2025 Uriel Maldonado. All rights reserved.
+            © 2026 Uriel Maldonado. All rights reserved.
           </p>
-          <div class="flex gap-6 text-sm text-base-content/50">
-            <a href="#" class="hover:text-base-content transition-colors">Privacy</a>
-            <a href="#" class="hover:text-base-content transition-colors">Terms</a>
-          </div>
         </div>
       </div>
     </footer>
