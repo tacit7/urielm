@@ -1,6 +1,8 @@
 defmodule UrielmWeb.Admin.UserDetailLive do
   use UrielmWeb, :live_view
 
+  import UrielmWeb.AdminComponents
+
   alias Urielm.Accounts
   alias Urielm.Accounts.User
 
@@ -396,32 +398,6 @@ defmodule UrielmWeb.Admin.UserDetailLive do
       </div>
     </div>
     """
-  end
-
-  defp role_badge(assigns) do
-    cond do
-      assigns.user.is_admin ->
-        ~H[<span class="badge badge-sm badge-error">Admin</span>]
-
-      assigns.user.is_moderator ->
-        ~H[<span class="badge badge-sm badge-warning">Mod</span>]
-
-      true ->
-        ~H[<span class="badge badge-sm badge-ghost">User</span>]
-    end
-  end
-
-  defp status_badge(assigns) do
-    cond do
-      User.suspended?(assigns.user) ->
-        ~H[<span class="badge badge-sm badge-error">Suspended</span>]
-
-      User.silenced?(assigns.user) ->
-        ~H[<span class="badge badge-sm badge-warning">Silenced</span>]
-
-      true ->
-        ~H[<span class="badge badge-sm badge-success">Active</span>]
-    end
   end
 
   defp parse_duration("permanent"), do: nil

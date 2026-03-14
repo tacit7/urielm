@@ -65,11 +65,17 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
     <Layouts.app flash={@flash} current_user={@current_user} current_page="admin" socket={@socket}>
       <div class="min-h-screen bg-base-100">
         <div class="container mx-auto px-4 py-8 max-w-6xl">
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-base-content">Trust Level Settings</h1>
-            <p class="text-base-content/60 mt-2">
-              Configure user tiers, permissions, and rate limits
-            </p>
+          <div class="mb-8 flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold text-base-content">Trust Level Settings</h1>
+              <p class="text-base-content/60 mt-2">
+                Configure user tiers, permissions, and rate limits
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <a href="/admin/users" class="btn btn-ghost btn-sm">Users</a>
+              <a href="/admin/moderation" class="btn btn-ghost btn-sm">Moderation Queue</a>
+            </div>
           </div>
 
           <div class="grid gap-4">

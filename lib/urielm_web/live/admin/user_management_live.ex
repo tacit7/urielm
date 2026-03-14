@@ -234,32 +234,6 @@ defmodule UrielmWeb.Admin.UserManagementLive do
     """
   end
 
-  defp role_badge(assigns) do
-    cond do
-      assigns.user.is_admin ->
-        ~H[<span class="badge badge-sm badge-error">Admin</span>]
-
-      assigns.user.is_moderator ->
-        ~H[<span class="badge badge-sm badge-warning">Mod</span>]
-
-      true ->
-        ~H[<span class="badge badge-sm badge-ghost">User</span>]
-    end
-  end
-
-  defp status_badge(assigns) do
-    cond do
-      User.suspended?(assigns.user) ->
-        ~H[<span class="badge badge-sm badge-error">Suspended</span>]
-
-      User.silenced?(assigns.user) ->
-        ~H[<span class="badge badge-sm badge-warning">Silenced</span>]
-
-      true ->
-        ~H[<span class="badge badge-sm badge-success">Active</span>]
-    end
-  end
-
   defp sort_icon(assigns) do
     field = assigns.field
     flop = assigns.flop
