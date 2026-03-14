@@ -209,10 +209,10 @@ defmodule UrielmWeb.LessonLive do
     <!-- Main Content -->
         <div class="max-w-[1800px] mx-auto w-full px-4 py-6">
           <!-- Mobile Sticky Header -->
-          <div class="flex items-center justify-between gap-2 mb-4 lg:hidden">
+          <div class="flex items-center gap-2 mb-4 lg:hidden">
             <.link
               navigate={~p"/courses/#{@course.slug}"}
-              class="btn btn-ghost btn-sm btn-circle"
+              class="btn btn-ghost btn-sm btn-circle flex-shrink-0"
               title="Back to course"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,6 +225,35 @@ defmodule UrielmWeb.LessonLive do
               </svg>
             </.link>
             <h1 class="text-lg font-bold text-base-content truncate flex-1">{@lesson.title}</h1>
+            <div class="flex items-center bg-base-200 rounded-full px-2 py-1 flex-shrink-0">
+              <.svelte
+                name="VoteButtons"
+                props={%{
+                  target_type: "lesson",
+                  target_id: to_string(@lesson.id),
+                  upvotes: @upvotes,
+                  downvotes: @downvotes,
+                  user_vote: @user_vote,
+                  layout: "horizontal",
+                  size: "sm"
+                }}
+                socket={@socket}
+              />
+            </div>
+            <label
+              for="lesson-drawer"
+              class="btn btn-ghost btn-sm btn-circle flex-shrink-0"
+              title="Course videos"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </label>
           </div>
           
     <!-- Video Title & Actions -->
@@ -410,6 +439,7 @@ defmodule UrielmWeb.LessonLive do
           </button>
 
           <button
+            :if={@lesson.notes_md}
             type="button"
             phx-click="set_dock_tab"
             phx-value-tab="notes"
@@ -428,6 +458,7 @@ defmodule UrielmWeb.LessonLive do
           </button>
 
           <button
+            :if={@lesson.resources_md}
             type="button"
             phx-click="set_dock_tab"
             phx-value-tab="resources"
@@ -446,6 +477,7 @@ defmodule UrielmWeb.LessonLive do
           </button>
 
           <button
+            :if={@lesson.timestamps_md}
             type="button"
             phx-click="set_dock_tab"
             phx-value-tab="timestamps"
