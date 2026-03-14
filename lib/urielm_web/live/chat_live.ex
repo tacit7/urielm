@@ -16,7 +16,6 @@ defmodule UrielmWeb.ChatLive do
        |> assign(:rooms, rooms)
        |> assign(:selected_room, nil)
        |> assign(:messages, [])
-       |> assign(:show_create_modal, false)
        |> assign(:room_form, %{"name" => "", "description" => ""})
        |> assign(:page_title, "Chat")}
     end
@@ -63,8 +62,8 @@ defmodule UrielmWeb.ChatLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_page="chat" socket={@socket}>
       <div class="flex h-[calc(100vh-4rem)] bg-base-200">
-        <!-- Create Room Modal -->
-        <div class={["modal", @show_create_modal && "modal-open"]}>
+        <%!-- Create Room Modal --%>
+        <dialog id="create_room_modal" class="modal">
           <div class="modal-box">
             <h3 class="font-bold text-lg text-base-content">Create New Room</h3>
             <form phx-submit="create_room" class="py-4">
@@ -92,26 +91,17 @@ defmodule UrielmWeb.ChatLive do
                 ></textarea>
               </div>
               <div class="modal-action">
-                <button
-                  type="button"
-                  phx-click="toggle_create_modal"
-                  class="btn btn-ghost"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                >
-                  Create
-                </button>
+                <form method="dialog">
+                  <button class="btn btn-ghost">Cancel</button>
+                </form>
+                <button type="submit" class="btn btn-primary">Create</button>
               </div>
             </form>
           </div>
           <form method="dialog" class="modal-backdrop">
-            <button phx-click="toggle_create_modal">close</button>
+            <button>close</button>
           </form>
-        </div>
+        </dialog>
         
     <!-- Sidebar with rooms -->
         <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-300">
@@ -122,7 +112,7 @@ defmodule UrielmWeb.ChatLive do
           <%= if @current_user.is_admin do %>
             <div class="p-4">
               <button
-                phx-click="toggle_create_modal"
+                onclick="create_room_modal.showModal()"
                 class="w-full btn btn-primary btn-sm"
               >
                 + New Room
@@ -132,8 +122,8 @@ defmodule UrielmWeb.ChatLive do
 
           <nav class="space-y-1 p-3">
             <%= for room <- @rooms do %>
-              <a
-                href={~p"/chat?room_id=#{room.id}"}
+              <.link
+                navigate={~p"/chat?room_id=#{room.id}"}
                 class={[
                   "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
                   @selected_room && @selected_room.id == room.id &&
@@ -143,7 +133,7 @@ defmodule UrielmWeb.ChatLive do
                 ]}
               >
                 # {room.name}
-              </a>
+              </.link>
             <% end %>
           </nav>
         </div>
@@ -175,11 +165,6 @@ defmodule UrielmWeb.ChatLive do
   end
 
   @impl true
-  def handle_event("toggle_create_modal", _params, socket) do
-    {:noreply, assign(socket, :show_create_modal, !socket.assigns[:show_create_modal])}
-  end
-
-  @impl true
   def handle_event("create_room", %{"name" => name, "description" => description}, socket) do
     user = socket.assigns[:current_user]
 
@@ -196,7 +181,6 @@ defmodule UrielmWeb.ChatLive do
           {:noreply,
            socket
            |> assign(:rooms, Chat.list_rooms())
-           |> assign(:show_create_modal, false)
            |> assign(:room_form, %{"name" => "", "description" => ""})
            |> push_navigate(to: ~p"/chat?room_id=#{room.id}")}
 
