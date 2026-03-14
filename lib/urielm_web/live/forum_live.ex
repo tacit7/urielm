@@ -3,6 +3,7 @@ defmodule UrielmWeb.ForumLive do
   use LiveSvelte.Components
 
   alias Urielm.Forum
+  alias UrielmWeb.LiveHelpers
 
   @board_colors %{
     "start-here"     => "#1B4F8A",
@@ -142,7 +143,7 @@ defmodule UrielmWeb.ForumLive do
             {@board.latest_thread_title}
           </a>
           <span class="font-mono text-xs text-base-content/30">
-            {relative_time(@board.last_activity_at)}
+            {LiveHelpers.format_short(@board.last_activity_at)}
           </span>
         <% else %>
           <span class="font-mono text-xs text-base-content/20">—</span>
@@ -157,24 +158,6 @@ defmodule UrielmWeb.ForumLive do
       </div>
     </div>
     """
-  end
-
-  defp relative_time(nil), do: "—"
-
-  defp relative_time(%NaiveDateTime{} = naive),
-    do: relative_time(DateTime.from_naive!(naive, "Etc/UTC"))
-
-  defp relative_time(datetime) do
-    diff = DateTime.diff(DateTime.utc_now(), datetime, :second)
-
-    cond do
-      diff < 60 -> "just now"
-      diff < 3600 -> "#{div(diff, 60)}m"
-      diff < 86400 -> "#{div(diff, 3600)}h"
-      diff < 604_800 -> "#{div(diff, 86400)}d"
-      diff < 2_592_000 -> "#{div(diff, 604_800)}w"
-      true -> "#{div(diff, 2_592_000)}mo"
-    end
   end
 
   defp serialize_categories(categories) do

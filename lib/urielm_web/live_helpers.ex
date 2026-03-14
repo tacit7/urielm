@@ -11,6 +11,13 @@ defmodule UrielmWeb.LiveHelpers do
   alias Urielm.Forum
   alias Urielm.Repo
 
+  @page_size 20
+
+  @doc """
+  Default pagination page size used across LiveViews.
+  """
+  def page_size, do: @page_size
+
   @doc """
   Serialize a forum thread into the map shape expected by ThreadCard.svelte.
   Expects the thread author to be preloaded.
@@ -229,6 +236,11 @@ defmodule UrielmWeb.LiveHelpers do
   Format a DateTime as a concise relative string.
   Examples: "now", "3m ago", "2h ago", or "Oct 12, 2025".
   """
+  def format_short(nil), do: "—"
+
+  def format_short(%NaiveDateTime{} = naive),
+    do: format_short(DateTime.from_naive!(naive, "Etc/UTC"))
+
   def format_short(%DateTime{} = datetime) do
     now = DateTime.utc_now()
     seconds_ago = DateTime.diff(now, datetime, :second)
