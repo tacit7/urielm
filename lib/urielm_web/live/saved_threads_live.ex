@@ -1,6 +1,5 @@
 defmodule UrielmWeb.SavedThreadsLive do
   use UrielmWeb, :live_view
-  use LiveSvelte.Components
 
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
@@ -13,16 +12,13 @@ defmodule UrielmWeb.SavedThreadsLive do
       nil ->
         {:ok, redirect(socket, to: ~p"/auth/signin")}
 
-      user ->
-        {:ok, {saved_threads, meta}} =
-          Forum.paginate_saved_threads(user.id, %{page: 1, page_size: LiveHelpers.page_size()})
-
+      _user ->
         {:ok,
          socket
          |> assign(:page_title, "Saved Threads")
          |> assign(:page, 1)
-         |> assign(:meta, meta)
-         |> stream(:threads, serialize_threads(saved_threads, user))}
+         |> assign(:meta, nil)
+         |> stream(:threads, [])}
     end
   end
 
