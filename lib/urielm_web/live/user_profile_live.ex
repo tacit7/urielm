@@ -36,7 +36,6 @@ defmodule UrielmWeb.UserProfileLive do
             p when is_integer(p) -> p
           end
 
-        user_id = user.id
         stats = Accounts.get_user_stats(user.id)
         current_user = socket.assigns.current_user
         is_following = current_user && Accounts.is_following?(current_user.id, user.id)
@@ -64,122 +63,10 @@ defmodule UrielmWeb.UserProfileLive do
           |> assign(:mod_reason, "")
           |> assign(:mod_duration, "forever")
 
-        socket =
-          case tab do
-            "threads" ->
-              case Forum.paginate_threads_by_author(user_id, %{
-                     page: page,
-                     page_size: 20,
-                     order_by: [:inserted_at],
-                     order_directions: [:desc]
-                   }) do
-                {:ok, {threads, meta}} ->
-                  assign(socket,
-                    threads:
-                      Enum.map(
-                        threads,
-                        &LiveHelpers.serialize_thread_card(&1, current_user)
-                      ),
-                    threads_meta: meta,
-                    comments: [],
-                    comments_meta: nil
-                  )
-
-                {:error, _} ->
-                  assign(socket, threads: [], threads_meta: nil, comments: [], comments_meta: nil)
-              end
-
-            "comments" ->
-              case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
-                {:ok, {comments, meta}} ->
-                  assign(socket,
-                    comments:
-                      Enum.map(
-                        comments,
-                        &LiveHelpers.serialize_comment(&1, current_user)
-                      ),
-                    comments_meta: meta,
-                    threads: [],
-                    threads_meta: nil
-                  )
-
-                {:error, _} ->
-                  assign(socket, comments: [], comments_meta: nil, threads: [], threads_meta: nil)
-              end
-
-            _ ->
-              socket
-              |> assign(:threads, [])
-              |> assign(:comments, [])
-              |> assign(:threads_meta, nil)
-              |> assign(:comments_meta, nil)
-          end
+        socket = load_tab_data(socket, tab, page)
 
         {:ok, socket}
     end
-  end
-
-  @impl true
-  def handle_params(params, _uri, socket) do
-    tab = Map.get(params, "tab", "threads")
-
-    page =
-      case params["page"] do
-        nil -> 1
-        p when is_binary(p) -> String.to_integer(p)
-        p when is_integer(p) -> p
-      end
-
-    user = socket.assigns.user
-    current_user = socket.assigns.current_user
-    user_id = user.id
-
-    socket = assign(socket, :active_tab, tab)
-
-    socket =
-      case tab do
-        "threads" ->
-          case Forum.paginate_threads_by_author(user_id, %{
-                 page: page,
-                 page_size: 20,
-                 order_by: [:inserted_at],
-                 order_directions: [:desc]
-               }) do
-            {:ok, {threads, meta}} ->
-              assign(socket,
-                threads: Enum.map(threads, &LiveHelpers.serialize_thread_card(&1, current_user)),
-                threads_meta: meta,
-                comments: [],
-                comments_meta: nil
-              )
-
-            {:error, _} ->
-              assign(socket, threads: [], threads_meta: nil, comments: [], comments_meta: nil)
-          end
-
-        "comments" ->
-          case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
-            {:ok, {comments, meta}} ->
-              assign(socket,
-                comments: Enum.map(comments, &LiveHelpers.serialize_comment(&1, current_user)),
-                comments_meta: meta,
-                threads: [],
-                threads_meta: nil
-              )
-
-            {:error, _} ->
-              assign(socket, comments: [], comments_meta: nil, threads: [], threads_meta: nil)
-          end
-
-        _ ->
-          socket
-          |> assign(:threads, [])
-          |> assign(:comments, [])
-          |> assign(:threads_meta, nil)
-          |> assign(:comments_meta, nil)
-      end
-
-    {:noreply, socket}
   end
 
   @impl true
@@ -210,8 +97,13 @@ defmodule UrielmWeb.UserProfileLive do
 
   @impl true
   def handle_event("switch_tab", %{"tab" => tab}, socket) do
-    username = socket.assigns.user.username
-    {:noreply, push_patch(socket, to: ~p"/u/#{username}?tab=#{tab}&page=1")}
+    {:noreply, load_tab_data(socket, tab, 1)}
+  end
+
+  @impl true
+  def handle_event("change_page", %{"tab" => tab, "page" => page}, socket) do
+    page = if is_binary(page), do: String.to_integer(page), else: page
+    {:noreply, load_tab_data(socket, tab, page)}
   end
 
   @impl true
@@ -473,6 +365,55 @@ defmodule UrielmWeb.UserProfileLive do
       end
     else
       {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  defp load_tab_data(socket, tab, page) do
+    user_id = socket.assigns.user.id
+    current_user = socket.assigns.current_user
+
+    socket = assign(socket, :active_tab, tab)
+
+    case tab do
+      "threads" ->
+        case Forum.paginate_threads_by_author(user_id, %{
+               page: page,
+               page_size: 20,
+               order_by: [:inserted_at],
+               order_directions: [:desc]
+             }) do
+          {:ok, {threads, meta}} ->
+            assign(socket,
+              threads: Enum.map(threads, &LiveHelpers.serialize_thread_card(&1, current_user)),
+              threads_meta: meta,
+              comments: [],
+              comments_meta: nil
+            )
+
+          {:error, _} ->
+            assign(socket, threads: [], threads_meta: nil, comments: [], comments_meta: nil)
+        end
+
+      "comments" ->
+        case Forum.paginate_comments_by_author(user_id, %{page: page, page_size: 20}) do
+          {:ok, {comments, meta}} ->
+            assign(socket,
+              comments: Enum.map(comments, &LiveHelpers.serialize_comment(&1, current_user)),
+              comments_meta: meta,
+              threads: [],
+              threads_meta: nil
+            )
+
+          {:error, _} ->
+            assign(socket, comments: [], comments_meta: nil, threads: [], threads_meta: nil)
+        end
+
+      _ ->
+        socket
+        |> assign(:threads, [])
+        |> assign(:comments, [])
+        |> assign(:threads_meta, nil)
+        |> assign(:comments_meta, nil)
     end
   end
 
@@ -841,8 +782,30 @@ defmodule UrielmWeb.UserProfileLive do
                   </div>
 
                   <%= if @threads_meta do %>
-                    <div class="flex justify-center mt-4">
-                      <.pagination meta={@threads_meta} path={fn n -> ~p"/u/#{@user.username}?tab=threads&page=#{n}" end} />
+                    <div class="flex justify-center gap-2 mt-4">
+                      <%= if @threads_meta.current_page > 1 do %>
+                        <button
+                          class="btn btn-sm"
+                          phx-click="change_page"
+                          phx-value-tab="threads"
+                          phx-value-page={@threads_meta.current_page - 1}
+                        >
+                          &laquo; Prev
+                        </button>
+                      <% end %>
+                      <span class="btn btn-sm btn-disabled">
+                        {@threads_meta.current_page} / {@threads_meta.total_pages}
+                      </span>
+                      <%= if @threads_meta.current_page < @threads_meta.total_pages do %>
+                        <button
+                          class="btn btn-sm"
+                          phx-click="change_page"
+                          phx-value-tab="threads"
+                          phx-value-page={@threads_meta.current_page + 1}
+                        >
+                          Next &raquo;
+                        </button>
+                      <% end %>
                     </div>
                   <% end %>
                 <% end %>
@@ -870,8 +833,30 @@ defmodule UrielmWeb.UserProfileLive do
                   </div>
 
                   <%= if @comments_meta do %>
-                    <div class="flex justify-center mt-4">
-                      <.pagination meta={@comments_meta} path={fn n -> ~p"/u/#{@user.username}?tab=comments&page=#{n}" end} />
+                    <div class="flex justify-center gap-2 mt-4">
+                      <%= if @comments_meta.current_page > 1 do %>
+                        <button
+                          class="btn btn-sm"
+                          phx-click="change_page"
+                          phx-value-tab="comments"
+                          phx-value-page={@comments_meta.current_page - 1}
+                        >
+                          &laquo; Prev
+                        </button>
+                      <% end %>
+                      <span class="btn btn-sm btn-disabled">
+                        {@comments_meta.current_page} / {@comments_meta.total_pages}
+                      </span>
+                      <%= if @comments_meta.current_page < @comments_meta.total_pages do %>
+                        <button
+                          class="btn btn-sm"
+                          phx-click="change_page"
+                          phx-value-tab="comments"
+                          phx-value-page={@comments_meta.current_page + 1}
+                        >
+                          Next &raquo;
+                        </button>
+                      <% end %>
                     </div>
                   <% end %>
                 <% end %>
