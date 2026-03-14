@@ -52,6 +52,7 @@ defmodule UrielmWeb.VideoLive do
           completed = if user, do: Content.completed_video?(user, video), else: false
 
           nav_items = build_nav_items(video, thread)
+          default_section = (List.first(nav_items) || %{key: "description"}).key
 
           # Load vote data
           {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", video.id)
@@ -65,7 +66,7 @@ defmodule UrielmWeb.VideoLive do
            |> assign(:thread, thread)
            |> assign(:comment_tree, comment_tree)
            |> assign(:nav_items, nav_items)
-           |> assign(:active_section, "description")
+           |> assign(:active_section, default_section)
            |> assign(:dock_tab, "home")
            |> assign(:reporting_comment_id, nil)
            |> assign(:upvotes, upvotes)
@@ -160,11 +161,18 @@ defmodule UrielmWeb.VideoLive do
     description = strip_markdown_and_truncate(video.description_md, 160)
     canonical_url = url(~p"/videos/#{slug}")
 
+    og_image =
+      case extract_youtube_id(video.youtube_url) do
+        nil -> nil
+        id -> "https://img.youtube.com/vi/#{id}/maxresdefault.jpg"
+      end
+
     socket
     |> assign(:meta_description, description)
     |> assign(:canonical_url, canonical_url)
     |> assign(:og_title, video.title)
     |> assign(:og_type, "video.other")
+    |> assign(:og_image, og_image)
   end
 
   defp extract_youtube_id(nil), do: nil
@@ -453,7 +461,13 @@ defmodule UrielmWeb.VideoLive do
               <% end %>
 
               <!-- Share -->
-              <button class="btn btn-ghost btn-circle text-white hover:text-primary" aria-label="Share">
+              <button
+                id="short-share-btn"
+                class="btn btn-ghost btn-circle text-white hover:text-primary"
+                aria-label="Share"
+                phx-hook="CopyToClipboard"
+                data-text={@canonical_url}
+              >
                 <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path stroke-width="2" d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>
                   <path stroke-width="2" d="M16 6l-4-4-4 4"/>
@@ -483,7 +497,6 @@ defmodule UrielmWeb.VideoLive do
                     <% else %>
                       <span class="font-semibold">@{@video.author_name}</span>
                     <% end %>
-                    <button class="btn btn-xs btn-outline btn-white">Follow</button>
                   </div>
                 <% end %>
 
@@ -492,7 +505,13 @@ defmodule UrielmWeb.VideoLive do
 
                 <!-- Description if exists -->
                 <%= if @video.description_md && @video.description_md != "" do %>
-                  <p class="text-sm opacity-80 line-clamp-2">{@video.description_md}</p>
+                  <div class="text-sm opacity-80 line-clamp-2 prose prose-sm prose-invert max-w-none">
+                    <.svelte
+                      name="MarkdownRenderer"
+                      props={%{content: @video.description_md}}
+                      socket={@socket}
+                    />
+                  </div>
                 <% end %>
 
                 <!-- Tags/metadata -->
@@ -609,21 +628,37 @@ defmodule UrielmWeb.VideoLive do
         <!-- Video Title & Actions -->
         <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
           <h1 class="text-2xl font-bold text-base-content">{@video.title}</h1>
-          <!-- Vote Buttons -->
-          <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
-            <.svelte
-              name="VoteButtons"
-              props={%{
-                target_type: "video",
-                target_id: @video.id,
-                upvotes: @upvotes,
-                downvotes: @downvotes,
-                user_vote: @user_vote,
-                layout: "horizontal",
-                size: "sm"
-              }}
-              socket={@socket}
-            />
+          <div class="flex items-center gap-3">
+            <!-- Mark Complete -->
+            <%= if @current_user do %>
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-success checkbox-sm"
+                  checked={@completed}
+                  phx-click={if @completed, do: "unmark_video_complete", else: "mark_video_complete"}
+                />
+                <span class="text-sm text-base-content/70">
+                  {if @completed, do: "Completed", else: "Mark complete"}
+                </span>
+              </label>
+            <% end %>
+            <!-- Vote Buttons -->
+            <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
+              <.svelte
+                name="VoteButtons"
+                props={%{
+                  target_type: "video",
+                  target_id: @video.id,
+                  upvotes: @upvotes,
+                  downvotes: @downvotes,
+                  user_vote: @user_vote,
+                  layout: "horizontal",
+                  size: "sm"
+                }}
+                socket={@socket}
+              />
+            </div>
           </div>
         </div>
 
@@ -648,7 +683,12 @@ defmodule UrielmWeb.VideoLive do
               <% else %>
                 <p class="font-semibold text-base-content">{@video.author_name}</p>
               <% end %>
-              <p class="text-xs text-base-content/60">{@video.format || "standard"} video</p>
+              <p class="text-xs text-base-content/60">
+                {@video.format || "standard"} video
+                {if date = (@video.published_at || @video.inserted_at),
+                  do: " · #{Calendar.strftime(date, "%b %d, %Y")}",
+                  else: ""}
+              </p>
             </div>
           </div>
         <% end %>
@@ -772,17 +812,29 @@ defmodule UrielmWeb.VideoLive do
                     </div>
                   </div>
                   <div class="flex-1">
-                    <form phx-submit="create_comment" class="space-y-3">
+                    <form phx-submit="create_comment" class="space-y-3" id="video-comment-form">
                       <textarea
                         id="video-comment-input"
                         name="body"
                         placeholder="Add a comment..."
                         required
                         phx-hook="ExpandingTextarea"
+                        phx-focus={JS.show(to: "#video-comment-actions")}
                         class="textarea textarea-ghost w-full focus:textarea-bordered bg-transparent resize-none"
                         rows="1"
                       ></textarea>
-                      <div class="flex justify-end gap-2">
+                      <div id="video-comment-actions" class="hidden flex justify-end gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm"
+                          phx-click={
+                            JS.hide(to: "#video-comment-actions")
+                            |> JS.dispatch("reset", to: "#video-comment-form")
+                            |> JS.set_attribute({"rows", "1"}, to: "#video-comment-input")
+                          }
+                        >
+                          Cancel
+                        </button>
                         <button type="submit" class="btn btn-primary btn-sm">Comment</button>
                       </div>
                     </form>
@@ -842,22 +894,24 @@ defmodule UrielmWeb.VideoLive do
           <span class="dock-label text-xs">Home</span>
         </button>
 
-        <button
-          type="button"
-          phx-click="set_dock_tab"
-          phx-value-tab="resources"
-          class={["dock-item", if(@dock_tab == "resources", do: "dock-active", else: "")]}
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 10V3L4 14h7v7l9-11h-7z"
-            />
-          </svg>
-          <span class="dock-label text-xs">Resources</span>
-        </button>
+        <%= if @video.resources_md && @video.resources_md != "" do %>
+          <button
+            type="button"
+            phx-click="set_dock_tab"
+            phx-value-tab="resources"
+            class={["dock-item", if(@dock_tab == "resources", do: "dock-active", else: "")]}
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+            <span class="dock-label text-xs">Resources</span>
+          </button>
+        <% end %>
 
         <%= if @video.author_name do %>
           <button
