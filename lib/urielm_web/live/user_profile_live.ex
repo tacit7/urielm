@@ -40,7 +40,13 @@ defmodule UrielmWeb.UserProfileLive do
         stats = Accounts.get_user_stats(user.id)
         current_user = socket.assigns.current_user
         is_following = current_user && Accounts.is_following?(current_user.id, user.id)
-        changeset = Accounts.change_user_profile(user)
+
+        form =
+          if current_user && current_user.id == user.id do
+            to_form(Accounts.change_user_profile(user))
+          else
+            nil
+          end
 
         socket =
           socket
@@ -49,7 +55,7 @@ defmodule UrielmWeb.UserProfileLive do
           |> assign(:stats, stats)
           |> assign(:is_following, is_following || false)
           |> assign(:active_tab, tab)
-          |> assign(:form, to_form(changeset))
+          |> assign(:form, form)
           |> assign(:editing_username, false)
           |> assign(:editing_display_name, false)
           |> assign(:show_delete_confirm, false)
@@ -458,7 +464,11 @@ defmodule UrielmWeb.UserProfileLive do
               <!-- User Info -->
               <div class="flex-1">
                 <div class="flex items-center gap-3 mb-1">
-                  <h1 class="text-2xl font-bold">{@user.username}</h1>
+                  <h1 class="text-2xl font-bold">
+                    {if @user.display_name && @user.display_name != @user.username,
+                      do: @user.display_name,
+                      else: @user.username}
+                  </h1>
                   <%= if @user.is_admin do %>
                     <span class="badge badge-error badge-sm">Admin</span>
                   <% end %>
@@ -474,7 +484,7 @@ defmodule UrielmWeb.UserProfileLive do
                 </div>
 
                 <%= if @user.display_name && @user.display_name != @user.username do %>
-                  <p class="text-base-content/80">{@user.display_name}</p>
+                  <p class="text-sm text-base-content/60">@{@user.username}</p>
                 <% end %>
 
                 <div class="flex items-center gap-4 text-sm text-base-content/60 mt-2">
@@ -672,6 +682,13 @@ defmodule UrielmWeb.UserProfileLive do
                     type="url"
                     label="Website"
                     placeholder="https://example.com"
+                  />
+
+                  <.input
+                    field={@form[:avatar_url]}
+                    type="url"
+                    label="Avatar URL"
+                    placeholder="https://example.com/avatar.jpg"
                   />
 
                   <div class="card-actions">
