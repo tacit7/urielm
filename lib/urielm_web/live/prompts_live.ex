@@ -3,6 +3,7 @@ defmodule UrielmWeb.PromptsLive do
   use LiveSvelte.Components
 
   alias Urielm.Content
+  alias Urielm.Engagement
 
   @page_size 20
 
@@ -49,6 +50,9 @@ defmodule UrielmWeb.PromptsLive do
      |> assign(:page, 1)
      |> assign(:has_more, length(prompts) == @page_size)
      |> assign(:selected_prompt, nil)
+     |> assign(:drawer_upvotes, 0)
+     |> assign(:drawer_downvotes, 0)
+     |> assign(:drawer_user_vote, nil)
      |> stream(:prompts, serialize_prompts(prompts), reset: true)}
   end
 
@@ -95,12 +99,18 @@ defmodule UrielmWeb.PromptsLive do
 
   @impl true
   def handle_event("open_prompt_modal", %{"id" => id}, socket) do
+    %{current_user: user} = socket.assigns
+
     prompt =
       id
       |> String.to_integer()
       |> Content.get_prompt!()
 
     tag_names = Enum.map(prompt.tag_records, & &1.name)
+
+    target_id = to_string(prompt.id)
+    {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+    user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
 
     serialized = %{
       id: prompt.id,
@@ -109,17 +119,17 @@ defmodule UrielmWeb.PromptsLive do
       prompt: prompt.prompt,
       category: prompt.category,
       tags: tag_names,
-      likes_count: prompt.likes_count,
       saves_count: prompt.saves_count,
-      user_liked:
-        socket.assigns.current_user &&
-          Content.user_liked_prompt?(socket.assigns.current_user.id, prompt.id),
       user_saved:
-        socket.assigns.current_user &&
-          Content.user_saved_prompt?(socket.assigns.current_user.id, prompt.id)
+        user && Content.user_saved_prompt?(user.id, prompt.id)
     }
 
-    {:noreply, assign(socket, :selected_prompt, serialized)}
+    {:noreply,
+     socket
+     |> assign(:selected_prompt, serialized)
+     |> assign(:drawer_upvotes, upvotes)
+     |> assign(:drawer_downvotes, downvotes)
+     |> assign(:drawer_user_vote, user_vote && user_vote.value)}
   end
 
   @impl true
@@ -128,47 +138,29 @@ defmodule UrielmWeb.PromptsLive do
   end
 
   @impl true
-  def handle_event("toggle_like", %{"id" => id}, socket) do
+  def handle_event("vote", %{"target_type" => "prompt", "target_id" => id, "value" => value}, socket) do
     %{current_user: user} = socket.assigns
 
     case user do
       nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to like prompts")}
+        {:noreply, put_flash(socket, :error, "Sign in to vote")}
 
       user ->
-        prompt_id = String.to_integer(id)
+        value_int = String.to_integer(value)
 
-        case Content.toggle_like(user.id, prompt_id) do
-          {:ok, _prompt} ->
-            # Refresh the prompt data in modal if it's open
-            updated_socket =
-              if socket.assigns.selected_prompt && socket.assigns.selected_prompt.id == prompt_id do
-                prompt =
-                  prompt_id
-                  |> Content.get_prompt!()
+        case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
+          {:ok, _} ->
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
+            user_vote = Engagement.get_vote(user.id, "prompt", id)
 
-                tag_names = Enum.map(prompt.tag_records, & &1.name)
-
-                serialized = %{
-                  id: prompt.id,
-                  title: prompt.title,
-                  url: prompt.url,
-                  prompt: prompt.prompt,
-                  category: prompt.category,
-                  tags: tag_names,
-                  likes_count: prompt.likes_count,
-                  user_liked: Content.user_liked_prompt?(user.id, prompt.id)
-                }
-
-                assign(socket, :selected_prompt, serialized)
-              else
-                socket
-              end
-
-            {:noreply, updated_socket}
+            {:noreply,
+             socket
+             |> assign(:drawer_upvotes, upvotes)
+             |> assign(:drawer_downvotes, downvotes)
+             |> assign(:drawer_user_vote, user_vote && user_vote.value)}
 
           {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to like prompt")}
+            {:noreply, put_flash(socket, :error, "Failed to vote")}
         end
     end
   end
@@ -399,9 +391,10 @@ defmodule UrielmWeb.PromptsLive do
                     name="PromptActions"
                     props={
                       %{
-                        likesCount: Map.get(@selected_prompt, :likes_count, 0),
+                        upvotes: @drawer_upvotes,
+                        downvotes: @drawer_downvotes,
                         savesCount: Map.get(@selected_prompt, :saves_count, 0),
-                        userLiked: Map.get(@selected_prompt, :user_liked, false),
+                        userVote: @drawer_user_vote,
                         userSaved: Map.get(@selected_prompt, :user_saved, false),
                         promptId: to_string(@selected_prompt.id),
                         detailUrl: ~p"/prompts/#{@selected_prompt.id}"
