@@ -140,9 +140,6 @@ defmodule UrielmWeb.UserProfileLive do
   end
 
   @impl true
-  def handle_event("load_more", _params, socket), do: {:noreply, socket}
-
-  @impl true
   def handle_event("switch_tab", %{"tab" => tab}, socket) do
     username = socket.assigns.user.username
     {:noreply, push_patch(socket, to: ~p"/u/#{username}?tab=#{tab}&page=1")}
@@ -775,7 +772,7 @@ defmodule UrielmWeb.UserProfileLive do
                   <div class="space-y-3">
                     <%= for comment <- @comments do %>
                       <div class="p-3 rounded-lg bg-base-200">
-                        <a href={~p"/forum/t/#{comment.thread_id}"} class="text-sm link link-primary">
+                        <a href={~p"/forum/t/#{comment.thread_id}" <> "#comment-#{comment.id}"} class="text-sm link link-primary">
                           {comment.thread_title}
                         </a>
                         <p class="text-base-content mt-1">{comment.body}</p>
