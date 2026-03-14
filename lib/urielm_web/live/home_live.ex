@@ -2,20 +2,52 @@ defmodule UrielmWeb.HomeLive do
   use UrielmWeb, :live_view
   use LiveSvelte.Components
 
+  import Ecto.Query, warn: false
+  alias Urielm.Repo
+  alias Urielm.Content.{Prompt, Video}
+  alias Urielm.Learning
+  alias Urielm.Learning.Course
+  alias Urielm.Content
+
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :current_page, "home")}
+    courses = Learning.list_courses() |> Enum.take(3)
+    posts = Content.list_published_posts() |> Enum.take(4)
+    prompts = Content.list_prompts(limit: 6)
+
+    shorts =
+      Content.list_published_videos(limit: 20)
+      |> Enum.filter(&(&1.format == "short"))
+      |> Enum.take(5)
+
+    prompt_count = Repo.aggregate(Prompt, :count)
+    course_count = Repo.aggregate(Course, :count)
+    video_count = Repo.aggregate(from(v in Video, where: not is_nil(v.published_at)), :count)
+
+    {:ok,
+     assign(socket,
+       current_page: "home",
+       courses: courses,
+       posts: posts,
+       prompts: prompts,
+       shorts: shorts,
+       stats: %{
+         videos: video_count,
+         prompts: prompt_count,
+         courses: course_count
+       }
+     )}
   end
 
   @impl true
   def render(assigns) do
     ~H"""
     <div class="bg-base-100 min-h-screen">
-      <.hero />
-      <.shorts />
-      <.courses />
-      <.blog_posts />
-      <.prompts />
+      <.hero stats={@stats} />
+      <.shorts shorts={@shorts} />
+      <.courses courses={@courses} />
+      <.blog_posts posts={@posts} />
+      <.prompts prompts={@prompts} />
       <.footer />
     </div>
     """
@@ -85,15 +117,15 @@ defmodule UrielmWeb.HomeLive do
             <!-- Stats Row -->
             <div class="flex gap-8 pt-8 border-t border-base-300">
               <div>
-                <div class="text-3xl font-bold text-base-content">50+</div>
-                <div class="text-sm text-base-content/50">Tutorials</div>
+                <div class="text-3xl font-bold text-base-content">{@stats.videos}</div>
+                <div class="text-sm text-base-content/50">Videos</div>
               </div>
               <div>
-                <div class="text-3xl font-bold text-base-content">1.2k</div>
+                <div class="text-3xl font-bold text-base-content">{@stats.prompts}</div>
                 <div class="text-sm text-base-content/50">Prompts</div>
               </div>
               <div>
-                <div class="text-3xl font-bold text-base-content">12</div>
+                <div class="text-3xl font-bold text-base-content">{@stats.courses}</div>
                 <div class="text-sm text-base-content/50">Courses</div>
               </div>
             </div>
@@ -137,7 +169,7 @@ defmodule UrielmWeb.HomeLive do
                 </div>
                 <div class="p-4">
                   <div class="text-sm font-medium text-base-content">Build an AI Agent</div>
-                  <div class="text-xs text-base-content/50 mt-1">12 min • 2.4k views</div>
+                  <div class="text-xs text-base-content/50 mt-1">Watch now</div>
                 </div>
               </div>
             </div>
@@ -149,16 +181,6 @@ defmodule UrielmWeb.HomeLive do
   end
 
   defp shorts(assigns) do
-    shorts_data = [
-      %{id: 1, title: "Claude vs GPT-4: Quick Comparison", views: "12k", duration: "0:45", gradient: "from-rose-500 to-orange-500"},
-      %{id: 2, title: "One Prompt That Changed Everything", views: "8.3k", duration: "0:58", gradient: "from-violet-500 to-purple-500"},
-      %{id: 3, title: "AI Code Review in 60 Seconds", views: "15k", duration: "1:00", gradient: "from-cyan-500 to-blue-500"},
-      %{id: 4, title: "The System Prompt Secret", views: "6.7k", duration: "0:42", gradient: "from-emerald-500 to-teal-500"},
-      %{id: 5, title: "Automate This With n8n", views: "9.1k", duration: "0:55", gradient: "from-amber-500 to-yellow-500"}
-    ]
-
-    assigns = assign(assigns, :shorts, shorts_data)
-
     ~H"""
     <section class="py-20 bg-base-200/50">
       <div class="max-w-7xl mx-auto px-6">
@@ -185,9 +207,9 @@ defmodule UrielmWeb.HomeLive do
 
         <!-- Shorts Horizontal Scroll -->
         <div class="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory scrollbar-hide">
-          <%= for short <- @shorts do %>
-            <div class="flex-shrink-0 w-44 snap-start group cursor-pointer">
-              <div class={"relative aspect-[9/16] rounded-2xl overflow-hidden bg-gradient-to-br #{short.gradient}"}>
+          <%= for {short, index} <- Enum.with_index(@shorts) do %>
+            <.link navigate={~p"/videos/#{short.slug}"} class="flex-shrink-0 w-44 snap-start group cursor-pointer">
+              <div class={"relative aspect-[9/16] rounded-2xl overflow-hidden #{short_gradient(index)}"}>
                 <!-- Play Button Overlay -->
                 <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
@@ -196,18 +218,13 @@ defmodule UrielmWeb.HomeLive do
                     </svg>
                   </div>
                 </div>
-                <!-- Duration Badge -->
-                <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-white text-xs font-medium">
-                  {short.duration}
-                </div>
               </div>
               <div class="mt-3">
                 <h3 class="text-sm font-medium text-base-content line-clamp-2 group-hover:text-primary transition-colors">
                   {short.title}
                 </h3>
-                <p class="text-xs text-base-content/50 mt-1">{short.views} views</p>
               </div>
-            </div>
+            </.link>
           <% end %>
         </div>
       </div>
@@ -216,38 +233,6 @@ defmodule UrielmWeb.HomeLive do
   end
 
   defp courses(assigns) do
-    courses_data = [
-      %{
-        id: 1,
-        title: "Claude Code Mastery",
-        description: "Build production AI apps with Claude's API. From basics to advanced agents.",
-        lessons: 24,
-        duration: "6 hours",
-        level: "Intermediate",
-        color: "primary"
-      },
-      %{
-        id: 2,
-        title: "Prompt Engineering Pro",
-        description: "Master the art of crafting prompts that get consistent, high-quality results.",
-        lessons: 18,
-        duration: "4 hours",
-        level: "Beginner",
-        color: "secondary"
-      },
-      %{
-        id: 3,
-        title: "n8n Automation Bootcamp",
-        description: "Automate your entire workflow with visual programming and AI integrations.",
-        lessons: 32,
-        duration: "8 hours",
-        level: "All Levels",
-        color: "accent"
-      }
-    ]
-
-    assigns = assign(assigns, :courses, courses_data)
-
     ~H"""
     <section class="py-24 bg-base-100">
       <div class="max-w-7xl mx-auto px-6">
@@ -264,12 +249,13 @@ defmodule UrielmWeb.HomeLive do
 
         <!-- Course Cards Grid -->
         <div class="grid md:grid-cols-3 gap-8">
-          <%= for course <- @courses do %>
-            <.link navigate={~p"/courses"} class="group">
+          <%= for {course, index} <- Enum.with_index(@courses) do %>
+            <% color = course_color_classes(index) %>
+            <.link navigate={~p"/courses/#{course.slug}"} class="group">
               <div class="h-full bg-base-200 rounded-3xl p-8 border border-base-300 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1">
                 <!-- Icon -->
-                <div class={"w-14 h-14 rounded-2xl bg-#{course.color}/10 flex items-center justify-center mb-6"}>
-                  <svg class={"w-7 h-7 text-#{course.color}"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class={"w-14 h-14 rounded-2xl #{color.icon_bg} flex items-center justify-center mb-6"}>
+                  <svg class={"w-7 h-7 #{color.icon_text}"} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
@@ -282,25 +268,9 @@ defmodule UrielmWeb.HomeLive do
                   {course.description}
                 </p>
 
-                <!-- Meta -->
-                <div class="flex items-center gap-4 text-xs text-base-content/50">
-                  <span class="flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    {course.lessons} lessons
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {course.duration}
-                  </span>
-                </div>
-
-                <!-- Level Badge -->
-                <div class="mt-6 pt-6 border-t border-base-300">
-                  <span class={"badge badge-#{course.color} badge-outline"}>{course.level}</span>
+                <!-- Badge -->
+                <div class="mt-auto pt-6 border-t border-base-300">
+                  <span class={"badge badge-outline #{color.badge}"}>Start Course</span>
                 </div>
               </div>
             </.link>
@@ -322,47 +292,6 @@ defmodule UrielmWeb.HomeLive do
   end
 
   defp blog_posts(assigns) do
-    posts_data = [
-      %{
-        id: 1,
-        title: "Building Production AI Agents with Claude 3.5",
-        excerpt: "A deep dive into creating reliable, production-ready AI agents using Anthropic's latest model.",
-        category: "Tutorial",
-        date: "Dec 28, 2025",
-        read_time: "8 min read",
-        featured: true
-      },
-      %{
-        id: 2,
-        title: "The Complete Guide to System Prompts",
-        excerpt: "Everything you need to know about crafting effective system prompts for any use case.",
-        category: "Guide",
-        date: "Dec 25, 2025",
-        read_time: "12 min read",
-        featured: false
-      },
-      %{
-        id: 3,
-        title: "n8n + AI: Automate Your Content Pipeline",
-        excerpt: "Set up an automated content workflow that uses AI to generate, review, and publish.",
-        category: "Automation",
-        date: "Dec 22, 2025",
-        read_time: "6 min read",
-        featured: false
-      },
-      %{
-        id: 4,
-        title: "RAG vs Fine-tuning: When to Use What",
-        excerpt: "A practical comparison of retrieval-augmented generation and model fine-tuning.",
-        category: "Deep Dive",
-        date: "Dec 20, 2025",
-        read_time: "10 min read",
-        featured: false
-      }
-    ]
-
-    assigns = assign(assigns, :posts, posts_data)
-
     ~H"""
     <section class="py-24 bg-base-200/30">
       <div class="max-w-7xl mx-auto px-6">
@@ -382,33 +311,32 @@ defmodule UrielmWeb.HomeLive do
 
         <!-- Blog Grid -->
         <div class="grid lg:grid-cols-2 gap-8">
-          <!-- Featured Post (Large) -->
-          <%= for post <- Enum.filter(@posts, & &1.featured) do %>
-            <.link navigate={~p"/blog"} class="group lg:row-span-2">
+          <!-- Featured Post (Large) — first post -->
+          <%= for post <- Enum.take(@posts, 1) do %>
+            <.link navigate={~p"/blog/#{post.slug}"} class="group lg:row-span-2">
               <div class="h-full bg-gradient-to-br from-primary/10 via-base-200 to-secondary/10 rounded-3xl p-8 border border-base-300 hover:border-primary/30 transition-all duration-300">
-                <span class="badge badge-primary">{post.category}</span>
-                <h3 class="text-2xl md:text-3xl font-bold text-base-content mt-6 mb-4 group-hover:text-primary transition-colors leading-tight">
+                <h3 class="text-2xl md:text-3xl font-bold text-base-content mt-2 mb-4 group-hover:text-primary transition-colors leading-tight">
                   {post.title}
                 </h3>
                 <p class="text-base-content/60 text-lg leading-relaxed mb-8">
                   {post.excerpt}
                 </p>
                 <div class="flex items-center justify-between mt-auto pt-6 border-t border-base-300">
-                  <span class="text-sm text-base-content/50">{post.date}</span>
-                  <span class="text-sm text-base-content/50">{post.read_time}</span>
+                  <span class="text-sm text-base-content/50">
+                    {Calendar.strftime(post.published_at, "%b %d, %Y")}
+                  </span>
                 </div>
               </div>
             </.link>
           <% end %>
 
           <!-- Other Posts -->
-          <%= for post <- Enum.reject(@posts, & &1.featured) do %>
-            <.link navigate={~p"/blog"} class="group">
+          <%= for post <- Enum.drop(@posts, 1) do %>
+            <.link navigate={~p"/blog/#{post.slug}"} class="group">
               <div class="bg-base-200 rounded-2xl p-6 border border-base-300 hover:border-secondary/30 transition-all duration-300 hover:shadow-lg">
                 <div class="flex items-start justify-between gap-4">
                   <div class="flex-1">
-                    <span class="badge badge-outline badge-sm">{post.category}</span>
-                    <h3 class="text-lg font-semibold text-base-content mt-3 mb-2 group-hover:text-secondary transition-colors">
+                    <h3 class="text-lg font-semibold text-base-content mb-2 group-hover:text-secondary transition-colors">
                       {post.title}
                     </h3>
                     <p class="text-base-content/60 text-sm line-clamp-2">
@@ -417,9 +345,7 @@ defmodule UrielmWeb.HomeLive do
                   </div>
                 </div>
                 <div class="flex items-center gap-4 mt-4 text-xs text-base-content/50">
-                  <span>{post.date}</span>
-                  <span>•</span>
-                  <span>{post.read_time}</span>
+                  <span>{Calendar.strftime(post.published_at, "%b %d, %Y")}</span>
                 </div>
               </div>
             </.link>
@@ -431,17 +357,6 @@ defmodule UrielmWeb.HomeLive do
   end
 
   defp prompts(assigns) do
-    prompts_data = [
-      %{id: 1, title: "Code Reviewer Pro", category: "Development", uses: "2.3k", icon: "code"},
-      %{id: 2, title: "Blog Post Writer", category: "Writing", uses: "1.8k", icon: "document"},
-      %{id: 3, title: "Data Analyst", category: "Analysis", uses: "1.2k", icon: "chart"},
-      %{id: 4, title: "Email Composer", category: "Writing", uses: "980", icon: "mail"},
-      %{id: 5, title: "SQL Generator", category: "Development", uses: "1.5k", icon: "database"},
-      %{id: 6, title: "Meeting Summarizer", category: "Productivity", uses: "2.1k", icon: "users"}
-    ]
-
-    assigns = assign(assigns, :prompts, prompts_data)
-
     ~H"""
     <section class="py-24 bg-base-100 relative overflow-hidden">
       <!-- Background Pattern -->
@@ -464,7 +379,7 @@ defmodule UrielmWeb.HomeLive do
         <!-- Prompts Grid -->
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <%= for prompt <- @prompts do %>
-            <.link navigate={~p"/prompts"} class="group">
+            <.link navigate={~p"/prompts/#{prompt.id}"} class="group">
               <div class="flex items-center gap-4 p-5 bg-base-200 rounded-2xl border border-base-300 hover:border-accent/30 hover:bg-base-200/80 transition-all duration-300">
                 <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
                   <svg class="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -478,7 +393,7 @@ defmodule UrielmWeb.HomeLive do
                   <div class="flex items-center gap-2 mt-1">
                     <span class="text-xs text-base-content/50">{prompt.category}</span>
                     <span class="text-xs text-base-content/30">•</span>
-                    <span class="text-xs text-base-content/50">{prompt.uses} uses</span>
+                    <span class="text-xs text-base-content/50">{prompt.likes_count} likes</span>
                   </div>
                 </div>
                 <svg class="w-5 h-5 text-base-content/30 group-hover:text-accent group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -567,5 +482,22 @@ defmodule UrielmWeb.HomeLive do
       </div>
     </footer>
     """
+  end
+
+  defp course_color_classes(0), do: %{icon_bg: "bg-primary/10", icon_text: "text-primary", badge: "badge-primary"}
+  defp course_color_classes(1), do: %{icon_bg: "bg-secondary/10", icon_text: "text-secondary", badge: "badge-secondary"}
+  defp course_color_classes(2), do: %{icon_bg: "bg-accent/10", icon_text: "text-accent", badge: "badge-accent"}
+  defp course_color_classes(_), do: %{icon_bg: "bg-base-300", icon_text: "text-base-content", badge: "badge-neutral"}
+
+  @short_gradients [
+    "bg-gradient-to-br from-rose-500 to-orange-500",
+    "bg-gradient-to-br from-violet-500 to-purple-500",
+    "bg-gradient-to-br from-cyan-500 to-blue-500",
+    "bg-gradient-to-br from-emerald-500 to-teal-500",
+    "bg-gradient-to-br from-amber-500 to-yellow-500"
+  ]
+
+  defp short_gradient(index) do
+    Enum.at(@short_gradients, rem(index, length(@short_gradients)))
   end
 end
