@@ -18,13 +18,10 @@ defmodule UrielmWeb.BlogLive do
           |> assign(:post, post)
           |> assign(:posts, nil)
           |> assign(:page_title, post.title)
-          |> assign(:meta_description, post.excerpt || String.slice(post.body, 0, 160))
+          |> assign(:meta_description, post.excerpt || truncate_body(post.body, 160))
         rescue
           Ecto.NoResultsError ->
-            socket
-            |> assign(:posts, nil)
-            |> assign(:post, nil)
-            |> assign(:page_title, "Post not found")
+            push_navigate(socket, to: ~p"/blog")
         end
       else
         # Show blog index
@@ -92,7 +89,7 @@ defmodule UrielmWeb.BlogLive do
                   </p>
 
                   <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed">
-                    {post.excerpt || String.slice(post.body, 0, 180) <> "…"}
+                    {post.excerpt || truncate_body(post.body)}
                   </p>
                 </article>
               <% end %>
@@ -165,6 +162,19 @@ defmodule UrielmWeb.BlogLive do
 
   defp markdown_to_html(markdown) do
     markdown
-    |> Earmark.as_html!()
+    |> Earmark.as_html!(code_class_prefix: "language-")
+  end
+
+  defp truncate_body(body, max \\ 180) do
+    if String.length(body) <= max do
+      body
+    else
+      body
+      |> String.slice(0, max)
+      |> String.split(" ")
+      |> Enum.drop(-1)
+      |> Enum.join(" ")
+      |> Kernel.<>("…")
+    end
   end
 end
