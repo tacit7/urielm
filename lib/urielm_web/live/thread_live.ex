@@ -41,6 +41,8 @@ defmodule UrielmWeb.ThreadLive do
         do: Forum.get_notification_level(socket.assigns.current_user.id, thread.id),
         else: "watching"
 
+    all_categories = Forum.list_categories_with_boards()
+
     {:ok,
      socket
      |> assign(:page_title, thread.title)
@@ -49,7 +51,8 @@ defmodule UrielmWeb.ThreadLive do
      |> assign(:thread_is_saved, is_saved)
      |> assign(:thread_is_subscribed, is_subscribed)
      |> assign(:notification_level, notification_level)
-     |> assign(:reporting_comment_id, nil)}
+     |> assign(:reporting_comment_id, nil)
+     |> assign(:all_categories, all_categories)}
   end
 
   @impl true
@@ -545,8 +548,11 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100">
-      <Layouts.flash_group flash={@flash} />
+    <UrielmWeb.Components.ForumLayout.forum_layout
+      categories={@all_categories}
+      flash={@flash}
+      current_board={@thread.board_slug}
+    >
       <div class="container mx-auto px-4 py-8 max-w-6xl">
         <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
           ← Back to {@thread.board_name}
@@ -801,7 +807,7 @@ defmodule UrielmWeb.ThreadLive do
         bg_class="bg-base-300"
         data-testid="comment-report-modal"
       />
-    </div>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end
 

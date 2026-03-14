@@ -7,6 +7,8 @@ defmodule UrielmWeb.SearchLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    all_categories = Forum.list_categories_with_boards()
+
     {:ok,
      socket
      |> assign(:page_title, "Search Forum")
@@ -14,6 +16,7 @@ defmodule UrielmWeb.SearchLive do
      |> assign(:page, 1)
      |> assign(:meta, nil)
      |> assign(:has_more, false)
+     |> assign(:all_categories, all_categories)
      |> stream(:results, [])}
   end
 
@@ -99,8 +102,11 @@ defmodule UrielmWeb.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100">
-      <Layouts.flash_group flash={@flash} />
+    <UrielmWeb.Components.ForumLayout.forum_layout
+      categories={@all_categories}
+      flash={@flash}
+      current_path="/forum/search"
+    >
       <div class="container mx-auto px-4 py-8 max-w-3xl">
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-base-content mb-4">Search Forum</h1>
@@ -142,7 +148,7 @@ defmodule UrielmWeb.SearchLive do
           </div>
         <% end %>
       </div>
-    </div>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end
 
