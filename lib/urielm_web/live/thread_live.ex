@@ -578,6 +578,9 @@ defmodule UrielmWeb.ThreadLive do
                   <% end %>
                   <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
                   <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
+                  <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="text-primary hover:underline text-sm">
+                    {@thread.board_name}
+                  </.link>
                 </div>
               </div>
 
@@ -624,6 +627,17 @@ defmodule UrielmWeb.ThreadLive do
                       </li>
                     </ul>
                   </div>
+
+                  <button
+                    class="btn btn-xs btn-ghost"
+                    phx-click={if @thread_is_subscribed, do: "unsubscribe", else: "subscribe"}
+                    title={if @thread_is_subscribed, do: "Unsubscribe", else: "Subscribe"}
+                  >
+                    <.um_icon
+                      name={if @thread_is_subscribed, do: "bell_solid", else: "bell"}
+                      class="w-4 h-4"
+                    />
+                  </button>
 
                   <button
                     class="btn btn-xs btn-ghost"

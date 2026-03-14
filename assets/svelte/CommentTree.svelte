@@ -183,11 +183,8 @@
               </div>
             </div>
 
-            <!-- Border above actions -->
-            <div class="border-t border-base-300 mt-3"></div>
-
             <!-- Action buttons - Discourse style -->
-            <div class="flex items-center justify-end pt-3 pb-3">
+            <div class="flex items-center justify-end">
               <!-- Actions on right -->
               <div class="flex items-center gap-1">
                 {#if canEdit(comment.author?.id) && editingId !== comment.id}
