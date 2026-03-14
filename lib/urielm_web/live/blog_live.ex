@@ -13,18 +13,37 @@ defmodule UrielmWeb.BlogLive do
         # Show individual post
         try do
           post = Content.get_post_by_slug!(slug)
+          all_posts = Content.list_published_posts()
+          current_index = Enum.find_index(all_posts, &(&1.id == post.id))
+
+          prev_post =
+            if current_index && current_index < length(all_posts) - 1,
+              do: Enum.at(all_posts, current_index + 1),
+              else: nil
+
+          next_post =
+            if current_index && current_index > 0,
+              do: Enum.at(all_posts, current_index - 1),
+              else: nil
 
           socket
           |> assign(:post, post)
           |> assign(:posts, nil)
+          |> assign(:prev_post, prev_post)
+          |> assign(:next_post, next_post)
           |> assign(:page_title, post.title)
-          |> assign(:meta_description, post.excerpt || String.slice(post.body, 0, 160))
+          |> assign(:meta_description, post.excerpt || truncate_body(post.body, 160))
+          |> assign(:og_title, post.title)
+          |> assign(:og_type, "article")
+          |> assign(:og_image, post.hero_image)
+          |> assign(:canonical_url, "https://urielm.dev/blog/#{post.slug}")
         rescue
           Ecto.NoResultsError ->
             socket
-            |> assign(:posts, nil)
-            |> assign(:post, nil)
-            |> assign(:page_title, "Post not found")
+            |> assign(:meta_description, nil)
+            |> assign(:og_title, nil)
+            |> assign(:canonical_url, nil)
+            |> push_navigate(to: ~p"/blog")
         end
       else
         # Show blog index
@@ -33,7 +52,11 @@ defmodule UrielmWeb.BlogLive do
         socket
         |> assign(:posts, posts)
         |> assign(:post, nil)
+        |> assign(:prev_post, nil)
+        |> assign(:next_post, nil)
         |> assign(:page_title, "Blog")
+        |> assign(:og_title, "Blog")
+        |> assign(:canonical_url, "https://urielm.dev/blog")
       end
 
     {:ok, socket}
@@ -62,51 +85,47 @@ defmodule UrielmWeb.BlogLive do
             <div class="space-y-5">
               <%= for {post, index} <- Enum.with_index(@posts) do %>
                 <article class={[
-                  "border rounded-lg p-5 sm:p-6 transition-all hover:border-primary/60",
+                  "relative border rounded-lg p-5 sm:p-6 transition-all hover:border-primary/60",
                   if index == 0 do
                     "border-base-300 bg-base-200/60 shadow-sm"
                   else
                     "border-base-300/50 bg-base-100 hover:shadow-sm"
                   end
                 ]}>
-                  <div class="flex items-start justify-between gap-4 mb-2">
-                    <h2 class="text-lg sm:text-xl font-semibold flex-1 leading-tight">
-                      <.link
-                        patch={~p"/blog/#{post.slug}"}
-                        class="hover:text-primary transition-colors"
-                      >
-                        {post.title}
-                      </.link>
-                    </h2>
-                    <%= if index == 0 do %>
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-primary/10 text-primary/80">
-                        Latest
-                      </span>
-                    <% end %>
+                  <.link patch={~p"/blog/#{post.slug}"} class="absolute inset-0 z-0 rounded-lg" aria-label={post.title}></.link>
+                  <div class="relative z-10">
+                    <div class="flex items-start justify-between gap-4 mb-2">
+                      <h2 class="text-lg sm:text-xl font-semibold flex-1 leading-tight">
+                        <.link
+                          patch={~p"/blog/#{post.slug}"}
+                          class="hover:text-primary transition-colors"
+                        >
+                          {post.title}
+                        </.link>
+                      </h2>
+                      <%= if index == 0 do %>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-primary/10 text-primary/80">
+                          Latest
+                        </span>
+                      <% end %>
+                    </div>
+
+                    <p class="text-xs text-base-content/50 mb-3">
+                      <%= if post.published_at do %>
+                        {Calendar.strftime(post.published_at, "%B %d, %Y")} · {read_time(post.body)} min read
+                      <% end %>
+                    </p>
+
+                    <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed">
+                      {post.excerpt || truncate_body(post.body)}
+                    </p>
                   </div>
-
-                  <p class="text-xs text-base-content/50 mb-3">
-                    <%= if post.published_at do %>
-                      {Calendar.strftime(post.published_at, "%B %d, %Y")}
-                    <% end %>
-                  </p>
-
-                  <p class="text-sm text-base-content/70 line-clamp-2 leading-relaxed">
-                    {post.excerpt || String.slice(post.body, 0, 180) <> "…"}
-                  </p>
                 </article>
               <% end %>
             </div>
           <% end %>
         </div>
 
-        <footer class="border-t border-base-300/30 bg-base-100/50 py-8 px-4 sm:px-6 lg:px-8 mt-auto">
-          <div class="max-w-4xl mx-auto">
-            <p class="text-xs text-base-content/40 text-center">
-              More writing coming. Follow along.
-            </p>
-          </div>
-        </footer>
       </div>
     <% else %>
       <div class="min-h-screen bg-base-100 flex flex-col">
@@ -140,6 +159,10 @@ defmodule UrielmWeb.BlogLive do
                 <span class="w-1.5 h-1.5 rounded-full bg-primary/50 lg:bg-primary/30"></span>
                 <span>Blog</span>
               </span>
+
+              <span class="hidden sm:inline text-base-content/30 lg:text-base-content/25">•</span>
+
+              <span>{read_time(@post.body)} min read</span>
             </div>
           </header>
 
@@ -157,7 +180,39 @@ defmodule UrielmWeb.BlogLive do
           <article class="prose" id="blog-article" phx-hook="HighlightCode">
             {raw(markdown_to_html(@post.body))}
           </article>
+
+          <nav class="mt-16 pt-8 border-t border-base-300/30 flex justify-between gap-4">
+            <%= if @prev_post do %>
+              <.link patch={~p"/blog/#{@prev_post.slug}"} class="group flex flex-col gap-1 max-w-[45%]">
+                <span class="text-xs text-base-content/40 group-hover:text-base-content/60">&larr; Older</span>
+                <span class="text-sm font-medium text-base-content/70 group-hover:text-primary transition-colors line-clamp-2">{@prev_post.title}</span>
+              </.link>
+            <% else %>
+              <div></div>
+            <% end %>
+            <%= if @next_post do %>
+              <.link patch={~p"/blog/#{@next_post.slug}"} class="group flex flex-col gap-1 items-end max-w-[45%] text-right">
+                <span class="text-xs text-base-content/40 group-hover:text-base-content/60">Newer &rarr;</span>
+                <span class="text-sm font-medium text-base-content/70 group-hover:text-primary transition-colors line-clamp-2">{@next_post.title}</span>
+              </.link>
+            <% else %>
+              <div></div>
+            <% end %>
+          </nav>
         </div>
+
+        <script type="application/ld+json">
+          {raw(Jason.encode!(%{
+            "@context" => "https://schema.org",
+            "@type" => "BlogPosting",
+            "headline" => @post.title,
+            "description" => @meta_description,
+            "url" => "https://urielm.dev/blog/#{@post.slug}",
+            "datePublished" => if(@post.published_at, do: DateTime.to_iso8601(@post.published_at), else: nil),
+            "image" => @post.hero_image,
+            "author" => %{"@type" => "Person", "name" => "Uriel Maldonado"}
+          }))}
+        </script>
       </div>
     <% end %>
     """
@@ -165,6 +220,24 @@ defmodule UrielmWeb.BlogLive do
 
   defp markdown_to_html(markdown) do
     markdown
-    |> Earmark.as_html!()
+    |> Earmark.as_html!(code_class_prefix: "language-")
+  end
+
+  defp read_time(body) do
+    words = body |> String.split(~r/\s+/) |> Enum.count()
+    max(1, ceil(words / 200))
+  end
+
+  defp truncate_body(body, max \\ 180) do
+    if String.length(body) <= max do
+      body
+    else
+      body
+      |> String.slice(0, max)
+      |> String.split(" ")
+      |> Enum.drop(-1)
+      |> Enum.join(" ")
+      |> Kernel.<>("…")
+    end
   end
 end
