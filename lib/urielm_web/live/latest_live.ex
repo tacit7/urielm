@@ -84,6 +84,10 @@ defmodule UrielmWeb.LatestLive do
       flash={@flash}
       current_path="/forum"
     >
+      <div class="mb-6">
+        <h1 class="text-3xl font-black tracking-tight text-base-content leading-none">Latest</h1>
+      </div>
+
       <!-- Thread table -->
       <div class="rounded-xl border border-base-300/60 overflow-hidden">
         <!-- Column headers -->

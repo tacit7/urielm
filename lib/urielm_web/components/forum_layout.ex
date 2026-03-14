@@ -55,6 +55,7 @@ defmodule UrielmWeb.Components.ForumLayout do
             <!-- Main Navigation -->
             <div class="space-y-1 mb-8">
               <.nav_link href="/forum" icon="topics" label="Latest" active={@current_path in ["/forum", "/forum/latest"]} />
+              <.nav_link href="/forum/categories" icon="hero-squares-2x2" label="Categories" active={@current_path == "/forum/categories"} />
               <.nav_link href="/saved" icon="bookmark" label="Saved" active={@current_path == "/saved"} />
               <.nav_link href="/notifications" icon="bell" label="Notifications" active={@current_path == "/notifications"} />
             </div>
