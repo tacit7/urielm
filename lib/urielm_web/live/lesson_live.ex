@@ -1,9 +1,10 @@
 defmodule UrielmWeb.LessonLive do
   use UrielmWeb, :live_view
-  alias Urielm.Learning
-  alias Urielm.Params
-  alias Urielm.Learning.LessonComment
   alias Urielm.Engagement
+  alias Urielm.Learning
+  alias Urielm.Learning.LessonComment
+  alias Urielm.Params
+  alias UrielmWeb.LiveHelpers
 
   @impl true
   def mount(params, session, socket) do
@@ -109,31 +110,8 @@ defmodule UrielmWeb.LessonLive do
   end
 
   @impl true
-  def handle_event("vote", %{"target_type" => "lesson", "target_id" => id, "value" => value}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to vote")}
-
-      user ->
-        value_int = String.to_integer(value)
-
-        case Engagement.toggle_vote(user.id, "lesson", id, value_int) do
-          {:ok, _} ->
-            {upvotes, downvotes, _score} = Engagement.get_vote_counts("lesson", id)
-            user_vote = Engagement.get_vote(user.id, "lesson", id)
-
-            {:noreply,
-             socket
-             |> assign(:upvotes, upvotes)
-             |> assign(:downvotes, downvotes)
-             |> assign(:user_vote, user_vote && user_vote.value)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to vote")}
-        end
-    end
+  def handle_event("vote", %{"target_type" => target_type, "target_id" => id, "value" => value}, socket) do
+    LiveHelpers.handle_vote(target_type, id, value, socket)
   end
 
   @impl true

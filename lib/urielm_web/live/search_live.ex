@@ -85,59 +85,17 @@ defmodule UrielmWeb.SearchLive do
 
   @impl true
   def handle_event("save_thread", %{"thread_id" => thread_id}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to save threads")}
-
-      user ->
-        case Forum.toggle_save_thread(user.id, thread_id) do
-          {:ok, _} ->
-            {:noreply, LiveHelpers.update_thread_in_stream(socket, :results, thread_id, user)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to save thread")}
-        end
-    end
+    LiveHelpers.handle_save_thread(thread_id, :results, socket)
   end
 
   @impl true
   def handle_event("subscribe", %{"thread_id" => thread_id}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to subscribe")}
-
-      user ->
-        case Forum.subscribe_to_thread(user.id, thread_id) do
-          {:ok, _} ->
-            {:noreply, LiveHelpers.update_thread_in_stream(socket, :results, thread_id, user)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to subscribe")}
-        end
-    end
+    LiveHelpers.handle_subscribe_thread(thread_id, :results, socket)
   end
 
   @impl true
   def handle_event("unsubscribe", %{"thread_id" => thread_id}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, socket}
-
-      user ->
-        case Forum.unsubscribe_from_thread(user.id, thread_id) do
-          {:ok, _} ->
-            {:noreply, LiveHelpers.update_thread_in_stream(socket, :results, thread_id, user)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to unsubscribe")}
-        end
-    end
+    LiveHelpers.handle_unsubscribe_thread(thread_id, :results, socket)
   end
 
   @impl true

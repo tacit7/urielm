@@ -3,9 +3,10 @@ defmodule UrielmWeb.PromptLive do
   use LiveSvelte.Components
 
   alias Urielm.Content
-  alias Urielm.Params
   alias Urielm.Content.Comment
   alias Urielm.Engagement
+  alias Urielm.Params
+  alias UrielmWeb.LiveHelpers
 
   @impl true
   def mount(params, session, socket) do
@@ -101,31 +102,8 @@ defmodule UrielmWeb.PromptLive do
   end
 
   @impl true
-  def handle_event("vote", %{"target_type" => "prompt", "target_id" => id, "value" => value}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to vote")}
-
-      user ->
-        value_int = String.to_integer(value)
-
-        case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
-          {:ok, _} ->
-            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
-            user_vote = Engagement.get_vote(user.id, "prompt", id)
-
-            {:noreply,
-             socket
-             |> assign(:upvotes, upvotes)
-             |> assign(:downvotes, downvotes)
-             |> assign(:user_vote, user_vote && user_vote.value)}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to vote")}
-        end
-    end
+  def handle_event("vote", %{"target_type" => target_type, "target_id" => id, "value" => value}, socket) do
+    LiveHelpers.handle_vote(target_type, id, value, socket)
   end
 
   # Keep toggle_like for backwards compatibility

@@ -7,6 +7,7 @@ defmodule UrielmWeb.LiveHelpers do
   """
 
   alias Urielm.Accounts.User
+  alias Urielm.Engagement
   alias Urielm.Forum
   alias Urielm.Repo
 
@@ -291,6 +292,80 @@ defmodule UrielmWeb.LiveHelpers do
           fun.(socket, user)
         end
     end
+  end
+
+  @doc """
+  Handle a vote event for any target type (video, lesson, prompt, etc.).
+
+  Checks auth, calls Engagement.toggle_vote, then refreshes vote counts
+  and assigns :upvotes, :downvotes, :user_vote on the socket.
+  """
+  def handle_vote(target_type, id, value, socket) do
+    with_auth(socket, "vote", fn socket, user ->
+      value_int = String.to_integer(value)
+
+      case Engagement.toggle_vote(user.id, target_type, id, value_int) do
+        {:ok, _} ->
+          {upvotes, downvotes, _score} = Engagement.get_vote_counts(target_type, id)
+          user_vote = Engagement.get_vote(user.id, target_type, id)
+
+          {:noreply,
+           socket
+           |> Phoenix.Component.assign(:upvotes, upvotes)
+           |> Phoenix.Component.assign(:downvotes, downvotes)
+           |> Phoenix.Component.assign(:user_vote, user_vote && user_vote.value)}
+
+        {:error, _} ->
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Failed to vote")}
+      end
+    end)
+  end
+
+  @doc """
+  Handle save_thread event for LiveViews that display threads in a stream.
+
+  Toggles save state and refreshes the thread entry in the given stream.
+  """
+  def handle_save_thread(thread_id, stream_name, socket) do
+    with_auth(socket, "save threads", fn socket, user ->
+      case Forum.toggle_save_thread(user.id, thread_id) do
+        {:ok, _} ->
+          {:noreply, update_thread_in_stream(socket, stream_name, thread_id, user)}
+
+        {:error, _} ->
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Failed to save thread")}
+      end
+    end)
+  end
+
+  @doc """
+  Handle subscribe event for LiveViews that display threads in a stream.
+  """
+  def handle_subscribe_thread(thread_id, stream_name, socket) do
+    with_auth(socket, "subscribe", fn socket, user ->
+      case Forum.subscribe_to_thread(user.id, thread_id) do
+        {:ok, _} ->
+          {:noreply, update_thread_in_stream(socket, stream_name, thread_id, user)}
+
+        {:error, _} ->
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Failed to subscribe")}
+      end
+    end)
+  end
+
+  @doc """
+  Handle unsubscribe event for LiveViews that display threads in a stream.
+  """
+  def handle_unsubscribe_thread(thread_id, stream_name, socket) do
+    with_auth(socket, "unsubscribe", fn socket, user ->
+      case Forum.unsubscribe_from_thread(user.id, thread_id) do
+        {:ok, _} ->
+          {:noreply, update_thread_in_stream(socket, stream_name, thread_id, user)}
+
+        {:error, _} ->
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Failed to unsubscribe")}
+      end
+    end)
   end
 
   @doc """
