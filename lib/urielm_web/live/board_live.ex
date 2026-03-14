@@ -159,6 +159,11 @@ defmodule UrielmWeb.BoardLive do
       flash={@flash}
       current_board={@board.slug}
     >
+      <div class="mb-4">
+        <h1 class="text-3xl font-black tracking-tight text-base-content leading-none">{@board.name}</h1>
+        <p :if={@board.description} class="text-sm text-base-content/50 mt-1">{@board.description}</p>
+      </div>
+
       <!-- Header -->
       <div class="mb-6">
         <!-- Tabs + New Topic button inline -->
@@ -190,6 +195,11 @@ defmodule UrielmWeb.BoardLive do
               href={~p"/forum/b/#{@board.slug}?filter=solved"}
               active={@filter == "solved"}
               label="Solved"
+            />
+            <.tab_link
+              href={~p"/forum/b/#{@board.slug}?filter=unsolved"}
+              active={@filter == "unsolved"}
+              label="Unsolved"
             />
           </div>
 
@@ -223,6 +233,7 @@ defmodule UrielmWeb.BoardLive do
               <p class="font-mono text-xs tracking-widest uppercase text-base-content/30">
                 <%= case @filter do %>
                   <% "solved" -> %>No solved topics
+                  <% "unsolved" -> %>No unsolved topics
                   <% "unread" -> %>All caught up
                   <% "new" -> %>No new topics
                   <% _ -> %>No topics yet
@@ -258,8 +269,8 @@ defmodule UrielmWeb.BoardLive do
 
   defp tab_link(assigns) do
     ~H"""
-    <a
-      href={@href}
+    <.link
+      navigate={@href}
       class={[
         "px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
         if(@active,
@@ -269,7 +280,7 @@ defmodule UrielmWeb.BoardLive do
       ]}
     >
       {@label}
-    </a>
+    </.link>
     """
   end
 end
