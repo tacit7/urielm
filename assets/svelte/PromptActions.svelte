@@ -1,5 +1,6 @@
 <script>
   import { Star, ArrowRight } from 'lucide-svelte'
+  import { handleVote as pushVote } from "../js/voteUtils.js"
 
   export let upvotes = 0
   export let downvotes = 0
@@ -17,9 +18,7 @@
   $: effectiveUserVote = userLiked !== null ? (userLiked ? 1 : null) : userVote
 
   function handleVote(value) {
-    if (live) {
-      live.pushEvent('vote', { target_type: 'prompt', target_id: String(promptId), value: String(value) })
-    }
+    pushVote(live, 'prompt', promptId, value)
   }
 
   function handleSave() {

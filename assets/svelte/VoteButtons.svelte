@@ -10,6 +10,8 @@
    * @param {string} layout - "horizontal" (default) or "vertical" (for shorts)
    * @param {string} size - "sm" (default) or "lg" (for shorts)
    */
+  import { handleVote as pushVote } from "../js/voteUtils.js"
+
   export let target_type = "thread"
   export let target_id = ""
   export let upvotes = 0
@@ -26,11 +28,7 @@
   export let live
 
   function handleVote(value) {
-    live.pushEvent("vote", {
-      target_type,
-      target_id,
-      value: String(value)
-    })
+    pushVote(live, target_type, target_id, value)
   }
 
   $: isVertical = layout === "vertical"

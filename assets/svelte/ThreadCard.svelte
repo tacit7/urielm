@@ -1,4 +1,6 @@
 <script>
+  import { handleVote as pushVote } from "../js/voteUtils.js"
+
   export let id = ""
   export let title = ""
   export let author = {}
@@ -39,7 +41,7 @@
   }
 
   function handleVote(value) {
-    live.pushEvent("vote", { target_type: "thread", target_id: id, value: String(value) })
+    pushVote(live, "thread", id, value)
   }
 
   function handleSave() {
