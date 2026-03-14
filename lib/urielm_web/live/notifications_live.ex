@@ -5,8 +5,6 @@ defmodule UrielmWeb.NotificationsLive do
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
 
-  @page_size 30
-
   @impl true
   def mount(_params, _session, socket) do
     %{current_user: user} = socket.assigns
@@ -17,13 +15,14 @@ defmodule UrielmWeb.NotificationsLive do
 
       user ->
         notifications =
-          Forum.list_notifications(user.id, limit: @page_size, offset: 0, unread_only: false)
+          Forum.list_notifications(user.id, limit: LiveHelpers.page_size(), offset: 0, unread_only: false)
 
         {:ok,
          socket
          |> assign(:page_title, "Notifications")
          |> assign(:page, 0)
-         |> assign(:has_more, length(notifications) == @page_size)
+         |> assign(:unread_only, false)
+         |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
          |> assign(:unread_count, Forum.count_unread_notifications(user.id))
          |> stream(:notifications, serialize_notifications(notifications))}
     end
@@ -36,16 +35,16 @@ defmodule UrielmWeb.NotificationsLive do
 
     notifications =
       if unread_only do
-        Forum.list_notifications(user.id, limit: @page_size, offset: 0, unread_only: true)
+        Forum.list_notifications(user.id, limit: LiveHelpers.page_size(), offset: 0, unread_only: true)
       else
-        Forum.list_notifications(user.id, limit: @page_size, offset: 0, unread_only: false)
+        Forum.list_notifications(user.id, limit: LiveHelpers.page_size(), offset: 0, unread_only: false)
       end
 
     {:noreply,
      socket
      |> assign(:unread_only, unread_only)
      |> assign(:page, 0)
-     |> assign(:has_more, length(notifications) == @page_size)
+     |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
      |> stream(:notifications, serialize_notifications(notifications), reset: true)}
   end
 
@@ -57,11 +56,11 @@ defmodule UrielmWeb.NotificationsLive do
     if not has_more do
       {:noreply, socket}
     else
-      offset = (page + 1) * @page_size
+      offset = (page + 1) * LiveHelpers.page_size()
 
       notifications =
         Forum.list_notifications(user.id,
-          limit: @page_size,
+          limit: LiveHelpers.page_size(),
           offset: offset,
           unread_only: unread_only
         )
@@ -69,21 +68,29 @@ defmodule UrielmWeb.NotificationsLive do
       {:noreply,
        socket
        |> assign(:page, page + 1)
-       |> assign(:has_more, length(notifications) == @page_size)
+       |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
        |> stream(:notifications, serialize_notifications(notifications))}
     end
   end
 
   @impl true
   def handle_event("mark_as_read", %{"notification_id" => notif_id}, socket) do
-    %{current_user: user} = socket.assigns
+    %{current_user: user, unread_only: unread_only} = socket.assigns
 
     case Forum.mark_notification_as_read(notif_id) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> assign(:unread_count, Forum.count_unread_notifications(user.id))
-         |> stream_delete(:notifications, %{id: notif_id})}
+      {:ok, updated_notif} ->
+        socket =
+          socket
+          |> assign(:unread_count, Forum.count_unread_notifications(user.id))
+
+        socket =
+          if unread_only do
+            stream_delete(socket, :notifications, %{id: notif_id})
+          else
+            stream_insert(socket, :notifications, serialize_notification(updated_notif))
+          end
+
+        {:noreply, socket}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to mark as read")}
@@ -110,7 +117,7 @@ defmodule UrielmWeb.NotificationsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_page="notifications" socket={@socket}>
       <div class="min-h-screen bg-base-100">
         <div class="container mx-auto px-4 py-8 max-w-3xl">
           <div class="mb-8">
@@ -238,23 +245,25 @@ defmodule UrielmWeb.NotificationsLive do
   end
 
   defp serialize_notifications(notifications) do
-    Enum.map(notifications, fn notif ->
-      %{
-        id: to_string(notif.id),
-        subject_type: notif.subject_type,
-        subject_id: to_string(notif.subject_id),
-        message: notif.message,
-        read_at: notif.read_at,
-        thread_id: notif.thread_id && to_string(notif.thread_id),
-        actor:
-          notif.actor &&
-            %{
-              id: notif.actor.id,
-              username: notif.actor.username
-            },
-        inserted_at: notif.inserted_at
-      }
-    end)
+    Enum.map(notifications, &serialize_notification/1)
+  end
+
+  defp serialize_notification(notif) do
+    %{
+      id: to_string(notif.id),
+      subject_type: notif.subject_type,
+      subject_id: to_string(notif.subject_id),
+      message: notif.message,
+      read_at: notif.read_at,
+      thread_id: notif.thread_id && to_string(notif.thread_id),
+      actor:
+        notif.actor &&
+          %{
+            id: notif.actor.id,
+            username: notif.actor.username
+          },
+      inserted_at: notif.inserted_at
+    }
   end
 
   defp get_notification_label(subject_type) do
