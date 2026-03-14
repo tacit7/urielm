@@ -25,15 +25,17 @@ defmodule UrielmWeb.PromptLive do
     {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
     user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
 
+    user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
+
     {:ok,
      socket
      |> assign(:page_title, prompt.title)
      |> assign(:prompt, prompt)
-     |> assign(:comment_changeset, Content.change_comment(%Comment{}))
      |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
      |> assign(:upvotes, upvotes)
      |> assign(:downvotes, downvotes)
-     |> assign(:user_vote, user_vote && user_vote.value)}
+     |> assign(:user_vote, user_vote && user_vote.value)
+     |> assign(:user_saved, user_saved)}
   end
 
   @impl true
@@ -128,20 +130,6 @@ defmodule UrielmWeb.PromptLive do
     end
   end
 
-  # Keep toggle_like for backwards compatibility
-  @impl true
-  def handle_event("toggle_like", %{"id" => _id}, socket) do
-    %{current_user: user, prompt: prompt} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to like prompts")}
-
-      user ->
-        handle_toggle_like(user, prompt.id, socket)
-    end
-  end
-
   @impl true
   def handle_event("toggle_save", %{"id" => _id}, socket) do
     %{current_user: user, prompt: prompt} = socket.assigns
@@ -155,23 +143,16 @@ defmodule UrielmWeb.PromptLive do
     end
   end
 
-  # Toggle like and save handlers
-  defp handle_toggle_like(user, prompt_id, socket) do
-    case Content.toggle_like(user.id, prompt_id) do
-      {:ok, _} ->
-        updated_prompt = Content.get_prompt_with_comments(prompt_id)
-        {:noreply, assign(socket, :prompt, updated_prompt)}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to like prompt")}
-    end
-  end
-
   defp handle_toggle_save(user, prompt_id, socket) do
     case Content.toggle_save(user.id, prompt_id) do
       {:ok, _} ->
         updated_prompt = Content.get_prompt_with_comments(prompt_id)
-        {:noreply, assign(socket, :prompt, updated_prompt)}
+        user_saved = Content.user_saved_prompt?(user.id, prompt_id)
+
+        {:noreply,
+         socket
+         |> assign(:prompt, updated_prompt)
+         |> assign(:user_saved, user_saved)}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to save prompt")}
@@ -221,8 +202,7 @@ defmodule UrielmWeb.PromptLive do
                     downvotes: @downvotes,
                     savesCount: @prompt.saves_count,
                     userVote: @user_vote,
-                    userSaved:
-                      @current_user && Content.user_saved_prompt?(@current_user.id, @prompt.id),
+                    userSaved: @user_saved,
                     promptId: to_string(@prompt.id)
                   }
                 }
@@ -235,21 +215,7 @@ defmodule UrielmWeb.PromptLive do
                   class="flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors"
                   title="Copy to clipboard"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
-                    </path>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                  </svg>
+                  <.um_icon name="hero-clipboard-document" class="w-5 h-5" />
                 </button>
               </.svelte>
             </div>
