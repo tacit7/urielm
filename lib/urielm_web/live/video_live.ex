@@ -569,44 +569,15 @@ defmodule UrielmWeb.VideoLive do
     </div>
 
     <!-- Report Comment Modal -->
-    <dialog id="report_comment_modal" class="modal">
-      <div class="modal-box bg-base-200">
-        <form method="dialog">
-          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-        </form>
-        <h3 class="font-bold text-lg mb-4">Report Comment</h3>
-        <form phx-submit="report_comment" class="space-y-4">
-          <input type="hidden" name="comment_id" value={@reporting_comment_id} />
-          <div>
-            <label class="label"><span class="label-text">Reason</span></label>
-            <select name="reason" class="select select-bordered w-full" required>
-              <option value="">Select a reason</option>
-              <option value="spam">Spam</option>
-              <option value="abuse">Abuse</option>
-              <option value="offensive">Offensive</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label class="label"><span class="label-text">Description</span></label>
-            <textarea
-              name="description"
-              placeholder="Explain why you're reporting this comment..."
-              class="textarea textarea-bordered w-full min-h-24"
-              required
-              minlength="10"
-            ></textarea>
-          </div>
-          <div class="modal-action">
-            <button type="button" class="btn btn-ghost" onclick="document.getElementById('report_comment_modal').close()">
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-error">Submit Report</button>
-          </div>
-        </form>
-      </div>
-      <form method="dialog" class="modal-backdrop"><button>close</button></form>
-    </dialog>
+    <.report_modal
+      id="report_comment_modal"
+      title="Report Comment"
+      form_event="report_comment"
+      comment_id={@reporting_comment_id}
+      submit_disabled={is_nil(@reporting_comment_id)}
+      description_label="Description"
+      description_placeholder="Explain why you're reporting this comment..."
+    />
     """
   end
 
@@ -928,48 +899,15 @@ defmodule UrielmWeb.VideoLive do
       </div>
       
     <!-- Report Comment Modal -->
-      <dialog id="report_comment_modal" class="modal">
-        <div class="modal-box bg-base-200">
-          <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-          </form>
-          <h3 class="font-bold text-lg mb-4">Report Comment</h3>
-          <form phx-submit="report_comment" class="space-y-4">
-            <input type="hidden" name="comment_id" value={@reporting_comment_id} />
-            <div>
-              <label class="label"><span class="label-text">Reason</span></label>
-              <select name="reason" class="select select-bordered w-full" required>
-                <option value="">Select a reason</option>
-                <option value="spam">Spam</option>
-                <option value="abuse">Abuse</option>
-                <option value="offensive">Offensive</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label class="label"><span class="label-text">Description</span></label>
-              <textarea
-                name="description"
-                placeholder="Explain why you're reporting this comment..."
-                class="textarea textarea-bordered w-full min-h-24"
-                required
-                minlength="10"
-              ></textarea>
-            </div>
-            <div class="modal-action">
-              <button
-                type="button"
-                class="btn btn-ghost"
-                onclick="document.getElementById('report_comment_modal').close()"
-              >
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-error">Submit Report</button>
-            </div>
-          </form>
-        </div>
-        <form method="dialog" class="modal-backdrop"><button>close</button></form>
-      </dialog>
+      <.report_modal
+        id="report_comment_modal"
+        title="Report Comment"
+        form_event="report_comment"
+        comment_id={@reporting_comment_id}
+        submit_disabled={is_nil(@reporting_comment_id)}
+        description_label="Description"
+        description_placeholder="Explain why you're reporting this comment..."
+      />
     </div>
     """
   end

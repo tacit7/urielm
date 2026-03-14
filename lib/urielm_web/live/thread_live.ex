@@ -776,134 +776,31 @@ defmodule UrielmWeb.ThreadLive do
       </div>
       
     <!-- Report Modal -->
-      <dialog id="report_thread_modal" data-testid="report-modal" class="modal">
-        <div class="modal-box bg-base-300">
-          <form method="dialog">
-            <button
-              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              aria-label="Close"
-            >
-              <.um_icon name="close" class="w-4 h-4" />
-            </button>
-          </form>
-          <h3 class="font-bold text-lg">Report this thread</h3>
-          <p class="py-4 text-sm text-base-content/60">Help us keep the community safe</p>
-
-          <form phx-submit="report_thread" data-testid="report-form" class="space-y-4">
-            <div>
-              <label class="label">
-                <span class="label-text">Reason</span>
-              </label>
-              <select
-                name="reason"
-                required
-                data-testid="report-reason"
-                class="select select-bordered w-full"
-              >
-                <option disabled selected>Choose a reason</option>
-                <option value="spam">Spam</option>
-                <option value="abuse">Abuse</option>
-                <option value="offensive">Offensive Content</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label">
-                <span class="label-text">Description (required)</span>
-              </label>
-              <textarea
-                name="description"
-                required
-                minlength="10"
-                maxlength="5000"
-                placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
-                data-testid="report-description"
-                class="textarea textarea-bordered w-full h-24"
-              ></textarea>
-              <p class="text-xs text-base-content/50 mt-1">
-                Minimum 10 characters • Maximum 5000 characters
-              </p>
-            </div>
-
-            <div class="modal-action">
-              <form method="dialog">
-                <button class="btn">Cancel</button>
-              </form>
-              <button type="submit" data-testid="report-submit" class="btn btn-error">
-                Submit Report
-              </button>
-            </div>
-          </form>
-        </div>
-        <form method="dialog" class="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <.report_modal
+        id="report_thread_modal"
+        title="Report this thread"
+        subtitle="Help us keep the community safe"
+        form_event="report_thread"
+        form_testid="report-form"
+        description_placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
+        cancel_class="btn"
+        bg_class="bg-base-300"
+        data-testid="report-modal"
+      />
       
     <!-- Comment Report Modal (Single Reusable) -->
-      <dialog id="report_comment_modal" data-testid="comment-report-modal" class="modal">
-        <div class="modal-box bg-base-300">
-          <form method="dialog">
-            <button
-              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-              aria-label="Close"
-            >
-              <.um_icon name="close" class="w-4 h-4" />
-            </button>
-          </form>
-          <h3 class="font-bold text-lg mb-4">Report Comment</h3>
-          <form id="report-comment-form" phx-submit="report_comment" class="space-y-4">
-            <input type="hidden" name="comment_id" value={@reporting_comment_id} />
-
-            <div>
-              <label class="label">
-                <span class="label-text">Reason</span>
-              </label>
-              <select name="reason" class="select select-bordered w-full" required>
-                <option value="">Select a reason</option>
-                <option value="spam">Spam</option>
-                <option value="abuse">Abuse</option>
-                <option value="offensive">Offensive</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="label">
-                <span class="label-text">Description (required)</span>
-              </label>
-              <textarea
-                name="description"
-                placeholder="Explain why you're reporting this comment..."
-                class="textarea textarea-bordered w-full min-h-24"
-                required
-                minlength="10"
-                maxlength="5000"
-              ></textarea>
-              <p class="text-xs text-base-content/60 mt-1">
-                Minimum 10 characters • Maximum 5000 characters
-              </p>
-            </div>
-
-            <div class="modal-action">
-              <form method="dialog">
-                <button class="btn btn-ghost">Cancel</button>
-              </form>
-              <button
-                type="submit"
-                class="btn btn-warning"
-                disabled={is_nil(@reporting_comment_id)}
-              >
-                Submit Report
-              </button>
-            </div>
-          </form>
-        </div>
-        <form method="dialog" class="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+      <.report_modal
+        id="report_comment_modal"
+        title="Report Comment"
+        form_event="report_comment"
+        form_id="report-comment-form"
+        comment_id={@reporting_comment_id}
+        submit_disabled={is_nil(@reporting_comment_id)}
+        submit_class="btn btn-warning"
+        description_placeholder="Explain why you're reporting this comment..."
+        bg_class="bg-base-300"
+        data-testid="comment-report-modal"
+      />
     </div>
     """
   end

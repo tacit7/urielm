@@ -90,6 +90,8 @@ defmodule UrielmWeb do
       import UrielmWeb.CoreComponents
       # Project icon component (function component)
       import UrielmWeb.Components.UMIcon, only: [um_icon: 1]
+      # Shared report modal component
+      import UrielmWeb.Components.ReportModal, only: [report_modal: 1]
       # LiveSvelte integration
       import LiveSvelte
 
