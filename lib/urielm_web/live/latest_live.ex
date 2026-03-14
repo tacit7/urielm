@@ -5,8 +5,6 @@ defmodule UrielmWeb.LatestLive do
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
 
-  @page_size 30
-
   @impl true
   def mount(params, _session, socket) do
     categories = Forum.list_categories_with_boards()
@@ -16,7 +14,7 @@ defmodule UrielmWeb.LatestLive do
 
     flop_params = %{
       page: page,
-      page_size: @page_size,
+      page_size: LiveHelpers.page_size(),
       order_by: [:updated_at, :id],
       order_directions: [:desc, :desc]
     }

@@ -5,8 +5,6 @@ defmodule UrielmWeb.SearchLive do
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
 
-  @page_size 20
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
@@ -33,7 +31,7 @@ defmodule UrielmWeb.SearchLive do
     socket =
       if String.length(String.trim(query)) > 0 do
         {:ok, {results, meta}} =
-          Forum.paginate_search_threads(query, %{page: page, page_size: @page_size})
+          Forum.paginate_search_threads(query, %{page: page, page_size: LiveHelpers.page_size()})
 
         socket
         |> assign(:query, query)

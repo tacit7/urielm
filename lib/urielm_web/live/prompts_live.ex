@@ -3,8 +3,7 @@ defmodule UrielmWeb.PromptsLive do
   use LiveSvelte.Components
 
   alias Urielm.Content
-
-  @page_size 20
+  alias UrielmWeb.LiveHelpers
 
   @impl true
   def mount(params, session, socket) do
@@ -47,7 +46,7 @@ defmodule UrielmWeb.PromptsLive do
      |> assign(:current_filter, initial_filter)
      |> assign(:categories, categories)
      |> assign(:page, 1)
-     |> assign(:has_more, length(prompts) == @page_size)
+     |> assign(:has_more, length(prompts) == LiveHelpers.page_size())
      |> assign(:selected_prompt, nil)
      |> stream(:prompts, serialize_prompts(prompts), reset: true)}
   end
@@ -63,7 +62,7 @@ defmodule UrielmWeb.PromptsLive do
      socket
      |> assign(:search_query, query)
      |> assign(:page, 1)
-     |> assign(:has_more, length(prompts) == @page_size)
+     |> assign(:has_more, length(prompts) == LiveHelpers.page_size())
      |> stream(:prompts, serialize_prompts(prompts), reset: true)}
   end
 
@@ -81,7 +80,7 @@ defmodule UrielmWeb.PromptsLive do
   def handle_event("load_more", _params, socket) do
     %{current_filter: filter, search_query: query, page: page} = socket.assigns
 
-    offset = page * @page_size
+    offset = page * LiveHelpers.page_size()
     opts = build_search_opts(filter, offset)
 
     new_prompts = Content.search_prompts(query, opts)
@@ -89,7 +88,7 @@ defmodule UrielmWeb.PromptsLive do
     {:noreply,
      socket
      |> assign(:page, page + 1)
-     |> assign(:has_more, length(new_prompts) == @page_size)
+     |> assign(:has_more, length(new_prompts) == LiveHelpers.page_size())
      |> stream(:prompts, serialize_prompts(new_prompts))}
   end
 
@@ -100,26 +99,7 @@ defmodule UrielmWeb.PromptsLive do
       |> String.to_integer()
       |> Content.get_prompt!()
 
-    tag_names = Enum.map(prompt.tag_records, & &1.name)
-
-    serialized = %{
-      id: prompt.id,
-      title: prompt.title,
-      url: prompt.url,
-      prompt: prompt.prompt,
-      category: prompt.category,
-      tags: tag_names,
-      likes_count: prompt.likes_count,
-      saves_count: prompt.saves_count,
-      user_liked:
-        socket.assigns.current_user &&
-          Content.user_liked_prompt?(socket.assigns.current_user.id, prompt.id),
-      user_saved:
-        socket.assigns.current_user &&
-          Content.user_saved_prompt?(socket.assigns.current_user.id, prompt.id)
-    }
-
-    {:noreply, assign(socket, :selected_prompt, serialized)}
+    {:noreply, assign(socket, :selected_prompt, serialize_prompt(prompt, socket.assigns.current_user))}
   end
 
   @impl true
@@ -147,20 +127,7 @@ defmodule UrielmWeb.PromptsLive do
                   prompt_id
                   |> Content.get_prompt!()
 
-                tag_names = Enum.map(prompt.tag_records, & &1.name)
-
-                serialized = %{
-                  id: prompt.id,
-                  title: prompt.title,
-                  url: prompt.url,
-                  prompt: prompt.prompt,
-                  category: prompt.category,
-                  tags: tag_names,
-                  likes_count: prompt.likes_count,
-                  user_liked: Content.user_liked_prompt?(user.id, prompt.id)
-                }
-
-                assign(socket, :selected_prompt, serialized)
+                assign(socket, :selected_prompt, serialize_prompt(prompt, user))
               else
                 socket
               end
@@ -193,20 +160,7 @@ defmodule UrielmWeb.PromptsLive do
                   prompt_id
                   |> Content.get_prompt!()
 
-                tag_names = Enum.map(prompt.tag_records, & &1.name)
-
-                serialized = %{
-                  id: prompt.id,
-                  title: prompt.title,
-                  url: prompt.url,
-                  prompt: prompt.prompt,
-                  category: prompt.category,
-                  tags: tag_names,
-                  saves_count: prompt.saves_count,
-                  user_saved: Content.user_saved_prompt?(user.id, prompt.id)
-                }
-
-                assign(socket, :selected_prompt, serialized)
+                assign(socket, :selected_prompt, serialize_prompt(prompt, user))
               else
                 socket
               end
@@ -229,12 +183,12 @@ defmodule UrielmWeb.PromptsLive do
      socket
      |> assign(:current_filter, category)
      |> assign(:page, 1)
-     |> assign(:has_more, length(prompts) == @page_size)
+     |> assign(:has_more, length(prompts) == LiveHelpers.page_size())
      |> stream(:prompts, serialize_prompts(prompts), reset: true)}
   end
 
   defp build_search_opts(category, offset) do
-    opts = %{limit: @page_size, offset: offset}
+    opts = %{limit: LiveHelpers.page_size(), offset: offset}
 
     if category == "all" do
       opts
@@ -427,6 +381,23 @@ defmodule UrielmWeb.PromptsLive do
       </div>
     </div>
     """
+  end
+
+  defp serialize_prompt(prompt, user) do
+    tag_names = Enum.map(prompt.tag_records, & &1.name)
+
+    %{
+      id: prompt.id,
+      title: prompt.title,
+      url: prompt.url,
+      prompt: prompt.prompt,
+      category: prompt.category,
+      tags: tag_names,
+      likes_count: prompt.likes_count,
+      saves_count: prompt.saves_count,
+      user_liked: user && Content.user_liked_prompt?(user.id, prompt.id),
+      user_saved: user && Content.user_saved_prompt?(user.id, prompt.id)
+    }
   end
 
   defp serialize_prompts(prompts) do

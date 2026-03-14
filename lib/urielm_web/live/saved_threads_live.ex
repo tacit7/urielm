@@ -5,8 +5,6 @@ defmodule UrielmWeb.SavedThreadsLive do
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
 
-  @page_size 20
-
   @impl true
   def mount(_params, _session, socket) do
     %{current_user: user} = socket.assigns
@@ -17,7 +15,7 @@ defmodule UrielmWeb.SavedThreadsLive do
 
       user ->
         {:ok, {saved_threads, meta}} =
-          Forum.paginate_saved_threads(user.id, %{page: 1, page_size: @page_size})
+          Forum.paginate_saved_threads(user.id, %{page: 1, page_size: LiveHelpers.page_size()})
 
         {:ok,
          socket
@@ -34,7 +32,7 @@ defmodule UrielmWeb.SavedThreadsLive do
     page = Map.get(params, "page", "1") |> String.to_integer()
 
     {:ok, {threads, meta}} =
-      Forum.paginate_saved_threads(user.id, %{page: page, page_size: @page_size})
+      Forum.paginate_saved_threads(user.id, %{page: page, page_size: LiveHelpers.page_size()})
 
     {:noreply,
      socket

@@ -5,8 +5,6 @@ defmodule UrielmWeb.BoardLive do
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
 
-  @page_size 20
-
   @impl true
   def mount(params, _session, socket) do
     slug = params["board_slug"]
@@ -38,27 +36,27 @@ defmodule UrielmWeb.BoardLive do
         "unread" when not is_nil(user) ->
           case Forum.paginate_unread_threads(user.id, board.id, %{
                  page: page,
-                 page_size: @page_size
+                 page_size: LiveHelpers.page_size()
                }) do
             {:ok, {data, meta}} -> {data, meta}
             {:error, _meta} -> {[], nil}
           end
 
         "new" ->
-          case Forum.paginate_new_threads(board.id, %{page: page, page_size: @page_size}) do
+          case Forum.paginate_new_threads(board.id, %{page: page, page_size: LiveHelpers.page_size()}) do
             {:ok, {data, meta}} -> {data, meta}
             {:error, _meta} -> {[], nil}
           end
 
         "solved" ->
-          flop_params = %{page: page, page_size: @page_size, order_by: [:updated_at], order_directions: [:desc]}
+          flop_params = %{page: page, page_size: LiveHelpers.page_size(), order_by: [:updated_at], order_directions: [:desc]}
           case Forum.paginate_threads(board.id, flop_params, solved: true) do
             {:ok, {data, meta}} -> {data, meta}
             {:error, _meta} -> {[], nil}
           end
 
         "unsolved" ->
-          flop_params = %{page: page, page_size: @page_size, order_by: [:updated_at], order_directions: [:desc]}
+          flop_params = %{page: page, page_size: LiveHelpers.page_size(), order_by: [:updated_at], order_directions: [:desc]}
           case Forum.paginate_threads(board.id, flop_params, solved: false) do
             {:ok, {data, meta}} -> {data, meta}
             {:error, _meta} -> {[], nil}
@@ -80,7 +78,7 @@ defmodule UrielmWeb.BoardLive do
                 %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
             end
 
-          flop_params = Map.merge(%{page: page, page_size: @page_size}, flop_order)
+          flop_params = Map.merge(%{page: page, page_size: LiveHelpers.page_size()}, flop_order)
 
           case Forum.paginate_threads(board.id, flop_params) do
             {:ok, {data, meta}} -> {data, meta}
