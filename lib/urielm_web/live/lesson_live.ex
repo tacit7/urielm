@@ -37,6 +37,9 @@ defmodule UrielmWeb.LessonLive do
             lessons = Learning.list_lessons(course.id)
             changeset = Learning.change_lesson_comment(%LessonComment{})
             nav_items = build_nav_items(lesson, course)
+            current_index = Enum.find_index(lessons, &(&1.id == lesson.id))
+            prev_lesson = if current_index && current_index > 0, do: Enum.at(lessons, current_index - 1), else: nil
+            next_lesson = if current_index, do: Enum.at(lessons, current_index + 1), else: nil
 
             # Load vote data
             %{current_user: user} = socket.assigns
@@ -57,7 +60,9 @@ defmodule UrielmWeb.LessonLive do
              |> assign(:nav_items, nav_items)
              |> assign(:upvotes, upvotes)
              |> assign(:downvotes, downvotes)
-             |> assign(:user_vote, user_vote && user_vote.value)}
+             |> assign(:user_vote, user_vote && user_vote.value)
+             |> assign(:prev_lesson, prev_lesson)
+             |> assign(:next_lesson, next_lesson)}
         end
     end
   end
@@ -112,19 +117,6 @@ defmodule UrielmWeb.LessonLive do
   @impl true
   def handle_event("vote", %{"target_type" => target_type, "target_id" => id, "value" => value}, socket) do
     LiveHelpers.handle_vote(target_type, id, value, socket)
-  end
-
-  @impl true
-  def handle_event("comment_focus", _params, socket) do
-    user = socket.assigns[:current_user]
-
-    if !user do
-      {:noreply,
-       socket
-       |> put_flash(:info, "Sign in to comment on this lesson.")}
-    else
-      {:noreply, socket}
-    end
   end
 
   @impl true
@@ -185,7 +177,35 @@ defmodule UrielmWeb.LessonLive do
             class="w-full h-full"
           />
         </div>
-        
+
+    <!-- Prev / Next navigation -->
+        <div class="max-w-[1800px] mx-auto w-full px-4 py-3 flex items-center justify-between border-b border-base-300">
+          <div class="flex-1">
+            <.link
+              :if={@prev_lesson}
+              navigate={~p"/courses/#{@course.slug}/lessons/#{@prev_lesson.slug}"}
+              class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span class="line-clamp-1 max-w-[180px] md:max-w-xs">{@prev_lesson.title}</span>
+            </.link>
+          </div>
+          <div class="flex-1 flex justify-end">
+            <.link
+              :if={@next_lesson}
+              navigate={~p"/courses/#{@course.slug}/lessons/#{@next_lesson.slug}"}
+              class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors"
+            >
+              <span class="line-clamp-1 max-w-[180px] md:max-w-xs text-right">{@next_lesson.title}</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </.link>
+          </div>
+        </div>
+
     <!-- Main Content -->
         <div class="max-w-[1800px] mx-auto w-full px-4 py-6">
           <!-- Mobile Sticky Header -->
@@ -269,10 +289,6 @@ defmodule UrielmWeb.LessonLive do
                 </div>
               </div>
 
-              <div :if={@lesson.notes_md} class="bg-base-200 rounded-xl p-4">
-                <p class="text-sm text-base-content/80 whitespace-pre-wrap">{@lesson.notes_md}</p>
-              </div>
-
               <div :if={@course.description} class="mt-4 bg-base-200 rounded-xl p-4">
                 <h3 class="font-semibold text-base-content mb-2">About this course</h3>
                 <p class="text-sm text-base-content/70">{@course.description}</p>
@@ -282,8 +298,8 @@ defmodule UrielmWeb.LessonLive do
     <!-- NOTES TAB -->
             <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "notes")]}>
               <h3 class="text-lg font-semibold text-base-content">Lesson notes</h3>
-              <div :if={@lesson.notes_md} class="bg-base-200 rounded-xl p-4">
-                <p class="text-sm text-base-content/80 whitespace-pre-wrap">{@lesson.notes_md}</p>
+              <div :if={@lesson.notes_md} class="prose prose-sm max-w-none">
+                <.svelte name="MarkdownRenderer" props={%{content: @lesson.notes_md}} socket={@socket} />
               </div>
               <div :if={!@lesson.notes_md} class="text-sm text-base-content/60 text-center py-8">
                 No notes available for this lesson.
@@ -348,26 +364,27 @@ defmodule UrielmWeb.LessonLive do
                 <% end %>
               </ul>
 
-              <.form
-                for={@comment_form}
-                id="lesson-comment-form"
-                phx-submit="save_comment"
-                class="mt-6"
-              >
-                <div class="space-y-2">
-                  <textarea
-                    name="comment[body]"
-                    placeholder="Add a comment..."
-                    phx-focus="comment_focus"
-                    class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    rows="3"
-                  />
-                  <div class="flex justify-end gap-2">
-                    <button type="reset" class="btn btn-ghost btn-sm">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+              <%= if @current_user do %>
+                <.form for={@comment_form} id="lesson-comment-form" phx-submit="save_comment" class="mt-6">
+                  <div class="space-y-2">
+                    <textarea
+                      name="comment[body]"
+                      placeholder="Add a comment..."
+                      class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                      rows="3"
+                    />
+                    <div class="flex justify-end gap-2">
+                      <button type="reset" class="btn btn-ghost btn-sm">Cancel</button>
+                      <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+                    </div>
                   </div>
+                </.form>
+              <% else %>
+                <div class="mt-6 bg-base-200 rounded-xl p-4 text-center">
+                  <p class="text-sm text-base-content/60 mb-3">Sign in to join the discussion</p>
+                  <.link navigate={~p"/signin"} class="btn btn-primary btn-sm">Sign in</.link>
                 </div>
-              </.form>
+              <% end %>
             </div>
           </div>
         </div>
@@ -503,10 +520,12 @@ defmodule UrielmWeb.LessonLive do
               >
                 <div class="relative flex-shrink-0 w-32 aspect-video bg-base-300 rounded overflow-hidden">
                   <img
+                    :if={course_lesson.youtube_video_id}
                     src={"https://i.ytimg.com/vi/#{course_lesson.youtube_video_id}/mqdefault.jpg"}
                     alt={course_lesson.title}
                     class="w-full h-full object-cover"
                   />
+                  <div :if={!course_lesson.youtube_video_id} class="w-full h-full bg-base-300" />
                   <div
                     :if={course_lesson.id == @lesson.id}
                     class="absolute inset-0 bg-base-content/20 flex items-center justify-center"

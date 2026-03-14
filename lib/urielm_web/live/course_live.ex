@@ -175,10 +175,12 @@ defmodule UrielmWeb.CourseLive do
       <!-- Thumbnail -->
       <div class="relative flex-shrink-0 w-28 md:w-36 aspect-video rounded-lg overflow-hidden bg-base-300">
         <img
+          :if={@lesson.youtube_video_id}
           src={"https://i.ytimg.com/vi/#{@lesson.youtube_video_id}/mqdefault.jpg"}
           alt={@lesson.title}
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
+        <div :if={!@lesson.youtube_video_id} class="w-full h-full bg-base-300" />
         <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <div class="w-8 h-8 rounded-full bg-base-100/90 flex items-center justify-center shadow-md">
             <svg class="w-3.5 h-3.5 text-base-content ml-0.5" fill="currentColor" viewBox="0 0 24 24">
@@ -194,7 +196,7 @@ defmodule UrielmWeb.CourseLive do
           {@lesson.title}
         </h3>
         <p :if={@lesson.notes_md} class="text-sm text-base-content/50 line-clamp-1 mt-1 leading-relaxed">
-          {@lesson.notes_md}
+          {String.replace(@lesson.notes_md, ~r/[#*_`\[\]>]/, "")}
         </p>
       </div>
 
