@@ -1,25 +1,22 @@
 defmodule UrielmWeb.Admin.UserManagementLive do
   use UrielmWeb, :live_view
 
+  import UrielmWeb.AdminComponents
+
   alias Urielm.Accounts
-  alias Urielm.Accounts.User
 
   @page_size 25
 
   @impl true
   def mount(_params, _session, socket) do
-    if socket.assigns.current_user && socket.assigns.current_user.is_admin do
-      {:ok,
-       socket
-       |> assign(:page_title, "User Management")
-       |> assign(:search, "")
-       |> assign(:status_filter, nil)
-       |> assign(:trust_filter, nil)
-       |> assign(:flop, default_flop())
-       |> load_users()}
-    else
-      {:ok, redirect(socket, to: "/")}
-    end
+    {:ok,
+     socket
+     |> assign(:page_title, "User Management")
+     |> assign(:search, "")
+     |> assign(:status_filter, nil)
+     |> assign(:trust_filter, nil)
+     |> assign(:flop, default_flop())
+     |> load_users()}
   end
 
   @impl true
@@ -323,13 +320,19 @@ defmodule UrielmWeb.Admin.UserManagementLive do
     %{default_flop() | page: page}
   end
 
-  defp toggle_sort(flop, field) do
-    field_atom = String.to_existing_atom(field)
+  @sortable_fields ~w(email trust_level inserted_at)
 
-    if flop[:order_by] == [field_atom] && flop[:order_directions] == [:asc] do
-      %{flop | order_by: [field_atom], order_directions: [:desc]}
+  defp toggle_sort(flop, field) do
+    if field not in @sortable_fields do
+      flop
     else
-      %{flop | order_by: [field_atom], order_directions: [:asc]}
+      field_atom = String.to_atom(field)
+
+      if flop[:order_by] == [field_atom] && flop[:order_directions] == [:asc] do
+        %{flop | order_by: [field_atom], order_directions: [:desc]}
+      else
+        %{flop | order_by: [field_atom], order_directions: [:asc]}
+      end
     end
   end
 end

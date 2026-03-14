@@ -6,22 +6,18 @@ defmodule UrielmWeb.Admin.UserDetailLive do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    if socket.assigns.current_user && socket.assigns.current_user.is_admin do
-      case Accounts.get_user(id) do
-        nil ->
-          {:ok, redirect(socket, to: "/admin/users")}
+    case Accounts.get_user(id) do
+      nil ->
+        {:ok, redirect(socket, to: "/admin/users")}
 
-        user ->
-          {:ok,
-           socket
-           |> assign(:page_title, "Manage #{user.username}")
-           |> assign(:user, user)
-           |> assign(:action, nil)
-           |> assign(:duration, "7d")
-           |> assign(:reason, "")}
-      end
-    else
-      {:ok, redirect(socket, to: "/")}
+      user ->
+        {:ok,
+         socket
+         |> assign(:page_title, "Manage #{user.username}")
+         |> assign(:user, user)
+         |> assign(:action, nil)
+         |> assign(:duration, "7d")
+         |> assign(:reason, "")}
     end
   end
 
@@ -265,7 +261,7 @@ defmodule UrielmWeb.Admin.UserDetailLive do
                       phx-click="set_trust_level"
                       phx-value-trust_level={level}
                       class={"btn btn-sm #{if @user.trust_level == level, do: "btn-primary", else: "btn-ghost"}"}
-                      disabled={@user.trust_level_locked && @user.trust_level == level}
+                      disabled={@user.trust_level_locked}
                     >
                       TL{level}
                     </button>

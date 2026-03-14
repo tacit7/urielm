@@ -6,18 +6,14 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if socket.assigns.current_user && socket.assigns.current_user.is_admin do
-      configs = TrustLevel.list_configs()
+    configs = TrustLevel.list_configs()
 
-      {:ok,
-       socket
-       |> assign(:page_title, "Trust Level Settings")
-       |> assign(:configs, configs)
-       |> assign(:editing, nil)
-       |> assign(:edit_form, nil)}
-    else
-      {:ok, redirect(socket, to: "/")}
-    end
+    {:ok,
+     socket
+     |> assign(:page_title, "Trust Level Settings")
+     |> assign(:configs, configs)
+     |> assign(:editing, nil)
+     |> assign(:edit_form, nil)}
   end
 
   @impl true

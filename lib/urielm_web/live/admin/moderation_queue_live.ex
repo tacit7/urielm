@@ -8,20 +8,16 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    if socket.assigns.current_user && socket.assigns.current_user.is_admin do
-      pending_count = Forum.count_pending_reports()
-      reports = Forum.list_reports(status: "pending", limit: @page_size, offset: 0)
+    pending_count = Forum.count_pending_reports()
+    reports = Forum.list_reports(status: "pending", limit: @page_size, offset: 0)
 
-      {:ok,
-       socket
-       |> assign(:page_title, "Moderation Queue")
-       |> assign(:reports, serialize_reports(reports))
-       |> assign(:pending_count, pending_count)
-       |> assign(:page, 0)
-       |> assign(:has_more, length(reports) == @page_size)}
-    else
-      {:ok, redirect(socket, to: "/")}
-    end
+    {:ok,
+     socket
+     |> assign(:page_title, "Moderation Queue")
+     |> assign(:reports, serialize_reports(reports))
+     |> assign(:pending_count, pending_count)
+     |> assign(:page, 0)
+     |> assign(:has_more, length(reports) == @page_size)}
   end
 
   @impl true
@@ -272,46 +268,33 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
 
   defp serialize_reports(reports) do
     Enum.map(reports, fn report ->
-      # Fetch target content (thread or comment) title
-      target_title =
+      {target_title, thread_id} =
         case report.target_type do
           "thread" ->
-            try do
-              # Fetch thread metadata only (no comments needed for moderation queue)
-              thread = Forum.get_thread!(report.target_id)
-              thread.title
-            rescue
-              Ecto.NoResultsError -> "Deleted thread"
-            end
+            thread =
+              try do
+                Forum.get_thread!(report.target_id)
+              rescue
+                Ecto.NoResultsError -> nil
+              end
+
+            title = if thread, do: thread.title, else: "Deleted thread"
+            {title, to_string(report.target_id)}
 
           "comment" ->
-            try do
-              comment = Forum.get_comment!(report.target_id)
-              String.slice(comment.body, 0, 80) <> "..."
-            rescue
-              Ecto.NoResultsError -> "Deleted comment"
-            end
+            comment =
+              try do
+                Forum.get_comment!(report.target_id)
+              rescue
+                Ecto.NoResultsError -> nil
+              end
+
+            target_title = if comment, do: String.slice(comment.body, 0, 80) <> "...", else: "Deleted comment"
+            thread_id = if comment, do: to_string(comment.thread_id), else: nil
+            {target_title, thread_id}
 
           _ ->
-            "Unknown"
-        end
-
-      # For comments, we need to fetch the thread to create a proper link
-      thread_id =
-        case report.target_type do
-          "thread" ->
-            to_string(report.target_id)
-
-          "comment" ->
-            try do
-              comment = Forum.get_comment!(report.target_id)
-              to_string(comment.thread_id)
-            rescue
-              Ecto.NoResultsError -> nil
-            end
-
-          _ ->
-            nil
+            {"Unknown", nil}
         end
 
       %{
