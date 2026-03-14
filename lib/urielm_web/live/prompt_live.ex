@@ -165,7 +165,7 @@ defmodule UrielmWeb.PromptLive do
     <div class="min-h-screen bg-base-100 text-base-content pt-20">
       <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
-          <.link navigate={~p"/prompts"} class="link link-hover text-sm mb-4">
+          <.link navigate={~p"/prompts?#{%{category: @prompt.category}}"} class="link link-hover text-sm mb-4">
             ← Back to Prompts
           </.link>
 

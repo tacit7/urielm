@@ -57,6 +57,12 @@ defmodule UrielmWeb.PromptsLive do
   end
 
   @impl true
+  def handle_params(params, _url, socket) do
+    category = Map.get(params, "category", "all")
+    {:noreply, apply_filter(category, socket)}
+  end
+
+  @impl true
   def handle_event("search", %{"query" => query}, socket) do
     %{current_filter: filter} = socket.assigns
     opts = build_search_opts(filter, 0)
@@ -212,17 +218,29 @@ defmodule UrielmWeb.PromptsLive do
   end
 
   defp handle_filter_change(category, socket) do
-    %{search_query: query} = socket.assigns
-    opts = build_search_opts(category, 0)
-
-    prompts = Content.search_prompts(query, opts)
+    patch_path =
+      if category == "all" do
+        ~p"/prompts"
+      else
+        ~p"/prompts?#{%{category: category}}"
+      end
 
     {:noreply,
      socket
-     |> assign(:current_filter, category)
-     |> assign(:page, 1)
-     |> assign(:has_more, length(prompts) == @page_size)
-     |> stream(:prompts, serialize_prompts(prompts), reset: true)}
+     |> apply_filter(category)
+     |> push_patch(to: patch_path)}
+  end
+
+  defp apply_filter(category, socket) do
+    %{search_query: query} = socket.assigns
+    opts = build_search_opts(category, 0)
+    prompts = Content.search_prompts(query, opts)
+
+    socket
+    |> assign(:current_filter, category)
+    |> assign(:page, 1)
+    |> assign(:has_more, length(prompts) == @page_size)
+    |> stream(:prompts, serialize_prompts(prompts), reset: true)
   end
 
   defp build_search_opts(category, offset) do
