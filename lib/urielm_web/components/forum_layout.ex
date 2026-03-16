@@ -4,7 +4,7 @@ defmodule UrielmWeb.Components.ForumLayout do
   import UrielmWeb.Layouts, only: [flash_group: 1]
 
   attr :flash, :map, default: %{}, doc: "the map of flash messages"
-  attr :current_user, :map, default: nil, doc: "the current user"
+  attr :current_user, :any, default: nil, doc: "the current user"
   attr :categories, :list, default: [], doc: "list of forum categories with boards"
   attr :current_path, :string, default: "/forum", doc: "current request path for active state"
   attr :current_board, :string, default: nil, doc: "current board slug for active state"
@@ -14,8 +14,8 @@ defmodule UrielmWeb.Components.ForumLayout do
     ~H"""
     <div class="drawer lg:drawer-open">
       <input id="forum-drawer" type="checkbox" class="drawer-toggle" />
-
-      <!-- Main Content -->
+      
+    <!-- Main Content -->
       <div class="drawer-content flex flex-col min-h-screen bg-base-100">
         <!-- Mobile navbar with hamburger -->
         <header class="sticky top-0 z-30 flex items-center gap-2 px-4 py-3 bg-base-100 border-b border-base-300 lg:hidden">
@@ -30,18 +30,25 @@ defmodule UrielmWeb.Components.ForumLayout do
           </label>
           <a href="/forum" class="font-semibold text-base-content">Forum</a>
         </header>
-
-        <!-- Page content -->
+        
+    <!-- Page content -->
         <main class="flex-1 overflow-y-auto">
           <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6 lg:py-8">
             {render_slot(@inner_block)}
           </div>
         </main>
       </div>
-
-      <!-- Sidebar -->
+      
+    <!-- Sidebar -->
       <aside class="drawer-side z-40">
-        <label for="forum-drawer" class="drawer-overlay" aria-label="Close sidebar" role="button" tabindex="-1"></label>
+        <label
+          for="forum-drawer"
+          class="drawer-overlay"
+          aria-label="Close sidebar"
+          role="button"
+          tabindex="-1"
+        >
+        </label>
         <nav class="w-64 min-h-screen bg-base-200 border-r border-base-300">
           <div class="p-4">
             <!-- Logo/Home -->
@@ -51,16 +58,36 @@ defmodule UrielmWeb.Components.ForumLayout do
               </div>
               <span class="font-semibold text-base-content">Urielm</span>
             </a>
-
-            <!-- Main Navigation -->
+            
+    <!-- Main Navigation -->
             <div class="space-y-1 mb-8">
-              <.nav_link href="/forum" icon="topics" label="Latest" active={@current_path in ["/forum", "/forum/latest"]} />
-              <.nav_link href="/forum/categories" icon="hero-squares-2x2" label="Categories" active={@current_path == "/forum/categories"} />
-              <.nav_link href="/saved" icon="bookmark" label="Saved" active={@current_path == "/saved"} />
-              <.nav_link href="/notifications" icon="bell" label="Notifications" active={@current_path == "/notifications"} />
+              <.nav_link
+                href="/forum"
+                icon="topics"
+                label="Latest"
+                active={@current_path in ["/forum", "/forum/latest"]}
+              />
+              <.nav_link
+                href="/forum/categories"
+                icon="hero-squares-2x2"
+                label="Categories"
+                active={@current_path == "/forum/categories"}
+              />
+              <.nav_link
+                href="/saved"
+                icon="bookmark"
+                label="Saved"
+                active={@current_path == "/saved"}
+              />
+              <.nav_link
+                href="/notifications"
+                icon="bell"
+                label="Notifications"
+                active={@current_path == "/notifications"}
+              />
             </div>
-
-            <!-- Categories -->
+            
+    <!-- Categories -->
             <div class="mb-6">
               <h3 class="text-xs font-bold text-base-content/60 uppercase tracking-wider px-2 mb-3">
                 Categories
@@ -71,11 +98,25 @@ defmodule UrielmWeb.Components.ForumLayout do
                 <% end %>
               </div>
             </div>
-
-            <!-- More Section -->
+            
+    <!-- More Section -->
             <div class="space-y-1 pt-6 border-t border-base-300">
-              <.nav_link href="#" icon="users" label="Users" active={false} />
-              <.nav_link href="#" icon="info" label="About" active={false} />
+              <.nav_link
+                href="/forum/search"
+                icon="search"
+                label="Search"
+                active={@current_path == "/forum/search"}
+              />
+              <%= if @current_user do %>
+                <.nav_link
+                  href={"/u/#{@current_user.username}"}
+                  icon="user_circle"
+                  label={@current_user.username}
+                  active={false}
+                />
+              <% else %>
+                <.nav_link href="/auth/signin" icon="user_circle" label="Sign in" active={false} />
+              <% end %>
             </div>
           </div>
         </nav>
@@ -111,31 +152,17 @@ defmodule UrielmWeb.Components.ForumLayout do
     """
   end
 
-  @category_colors %{
-    "start-here" => "badge-primary",
-    "announcements" => "badge-secondary",
-    "qa" => "badge-accent",
-    "prompting" => "badge-info",
-    "building" => "badge-success",
-    "models-tools" => "badge-warning",
-    "show-and-tell" => "badge-neutral",
-    "feedback" => "badge-error",
-    "off-topic" => "badge-ghost"
-  }
-
   attr :category, :map, required: true
   attr :current_board, :string, default: nil
 
   def category_group(assigns) do
-    assigns = assign(assigns, :colors, @category_colors)
-
     ~H"""
     <div class="mb-2">
       <div class="px-3 py-1 text-xs font-semibold text-base-content/50 uppercase tracking-wide">
         {@category.name}
       </div>
       <%= for board <- @category.boards || [] do %>
-        <.board_link board={board} active={@current_board == board.slug} colors={@colors} />
+        <.board_link board={board} active={@current_board == board.slug} />
       <% end %>
     </div>
     """
@@ -143,11 +170,9 @@ defmodule UrielmWeb.Components.ForumLayout do
 
   attr :board, :map, required: true
   attr :active, :boolean, default: false
-  attr :colors, :map, required: true
 
   def board_link(assigns) do
-    badge_class = Map.get(assigns.colors, assigns.board.slug, "badge-neutral")
-    assigns = assign(assigns, :badge_class, badge_class)
+    assigns = assign(assigns, :badge_class, UrielmWeb.ForumColors.badge_class(assigns.board.slug))
 
     ~H"""
     <label for="forum-drawer" class="cursor-pointer lg:cursor-default">

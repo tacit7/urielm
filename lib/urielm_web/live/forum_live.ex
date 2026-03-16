@@ -4,19 +4,7 @@ defmodule UrielmWeb.ForumLive do
 
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
-
-  @board_colors %{
-    "start-here"     => "#1B4F8A",
-    "announcements"  => "#B03A2E",
-    "qa"             => "#1A7A5E",
-    "prompting"      => "#5B3A9E",
-    "building"       => "#2D6A4F",
-    "models-tools"   => "#8B4513",
-    "show-and-tell"  => "#962D4A",
-    "feedback"       => "#9A6B10",
-    "off-topic"      => "#4A5568",
-    "ai-development" => "#1A3A7A"
-  }
+  alias UrielmWeb.ForumColors
 
   @impl true
   def mount(_params, _session, socket) do
@@ -35,6 +23,7 @@ defmodule UrielmWeb.ForumLive do
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
       flash={@flash}
+      current_user={@current_user}
       current_path="/forum/categories"
     >
       <!-- Page header -->
@@ -52,16 +41,16 @@ defmodule UrielmWeb.ForumLive do
         </div>
         <div class="mt-4 h-px bg-base-content/10" />
       </div>
-
-      <!-- Empty state -->
+      
+    <!-- Empty state -->
       <div :if={@categories == []} class="flex flex-col items-center justify-center py-32">
         <p class="font-mono font-black text-8xl text-base-content/10 select-none mb-4">00</p>
         <p class="font-mono text-xs tracking-[0.3em] uppercase text-base-content/30">
           No categories yet
         </p>
       </div>
-
-      <!-- Categories -->
+      
+    <!-- Categories -->
       <div :if={@categories != []} class="space-y-8">
         <.category_section :for={category <- @categories} category={category} />
       </div>
@@ -81,8 +70,8 @@ defmodule UrielmWeb.ForumLive do
         </span>
         <div class="flex-1 h-px bg-base-content/8" />
       </div>
-
-      <!-- Discourse-style board table -->
+      
+    <!-- Discourse-style board table -->
       <div class="rounded-xl border border-base-300/60 overflow-hidden">
         <!-- Column headers -->
         <div class="hidden md:grid md:grid-cols-[1fr_220px_72px] bg-base-200/60 px-4 py-2 border-b border-base-300/40">
@@ -92,8 +81,8 @@ defmodule UrielmWeb.ForumLive do
             Topics
           </span>
         </div>
-
-        <!-- Board rows -->
+        
+    <!-- Board rows -->
         <div class="divide-y divide-base-300/40">
           <.board_row :for={board <- @category.boards} board={board} />
         </div>
@@ -105,10 +94,14 @@ defmodule UrielmWeb.ForumLive do
   attr :board, :map, required: true
 
   defp board_row(assigns) do
-    hex = Map.get(@board_colors, assigns.board.slug, "#4A5568")
+    hex = ForumColors.icon_color(assigns.board.slug)
 
     assigns =
-      assign(assigns, :icon_style, "background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%), #{hex};")
+      assign(
+        assigns,
+        :icon_style,
+        "background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%), #{hex};"
+      )
 
     ~H"""
     <div class="group grid grid-cols-1 md:grid-cols-[1fr_220px_72px] items-center px-4 py-4 hover:bg-base-200/40 transition-colors duration-150 gap-y-2 gap-x-4">
@@ -132,8 +125,8 @@ defmodule UrielmWeb.ForumLive do
           </p>
         </div>
       </a>
-
-      <!-- Latest thread -->
+      
+    <!-- Latest thread -->
       <div class="md:block min-w-0 pl-12 md:pl-0">
         <%= if @board.latest_thread_title do %>
           <a
@@ -149,9 +142,9 @@ defmodule UrielmWeb.ForumLive do
           <span class="font-mono text-xs text-base-content/20">—</span>
         <% end %>
       </div>
-
-      <!-- Topic count -->
-      <div class="hidden md:flex flex-col items-end justify-center">
+      
+    <!-- Topic count -->
+      <div class="flex flex-col items-end justify-center">
         <span class="font-mono text-sm text-base-content/60 tabular-nums">
           {@board.thread_count}
         </span>

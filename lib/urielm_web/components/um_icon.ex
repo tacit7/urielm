@@ -60,7 +60,10 @@ defmodule UrielmWeb.Components.UMIcon do
         "check_circle" => "check-circle",
         "arrow_up" => "arrow-up",
         "pin" => "map-pin",
-        "reply" => "arrow-uturn-left"
+        "reply" => "arrow-uturn-left",
+        "magnifying_glass" => "magnifying-glass",
+        "search" => "magnifying-glass",
+        "user_circle" => "user-circle"
       }
       |> Map.get(name, name)
 

@@ -54,9 +54,14 @@ defmodule UrielmWeb.LatestLive do
           end
 
         case value_int && Forum.cast_vote(user.id, target_type, target_id, value_int) do
-          nil -> {:noreply, socket}
-          {:ok, _} -> {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, target_id, user)}
-          {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to vote")}
+          nil ->
+            {:noreply, socket}
+
+          {:ok, _} ->
+            {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, target_id, user)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to vote")}
         end
     end
   end
@@ -82,24 +87,31 @@ defmodule UrielmWeb.LatestLive do
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
       flash={@flash}
+      current_user={@current_user}
       current_path="/forum"
     >
       <div class="mb-6">
         <h1 class="text-3xl font-black tracking-tight text-base-content leading-none">Latest</h1>
       </div>
-
-      <!-- Thread table -->
+      
+    <!-- Thread table -->
       <div class="rounded-xl border border-base-300/60 overflow-hidden">
         <!-- Column headers -->
         <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
           <div class="w-2" />
           <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
-          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">Replies</span>
-          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">Views</span>
-          <span class="text-xs font-medium text-base-content/35 tracking-wide text-right">Activity</span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
+            Replies
+          </span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
+            Views
+          </span>
+          <span class="text-xs font-medium text-base-content/35 tracking-wide text-right">
+            Activity
+          </span>
         </div>
-
-        <!-- Threads -->
+        
+    <!-- Threads -->
         <div id="threads" phx-update="stream">
           <div id="empty-state" class="hidden only:flex justify-center py-16">
             <div class="text-center">
@@ -114,8 +126,8 @@ defmodule UrielmWeb.LatestLive do
           </div>
         </div>
       </div>
-
-      <!-- Pagination -->
+      
+    <!-- Pagination -->
       <div class="flex items-center justify-center gap-2 mt-8">
         <%= if @meta do %>
           <.pagination
@@ -133,11 +145,13 @@ defmodule UrielmWeb.LatestLive do
   end
 
   defp parse_page(nil), do: 1
+
   defp parse_page(p) when is_binary(p) do
     case Integer.parse(p) do
       {n, ""} when n >= 1 -> n
       _ -> 1
     end
   end
+
   defp parse_page(p) when is_integer(p), do: max(p, 1)
 end

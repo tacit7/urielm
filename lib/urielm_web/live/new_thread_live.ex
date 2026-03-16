@@ -25,10 +25,13 @@ defmodule UrielmWeb.NewThreadLive do
          |> redirect(to: ~p"/signup/set-handle")}
 
       true ->
+        categories = Forum.list_categories_with_boards()
+
         {:ok,
          socket
          |> assign(:page_title, "New Thread")
          |> assign(:board, board)
+         |> assign(:all_categories, categories)
          |> assign(:thread_form, to_form(Thread.changeset(%Thread{}, %{})))}
     end
   end
@@ -83,66 +86,67 @@ defmodule UrielmWeb.NewThreadLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="" socket={@socket}>
-      <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-2xl">
-          <div class="mb-8">
-            <.link navigate={~p"/forum/b/#{@board.slug}"} class="link link-hover text-sm mb-4">
-              ← Back to {@board.name}
-            </.link>
+    <UrielmWeb.Components.ForumLayout.forum_layout
+      categories={@all_categories}
+      flash={@flash}
+      current_user={@current_user}
+      current_board={@board.slug}
+    >
+      <div class="mb-8">
+        <.link navigate={~p"/forum/b/#{@board.slug}"} class="link link-hover text-sm mb-4">
+          ← Back to {@board.name}
+        </.link>
 
-            <h1 class="text-4xl font-bold text-base-content mb-2">New Thread</h1>
-            <p class="text-base-content/60">Start a discussion in {@board.name}</p>
-          </div>
+        <h1 class="text-4xl font-bold text-base-content mb-2">New Thread</h1>
+        <p class="text-base-content/60">Start a discussion in {@board.name}</p>
+      </div>
 
-          <div class="card bg-base-200 border border-base-300">
-            <div class="card-body">
-              <.form for={@thread_form} phx-change="validate" phx-submit="save" class="space-y-6">
-                <div>
-                  <.input
-                    field={@thread_form[:title]}
-                    type="text"
-                    label="Title"
-                    placeholder="What's your thread about?"
-                    class="input input-bordered w-full"
-                    required
-                  />
-                  <%= for {msg, _opts} <- @thread_form[:title].errors do %>
-                    <p class="text-error text-sm mt-1">{msg}</p>
-                  <% end %>
-                </div>
-
-                <div>
-                  <.input
-                    field={@thread_form[:body]}
-                    type="textarea"
-                    label="Description"
-                    placeholder="Share your thoughts... (Markdown supported)"
-                    class="textarea textarea-bordered w-full min-h-80"
-                    required
-                  />
-                  <%= for {msg, _opts} <- @thread_form[:body].errors do %>
-                    <p class="text-error text-sm mt-1">{msg}</p>
-                  <% end %>
-                </div>
-
-                <div class="flex gap-4 justify-end">
-                  <.link
-                    navigate={~p"/forum/b/#{@board.slug}"}
-                    class="btn btn-ghost"
-                  >
-                    Cancel
-                  </.link>
-                  <button type="submit" class="btn btn-primary">
-                    Create Thread
-                  </button>
-                </div>
-              </.form>
+      <div class="card bg-base-200 border border-base-300">
+        <div class="card-body">
+          <.form for={@thread_form} phx-change="validate" phx-submit="save" class="space-y-6">
+            <div>
+              <.input
+                field={@thread_form[:title]}
+                type="text"
+                label="Title"
+                placeholder="What's your thread about?"
+                class="input input-bordered w-full"
+                required
+              />
+              <%= for {msg, _opts} <- @thread_form[:title].errors do %>
+                <p class="text-error text-sm mt-1">{msg}</p>
+              <% end %>
             </div>
-          </div>
+
+            <div>
+              <.input
+                field={@thread_form[:body]}
+                type="textarea"
+                label="Description"
+                placeholder="Share your thoughts... (Markdown supported)"
+                class="textarea textarea-bordered w-full min-h-80"
+                required
+              />
+              <%= for {msg, _opts} <- @thread_form[:body].errors do %>
+                <p class="text-error text-sm mt-1">{msg}</p>
+              <% end %>
+            </div>
+
+            <div class="flex gap-4 justify-end">
+              <.link
+                navigate={~p"/forum/b/#{@board.slug}"}
+                class="btn btn-ghost"
+              >
+                Cancel
+              </.link>
+              <button type="submit" class="btn btn-primary">
+                Create Thread
+              </button>
+            </div>
+          </.form>
         </div>
       </div>
-    </Layouts.app>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
     """
   end
 end
