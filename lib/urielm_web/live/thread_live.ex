@@ -551,6 +551,7 @@ defmodule UrielmWeb.ThreadLive do
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
       flash={@flash}
+      current_user={@current_user}
       current_board={@thread.board_slug}
     >
       <div class="container mx-auto px-4 py-8 max-w-6xl">
@@ -578,7 +579,10 @@ defmodule UrielmWeb.ThreadLive do
                   <% end %>
                   <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
                   <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
-                  <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="text-primary hover:underline text-sm">
+                  <.link
+                    navigate={~p"/forum/b/#{@thread.board_slug}"}
+                    class="text-primary hover:underline text-sm"
+                  >
                     {@thread.board_name}
                   </.link>
                 </div>
