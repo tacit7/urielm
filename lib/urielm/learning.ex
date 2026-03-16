@@ -22,6 +22,13 @@ defmodule Urielm.Learning do
   end
 
   @doc """
+  Returns the total count of courses.
+  """
+  def count_courses do
+    Repo.aggregate(Course, :count)
+  end
+
+  @doc """
   Gets a single course by ID.
   """
   def get_course!(id), do: Repo.get!(Course, id)

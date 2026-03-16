@@ -292,11 +292,17 @@ defmodule Urielm.Content do
       [%Post{}, ...]
 
   """
-  def list_published_posts do
-    Post
-    |> Post.published()
-    |> order_by([p], desc: p.published_at)
-    |> Repo.all()
+  def list_published_posts(opts \\ []) do
+    limit = Keyword.get(opts, :limit)
+
+    query =
+      Post
+      |> Post.published()
+      |> order_by([p], desc: p.published_at)
+
+    query = if limit, do: from(p in query, limit: ^limit), else: query
+
+    Repo.all(query)
   end
 
   @doc """
@@ -576,10 +582,24 @@ defmodule Urielm.Content do
     update_prompt(prompt, %{comments_count: count})
   end
 
+  @doc """
+  Returns the count of all prompts (treated as published).
+  """
+  def count_published_prompts do
+    Repo.aggregate(Prompt, :count)
+  end
+
   # Video functions
 
   alias Urielm.Content.Video
   alias Urielm.Content.VideoCompletion
+
+  @doc """
+  Returns the count of published videos.
+  """
+  def count_published_videos do
+    Repo.aggregate(from(v in Video, where: not is_nil(v.published_at)), :count)
+  end
 
   @doc """
   Gets a single video by slug.
@@ -628,6 +648,31 @@ defmodule Urielm.Content do
     query =
       from(v in Video,
         where: not is_nil(v.published_at),
+        order_by: [desc: v.published_at, desc: v.id],
+        offset: ^offset
+      )
+
+    query = if limit, do: from(q in query, limit: ^limit), else: query
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns the list of published short videos.
+
+  ## Examples
+
+      iex> list_published_shorts(limit: 5)
+      [%Video{}, ...]
+
+  """
+  def list_published_shorts(opts \\ []) do
+    limit = Keyword.get(opts, :limit)
+    offset = Keyword.get(opts, :offset, 0)
+
+    query =
+      from(v in Video,
+        where: v.format == "short" and not is_nil(v.published_at),
         order_by: [desc: v.published_at, desc: v.id],
         offset: ^offset
       )

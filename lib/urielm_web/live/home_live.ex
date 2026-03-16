@@ -1,41 +1,37 @@
 defmodule UrielmWeb.HomeLive do
   use UrielmWeb, :live_view
-  use LiveSvelte.Components
 
-  import Ecto.Query, warn: false
-  alias Urielm.Repo
-  alias Urielm.Content.{Prompt, Video}
-  alias Urielm.Learning
-  alias Urielm.Learning.Course
   alias Urielm.Content
+  alias Urielm.Learning
 
   @impl true
   def mount(_params, _session, socket) do
-    courses = Learning.list_courses() |> Enum.take(3)
-    posts = Content.list_published_posts() |> Enum.take(4)
-    prompts = Content.list_prompts(limit: 6)
+    socket =
+      if connected?(socket) do
+        assign(socket,
+          page_title: "Home",
+          courses: Learning.list_courses() |> Enum.take(3),
+          posts: Content.list_published_posts(limit: 4),
+          prompts: Content.list_prompts(limit: 6),
+          shorts: Content.list_published_shorts(limit: 5),
+          stats: %{
+            videos: Content.count_published_videos(),
+            prompts: Content.count_published_prompts(),
+            courses: Learning.count_courses()
+          }
+        )
+      else
+        assign(socket,
+          page_title: "Home",
+          courses: [],
+          posts: [],
+          prompts: [],
+          shorts: [],
+          stats: %{videos: 0, prompts: 0, courses: 0}
+        )
+      end
 
-    shorts =
-      Content.list_published_videos(limit: 20)
-      |> Enum.filter(&(&1.format == "short"))
-      |> Enum.take(5)
-
-    prompt_count = Repo.aggregate(Prompt, :count)
-    course_count = Repo.aggregate(Course, :count)
-    video_count = Repo.aggregate(from(v in Video, where: not is_nil(v.published_at)), :count)
-
-    {:ok,
-     assign(socket,
-       courses: courses,
-       posts: posts,
-       prompts: prompts,
-       shorts: shorts,
-       stats: %{
-         videos: video_count,
-         prompts: prompt_count,
-         courses: course_count
-       }
-     )}
+    {:ok, socket}
   end
 
   @impl true
@@ -131,7 +127,7 @@ defmodule UrielmWeb.HomeLive do
                   <div class="w-3 h-3 rounded-full bg-success"></div>
                   <span class="ml-2 text-xs text-base-content/50 font-mono">claude_agent.py</span>
                 </div>
-                <pre class="text-xs font-mono text-base-content/80 overflow-hidden"><code><span class="text-secondary">from</span> anthropic <span class="text-secondary">import</span> Anthropic&#10;&#10;client = Anthropic()&#10;response = client.messages.create(&#10;    model=<span class="text-success">"claude-3-5-sonnet"</span>,&#10;    max_tokens=<span class="text-warning">1024</span>,&#10;    messages=[...]&#10;)</code></pre>
+                <pre class="text-xs font-mono text-base-content/80 overflow-hidden"><code><span class="text-secondary">from</span> anthropic <span class="text-secondary">import</span> Anthropic&#10;&#10;client = Anthropic()&#10;response = client.messages.create(&#10;    model=<span class="text-success">"claude-sonnet-4-6"</span>,&#10;    max_tokens=<span class="text-warning">1024</span>,&#10;    messages=[...]&#10;)</code></pre>
               </div>
 
               <!-- Card 2: Prompt Card -->
@@ -194,6 +190,9 @@ defmodule UrielmWeb.HomeLive do
         </div>
 
         <!-- Shorts Horizontal Scroll -->
+        <%= if Enum.empty?(@shorts) do %>
+          <p class="text-base-content/50 text-sm">No shorts yet.</p>
+        <% end %>
         <div class="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory scrollbar-hide">
           <%= for {short, index} <- Enum.with_index(@shorts) do %>
             <.link navigate={~p"/videos/#{short.slug}"} class="flex-shrink-0 w-44 snap-start group cursor-pointer">
@@ -236,6 +235,9 @@ defmodule UrielmWeb.HomeLive do
         </div>
 
         <!-- Course Cards Grid -->
+        <%= if Enum.empty?(@courses) do %>
+          <p class="text-base-content/50 text-sm">No courses yet.</p>
+        <% end %>
         <div class="grid md:grid-cols-3 gap-8">
           <%= for {course, index} <- Enum.with_index(@courses) do %>
             <% color = course_color_classes(index) %>
@@ -298,6 +300,9 @@ defmodule UrielmWeb.HomeLive do
         </div>
 
         <!-- Blog Grid -->
+        <%= if Enum.empty?(@posts) do %>
+          <p class="text-base-content/50 text-sm">No posts yet.</p>
+        <% end %>
         <div class="grid lg:grid-cols-2 gap-8">
           <!-- Featured Post (Large) — first post -->
           <%= for post <- Enum.take(@posts, 1) do %>
@@ -365,6 +370,9 @@ defmodule UrielmWeb.HomeLive do
         </div>
 
         <!-- Prompts Grid -->
+        <%= if Enum.empty?(@prompts) do %>
+          <p class="text-base-content/50 text-sm">No prompts yet.</p>
+        <% end %>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <%= for prompt <- @prompts do %>
             <.link navigate={~p"/prompts/#{prompt.id}"} class="group">
