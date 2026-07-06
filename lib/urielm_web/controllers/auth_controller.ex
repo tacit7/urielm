@@ -150,29 +150,34 @@ defmodule UrielmWeb.AuthController do
         conn |> put_flash(:error, "Invalid user ID") |> redirect(to: ~p"/")
 
       parsed_id ->
-        user = Accounts.get_user(parsed_id)
-        return_to = get_session(conn, :return_to) || "/"
+        case Accounts.get_user(parsed_id) do
+          nil ->
+            conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
-        conn =
-          conn
-          |> put_session(:user_id, user.id)
-          |> delete_session(:return_to)
-          |> configure_session(renew: true)
+          user ->
+            return_to = get_session(conn, :return_to) || "/"
 
-        # If email not verified, redirect to verification page
-        cond do
-          !user.email_verified ->
-            conn
-            |> put_session(:pending_redirect, return_to)
-            |> redirect(to: ~p"/signup/verify-email")
+            conn =
+              conn
+              |> put_session(:user_id, user.id)
+              |> delete_session(:return_to)
+              |> configure_session(renew: true)
 
-          needs_handle_for_action?(return_to) && is_nil(user.username) ->
-            conn
-            |> put_session(:pending_redirect, return_to)
-            |> redirect(to: ~p"/signup/set-handle")
+            # If email not verified, redirect to verification page
+            cond do
+              !user.email_verified ->
+                conn
+                |> put_session(:pending_redirect, return_to)
+                |> redirect(to: ~p"/signup/verify-email")
 
-          true ->
-            redirect(conn, to: return_to)
+              needs_handle_for_action?(return_to) && is_nil(user.username) ->
+                conn
+                |> put_session(:pending_redirect, return_to)
+                |> redirect(to: ~p"/signup/set-handle")
+
+              true ->
+                redirect(conn, to: return_to)
+            end
         end
     end
   end

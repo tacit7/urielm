@@ -30,25 +30,29 @@ defmodule UrielmWeb.PromptLive do
         {:ok, socket |> put_flash(:error, "Invalid prompt") |> redirect(to: ~p"/prompts")}
 
       prompt_id ->
-        prompt = Content.get_prompt_with_comments(prompt_id)
+        case Content.get_prompt_with_comments(prompt_id) do
+          nil ->
+            {:ok, socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
 
-        # Load vote data
-        %{current_user: user} = socket.assigns
-        target_id = to_string(prompt.id)
-        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
-        user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+          prompt ->
+            # Load vote data
+            %{current_user: user} = socket.assigns
+            target_id = to_string(prompt.id)
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+            user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
 
-        user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
+            user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
 
-        {:ok,
-         socket
-         |> assign(:page_title, prompt.title)
-         |> assign(:prompt, prompt)
-         |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
-         |> assign(:upvotes, upvotes)
-         |> assign(:downvotes, downvotes)
-         |> assign(:user_vote, user_vote && user_vote.value)
-         |> assign(:user_saved, user_saved)}
+            {:ok,
+             socket
+             |> assign(:page_title, prompt.title)
+             |> assign(:prompt, prompt)
+             |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)
+             |> assign(:user_saved, user_saved)}
+        end
     end
   end
 
