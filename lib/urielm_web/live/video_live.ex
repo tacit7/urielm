@@ -18,14 +18,7 @@ defmodule UrielmWeb.VideoLive do
 
     slug = child_params["slug"]
 
-    video =
-      try do
-        Content.get_video_by_slug!(slug)
-      rescue
-        Ecto.NoResultsError ->
-          # Video not found - will handle below
-          nil
-      end
+    video = Content.get_video_by_slug(slug)
 
     if is_nil(video) do
       {:ok,

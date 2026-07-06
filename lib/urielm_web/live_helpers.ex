@@ -207,11 +207,13 @@ defmodule UrielmWeb.LiveHelpers do
   Returns the updated socket.
 
   This does NOT load comments and does NOT increment view count.
+  Uses bulk loading to avoid N+1 queries for user state.
   """
   def update_thread_in_stream(socket, stream_name, thread_id, current_user) do
     # Fetch thread without comments (author and board already preloaded)
     thread = Forum.get_thread!(thread_id)
-    serialized = serialize_thread_card(thread, current_user)
+    bulk_state = load_bulk_thread_state(current_user, [thread.id])
+    serialized = serialize_thread_card_bulk(thread, current_user, bulk_state)
     Phoenix.LiveView.stream_insert(socket, stream_name, serialized)
   end
 

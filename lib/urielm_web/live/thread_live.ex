@@ -13,46 +13,54 @@ defmodule UrielmWeb.ThreadLive do
 
     # Fetch thread with comments for the thread page
     # Admins can view soft-deleted threads; regular users cannot
-    thread = Forum.get_thread!(id, include_comments?: true, allow_removed?: is_admin)
-    comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
+    case Forum.get_thread(id, include_comments?: true, allow_removed?: is_admin) do
+      nil ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Thread not found")
+         |> redirect(to: ~p"/")}
 
-    # Only track view count when connected (real page view)
-    if connected?(socket) do
-      Forum.increment_thread_view_count(thread.id)
+      thread ->
+        comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
 
-      # Mark thread as read (only when connected to avoid double DB write)
-      if socket.assigns.current_user do
-        Forum.mark_thread_read(socket.assigns.current_user.id, thread.id)
-      end
+        # Only track view count when connected (real page view)
+        if connected?(socket) do
+          Forum.increment_thread_view_count(thread.id)
+
+          # Mark thread as read (only when connected to avoid double DB write)
+          if socket.assigns.current_user do
+            Forum.mark_thread_read(socket.assigns.current_user.id, thread.id)
+          end
+        end
+
+        is_saved =
+          if socket.assigns.current_user,
+            do: Forum.is_thread_saved?(socket.assigns.current_user.id, thread.id),
+            else: false
+
+        is_subscribed =
+          if socket.assigns.current_user,
+            do: Forum.is_subscribed?(socket.assigns.current_user.id, thread.id),
+            else: false
+
+        notification_level =
+          if socket.assigns.current_user,
+            do: Forum.get_notification_level(socket.assigns.current_user.id, thread.id),
+            else: "watching"
+
+        all_categories = Forum.list_categories_with_boards()
+
+        {:ok,
+         socket
+         |> assign(:page_title, thread.title)
+         |> assign(:thread, LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user))
+         |> assign(:comment_tree, comment_tree)
+         |> assign(:thread_is_saved, is_saved)
+         |> assign(:thread_is_subscribed, is_subscribed)
+         |> assign(:notification_level, notification_level)
+         |> assign(:reporting_comment_id, nil)
+         |> assign(:all_categories, all_categories)}
     end
-
-    is_saved =
-      if socket.assigns.current_user,
-        do: Forum.is_thread_saved?(socket.assigns.current_user.id, thread.id),
-        else: false
-
-    is_subscribed =
-      if socket.assigns.current_user,
-        do: Forum.is_subscribed?(socket.assigns.current_user.id, thread.id),
-        else: false
-
-    notification_level =
-      if socket.assigns.current_user,
-        do: Forum.get_notification_level(socket.assigns.current_user.id, thread.id),
-        else: "watching"
-
-    all_categories = Forum.list_categories_with_boards()
-
-    {:ok,
-     socket
-     |> assign(:page_title, thread.title)
-     |> assign(:thread, LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user))
-     |> assign(:comment_tree, comment_tree)
-     |> assign(:thread_is_saved, is_saved)
-     |> assign(:thread_is_subscribed, is_subscribed)
-     |> assign(:notification_level, notification_level)
-     |> assign(:reporting_comment_id, nil)
-     |> assign(:all_categories, all_categories)}
   end
 
   @impl true

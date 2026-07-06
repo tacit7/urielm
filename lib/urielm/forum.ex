@@ -231,6 +231,29 @@ defmodule Urielm.Forum do
   end
 
   @doc """
+  Non-raising version of get_thread! Returns nil if not found or soft-deleted
+  (unless allow_removed?: true).
+  """
+  def get_thread(id, opts \\ []) do
+    Repo.get(Thread, id)
+    |> case do
+      nil ->
+        nil
+
+      thread ->
+        thread = preload_thread_meta(thread)
+        allow_removed? = Keyword.get(opts, :allow_removed?, false)
+        include_comments? = Keyword.get(opts, :include_comments?, false)
+
+        cond do
+          thread.is_removed and not allow_removed? -> nil
+          include_comments? -> Map.put(thread, :comments, list_comments_with_authors(id))
+          true -> thread
+        end
+    end
+  end
+
+  @doc """
   Increments the view count for a thread.
   This is a command-style function with a side effect and should be called explicitly
   only when a real page view occurs (not during metadata fetching or refresh actions).
