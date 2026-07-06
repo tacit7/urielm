@@ -32,7 +32,11 @@ defmodule UrielmWeb.UserProfileLive do
         page =
           case child_params["page"] do
             nil -> 1
-            p when is_binary(p) -> String.to_integer(p)
+            p when is_binary(p) ->
+              case Integer.parse(p) do
+                {n, _} when n > 0 -> n
+                _ -> 1
+              end
             p when is_integer(p) -> p
           end
 
@@ -102,7 +106,15 @@ defmodule UrielmWeb.UserProfileLive do
 
   @impl true
   def handle_event("change_page", %{"tab" => tab, "page" => page}, socket) do
-    page = if is_binary(page), do: String.to_integer(page), else: page
+    page =
+      if is_binary(page) do
+        case Integer.parse(page) do
+          {n, _} when n > 0 -> n
+          _ -> 1
+        end
+      else
+        page
+      end
     {:noreply, load_tab_data(socket, tab, page)}
   end
 

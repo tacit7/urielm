@@ -314,21 +314,31 @@ defmodule UrielmWeb.LiveHelpers do
   """
   def handle_vote(target_type, id, value, socket) do
     with_auth(socket, "vote", fn socket, user ->
-      value_int = String.to_integer(value)
+      value_int =
+        case Integer.parse(value) do
+          {n, _} -> n
+          :error -> nil
+        end
 
-      case Engagement.toggle_vote(user.id, target_type, id, value_int) do
-        {:ok, _} ->
-          {upvotes, downvotes, _score} = Engagement.get_vote_counts(target_type, id)
-          user_vote = Engagement.get_vote(user.id, target_type, id)
+      case value_int do
+        nil ->
+          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Invalid vote value")}
 
-          {:noreply,
-           socket
-           |> Phoenix.Component.assign(:upvotes, upvotes)
-           |> Phoenix.Component.assign(:downvotes, downvotes)
-           |> Phoenix.Component.assign(:user_vote, user_vote && user_vote.value)}
+        value_int ->
+          case Engagement.toggle_vote(user.id, target_type, id, value_int) do
+            {:ok, _} ->
+              {upvotes, downvotes, _score} = Engagement.get_vote_counts(target_type, id)
+              user_vote = Engagement.get_vote(user.id, target_type, id)
 
-        {:error, _} ->
-          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Failed to vote")}
+              {:noreply,
+               socket
+               |> Phoenix.Component.assign(:upvotes, upvotes)
+               |> Phoenix.Component.assign(:downvotes, downvotes)
+               |> Phoenix.Component.assign(:user_vote, user_vote && user_vote.value)}
+
+            {:error, _} ->
+              {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Failed to vote")}
+          end
       end
     end)
   end

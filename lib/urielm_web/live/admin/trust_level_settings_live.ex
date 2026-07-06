@@ -18,15 +18,26 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
 
   @impl true
   def handle_event("edit", %{"level" => level_str}, socket) do
-    level = String.to_integer(level_str)
-    config = TrustLevel.get_config(level)
+    level =
+      case Integer.parse(level_str) do
+        {n, _} -> n
+        :error -> nil
+      end
 
-    form =
-      config
-      |> TrustLevelConfig.changeset(%{})
-      |> to_form()
+    case level do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Invalid trust level")}
 
-    {:noreply, assign(socket, editing: level, edit_form: form)}
+      level ->
+        config = TrustLevel.get_config(level)
+
+        form =
+          config
+          |> TrustLevelConfig.changeset(%{})
+          |> to_form()
+
+        {:noreply, assign(socket, editing: level, edit_form: form)}
+    end
   end
 
   @impl true

@@ -25,7 +25,16 @@ defmodule UrielmWeb.SavedThreadsLive do
   @impl true
   def handle_params(params, _uri, socket) do
     %{current_user: user} = socket.assigns
-    page = Map.get(params, "page", "1") |> String.to_integer()
+    page =
+      Map.get(params, "page", "1")
+      |> case do
+        p when is_binary(p) ->
+          case Integer.parse(p) do
+            {n, _} when n > 0 -> n
+            _ -> 1
+          end
+        p when is_integer(p) -> p
+      end
 
     {:ok, {threads, meta}} =
       Forum.paginate_saved_threads(user.id, %{page: page, page_size: LiveHelpers.page_size()})
@@ -45,14 +54,24 @@ defmodule UrielmWeb.SavedThreadsLive do
       ) do
     %{current_user: user} = socket.assigns
 
-    value_int = String.to_integer(value)
+    value_int =
+      case Integer.parse(value) do
+        {n, _} -> n
+        :error -> nil
+      end
 
-    case Forum.cast_vote(user.id, target_type, target_id, value_int) do
-      {:ok, _vote} ->
-        {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, target_id, user)}
+    case value_int do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Invalid vote value")}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to vote")}
+      value_int ->
+        case Forum.cast_vote(user.id, target_type, target_id, value_int) do
+          {:ok, _vote} ->
+            {:noreply, LiveHelpers.update_thread_in_stream(socket, :threads, target_id, user)}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to vote")}
+        end
     end
   end
 

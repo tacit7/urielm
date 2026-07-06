@@ -106,35 +106,44 @@ defmodule UrielmWeb.PromptsLive do
   def handle_event("open_prompt_modal", %{"id" => id}, socket) do
     %{current_user: user} = socket.assigns
 
-    prompt =
-      id
-      |> String.to_integer()
-      |> Content.get_prompt!()
+    prompt_id =
+      case Integer.parse(id) do
+        {n, _} -> n
+        :error -> nil
+      end
 
-    tag_names = Enum.map(prompt.tag_records, & &1.name)
+    case prompt_id do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Invalid prompt")}
 
-    target_id = to_string(prompt.id)
-    {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
-    user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+      prompt_id ->
+        prompt = Content.get_prompt!(prompt_id)
 
-    serialized = %{
-      id: prompt.id,
-      title: prompt.title,
-      url: prompt.url,
-      prompt: prompt.prompt,
-      category: prompt.category,
-      tags: tag_names,
-      saves_count: prompt.saves_count,
-      user_saved:
-        user && Content.user_saved_prompt?(user.id, prompt.id)
-    }
+        tag_names = Enum.map(prompt.tag_records, & &1.name)
 
-    {:noreply,
-     socket
-     |> assign(:selected_prompt, serialized)
-     |> assign(:drawer_upvotes, upvotes)
-     |> assign(:drawer_downvotes, downvotes)
-     |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+        target_id = to_string(prompt.id)
+        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+        user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+
+        serialized = %{
+          id: prompt.id,
+          title: prompt.title,
+          url: prompt.url,
+          prompt: prompt.prompt,
+          category: prompt.category,
+          tags: tag_names,
+          saves_count: prompt.saves_count,
+          user_saved:
+            user && Content.user_saved_prompt?(user.id, prompt.id)
+        }
+
+        {:noreply,
+         socket
+         |> assign(:selected_prompt, serialized)
+         |> assign(:drawer_upvotes, upvotes)
+         |> assign(:drawer_downvotes, downvotes)
+         |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+    end
   end
 
   @impl true
@@ -151,21 +160,31 @@ defmodule UrielmWeb.PromptsLive do
         {:noreply, put_flash(socket, :error, "Sign in to vote")}
 
       user ->
-        value_int = String.to_integer(value)
+        value_int =
+          case Integer.parse(value) do
+            {n, _} -> n
+            :error -> nil
+          end
 
-        case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
-          {:ok, _} ->
-            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
-            user_vote = Engagement.get_vote(user.id, "prompt", id)
+        case value_int do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Invalid vote value")}
 
-            {:noreply,
-             socket
-             |> assign(:drawer_upvotes, upvotes)
-             |> assign(:drawer_downvotes, downvotes)
-             |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+          value_int ->
+            case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
+              {:ok, _} ->
+                {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
+                user_vote = Engagement.get_vote(user.id, "prompt", id)
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to vote")}
+                {:noreply,
+                 socket
+                 |> assign(:drawer_upvotes, upvotes)
+                 |> assign(:drawer_downvotes, downvotes)
+                 |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+
+              {:error, _} ->
+                {:noreply, put_flash(socket, :error, "Failed to vote")}
+            end
         end
     end
   end
@@ -179,26 +198,36 @@ defmodule UrielmWeb.PromptsLive do
         {:noreply, put_flash(socket, :error, "Sign in to save prompts")}
 
       user ->
-        prompt_id = String.to_integer(id)
+        prompt_id =
+          case Integer.parse(id) do
+            {n, _} -> n
+            :error -> nil
+          end
 
-        case Content.toggle_save(user.id, prompt_id) do
-          {:ok, _prompt} ->
-            # Refresh the prompt data in modal if it's open
-            updated_socket =
-              if socket.assigns.selected_prompt && socket.assigns.selected_prompt.id == prompt_id do
-                prompt =
-                  prompt_id
-                  |> Content.get_prompt!()
+        case prompt_id do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Invalid prompt")}
 
-                assign(socket, :selected_prompt, serialize_prompt(prompt, user))
-              else
-                socket
-              end
+          prompt_id ->
+            case Content.toggle_save(user.id, prompt_id) do
+              {:ok, _prompt} ->
+                # Refresh the prompt data in modal if it's open
+                updated_socket =
+                  if socket.assigns.selected_prompt && socket.assigns.selected_prompt.id == prompt_id do
+                    prompt =
+                      prompt_id
+                      |> Content.get_prompt!()
 
-            {:noreply, updated_socket}
+                    assign(socket, :selected_prompt, serialize_prompt(prompt, user))
+                  else
+                    socket
+                  end
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to save prompt")}
+                {:noreply, updated_socket}
+
+              {:error, _} ->
+                {:noreply, put_flash(socket, :error, "Failed to save prompt")}
+            end
         end
     end
   end
