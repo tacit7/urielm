@@ -1125,6 +1125,7 @@ defmodule Urielm.Forum do
         attrs_list =
           Enum.map(subscribers, fn user_id ->
             %{
+              id: Ecto.UUID.generate(),
               user_id: user_id,
               subject_type: subject_type,
               subject_id: thread_id,
@@ -1459,12 +1460,19 @@ defmodule Urielm.Forum do
   # Helpers
 
   defp update_thread_comment_count(thread_id) do
-    count =
-      from(c in Comment, where: c.thread_id == ^thread_id and c.is_removed == false)
-      |> Repo.aggregate(:count)
-
-    from(t in Thread, where: t.id == ^thread_id)
-    |> Repo.update_all(set: [comment_count: count])
+    from(t in Thread,
+      where: t.id == ^thread_id,
+      update: [
+        set: [
+          comment_count:
+            fragment(
+              "(SELECT COUNT(*) FROM forum_comments WHERE thread_id = ? AND is_removed = false)",
+              ^thread_id
+            )
+        ]
+      ]
+    )
+    |> Repo.update_all([])
   end
 
   # Generic rate limit wrapper; -1 means unlimited
