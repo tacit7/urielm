@@ -153,83 +153,70 @@ defmodule UrielmWeb.PromptsLive do
 
   @impl true
   def handle_event("vote", %{"target_type" => "prompt", "target_id" => id, "value" => value}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to vote")}
-
-      user ->
-        value_int =
-          case Integer.parse(value) do
-            {n, ""} -> n
-            _ -> nil
-          end
-
-        case value_int do
-          nil ->
-            {:noreply, put_flash(socket, :error, "Invalid vote value")}
-
-          value_int ->
-            case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
-              {:ok, _} ->
-                {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
-                user_vote = Engagement.get_vote(user.id, "prompt", id)
-
-                {:noreply,
-                 socket
-                 |> assign(:drawer_upvotes, upvotes)
-                 |> assign(:drawer_downvotes, downvotes)
-                 |> assign(:drawer_user_vote, user_vote && user_vote.value)}
-
-              {:error, _} ->
-                {:noreply, put_flash(socket, :error, "Failed to vote")}
-            end
+    LiveHelpers.with_auth(socket, "vote", fn socket, user ->
+      value_int =
+        case Integer.parse(value) do
+          {n, ""} -> n
+          _ -> nil
         end
-    end
+
+      case value_int do
+        nil ->
+          {:noreply, put_flash(socket, :error, "Invalid vote value")}
+
+        value_int ->
+          case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
+            {:ok, _} ->
+              {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
+              user_vote = Engagement.get_vote(user.id, "prompt", id)
+
+              {:noreply,
+               socket
+               |> assign(:drawer_upvotes, upvotes)
+               |> assign(:drawer_downvotes, downvotes)
+               |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to vote")}
+          end
+      end
+    end)
   end
 
   @impl true
   def handle_event("toggle_save", %{"id" => id}, socket) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to save prompts")}
-
-      user ->
-        prompt_id =
-          case Integer.parse(id) do
-            {n, ""} -> n
-            _ -> nil
-          end
-
-        case prompt_id do
-          nil ->
-            {:noreply, put_flash(socket, :error, "Invalid prompt")}
-
-          prompt_id ->
-            case Content.toggle_save(user.id, prompt_id) do
-              {:ok, _prompt} ->
-                # Refresh the prompt data in modal if it's open
-                updated_socket =
-                  if socket.assigns.selected_prompt && socket.assigns.selected_prompt.id == prompt_id do
-                    prompt =
-                      prompt_id
-                      |> Content.get_prompt!()
-
-                    assign(socket, :selected_prompt, serialize_prompt(prompt, user))
-                  else
-                    socket
-                  end
-
-                {:noreply, updated_socket}
-
-              {:error, _} ->
-                {:noreply, put_flash(socket, :error, "Failed to save prompt")}
-            end
+    LiveHelpers.with_auth(socket, "save prompts", fn socket, user ->
+      prompt_id =
+        case Integer.parse(id) do
+          {n, ""} -> n
+          _ -> nil
         end
-    end
+
+      case prompt_id do
+        nil ->
+          {:noreply, put_flash(socket, :error, "Invalid prompt")}
+
+        prompt_id ->
+          case Content.toggle_save(user.id, prompt_id) do
+            {:ok, _prompt} ->
+              updated_socket =
+                if socket.assigns.selected_prompt && socket.assigns.selected_prompt.id == prompt_id do
+                  prompt =
+                    prompt_id
+                    |> Content.get_prompt!()
+
+                  assign(socket, :selected_prompt, serialize_prompt(prompt, user))
+                else
+                  socket
+                end
+
+              {:noreply, updated_socket}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to save prompt")}
+          end
+      end
+    end)
   end
 
   defp handle_filter_change(category, socket) do
