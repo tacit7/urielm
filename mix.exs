@@ -80,7 +80,14 @@ defmodule Urielm.MixProject do
       {:sweet_xml, "~> 0.7"},
       {:hackney, "~> 1.20"},
       # UUID v7 generation
-      {:uniq, "~> 0.6"}
+      {:uniq, "~> 0.6"},
+      # Code quality
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
+      {:sobelow, "~> 0.13", only: [:dev], runtime: false},
+      {:ex_slop, "~> 0.1", only: [:dev, :test], runtime: false},
+      {:ex_dna, github: "elixir-vibe/ex_dna", only: [:dev, :test], runtime: false, override: true},
+      {:reach, github: "elixir-vibe/reach", only: [:dev], runtime: false}
     ]
   end
 
