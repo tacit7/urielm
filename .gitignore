@@ -49,3 +49,6 @@ bin/docker-deploy.sh
 
 # macOS
 .DS_Store
+.claude/worktrees/
+.worktrees/
+docs/courses
