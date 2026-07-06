@@ -1079,22 +1079,43 @@ defmodule Urielm.Forum do
   end
 
   def notify_thread_subscribers(thread_id, actor_id, subject_type, message) do
-    subscribers =
-      from(s in Subscription,
-        where: s.thread_id == ^thread_id and s.user_id != ^actor_id,
-        select: s.user_id
-      )
-      |> Repo.all()
+    valid_subject_type? = subject_type in ["comment", "reply", "thread_update"]
+    valid_message? = is_nil(message) or String.length(message) <= 500
 
-    Enum.each(subscribers, fn user_id ->
-      create_notification(user_id, subject_type, thread_id, %{
-        actor_id: actor_id,
-        thread_id: thread_id,
-        message: message
-      })
-    end)
+    cond do
+      not valid_subject_type? ->
+        {:error, :invalid_subject_type}
 
-    {:ok, length(subscribers)}
+      not valid_message? ->
+        {:error, :message_too_long}
+
+      true ->
+        subscribers =
+          from(s in Subscription,
+            where: s.thread_id == ^thread_id and s.user_id != ^actor_id,
+            select: s.user_id
+          )
+          |> Repo.all()
+
+        now = DateTime.utc_now()
+
+        attrs_list =
+          Enum.map(subscribers, fn user_id ->
+            %{
+              user_id: user_id,
+              subject_type: subject_type,
+              subject_id: thread_id,
+              actor_id: actor_id,
+              thread_id: thread_id,
+              message: message,
+              inserted_at: now,
+              updated_at: now
+            }
+          end)
+
+        {count, _} = Repo.insert_all(Notification, attrs_list)
+        {:ok, count}
+    end
   end
 
   # Search
