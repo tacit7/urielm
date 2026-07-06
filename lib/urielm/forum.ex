@@ -243,11 +243,12 @@ defmodule Urielm.Forum do
       thread ->
         thread = preload_thread_meta(thread)
         allow_removed? = Keyword.get(opts, :allow_removed?, false)
+        include_comments? = Keyword.get(opts, :include_comments?, false)
 
-        if thread.is_removed and not allow_removed? do
-          nil
-        else
-          thread
+        cond do
+          thread.is_removed and not allow_removed? -> nil
+          include_comments? -> Map.put(thread, :comments, list_comments_with_authors(id))
+          true -> thread
         end
     end
   end
