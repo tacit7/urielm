@@ -342,6 +342,15 @@ defmodule Urielm.Content do
   def get_post!(id), do: Repo.get!(Post, id)
 
   @doc """
+  Non-raising version of get_post_by_slug!. Returns nil if not found or not published.
+  """
+  def get_post_by_slug(slug) do
+    Post
+    |> Post.published()
+    |> Repo.get_by(slug: slug)
+  end
+
+  @doc """
   Creates a post.
 
   ## Examples
@@ -630,6 +639,17 @@ defmodule Urielm.Content do
   def get_video_by_slug!(slug) do
     Repo.get_by!(Video, slug: slug)
     |> Repo.preload(:thread)
+  end
+
+  @doc """
+  Non-raising version of get_video_by_slug!. Returns nil if not found.
+  """
+  def get_video_by_slug(slug) do
+    Repo.get_by(Video, slug: slug)
+    |> case do
+      nil -> nil
+      video -> Repo.preload(video, :thread)
+    end
   end
 
   @doc """
