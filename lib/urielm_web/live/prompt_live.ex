@@ -18,25 +18,38 @@ defmodule UrielmWeb.PromptLive do
       end
 
     id = child_params["id"]
-    prompt = Content.get_prompt_with_comments(String.to_integer(id))
 
-    # Load vote data
-    %{current_user: user} = socket.assigns
-    target_id = to_string(prompt.id)
-    {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
-    user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+    prompt_id =
+      case Integer.parse(id) do
+        {n, ""} -> n
+        _ -> nil
+      end
 
-    user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
+    case prompt_id do
+      nil ->
+        {:ok, socket |> put_flash(:error, "Invalid prompt") |> redirect(to: ~p"/prompts")}
 
-    {:ok,
-     socket
-     |> assign(:page_title, prompt.title)
-     |> assign(:prompt, prompt)
-     |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
-     |> assign(:upvotes, upvotes)
-     |> assign(:downvotes, downvotes)
-     |> assign(:user_vote, user_vote && user_vote.value)
-     |> assign(:user_saved, user_saved)}
+      prompt_id ->
+        prompt = Content.get_prompt_with_comments(prompt_id)
+
+        # Load vote data
+        %{current_user: user} = socket.assigns
+        target_id = to_string(prompt.id)
+        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+        user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+
+        user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
+
+        {:ok,
+         socket
+         |> assign(:page_title, prompt.title)
+         |> assign(:prompt, prompt)
+         |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
+         |> assign(:upvotes, upvotes)
+         |> assign(:downvotes, downvotes)
+         |> assign(:user_vote, user_vote && user_vote.value)
+         |> assign(:user_saved, user_saved)}
+    end
   end
 
   @impl true
@@ -87,19 +100,31 @@ defmodule UrielmWeb.PromptLive do
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
     %{current_user: user, prompt: prompt} = socket.assigns
 
-    comment = Content.get_comment!(String.to_integer(comment_id))
-
-    if user && (comment.user_id == user.id or user.is_admin) do
-      case Content.delete_comment(comment) do
-        {:ok, _} ->
-          updated_prompt = Content.get_prompt_with_comments(prompt.id)
-          {:noreply, assign(socket, :prompt, updated_prompt)}
-
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+    parsed_id =
+      case Integer.parse(comment_id) do
+        {n, ""} -> n
+        _ -> nil
       end
-    else
-      {:noreply, put_flash(socket, :error, "Not authorized")}
+
+    case parsed_id do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Invalid comment ID")}
+
+      parsed_id ->
+        comment = Content.get_comment!(parsed_id)
+
+        if user && (comment.user_id == user.id or user.is_admin) do
+          case Content.delete_comment(comment) do
+            {:ok, _} ->
+              updated_prompt = Content.get_prompt_with_comments(prompt.id)
+              {:noreply, assign(socket, :prompt, updated_prompt)}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+          end
+        else
+          {:noreply, put_flash(socket, :error, "Not authorized")}
+        end
     end
   end
 

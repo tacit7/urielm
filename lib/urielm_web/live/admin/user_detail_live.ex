@@ -153,17 +153,27 @@ defmodule UrielmWeb.Admin.UserDetailLive do
 
   @impl true
   def handle_event("set_trust_level", %{"trust_level" => level}, socket) do
-    trust_level = String.to_integer(level)
+    trust_level =
+      case Integer.parse(level) do
+        {n, ""} -> n
+        _ -> nil
+      end
 
-    case Accounts.update_trust_level(socket.assigns.user, trust_level, socket.assigns.current_user) do
-      {:ok, updated} ->
-        {:noreply,
-         socket
-         |> assign(:user, updated)
-         |> put_flash(:info, "Trust level updated to TL#{trust_level}")}
+    case trust_level do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Invalid trust level")}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to update trust level")}
+      trust_level ->
+        case Accounts.update_trust_level(socket.assigns.user, trust_level, socket.assigns.current_user) do
+          {:ok, updated} ->
+            {:noreply,
+             socket
+             |> assign(:user, updated)
+             |> put_flash(:info, "Trust level updated to TL#{trust_level}")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to update trust level")}
+        end
     end
   end
 

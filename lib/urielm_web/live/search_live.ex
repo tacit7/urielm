@@ -27,7 +27,11 @@ defmodule UrielmWeb.SearchLive do
     page =
       case params["page"] do
         nil -> 1
-        p when is_binary(p) -> String.to_integer(p)
+        p when is_binary(p) ->
+          case Integer.parse(p) do
+            {n, ""} when n > 0 -> n
+            _ -> 1
+          end
         p when is_integer(p) -> p
       end
 
@@ -71,15 +75,25 @@ defmodule UrielmWeb.SearchLive do
 
       user ->
         target_id_binary = target_id
-        value_int = String.to_integer(value)
+        value_int =
+          case Integer.parse(value) do
+            {n, ""} -> n
+            _ -> nil
+          end
 
-        case Forum.cast_vote(user.id, target_type, target_id_binary, value_int) do
-          {:ok, _vote} ->
-            {:noreply,
-             LiveHelpers.update_thread_in_stream(socket, :results, target_id_binary, user)}
+        case value_int do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Invalid vote value")}
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to vote")}
+          value_int ->
+            case Forum.cast_vote(user.id, target_type, target_id_binary, value_int) do
+              {:ok, _vote} ->
+                {:noreply,
+                 LiveHelpers.update_thread_in_stream(socket, :results, target_id_binary, user)}
+
+              {:error, _} ->
+                {:noreply, put_flash(socket, :error, "Failed to vote")}
+            end
         end
     end
   end

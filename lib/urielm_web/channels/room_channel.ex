@@ -5,25 +5,37 @@ defmodule UrielmWeb.RoomChannel do
 
   def join("room:" <> room_id, _payload, socket) do
     user = socket.assigns[:current_user]
-    room_id_int = String.to_integer(room_id)
 
-    if user && Chat.is_member?(user.id, room_id_int) do
-      # Load recent messages with users preloaded
-      messages =
-        Chat.list_room_messages(room_id_int, 50)
-        |> Enum.map(fn msg ->
-          # Ensure user is loaded
-          if Ecto.assoc_loaded?(msg.user) do
-            msg
-          else
-            Urielm.Repo.preload(msg, :user)
-          end
-        end)
-        |> Enum.map(&serialize_message/1)
+    room_id_int =
+      case Integer.parse(room_id) do
+        {n, ""} -> n
+        _ -> nil
+      end
 
-      {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
-    else
-      {:error, %{reason: "unauthorized"}}
+    case room_id_int do
+      nil ->
+        Logger.error("Invalid room ID: #{inspect(room_id)}")
+        {:error, %{reason: "invalid_room_id"}}
+
+      room_id_int ->
+        if user && Chat.is_member?(user.id, room_id_int) do
+          # Load recent messages with users preloaded
+          messages =
+            Chat.list_room_messages(room_id_int, 50)
+            |> Enum.map(fn msg ->
+              # Ensure user is loaded
+              if Ecto.assoc_loaded?(msg.user) do
+                msg
+              else
+                Urielm.Repo.preload(msg, :user)
+              end
+            end)
+            |> Enum.map(&serialize_message/1)
+
+          {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
+        else
+          {:error, %{reason: "unauthorized"}}
+        end
     end
   rescue
     e ->

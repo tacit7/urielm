@@ -51,7 +51,15 @@ defmodule UrielmWeb.Admin.UserManagementLive do
 
   @impl true
   def handle_event("filter_trust", %{"trust_level" => level}, socket) do
-    trust = if level == "", do: nil, else: String.to_integer(level)
+    trust =
+      if level == "" do
+        nil
+      else
+        case Integer.parse(level) do
+          {n, ""} -> n
+          _ -> nil
+        end
+      end
 
     {:noreply,
      socket
@@ -72,7 +80,13 @@ defmodule UrielmWeb.Admin.UserManagementLive do
 
   @impl true
   def handle_event("page", %{"page" => page}, socket) do
-    flop = %{socket.assigns.flop | page: String.to_integer(page)}
+    page_num =
+      case Integer.parse(page) do
+        {n, ""} when n > 0 -> n
+        _ -> 1
+      end
+
+    flop = %{socket.assigns.flop | page: page_num}
 
     {:noreply,
      socket
@@ -290,7 +304,17 @@ defmodule UrielmWeb.Admin.UserManagementLive do
   end
 
   defp parse_flop(params) do
-    page = Map.get(params, "page", "1") |> String.to_integer()
+    page =
+      Map.get(params, "page", "1")
+      |> case do
+        p when is_binary(p) ->
+          case Integer.parse(p) do
+            {n, ""} when n > 0 -> n
+            _ -> 1
+          end
+        p when is_integer(p) -> p
+      end
+
     %{default_flop() | page: page}
   end
 

@@ -106,14 +106,24 @@ defmodule UrielmWeb.ThreadLive do
         {:noreply, put_flash(socket, :error, "Sign in to vote")}
 
       user ->
-        value_int = String.to_integer(value)
+        value_int =
+          case Integer.parse(value) do
+            {n, ""} -> n
+            _ -> nil
+          end
 
-        case Forum.cast_vote(user.id, target_type, target_id, value_int) do
-          {:ok, _vote} ->
-            {:noreply, socket |> refresh_thread(user)}
+        case value_int do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Invalid vote value")}
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to vote")}
+          value_int ->
+            case Forum.cast_vote(user.id, target_type, target_id, value_int) do
+              {:ok, _vote} ->
+                {:noreply, socket |> refresh_thread(user)}
+
+              {:error, _} ->
+                {:noreply, put_flash(socket, :error, "Failed to vote")}
+            end
         end
     end
   end

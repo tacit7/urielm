@@ -139,29 +139,41 @@ defmodule UrielmWeb.AuthController do
   Post-signup redirect - sets session and redirects to verification page or intended destination
   """
   def post_signup(conn, %{"user_id" => user_id}) do
-    user = Accounts.get_user(String.to_integer(user_id))
-    return_to = get_session(conn, :return_to) || "/"
+    parsed_id =
+      case Integer.parse(user_id) do
+        {n, ""} -> n
+        _ -> nil
+      end
 
-    conn =
-      conn
-      |> put_session(:user_id, user.id)
-      |> delete_session(:return_to)
-      |> configure_session(renew: true)
+    case parsed_id do
+      nil ->
+        conn |> put_flash(:error, "Invalid user ID") |> redirect(to: ~p"/")
 
-    # If email not verified, redirect to verification page
-    cond do
-      !user.email_verified ->
-        conn
-        |> put_session(:pending_redirect, return_to)
-        |> redirect(to: ~p"/signup/verify-email")
+      parsed_id ->
+        user = Accounts.get_user(parsed_id)
+        return_to = get_session(conn, :return_to) || "/"
 
-      needs_handle_for_action?(return_to) && is_nil(user.username) ->
-        conn
-        |> put_session(:pending_redirect, return_to)
-        |> redirect(to: ~p"/signup/set-handle")
+        conn =
+          conn
+          |> put_session(:user_id, user.id)
+          |> delete_session(:return_to)
+          |> configure_session(renew: true)
 
-      true ->
-        redirect(conn, to: return_to)
+        # If email not verified, redirect to verification page
+        cond do
+          !user.email_verified ->
+            conn
+            |> put_session(:pending_redirect, return_to)
+            |> redirect(to: ~p"/signup/verify-email")
+
+          needs_handle_for_action?(return_to) && is_nil(user.username) ->
+            conn
+            |> put_session(:pending_redirect, return_to)
+            |> redirect(to: ~p"/signup/set-handle")
+
+          true ->
+            redirect(conn, to: return_to)
+        end
     end
   end
 
