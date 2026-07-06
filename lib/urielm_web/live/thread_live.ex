@@ -107,119 +107,101 @@ defmodule UrielmWeb.ThreadLive do
         %{"target_type" => target_type, "target_id" => target_id, "value" => value},
         socket
       ) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to vote")}
-
-      user ->
-        value_int =
-          case Integer.parse(value) do
-            {n, ""} -> n
-            _ -> nil
-          end
-
-        case value_int do
-          nil ->
-            {:noreply, put_flash(socket, :error, "Invalid vote value")}
-
-          value_int ->
-            case Forum.cast_vote(user.id, target_type, target_id, value_int) do
-              {:ok, _vote} ->
-                {:noreply, socket |> refresh_thread(user)}
-
-              {:error, _} ->
-                {:noreply, put_flash(socket, :error, "Failed to vote")}
-            end
+    LiveHelpers.with_auth(socket, "vote", fn socket, user ->
+      value_int =
+        case Integer.parse(value) do
+          {n, ""} -> n
+          _ -> nil
         end
-    end
+
+      case value_int do
+        nil ->
+          {:noreply, put_flash(socket, :error, "Invalid vote value")}
+
+        value_int ->
+          case Forum.cast_vote(user.id, target_type, target_id, value_int) do
+            {:ok, _vote} ->
+              {:noreply, socket |> refresh_thread(user)}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to vote")}
+          end
+      end
+    end)
   end
 
   @impl true
   def handle_event("delete_thread", _params, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Not authorized")}
+    LiveHelpers.with_auth(socket, "delete threads", fn socket, user ->
+      # Fetch thread metadata only (no comments needed for deletion)
+      thread = Forum.get_thread!(thread_data.id)
 
-      user ->
-        # Fetch thread metadata only (no comments needed for deletion)
-        thread = Forum.get_thread!(thread_data.id)
+      case Forum.remove_thread(thread, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Thread deleted")
+           |> redirect(to: ~p"/forum/b/#{thread.board.slug}")}
 
-        case Forum.remove_thread(thread, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> put_flash(:info, "Thread deleted")
-             |> redirect(to: ~p"/forum/b/#{thread.board.slug}")}
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Not authorized")}
 
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Not authorized")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to delete thread")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete thread")}
+      end
+    end)
   end
 
   @impl true
   def handle_event("mark_solved", %{"comment_id" => comment_id}, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Not authorized")}
+    LiveHelpers.with_auth(socket, "mark threads as solved", fn socket, user ->
+      thread_id = thread_data.id
+      # Fetch thread metadata only (no comments needed for mark as solved)
+      thread = Forum.get_thread!(thread_id)
 
-      user ->
-        thread_id = thread_data.id
-        # Fetch thread metadata only (no comments needed for mark as solved)
-        thread = Forum.get_thread!(thread_id)
+      case Forum.mark_as_solved(thread, comment_id, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Marked as solved")}
 
-        case Forum.mark_as_solved(thread, comment_id, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> refresh_thread(user)
-             |> put_flash(:info, "Marked as solved")}
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Only the author can mark as solved")}
 
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Only the author can mark as solved")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to mark as solved")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to mark as solved")}
+      end
+    end)
   end
 
   @impl true
   def handle_event("unmark_solved", _params, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Not authorized")}
+    LiveHelpers.with_auth(socket, "unmark threads as solved", fn socket, user ->
+      thread_id = thread_data.id
+      # Fetch thread metadata only (no comments needed for unmark solved)
+      thread = Forum.get_thread!(thread_id)
 
-      user ->
-        thread_id = thread_data.id
-        # Fetch thread metadata only (no comments needed for unmark solved)
-        thread = Forum.get_thread!(thread_id)
+      case Forum.unmark_as_solved(thread, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Unmarked as solved")}
 
-        case Forum.unmark_as_solved(thread, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> refresh_thread(user)
-             |> put_flash(:info, "Unmarked as solved")}
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Only the author can unmark solved")}
 
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Only the author can unmark solved")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to unmark as solved")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to unmark as solved")}
+      end
+    end)
   end
 
   @impl true
@@ -271,56 +253,44 @@ defmodule UrielmWeb.ThreadLive do
 
   @impl true
   def handle_event("edit_comment", %{"id" => comment_id, "body" => body}, socket) do
-    %{current_user: user} = socket.assigns
+    LiveHelpers.with_auth(socket, "edit comments", fn socket, user ->
+      comment = Forum.get_comment!(comment_id)
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Not authorized")}
+      case Forum.edit_comment(comment, body, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Comment updated")}
 
-      user ->
-        comment = Forum.get_comment!(comment_id)
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Not authorized")}
 
-        case Forum.edit_comment(comment, body, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> refresh_thread(user)
-             |> put_flash(:info, "Comment updated")}
-
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Not authorized")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to update comment")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to update comment")}
+      end
+    end)
   end
 
   @impl true
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
-    %{current_user: user} = socket.assigns
+    LiveHelpers.with_auth(socket, "delete comments", fn socket, user ->
+      comment = Forum.get_comment!(comment_id)
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Not authorized")}
+      case Forum.remove_comment(comment, user) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Comment deleted")}
 
-      user ->
-        comment = Forum.get_comment!(comment_id)
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Not authorized")}
 
-        case Forum.remove_comment(comment, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> refresh_thread(user)
-             |> put_flash(:info, "Comment deleted")}
-
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Not authorized")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to delete comment")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+      end
+    end)
   end
 
   @impl true
@@ -329,17 +299,11 @@ defmodule UrielmWeb.ThreadLive do
         %{"target_type" => _target_type, "target_id" => _target_id},
         socket
       ) do
-    %{current_user: user} = socket.assigns
-
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to like")}
-
-      _user ->
-        # For now, just acknowledge the event. Like functionality can be expanded later.
-        # This handler prevents errors when PostActions tries to toggle likes
-        {:noreply, socket}
-    end
+    LiveHelpers.with_auth(socket, "like", fn socket, _user ->
+      # For now, just acknowledge the event. Like functionality can be expanded later.
+      # This handler prevents errors when PostActions tries to toggle likes
+      {:noreply, socket}
+    end)
   end
 
   @impl true
@@ -470,32 +434,28 @@ defmodule UrielmWeb.ThreadLive do
 
   @impl true
   def handle_event("report_thread", %{"reason" => reason, "description" => description}, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to report")}
+    LiveHelpers.with_auth(socket, "report", fn socket, user ->
+      case Forum.create_report(user.id, "thread", thread_data.id, %{
+             reason: reason,
+             description: description
+           }) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Report submitted successfully")
+           |> push_event("close_modal", %{"id" => "report_thread_modal"})}
 
-      user ->
-        case Forum.create_report(user.id, "thread", thread_data.id, %{
-               reason: reason,
-               description: description
-             }) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> put_flash(:info, "Report submitted successfully")
-             |> push_event("close_modal", %{"id" => "report_thread_modal"})}
+        {:error, :unique_constraint} ->
+          {:noreply, put_flash(socket, :error, "You've already reported this")}
 
-          {:error, :unique_constraint} ->
-            {:noreply, put_flash(socket, :error, "You've already reported this")}
-
-          {:error, changeset} ->
-            # Extract validation errors
-            errors = format_errors(changeset)
-            {:noreply, put_flash(socket, :error, errors)}
-        end
-    end
+        {:error, changeset} ->
+          # Extract validation errors
+          errors = format_errors(changeset)
+          {:noreply, put_flash(socket, :error, errors)}
+      end
+    end)
   end
 
   @impl true
@@ -512,55 +472,45 @@ defmodule UrielmWeb.ThreadLive do
         %{"comment_id" => comment_id, "reason" => reason, "description" => description},
         socket
       ) do
-    %{current_user: user} = socket.assigns
+    LiveHelpers.with_auth(socket, "report", fn socket, user ->
+      case Forum.create_report(user.id, "comment", comment_id, %{
+             reason: reason,
+             description: description
+           }) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> assign(:reporting_comment_id, nil)
+           |> put_flash(:info, "Report submitted successfully")
+           |> push_event("close_modal", %{"id" => "report_comment_modal"})}
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to report")}
+        {:error, :unique_constraint} ->
+          {:noreply, put_flash(socket, :error, "You've already reported this")}
 
-      user ->
-        case Forum.create_report(user.id, "comment", comment_id, %{
-               reason: reason,
-               description: description
-             }) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> assign(:reporting_comment_id, nil)
-             |> put_flash(:info, "Report submitted successfully")
-             |> push_event("close_modal", %{"id" => "report_comment_modal"})}
-
-          {:error, :unique_constraint} ->
-            {:noreply, put_flash(socket, :error, "You've already reported this")}
-
-          {:error, changeset} ->
-            # Extract validation errors
-            errors = format_errors(changeset)
-            {:noreply, put_flash(socket, :error, errors)}
-        end
-    end
+        {:error, changeset} ->
+          # Extract validation errors
+          errors = format_errors(changeset)
+          {:noreply, put_flash(socket, :error, errors)}
+      end
+    end)
   end
 
   @impl true
   def handle_event("set_notification_level", %{"level" => level}, socket) do
-    %{current_user: user, thread: thread_data} = socket.assigns
+    thread_data = socket.assigns.thread
 
-    case user do
-      nil ->
-        {:noreply, put_flash(socket, :error, "Sign in to change notification settings")}
+    LiveHelpers.with_auth(socket, "change notification settings", fn socket, user ->
+      case Forum.set_notification_level(user.id, thread_data.id, level) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> assign(:notification_level, level)
+           |> put_flash(:info, "Notification setting updated")}
 
-      user ->
-        case Forum.set_notification_level(user.id, thread_data.id, level) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> assign(:notification_level, level)
-             |> put_flash(:info, "Notification setting updated")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to update notification setting")}
-        end
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to update notification setting")}
+      end
+    end)
   end
 
   @impl true
