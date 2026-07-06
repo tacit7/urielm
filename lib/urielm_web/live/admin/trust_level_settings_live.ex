@@ -20,8 +20,8 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
   def handle_event("edit", %{"level" => level_str}, socket) do
     level =
       case Integer.parse(level_str) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case level do

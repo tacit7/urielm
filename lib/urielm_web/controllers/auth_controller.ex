@@ -141,8 +141,8 @@ defmodule UrielmWeb.AuthController do
   def post_signup(conn, %{"user_id" => user_id}) do
     parsed_id =
       case Integer.parse(user_id) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case parsed_id do

@@ -316,8 +316,8 @@ defmodule UrielmWeb.LiveHelpers do
     with_auth(socket, "vote", fn socket, user ->
       value_int =
         case Integer.parse(value) do
-          {n, _} -> n
-          :error -> nil
+          {n, ""} -> n
+          _ -> nil
         end
 
       case value_int do

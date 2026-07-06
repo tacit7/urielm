@@ -56,8 +56,8 @@ defmodule UrielmWeb.Admin.UserManagementLive do
         nil
       else
         case Integer.parse(level) do
-          {n, _} -> n
-          :error -> nil
+          {n, ""} -> n
+          _ -> nil
         end
       end
 
@@ -82,7 +82,7 @@ defmodule UrielmWeb.Admin.UserManagementLive do
   def handle_event("page", %{"page" => page}, socket) do
     page_num =
       case Integer.parse(page) do
-        {n, _} when n > 0 -> n
+        {n, ""} when n > 0 -> n
         _ -> 1
       end
 
@@ -309,7 +309,7 @@ defmodule UrielmWeb.Admin.UserManagementLive do
       |> case do
         p when is_binary(p) ->
           case Integer.parse(p) do
-            {n, _} when n > 0 -> n
+            {n, ""} when n > 0 -> n
             _ -> 1
           end
         p when is_integer(p) -> p

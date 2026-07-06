@@ -34,7 +34,7 @@ defmodule UrielmWeb.UserProfileLive do
             nil -> 1
             p when is_binary(p) ->
               case Integer.parse(p) do
-                {n, _} when n > 0 -> n
+                {n, ""} when n > 0 -> n
                 _ -> 1
               end
             p when is_integer(p) -> p
@@ -109,7 +109,7 @@ defmodule UrielmWeb.UserProfileLive do
     page =
       if is_binary(page) do
         case Integer.parse(page) do
-          {n, _} when n > 0 -> n
+          {n, ""} when n > 0 -> n
           _ -> 1
         end
       else

@@ -108,8 +108,8 @@ defmodule UrielmWeb.ThreadLive do
       user ->
         value_int =
           case Integer.parse(value) do
-            {n, _} -> n
-            :error -> nil
+            {n, ""} -> n
+            _ -> nil
           end
 
         case value_int do

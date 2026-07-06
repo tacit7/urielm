@@ -21,8 +21,8 @@ defmodule UrielmWeb.PromptLive do
 
     prompt_id =
       case Integer.parse(id) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case prompt_id do
@@ -102,8 +102,8 @@ defmodule UrielmWeb.PromptLive do
 
     parsed_id =
       case Integer.parse(comment_id) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case parsed_id do

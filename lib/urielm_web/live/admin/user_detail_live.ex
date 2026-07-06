@@ -155,8 +155,8 @@ defmodule UrielmWeb.Admin.UserDetailLive do
   def handle_event("set_trust_level", %{"trust_level" => level}, socket) do
     trust_level =
       case Integer.parse(level) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case trust_level do

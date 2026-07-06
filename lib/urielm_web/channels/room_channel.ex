@@ -8,8 +8,8 @@ defmodule UrielmWeb.RoomChannel do
 
     room_id_int =
       case Integer.parse(room_id) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case room_id_int do

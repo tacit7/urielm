@@ -108,8 +108,8 @@ defmodule UrielmWeb.PromptsLive do
 
     prompt_id =
       case Integer.parse(id) do
-        {n, _} -> n
-        :error -> nil
+        {n, ""} -> n
+        _ -> nil
       end
 
     case prompt_id do
@@ -162,8 +162,8 @@ defmodule UrielmWeb.PromptsLive do
       user ->
         value_int =
           case Integer.parse(value) do
-            {n, _} -> n
-            :error -> nil
+            {n, ""} -> n
+            _ -> nil
           end
 
         case value_int do
@@ -200,8 +200,8 @@ defmodule UrielmWeb.PromptsLive do
       user ->
         prompt_id =
           case Integer.parse(id) do
-            {n, _} -> n
-            :error -> nil
+            {n, ""} -> n
+            _ -> nil
           end
 
         case prompt_id do
