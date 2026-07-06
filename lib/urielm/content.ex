@@ -542,17 +542,23 @@ defmodule Urielm.Content do
   Gets a prompt with its comments for display.
   """
   def get_prompt_with_comments(prompt_id) do
-    prompt = Repo.get!(Prompt, prompt_id) |> Repo.preload(:tag_records)
+    case Repo.get(Prompt, prompt_id) do
+      nil ->
+        nil
 
-    comments =
-      from(c in Comment,
-        where: c.prompt_id == ^prompt_id and is_nil(c.deleted_at) and is_nil(c.parent_id),
-        order_by: [desc: c.inserted_at],
-        preload: [:user, :replies]
-      )
-      |> Repo.all()
+      prompt ->
+        prompt = Repo.preload(prompt, :tag_records)
 
-    Map.put(prompt, :comments, comments)
+        comments =
+          from(c in Comment,
+            where: c.prompt_id == ^prompt_id and is_nil(c.deleted_at) and is_nil(c.parent_id),
+            order_by: [desc: c.inserted_at],
+            preload: [:user, :replies]
+          )
+          |> Repo.all()
+
+        Map.put(prompt, :comments, comments)
+    end
   end
 
   # Helper functions
