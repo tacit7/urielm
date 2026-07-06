@@ -1,4 +1,6 @@
 defmodule UrielmWeb.AdminComponents do
+  @moduledoc false
+
   use Phoenix.Component
 
   alias Urielm.Accounts.User

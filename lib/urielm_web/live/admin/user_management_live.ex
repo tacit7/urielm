@@ -324,7 +324,7 @@ defmodule UrielmWeb.Admin.UserManagementLive do
     if field not in @sortable_fields do
       flop
     else
-      field_atom = String.to_atom(field)
+      field_atom = String.to_existing_atom(field)
 
       if flop[:order_by] == [field_atom] && flop[:order_directions] == [:asc] do
         %{flop | order_by: [field_atom], order_directions: [:desc]}

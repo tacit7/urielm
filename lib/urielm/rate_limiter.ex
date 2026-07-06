@@ -75,7 +75,7 @@ defmodule Urielm.RateLimiter do
     cleaned_state =
       state
       |> Enum.reduce(%{}, fn {key, timestamps}, acc ->
-        recent = Enum.filter(timestamps, &(&1 > now - 86400))
+        recent = Enum.filter(timestamps, &(&1 > now - 86_400))
 
         case recent do
           [] -> acc

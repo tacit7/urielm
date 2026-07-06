@@ -1,4 +1,6 @@
 defmodule UrielmWeb.Components.ForumLayout do
+  @moduledoc false
+
   use UrielmWeb, :html
 
   import UrielmWeb.Layouts, only: [flash_group: 1]

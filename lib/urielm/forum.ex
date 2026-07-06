@@ -401,7 +401,7 @@ defmodule Urielm.Forum do
   def set_close_timer(%Thread{} = thread, days_from_now, %{id: user_id} = user)
       when is_integer(days_from_now) and days_from_now > 0 do
     if is_moderator?(user) do
-      close_at = DateTime.utc_now() |> DateTime.add(days_from_now * 86400, :second)
+      close_at = DateTime.utc_now() |> DateTime.add(days_from_now * 86_400, :second)
 
       update_thread(thread, %{
         close_at: close_at,
@@ -1277,7 +1277,7 @@ defmodule Urielm.Forum do
   def list_new_threads(_user_id, board_id, opts \\ []) do
     days = Keyword.get(opts, :days, 1)
 
-    cutoff = DateTime.utc_now() |> DateTime.add(-days * 86400, :second)
+    cutoff = DateTime.utc_now() |> DateTime.add(-days * 86_400, :second)
 
     from(t in Thread,
       where: t.board_id == ^board_id and t.is_removed == false and t.inserted_at > ^cutoff,
@@ -1294,7 +1294,7 @@ defmodule Urielm.Forum do
   """
   def paginate_new_threads(board_id, params \\ %{}, opts \\ []) do
     days = Keyword.get(opts, :days, 1)
-    cutoff = DateTime.utc_now() |> DateTime.add(-days * 86400, :second)
+    cutoff = DateTime.utc_now() |> DateTime.add(-days * 86_400, :second)
 
     base =
       from(t in Thread,

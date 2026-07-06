@@ -46,7 +46,6 @@ defmodule Mix.Tasks.SeedVibeCodingPost do
         # Category might already exist
         case Repo.get_by(Urielm.Forum.Category, slug: "discussions") do
           nil ->
-            IO.inspect(changeset.errors)
             {:error, changeset}
 
           category ->
@@ -180,7 +179,6 @@ defmodule Mix.Tasks.SeedVibeCodingPost do
         {:ok, thread}
 
       {:error, changeset} ->
-        IO.inspect(changeset.errors)
         {:error, changeset}
     end
   end

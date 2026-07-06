@@ -83,7 +83,7 @@ defmodule Urielm.Forum.Thread do
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
     |> validate_inclusion(:kind, ["forum", "video"])
     |> validate_length(:title, min: 3, max: 300)
-    |> validate_length(:body, min: 10, max: 10000)
+    |> validate_length(:body, min: 10, max: 10_000)
     |> sanitize_body()
     |> foreign_key_constraint(:board_id)
     |> foreign_key_constraint(:author_id)

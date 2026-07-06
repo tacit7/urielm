@@ -20,7 +20,7 @@ defmodule Urielm.ContentSanitizer do
   @doc """
   Validates and truncates forum thread/comment body length.
   """
-  def validate_content_length(text, max_length \\ 10000) do
+  def validate_content_length(text, max_length \\ 10_000) do
     case text do
       nil ->
         {:error, "Content cannot be empty"}

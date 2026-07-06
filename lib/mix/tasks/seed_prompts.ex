@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.SeedPrompts do
+  @moduledoc false
+
   use Mix.Task
   alias Urielm.Repo
   alias Urielm.Content.Prompt

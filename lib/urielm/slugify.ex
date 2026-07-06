@@ -1,4 +1,6 @@
 defmodule Urielm.Slugify do
+  @moduledoc false
+
   @doc """
   Turn a title like "My First Post!" into "my-first-post".
   """

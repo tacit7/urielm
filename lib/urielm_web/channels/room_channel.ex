@@ -1,4 +1,6 @@
 defmodule UrielmWeb.RoomChannel do
+  @moduledoc false
+
   use Phoenix.Channel
   alias Urielm.Chat
   require Logger

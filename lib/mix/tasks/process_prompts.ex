@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.ProcessPrompts do
+  @moduledoc false
+
   use Mix.Task
 
   import Ecto.Query

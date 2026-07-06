@@ -348,7 +348,7 @@ defmodule Mix.Tasks.SeedAiNews do
           end
 
         {:error, changeset} ->
-          IO.inspect(changeset.errors, label: "Error creating post #{index}")
+          {:error, changeset}
       end
     end)
 

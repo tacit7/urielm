@@ -232,8 +232,8 @@ defmodule UrielmWeb.LiveHelpers do
     cond do
       diff < 60 -> "just now"
       diff < 3600 -> "#{div(diff, 60)} minutes ago"
-      diff < 86400 -> "#{div(diff, 3600)} hours ago"
-      diff < 604_800 -> "#{div(diff, 86400)} days ago"
+      diff < 86_400 -> "#{div(diff, 3600)} hours ago"
+      diff < 604_800 -> "#{div(diff, 86_400)} days ago"
       true -> Calendar.strftime(datetime, "%B %d, %Y")
     end
   end
@@ -254,7 +254,7 @@ defmodule UrielmWeb.LiveHelpers do
     cond do
       seconds_ago < 60 -> "now"
       seconds_ago < 3600 -> "#{div(seconds_ago, 60)}m ago"
-      seconds_ago < 86400 -> "#{div(seconds_ago, 3600)}h ago"
+      seconds_ago < 86_400 -> "#{div(seconds_ago, 3600)}h ago"
       true -> Calendar.strftime(datetime, "%b %d, %Y")
     end
   end

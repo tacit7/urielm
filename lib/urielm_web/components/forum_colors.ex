@@ -1,4 +1,6 @@
 defmodule UrielmWeb.ForumColors do
+  @moduledoc false
+
   @colors %{
     "start-here" => "#1B4F8A",
     "announcements" => "#B03A2E",
