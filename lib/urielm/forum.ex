@@ -1086,15 +1086,24 @@ defmodule Urielm.Forum do
       )
       |> Repo.all()
 
-    Enum.each(subscribers, fn user_id ->
-      create_notification(user_id, subject_type, thread_id, %{
-        actor_id: actor_id,
-        thread_id: thread_id,
-        message: message
-      })
-    end)
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-    {:ok, length(subscribers)}
+    attrs_list =
+      Enum.map(subscribers, fn user_id ->
+        %{
+          user_id: user_id,
+          subject_type: subject_type,
+          subject_id: thread_id,
+          actor_id: actor_id,
+          thread_id: thread_id,
+          message: message,
+          inserted_at: now,
+          updated_at: now
+        }
+      end)
+
+    {count, _} = Repo.insert_all(Notification, attrs_list)
+    {:ok, count}
   end
 
   # Search
