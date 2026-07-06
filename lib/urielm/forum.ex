@@ -1462,19 +1462,8 @@ defmodule Urielm.Forum do
   # Helpers
 
   defp update_thread_comment_count(thread_id) do
-    from(t in Thread,
-      where: t.id == ^thread_id,
-      update: [
-        set: [
-          comment_count:
-            fragment(
-              "(SELECT COUNT(*) FROM forum_comments WHERE thread_id = ? AND is_removed = false)",
-              ^thread_id
-            )
-        ]
-      ]
-    )
-    |> Repo.update_all([])
+    from(t in Thread, where: t.id == ^thread_id)
+    |> Repo.update_all(inc: [comment_count: 1])
   end
 
   # Generic rate limit wrapper; -1 means unlimited

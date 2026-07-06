@@ -20,7 +20,7 @@ defmodule Urielm.Engagement.Vote do
 
   schema "votes" do
     field(:target_type, :string)
-    field(:target_id, :string)
+    field(:target_id, :binary_id)
     field(:value, :integer)
 
     belongs_to(:user, Urielm.Accounts.User, type: :id)
