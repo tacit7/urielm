@@ -1080,7 +1080,9 @@ defmodule Urielm.Forum do
         {:error, :not_found}
 
       notification ->
-        case notification |> Notification.changeset(%{read_at: DateTime.utc_now()}) |> Repo.update() do
+        case notification
+             |> Notification.changeset(%{read_at: DateTime.utc_now()})
+             |> Repo.update() do
           {:ok, updated} -> {:ok, Repo.preload(updated, :actor)}
           error -> error
         end

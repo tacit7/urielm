@@ -133,8 +133,7 @@ defmodule UrielmWeb.PromptsLive do
           category: prompt.category,
           tags: tag_names,
           saves_count: prompt.saves_count,
-          user_saved:
-            user && Content.user_saved_prompt?(user.id, prompt.id)
+          user_saved: user && Content.user_saved_prompt?(user.id, prompt.id)
         }
 
         {:noreply,
@@ -152,7 +151,11 @@ defmodule UrielmWeb.PromptsLive do
   end
 
   @impl true
-  def handle_event("vote", %{"target_type" => "prompt", "target_id" => id, "value" => value}, socket) do
+  def handle_event(
+        "vote",
+        %{"target_type" => "prompt", "target_id" => id, "value" => value},
+        socket
+      ) do
     LiveHelpers.with_auth(socket, "vote", fn socket, user ->
       value_int =
         case Integer.parse(value) do
@@ -200,7 +203,8 @@ defmodule UrielmWeb.PromptsLive do
           case Content.toggle_save(user.id, prompt_id) do
             {:ok, _prompt} ->
               updated_socket =
-                if socket.assigns.selected_prompt && socket.assigns.selected_prompt.id == prompt_id do
+                if socket.assigns.selected_prompt &&
+                     socket.assigns.selected_prompt.id == prompt_id do
                   prompt =
                     prompt_id
                     |> Content.get_prompt!()

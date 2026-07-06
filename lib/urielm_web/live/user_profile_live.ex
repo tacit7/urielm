@@ -31,13 +31,17 @@ defmodule UrielmWeb.UserProfileLive do
 
         page =
           case child_params["page"] do
-            nil -> 1
+            nil ->
+              1
+
             p when is_binary(p) ->
               case Integer.parse(p) do
                 {n, ""} when n > 0 -> n
                 _ -> 1
               end
-            p when is_integer(p) -> p
+
+            p when is_integer(p) ->
+              p
           end
 
         stats = Accounts.get_user_stats(user.id)
@@ -115,6 +119,7 @@ defmodule UrielmWeb.UserProfileLive do
       else
         page
       end
+
     {:noreply, load_tab_data(socket, tab, page)}
   end
 
@@ -473,8 +478,8 @@ defmodule UrielmWeb.UserProfileLive do
                   </div>
                 <% end %>
               </div>
-
-              <!-- User Info -->
+              
+    <!-- User Info -->
               <div class="flex-1">
                 <div class="flex items-center gap-3 mb-1">
                   <h1 class="text-2xl font-bold">
@@ -513,8 +518,8 @@ defmodule UrielmWeb.UserProfileLive do
                   </span>
                 </div>
               </div>
-
-              <!-- Follow / Mod Actions -->
+              
+    <!-- Follow / Mod Actions -->
               <%= if @current_user && @current_user.id != @user.id do %>
                 <div class="flex items-center gap-2">
                   <button
@@ -532,7 +537,10 @@ defmodule UrielmWeb.UserProfileLive do
                       <label tabindex="0" class="btn btn-sm btn-ghost">
                         <.um_icon name="hero-ellipsis-vertical" class="w-5 h-5" />
                       </label>
-                      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
+                      <ul
+                        tabindex="0"
+                        class="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52"
+                      >
                         <%= if User.suspended?(@user) do %>
                           <li>
                             <button phx-click="unsuspend_user" class="text-success">
@@ -583,22 +591,28 @@ defmodule UrielmWeb.UserProfileLive do
             <% end %>
           </div>
         </div>
-
-        <!-- Stats Card -->
+        
+    <!-- Stats Card -->
         <div class="card bg-base-100 shadow-xl mb-6">
           <div class="card-body py-4">
             <div class="stats stats-horizontal w-full">
               <div class="stat place-items-center py-2">
                 <div class="stat-value text-xl">{@stats.thread_count}</div>
-                <div class="stat-desc">{if @stats.thread_count == 1, do: "Thread", else: "Threads"}</div>
+                <div class="stat-desc">
+                  {if @stats.thread_count == 1, do: "Thread", else: "Threads"}
+                </div>
               </div>
               <div class="stat place-items-center py-2">
                 <div class="stat-value text-xl">{@stats.comment_count}</div>
-                <div class="stat-desc">{if @stats.comment_count == 1, do: "Comment", else: "Comments"}</div>
+                <div class="stat-desc">
+                  {if @stats.comment_count == 1, do: "Comment", else: "Comments"}
+                </div>
               </div>
               <div class="stat place-items-center py-2">
                 <div class="stat-value text-xl">{@stats.follower_count}</div>
-                <div class="stat-desc">{if @stats.follower_count == 1, do: "Follower", else: "Followers"}</div>
+                <div class="stat-desc">
+                  {if @stats.follower_count == 1, do: "Follower", else: "Followers"}
+                </div>
               </div>
               <div class="stat place-items-center py-2">
                 <div class="stat-value text-xl">{@stats.following_count}</div>
@@ -617,18 +631,33 @@ defmodule UrielmWeb.UserProfileLive do
                 <p class="text-sm text-base-content/70">Manage your account settings</p>
 
                 <div class="divider"></div>
-
-                <!-- Username -->
+                
+    <!-- Username -->
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="font-medium">Username</p>
                     <p class="text-sm text-base-content/60">@{@user.username}</p>
                   </div>
                   <%= if @editing_username do %>
-                    <.form for={@form} id="username-form" phx-submit="update_username" class="flex items-center gap-2">
-                      <.input field={@form[:username]} type="text" class="input input-sm input-bordered" />
+                    <.form
+                      for={@form}
+                      id="username-form"
+                      phx-submit="update_username"
+                      class="flex items-center gap-2"
+                    >
+                      <.input
+                        field={@form[:username]}
+                        type="text"
+                        class="input input-sm input-bordered"
+                      />
                       <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                      <button type="button" phx-click="cancel_edit_username" class="btn btn-ghost btn-sm">Cancel</button>
+                      <button
+                        type="button"
+                        phx-click="cancel_edit_username"
+                        class="btn btn-ghost btn-sm"
+                      >
+                        Cancel
+                      </button>
                     </.form>
                   <% else %>
                     <button phx-click="edit_username" class="btn btn-ghost btn-sm">Edit</button>
@@ -636,18 +665,33 @@ defmodule UrielmWeb.UserProfileLive do
                 </div>
 
                 <div class="divider my-2"></div>
-
-                <!-- Display Name -->
+                
+    <!-- Display Name -->
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="font-medium">Display Name</p>
                     <p class="text-sm text-base-content/60">{@user.display_name || "Not set"}</p>
                   </div>
                   <%= if @editing_display_name do %>
-                    <.form for={@form} id="display-name-form" phx-submit="update_display_name" class="flex items-center gap-2">
-                      <.input field={@form[:display_name]} type="text" class="input input-sm input-bordered" />
+                    <.form
+                      for={@form}
+                      id="display-name-form"
+                      phx-submit="update_display_name"
+                      class="flex items-center gap-2"
+                    >
+                      <.input
+                        field={@form[:display_name]}
+                        type="text"
+                        class="input input-sm input-bordered"
+                      />
                       <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                      <button type="button" phx-click="cancel_edit_display_name" class="btn btn-ghost btn-sm">Cancel</button>
+                      <button
+                        type="button"
+                        phx-click="cancel_edit_display_name"
+                        class="btn btn-ghost btn-sm"
+                      >
+                        Cancel
+                      </button>
                     </.form>
                   <% else %>
                     <button phx-click="edit_display_name" class="btn btn-ghost btn-sm">Edit</button>
@@ -655,8 +699,8 @@ defmodule UrielmWeb.UserProfileLive do
                 </div>
 
                 <div class="divider my-2"></div>
-
-                <!-- Email -->
+                
+    <!-- Email -->
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="font-medium">Email</p>
@@ -666,8 +710,8 @@ defmodule UrielmWeb.UserProfileLive do
                 </div>
               </div>
             </div>
-
-            <!-- Profile Card -->
+            
+    <!-- Profile Card -->
             <div class="card bg-base-100 shadow-xl">
               <div class="card-body">
                 <h2 class="card-title">Profile</h2>
@@ -675,7 +719,13 @@ defmodule UrielmWeb.UserProfileLive do
 
                 <div class="divider"></div>
 
-                <.form for={@form} id="profile-form" phx-change="validate_profile" phx-submit="update_profile" class="space-y-4">
+                <.form
+                  for={@form}
+                  id="profile-form"
+                  phx-change="validate_profile"
+                  phx-submit="update_profile"
+                  class="space-y-4"
+                >
                   <.input
                     field={@form[:bio]}
                     type="textarea"
@@ -710,8 +760,8 @@ defmodule UrielmWeb.UserProfileLive do
                 </.form>
               </div>
             </div>
-
-            <!-- Danger Zone Card -->
+            
+    <!-- Danger Zone Card -->
             <div class="card bg-base-100 shadow-xl border-2 border-error">
               <div class="card-body">
                 <h2 class="card-title text-error">Danger Zone</h2>
@@ -722,14 +772,18 @@ defmodule UrielmWeb.UserProfileLive do
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="font-medium">Delete Account</p>
-                    <p class="text-xs text-base-content/60">Permanently delete your account and all data</p>
+                    <p class="text-xs text-base-content/60">
+                      Permanently delete your account and all data
+                    </p>
                   </div>
-                  <button phx-click="show_delete_confirm" class="btn btn-error btn-sm">Delete Account</button>
+                  <button phx-click="show_delete_confirm" class="btn btn-error btn-sm">
+                    Delete Account
+                  </button>
                 </div>
               </div>
             </div>
-
-            <!-- Delete Confirmation Modal -->
+            
+    <!-- Delete Confirmation Modal -->
             <%= if @show_delete_confirm do %>
               <div class="fixed inset-0 z-50">
                 <div class="absolute inset-0 bg-black/50" phx-click="cancel_delete"></div>
@@ -742,23 +796,25 @@ defmodule UrielmWeb.UserProfileLive do
                     </p>
                     <div class="modal-action">
                       <button type="button" phx-click="cancel_delete" class="btn">Cancel</button>
-                      <button type="button" phx-click="delete_account" class="btn btn-error">Yes, Delete</button>
+                      <button type="button" phx-click="delete_account" class="btn btn-error">
+                        Yes, Delete
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
             <% end %>
           <% end %>
-
-          <!-- Activity Card -->
+          
+    <!-- Activity Card -->
           <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
               <h2 class="card-title">Activity</h2>
               <p class="text-sm text-base-content/70">Recent threads and comments</p>
 
               <div class="divider"></div>
-
-              <!-- Activity Tabs -->
+              
+    <!-- Activity Tabs -->
               <div class="tabs tabs-boxed mb-4 w-fit">
                 <a
                   class={["tab", @active_tab == "threads" && "tab-active"]}
@@ -782,12 +838,19 @@ defmodule UrielmWeb.UserProfileLive do
                 <% else %>
                   <div class="space-y-3">
                     <%= for thread <- @threads do %>
-                      <a href={~p"/forum/t/#{thread.id}"} class="block p-3 rounded-lg bg-base-200 hover:bg-base-300 transition-colors">
+                      <a
+                        href={~p"/forum/t/#{thread.id}"}
+                        class="block p-3 rounded-lg bg-base-200 hover:bg-base-300 transition-colors"
+                      >
                         <p class="font-medium">{thread.title}</p>
                         <p class="text-sm text-base-content/60 line-clamp-1">{thread.body}</p>
                         <div class="flex items-center gap-3 text-xs text-base-content/50 mt-1">
                           <span>{Calendar.strftime(thread.created_at, "%b %d, %Y")}</span>
-                          <span>{thread.comment_count} {if thread.comment_count == 1, do: "reply", else: "replies"}</span>
+                          <span>
+                            {thread.comment_count} {if thread.comment_count == 1,
+                              do: "reply",
+                              else: "replies"}
+                          </span>
                         </div>
                       </a>
                     <% end %>
@@ -830,7 +893,10 @@ defmodule UrielmWeb.UserProfileLive do
                   <div class="space-y-3">
                     <%= for comment <- @comments do %>
                       <div class="p-3 rounded-lg bg-base-200">
-                        <a href={~p"/forum/t/#{comment.thread_id}" <> "#comment-#{comment.id}"} class="text-sm link link-primary">
+                        <a
+                          href={~p"/forum/t/#{comment.thread_id}" <> "#comment-#{comment.id}"}
+                          class="text-sm link link-primary"
+                        >
                           {comment.thread_title}
                         </a>
                         <p class="text-base-content mt-1">{comment.body}</p>
@@ -877,127 +943,127 @@ defmodule UrielmWeb.UserProfileLive do
           </div>
         </div>
       </div>
-
-      <!-- Suspend Modal -->
+      
+    <!-- Suspend Modal -->
       <%= if @show_suspend_modal do %>
         <div class="fixed inset-0 z-50">
           <div class="absolute inset-0 bg-black/50" phx-click="close_mod_modal"></div>
           <div class="relative flex items-center justify-center h-full pointer-events-none">
-          <div class="modal-box bg-base-200 pointer-events-auto">
-            <h3 class="font-bold text-lg text-error">Suspend {@user.username}</h3>
-            <p class="py-2 text-sm text-base-content/70">
-              Suspended users cannot login or access the site.
-            </p>
-            <div class="space-y-4 mt-4">
-              <div>
-                <label class="label">
-                  <span class="label-text">Reason (required)</span>
-                </label>
-                <textarea
-                  class="textarea textarea-bordered w-full bg-base-300"
-                  placeholder="Why is this user being suspended?"
-                  phx-change="update_mod_form"
-                  name="reason"
-                  rows="3"
-                ><%= @mod_reason %></textarea>
+            <div class="modal-box bg-base-200 pointer-events-auto">
+              <h3 class="font-bold text-lg text-error">Suspend {@user.username}</h3>
+              <p class="py-2 text-sm text-base-content/70">
+                Suspended users cannot login or access the site.
+              </p>
+              <div class="space-y-4 mt-4">
+                <div>
+                  <label class="label">
+                    <span class="label-text">Reason (required)</span>
+                  </label>
+                  <textarea
+                    class="textarea textarea-bordered w-full bg-base-300"
+                    placeholder="Why is this user being suspended?"
+                    phx-change="update_mod_form"
+                    name="reason"
+                    rows="3"
+                  ><%= @mod_reason %></textarea>
+                </div>
+                <div>
+                  <label class="label">
+                    <span class="label-text">Duration</span>
+                  </label>
+                  <select
+                    class="select select-bordered w-full bg-base-300"
+                    phx-change="update_mod_form"
+                    name="duration"
+                  >
+                    <option value="1h" selected={@mod_duration == "1h"}>1 hour</option>
+                    <option value="1d" selected={@mod_duration == "1d"}>1 day</option>
+                    <option value="3d" selected={@mod_duration == "3d"}>3 days</option>
+                    <option value="1w" selected={@mod_duration == "1w"}>1 week</option>
+                    <option value="1m" selected={@mod_duration == "1m"}>1 month</option>
+                    <option value="3m" selected={@mod_duration == "3m"}>3 months</option>
+                    <option value="6m" selected={@mod_duration == "6m"}>6 months</option>
+                    <option value="1y" selected={@mod_duration == "1y"}>1 year</option>
+                    <option value="forever" selected={@mod_duration == "forever"}>Forever</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label class="label">
-                  <span class="label-text">Duration</span>
-                </label>
-                <select
-                  class="select select-bordered w-full bg-base-300"
-                  phx-change="update_mod_form"
-                  name="duration"
+              <div class="modal-action">
+                <button type="button" phx-click="close_mod_modal" class="btn btn-ghost">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  phx-click="suspend_user"
+                  class="btn btn-error"
+                  disabled={@mod_reason == ""}
                 >
-                  <option value="1h" selected={@mod_duration == "1h"}>1 hour</option>
-                  <option value="1d" selected={@mod_duration == "1d"}>1 day</option>
-                  <option value="3d" selected={@mod_duration == "3d"}>3 days</option>
-                  <option value="1w" selected={@mod_duration == "1w"}>1 week</option>
-                  <option value="1m" selected={@mod_duration == "1m"}>1 month</option>
-                  <option value="3m" selected={@mod_duration == "3m"}>3 months</option>
-                  <option value="6m" selected={@mod_duration == "6m"}>6 months</option>
-                  <option value="1y" selected={@mod_duration == "1y"}>1 year</option>
-                  <option value="forever" selected={@mod_duration == "forever"}>Forever</option>
-                </select>
+                  Suspend User
+                </button>
               </div>
             </div>
-            <div class="modal-action">
-              <button type="button" phx-click="close_mod_modal" class="btn btn-ghost">
-                Cancel
-              </button>
-              <button
-                type="button"
-                phx-click="suspend_user"
-                class="btn btn-error"
-                disabled={@mod_reason == ""}
-              >
-                Suspend User
-              </button>
-            </div>
-          </div>
           </div>
         </div>
       <% end %>
-
-      <!-- Silence Modal -->
+      
+    <!-- Silence Modal -->
       <%= if @show_silence_modal do %>
         <div class="fixed inset-0 z-50">
           <div class="absolute inset-0 bg-black/50" phx-click="close_mod_modal"></div>
           <div class="relative flex items-center justify-center h-full pointer-events-none">
-          <div class="modal-box bg-base-200 pointer-events-auto">
-            <h3 class="font-bold text-lg text-warning">Silence {@user.username}</h3>
-            <p class="py-2 text-sm text-base-content/70">
-              Silenced users can browse but cannot post, comment, or vote.
-            </p>
-            <div class="space-y-4 mt-4">
-              <div>
-                <label class="label">
-                  <span class="label-text">Reason (required)</span>
-                </label>
-                <textarea
-                  class="textarea textarea-bordered w-full bg-base-300"
-                  placeholder="Why is this user being silenced?"
-                  phx-change="update_mod_form"
-                  name="reason"
-                  rows="3"
-                ><%= @mod_reason %></textarea>
+            <div class="modal-box bg-base-200 pointer-events-auto">
+              <h3 class="font-bold text-lg text-warning">Silence {@user.username}</h3>
+              <p class="py-2 text-sm text-base-content/70">
+                Silenced users can browse but cannot post, comment, or vote.
+              </p>
+              <div class="space-y-4 mt-4">
+                <div>
+                  <label class="label">
+                    <span class="label-text">Reason (required)</span>
+                  </label>
+                  <textarea
+                    class="textarea textarea-bordered w-full bg-base-300"
+                    placeholder="Why is this user being silenced?"
+                    phx-change="update_mod_form"
+                    name="reason"
+                    rows="3"
+                  ><%= @mod_reason %></textarea>
+                </div>
+                <div>
+                  <label class="label">
+                    <span class="label-text">Duration</span>
+                  </label>
+                  <select
+                    class="select select-bordered w-full bg-base-300"
+                    phx-change="update_mod_form"
+                    name="duration"
+                  >
+                    <option value="1h" selected={@mod_duration == "1h"}>1 hour</option>
+                    <option value="1d" selected={@mod_duration == "1d"}>1 day</option>
+                    <option value="3d" selected={@mod_duration == "3d"}>3 days</option>
+                    <option value="1w" selected={@mod_duration == "1w"}>1 week</option>
+                    <option value="1m" selected={@mod_duration == "1m"}>1 month</option>
+                    <option value="3m" selected={@mod_duration == "3m"}>3 months</option>
+                    <option value="6m" selected={@mod_duration == "6m"}>6 months</option>
+                    <option value="1y" selected={@mod_duration == "1y"}>1 year</option>
+                    <option value="forever" selected={@mod_duration == "forever"}>Forever</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label class="label">
-                  <span class="label-text">Duration</span>
-                </label>
-                <select
-                  class="select select-bordered w-full bg-base-300"
-                  phx-change="update_mod_form"
-                  name="duration"
+              <div class="modal-action">
+                <button type="button" phx-click="close_mod_modal" class="btn btn-ghost">
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  phx-click="silence_user"
+                  class="btn btn-warning"
+                  disabled={@mod_reason == ""}
                 >
-                  <option value="1h" selected={@mod_duration == "1h"}>1 hour</option>
-                  <option value="1d" selected={@mod_duration == "1d"}>1 day</option>
-                  <option value="3d" selected={@mod_duration == "3d"}>3 days</option>
-                  <option value="1w" selected={@mod_duration == "1w"}>1 week</option>
-                  <option value="1m" selected={@mod_duration == "1m"}>1 month</option>
-                  <option value="3m" selected={@mod_duration == "3m"}>3 months</option>
-                  <option value="6m" selected={@mod_duration == "6m"}>6 months</option>
-                  <option value="1y" selected={@mod_duration == "1y"}>1 year</option>
-                  <option value="forever" selected={@mod_duration == "forever"}>Forever</option>
-                </select>
+                  Silence User
+                </button>
               </div>
             </div>
-            <div class="modal-action">
-              <button type="button" phx-click="close_mod_modal" class="btn btn-ghost">
-                Cancel
-              </button>
-              <button
-                type="button"
-                phx-click="silence_user"
-                class="btn btn-warning"
-                disabled={@mod_reason == ""}
-              >
-                Silence User
-              </button>
-            </div>
-          </div>
           </div>
         </div>
       <% end %>

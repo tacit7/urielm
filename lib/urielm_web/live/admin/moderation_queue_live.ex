@@ -295,7 +295,9 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
                 Ecto.NoResultsError -> nil
               end
 
-            target_title = if comment, do: String.slice(comment.body, 0, 80) <> "...", else: "Deleted comment"
+            target_title =
+              if comment, do: String.slice(comment.body, 0, 80) <> "...", else: "Deleted comment"
+
             thread_id = if comment, do: to_string(comment.thread_id), else: nil
             {target_title, thread_id}
 

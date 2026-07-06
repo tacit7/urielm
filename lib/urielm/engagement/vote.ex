@@ -19,11 +19,11 @@ defmodule Urielm.Engagement.Vote do
   @valid_values [-1, 1]
 
   schema "votes" do
-    field :target_type, :string
-    field :target_id, :string
-    field :value, :integer
+    field(:target_type, :string)
+    field(:target_id, :string)
+    field(:value, :integer)
 
-    belongs_to :user, Urielm.Accounts.User, type: :id
+    belongs_to(:user, Urielm.Accounts.User, type: :id)
 
     timestamps(type: :utc_datetime_usec)
   end

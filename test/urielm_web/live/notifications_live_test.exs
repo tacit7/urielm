@@ -47,7 +47,12 @@ defmodule UrielmWeb.NotificationsLiveTest do
       assert html =~ actor.username
     end
 
-    test "does not show other users' notifications", %{conn: conn, user: user, other: other, thread: thread} do
+    test "does not show other users' notifications", %{
+      conn: conn,
+      user: user,
+      other: other,
+      thread: thread
+    } do
       Forum.create_notification(other.id, "comment", thread.id, %{
         actor_id: user.id,
         thread_id: thread.id,
@@ -96,7 +101,11 @@ defmodule UrielmWeb.NotificationsLiveTest do
       assert Forum.count_unread_notifications(user.id) == 0
     end
 
-    test "updates unread count in UI after marking all read", %{conn: conn, user: user, thread: thread} do
+    test "updates unread count in UI after marking all read", %{
+      conn: conn,
+      user: user,
+      thread: thread
+    } do
       actor = user_fixture()
 
       for _ <- 1..2 do

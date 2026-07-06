@@ -92,7 +92,10 @@ defmodule Urielm.Forum.PostRevisionsTest do
   end
 
   describe "list_revisions/2" do
-    test "returns revisions in descending order by revision number", %{author: author, thread: thread} do
+    test "returns revisions in descending order by revision number", %{
+      author: author,
+      thread: thread
+    } do
       {:ok, v2} = Forum.edit_thread(thread, "Version two.", author)
       {:ok, _v3} = Forum.edit_thread(v2, "Version three.", author)
 
@@ -105,7 +108,11 @@ defmodule Urielm.Forum.PostRevisionsTest do
       assert Forum.list_revisions("thread", thread.id) == []
     end
 
-    test "does not mix thread and comment revisions", %{author: author, thread: thread, comment: comment} do
+    test "does not mix thread and comment revisions", %{
+      author: author,
+      thread: thread,
+      comment: comment
+    } do
       {:ok, _} = Forum.edit_thread(thread, "Edited thread.", author)
       {:ok, _} = Forum.edit_comment(comment, "Edited comment.", author)
 

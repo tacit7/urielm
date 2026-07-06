@@ -58,7 +58,8 @@ defmodule UrielmWeb.Admin.UserManagementLiveTest do
       conn = log_in_user(conn, admin)
       {:ok, view, _html} = live(conn, "/admin/users")
 
-      html = view |> element("form[phx-change='search']") |> render_change(%{"search" => "alicexyz"})
+      html =
+        view |> element("form[phx-change='search']") |> render_change(%{"search" => "alicexyz"})
 
       assert html =~ alice.username
       refute html =~ bob.username
@@ -66,7 +67,10 @@ defmodule UrielmWeb.Admin.UserManagementLiveTest do
 
     test "filters users by email", %{conn: conn} do
       admin = Fixtures.admin_fixture()
-      alice = Fixtures.user_fixture(%{username: "aliceemail", email: "unique_alice_email@example.com"})
+
+      alice =
+        Fixtures.user_fixture(%{username: "aliceemail", email: "unique_alice_email@example.com"})
+
       bob = Fixtures.user_fixture(%{username: "bobemail", email: "unique_bob_email@example.com"})
       conn = log_in_user(conn, admin)
       {:ok, view, _html} = live(conn, "/admin/users")

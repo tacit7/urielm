@@ -69,7 +69,11 @@ defmodule UrielmWeb.UserProfileLiveTest do
       assert Accounts.is_following?(visitor.id, owner.id)
     end
 
-    test "visitor can unfollow a user they already follow", %{conn: conn, visitor: visitor, owner: owner} do
+    test "visitor can unfollow a user they already follow", %{
+      conn: conn,
+      visitor: visitor,
+      owner: owner
+    } do
       Accounts.follow_user(visitor.id, owner.id)
 
       {:ok, live, _html} = live(log_in_user(conn, visitor), "/u/#{owner.username}")

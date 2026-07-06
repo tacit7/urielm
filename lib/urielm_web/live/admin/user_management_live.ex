@@ -153,19 +153,31 @@ defmodule UrielmWeb.Admin.UserManagementLive do
                   <tr>
                     <th>User</th>
                     <th>
-                      <button phx-click="sort" phx-value-field="email" class="flex items-center gap-1 hover:text-primary">
+                      <button
+                        phx-click="sort"
+                        phx-value-field="email"
+                        class="flex items-center gap-1 hover:text-primary"
+                      >
                         Email <.sort_icon field="email" flop={@flop} />
                       </button>
                     </th>
                     <th>Role</th>
                     <th>
-                      <button phx-click="sort" phx-value-field="trust_level" class="flex items-center gap-1 hover:text-primary">
+                      <button
+                        phx-click="sort"
+                        phx-value-field="trust_level"
+                        class="flex items-center gap-1 hover:text-primary"
+                      >
                         Trust <.sort_icon field="trust_level" flop={@flop} />
                       </button>
                     </th>
                     <th>Status</th>
                     <th>
-                      <button phx-click="sort" phx-value-field="inserted_at" class="flex items-center gap-1 hover:text-primary">
+                      <button
+                        phx-click="sort"
+                        phx-value-field="inserted_at"
+                        class="flex items-center gap-1 hover:text-primary"
+                      >
                         Joined <.sort_icon field="inserted_at" flop={@flop} />
                       </button>
                     </th>
@@ -175,7 +187,9 @@ defmodule UrielmWeb.Admin.UserManagementLive do
                 <tbody>
                   <%= if @users == [] do %>
                     <tr>
-                      <td colspan="7" class="text-center py-8 text-base-content/50">No users found</td>
+                      <td colspan="7" class="text-center py-8 text-base-content/50">
+                        No users found
+                      </td>
                     </tr>
                   <% else %>
                     <%= for user <- @users do %>
@@ -226,7 +240,11 @@ defmodule UrielmWeb.Admin.UserManagementLive do
           <%= if @meta && @meta.total_pages > 1 do %>
             <div class="flex justify-center gap-2 mt-6">
               <%= if @meta.has_previous_page? do %>
-                <button phx-click="page" phx-value-page={@meta.current_page - 1} class="btn btn-sm btn-ghost">
+                <button
+                  phx-click="page"
+                  phx-value-page={@meta.current_page - 1}
+                  class="btn btn-sm btn-ghost"
+                >
                   ← Prev
                 </button>
               <% end %>
@@ -236,7 +254,11 @@ defmodule UrielmWeb.Admin.UserManagementLive do
               </span>
 
               <%= if @meta.has_next_page? do %>
-                <button phx-click="page" phx-value-page={@meta.current_page + 1} class="btn btn-sm btn-ghost">
+                <button
+                  phx-click="page"
+                  phx-value-page={@meta.current_page + 1}
+                  class="btn btn-sm btn-ghost"
+                >
                   Next →
                 </button>
               <% end %>
@@ -312,7 +334,9 @@ defmodule UrielmWeb.Admin.UserManagementLive do
             {n, ""} when n > 0 -> n
             _ -> 1
           end
-        p when is_integer(p) -> p
+
+        p when is_integer(p) ->
+          p
       end
 
     %{default_flop() | page: page}

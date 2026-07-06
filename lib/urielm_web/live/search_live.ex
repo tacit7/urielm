@@ -26,13 +26,17 @@ defmodule UrielmWeb.SearchLive do
 
     page =
       case params["page"] do
-        nil -> 1
+        nil ->
+          1
+
         p when is_binary(p) ->
           case Integer.parse(p) do
             {n, ""} when n > 0 -> n
             _ -> 1
           end
-        p when is_integer(p) -> p
+
+        p when is_integer(p) ->
+          p
       end
 
     socket =
@@ -75,6 +79,7 @@ defmodule UrielmWeb.SearchLive do
 
       user ->
         target_id_binary = target_id
+
         value_int =
           case Integer.parse(value) do
             {n, ""} -> n

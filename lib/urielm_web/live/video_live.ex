@@ -212,7 +212,11 @@ defmodule UrielmWeb.VideoLive do
   end
 
   @impl true
-  def handle_event("vote", %{"target_type" => target_type, "target_id" => id, "value" => value}, socket) do
+  def handle_event(
+        "vote",
+        %{"target_type" => target_type, "target_id" => id, "value" => value},
+        socket
+      ) do
     LiveHelpers.handle_vote(target_type, id, value, socket)
   end
 
@@ -397,8 +401,8 @@ defmodule UrielmWeb.VideoLive do
     <!-- DaisyUI Drawer wrapper for comments -->
     <div class="drawer drawer-end">
       <input id="comments-drawer" type="checkbox" class="drawer-toggle" />
-
-      <!-- Main content -->
+      
+    <!-- Main content -->
       <div class="drawer-content">
         <!-- Full-screen vertical snap feed -->
         <div class="h-screen w-screen overflow-y-scroll snap-y snap-mandatory overscroll-contain bg-black text-white">
@@ -416,44 +420,56 @@ defmodule UrielmWeb.VideoLive do
               <% else %>
                 <.svelte
                   name="YouTubePlayer"
-                  props={%{videoId: extract_youtube_id(@video.youtube_url), controls: true, shorts: true}}
+                  props={
+                    %{videoId: extract_youtube_id(@video.youtube_url), controls: true, shorts: true}
+                  }
                   socket={@socket}
                   class="h-full w-full object-cover"
                 />
               <% end %>
-
-              <!-- Gradient overlay for legibility -->
-              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20"></div>
+              
+    <!-- Gradient overlay for legibility -->
+              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20">
+              </div>
             </div>
-
-            <!-- Right action rail -->
+            
+    <!-- Right action rail -->
             <aside class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3 text-white">
               <!-- Vote Buttons (vertical layout for shorts) -->
               <.svelte
                 name="VoteButtons"
-                props={%{
-                  target_type: "video",
-                  target_id: @video.id,
-                  upvotes: @upvotes,
-                  downvotes: @downvotes,
-                  user_vote: @user_vote,
-                  layout: "vertical",
-                  size: "lg"
-                }}
+                props={
+                  %{
+                    target_type: "video",
+                    target_id: @video.id,
+                    upvotes: @upvotes,
+                    downvotes: @downvotes,
+                    user_vote: @user_vote,
+                    layout: "vertical",
+                    size: "lg"
+                  }
+                }
                 socket={@socket}
               />
-
-              <!-- Comments drawer trigger -->
+              
+    <!-- Comments drawer trigger -->
               <%= if @thread do %>
-                <label for="comments-drawer" class="btn btn-ghost btn-circle text-white hover:text-primary cursor-pointer" aria-label="Comments">
+                <label
+                  for="comments-drawer"
+                  class="btn btn-ghost btn-circle text-white hover:text-primary cursor-pointer"
+                  aria-label="Comments"
+                >
                   <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-width="2" d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                    <path
+                      stroke-width="2"
+                      d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
+                    />
                   </svg>
                 </label>
                 <span class="text-xs opacity-80">{@thread.comment_count}</span>
               <% end %>
-
-              <!-- Share -->
+              
+    <!-- Share -->
               <button
                 id="short-share-btn"
                 class="btn btn-ghost btn-circle text-white hover:text-primary"
@@ -462,15 +478,15 @@ defmodule UrielmWeb.VideoLive do
                 data-text={@canonical_url}
               >
                 <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-width="2" d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>
-                  <path stroke-width="2" d="M16 6l-4-4-4 4"/>
-                  <path stroke-width="2" d="M12 2v14"/>
+                  <path stroke-width="2" d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                  <path stroke-width="2" d="M16 6l-4-4-4 4" />
+                  <path stroke-width="2" d="M12 2v14" />
                 </svg>
               </button>
               <span class="text-xs opacity-80">Share</span>
             </aside>
-
-            <!-- Bottom metadata -->
+            
+    <!-- Bottom metadata -->
             <div class="absolute left-0 right-16 bottom-0 z-10 p-4 pb-6">
               <div class="max-w-[85%] space-y-2">
                 <!-- Author info -->
@@ -484,7 +500,12 @@ defmodule UrielmWeb.VideoLive do
                       </div>
                     </div>
                     <%= if @video.author_url do %>
-                      <a href={@video.author_url} target="_blank" rel="noopener" class="font-semibold hover:underline">
+                      <a
+                        href={@video.author_url}
+                        target="_blank"
+                        rel="noopener"
+                        class="font-semibold hover:underline"
+                      >
                         @{@video.author_name}
                       </a>
                     <% else %>
@@ -492,11 +513,11 @@ defmodule UrielmWeb.VideoLive do
                     <% end %>
                   </div>
                 <% end %>
-
-                <!-- Title/Caption -->
+                
+    <!-- Title/Caption -->
                 <p class="text-sm leading-snug line-clamp-3">{@video.title}</p>
-
-                <!-- Description if exists -->
+                
+    <!-- Description if exists -->
                 <%= if @video.description_md && @video.description_md != "" do %>
                   <div class="text-sm opacity-80 line-clamp-2 prose prose-sm prose-invert max-w-none">
                     <.svelte
@@ -506,8 +527,8 @@ defmodule UrielmWeb.VideoLive do
                     />
                   </div>
                 <% end %>
-
-                <!-- Tags/metadata -->
+                
+    <!-- Tags/metadata -->
                 <div class="flex items-center gap-2 text-xs opacity-80">
                   <span class="badge badge-ghost badge-sm">Short</span>
                   <%= if @video.visibility != "public" do %>
@@ -519,8 +540,8 @@ defmodule UrielmWeb.VideoLive do
           </section>
         </div>
       </div>
-
-      <!-- Comments Drawer (slides in from right) -->
+      
+    <!-- Comments Drawer (slides in from right) -->
       <div class="drawer-side z-50">
         <label for="comments-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
@@ -528,12 +549,12 @@ defmodule UrielmWeb.VideoLive do
           <!-- Header -->
           <div class="flex items-center justify-between p-4 border-b border-base-300">
             <h2 class="text-lg font-semibold">
-              Comments <%= if @thread, do: @thread.comment_count, else: 0 %>
+              Comments {if @thread, do: @thread.comment_count, else: 0}
             </h2>
             <label for="comments-drawer" class="btn btn-sm btn-ghost btn-circle">✕</label>
           </div>
-
-          <!-- Comments list -->
+          
+    <!-- Comments list -->
           <div class="flex-1 overflow-y-auto p-4 max-h-[calc(100vh-140px)]">
             <%= if @thread do %>
               <.svelte
@@ -556,8 +577,8 @@ defmodule UrielmWeb.VideoLive do
               </p>
             <% end %>
           </div>
-
-          <!-- Add comment input -->
+          
+    <!-- Add comment input -->
           <div class="p-4 border-t border-base-300">
             <%= if @current_user do %>
               <form phx-submit="create_comment" class="flex gap-2">
@@ -615,7 +636,7 @@ defmodule UrielmWeb.VideoLive do
           </div>
         <% end %>
       </div>
-
+      
     <!-- Main Content -->
       <div class="max-w-4xl mx-auto px-4 py-6 pb-24 lg:pb-6">
         <!-- Video Title & Actions -->
@@ -640,21 +661,23 @@ defmodule UrielmWeb.VideoLive do
             <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
               <.svelte
                 name="VoteButtons"
-                props={%{
-                  target_type: "video",
-                  target_id: @video.id,
-                  upvotes: @upvotes,
-                  downvotes: @downvotes,
-                  user_vote: @user_vote,
-                  layout: "horizontal",
-                  size: "sm"
-                }}
+                props={
+                  %{
+                    target_type: "video",
+                    target_id: @video.id,
+                    upvotes: @upvotes,
+                    downvotes: @downvotes,
+                    user_vote: @user_vote,
+                    layout: "horizontal",
+                    size: "sm"
+                  }
+                }
                 socket={@socket}
               />
             </div>
           </div>
         </div>
-
+        
     <!-- Author Info (if available) -->
         <%= if @video.author_name do %>
           <div class="flex items-center gap-3 pb-4 border-b border-base-300 mb-4">
@@ -677,10 +700,11 @@ defmodule UrielmWeb.VideoLive do
                 <p class="font-semibold text-base-content">{@video.author_name}</p>
               <% end %>
               <p class="text-xs text-base-content/60">
-                {@video.format || "standard"} video
-                {if date = (@video.published_at || @video.inserted_at),
-                  do: " · #{Calendar.strftime(date, "%b %d, %Y")}",
-                  else: ""}
+                {@video.format || "standard"} video {if date =
+                                                          @video.published_at || @video.inserted_at,
+                                                        do:
+                                                          " · #{Calendar.strftime(date, "%b %d, %Y")}",
+                                                        else: ""}
               </p>
             </div>
           </div>

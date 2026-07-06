@@ -60,7 +60,11 @@ defmodule UrielmWeb.SearchLiveTest do
   end
 
   describe "save_thread from search" do
-    test "authenticated user can save a thread from results", %{conn: conn, user: user, thread: thread} do
+    test "authenticated user can save a thread from results", %{
+      conn: conn,
+      user: user,
+      thread: thread
+    } do
       {:ok, live, _html} = live(log_in_user(conn, user), "/forum/search?q=sourdough")
 
       render_click(live, "save_thread", %{"thread_id" => to_string(thread.id)})
@@ -70,7 +74,11 @@ defmodule UrielmWeb.SearchLiveTest do
   end
 
   describe "subscribe from search" do
-    test "authenticated user can subscribe to a thread from results", %{conn: conn, user: user, thread: thread} do
+    test "authenticated user can subscribe to a thread from results", %{
+      conn: conn,
+      user: user,
+      thread: thread
+    } do
       {:ok, live, _html} = live(log_in_user(conn, user), "/forum/search?q=sourdough")
 
       render_click(live, "subscribe", %{"thread_id" => to_string(thread.id)})

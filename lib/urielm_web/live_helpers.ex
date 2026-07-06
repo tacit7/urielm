@@ -305,7 +305,12 @@ defmodule UrielmWeb.LiveHelpers do
 
       user ->
         if User.silenced?(user) do
-          {:noreply, Phoenix.LiveView.put_flash(socket, :error, "Your account is silenced and cannot #{action_name}")}
+          {:noreply,
+           Phoenix.LiveView.put_flash(
+             socket,
+             :error,
+             "Your account is silenced and cannot #{action_name}"
+           )}
         else
           fun.(socket, user)
         end

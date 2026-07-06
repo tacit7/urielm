@@ -164,7 +164,11 @@ defmodule UrielmWeb.Admin.UserDetailLive do
         {:noreply, put_flash(socket, :error, "Invalid trust level")}
 
       trust_level ->
-        case Accounts.update_trust_level(socket.assigns.user, trust_level, socket.assigns.current_user) do
+        case Accounts.update_trust_level(
+               socket.assigns.user,
+               trust_level,
+               socket.assigns.current_user
+             ) do
           {:ok, updated} ->
             {:noreply,
              socket
@@ -280,7 +284,9 @@ defmodule UrielmWeb.Admin.UserDetailLive do
                   <% end %>
                 </div>
                 <%= if @user.trust_level_locked do %>
-                  <p class="text-xs text-base-content/50 mt-2">Trust level is locked for this user.</p>
+                  <p class="text-xs text-base-content/50 mt-2">
+                    Trust level is locked for this user.
+                  </p>
                 <% end %>
               </div>
             </div>
@@ -323,7 +329,11 @@ defmodule UrielmWeb.Admin.UserDetailLive do
                       danger={true}
                     />
                   <% else %>
-                    <button phx-click="show_action" phx-value-action="suspend" class="btn btn-sm btn-error">
+                    <button
+                      phx-click="show_action"
+                      phx-value-action="suspend"
+                      class="btn btn-sm btn-error"
+                    >
                       Suspend User
                     </button>
                   <% end %>
@@ -348,7 +358,11 @@ defmodule UrielmWeb.Admin.UserDetailLive do
                       danger={false}
                     />
                   <% else %>
-                    <button phx-click="show_action" phx-value-action="silence" class="btn btn-sm btn-warning">
+                    <button
+                      phx-click="show_action"
+                      phx-value-action="silence"
+                      class="btn btn-sm btn-warning"
+                    >
                       Silence User
                     </button>
                   <% end %>

@@ -25,6 +25,7 @@ defmodule UrielmWeb.SavedThreadsLive do
   @impl true
   def handle_params(params, _uri, socket) do
     %{current_user: user} = socket.assigns
+
     page =
       Map.get(params, "page", "1")
       |> case do
@@ -33,7 +34,9 @@ defmodule UrielmWeb.SavedThreadsLive do
             {n, ""} when n > 0 -> n
             _ -> 1
           end
-        p when is_integer(p) -> p
+
+        p when is_integer(p) ->
+          p
       end
 
     {:ok, {threads, meta}} =

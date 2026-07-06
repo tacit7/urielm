@@ -21,7 +21,8 @@ defmodule UrielmWeb.ThreadLive do
          |> redirect(to: ~p"/")}
 
       thread ->
-        comment_tree = LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
+        comment_tree =
+          LiveHelpers.build_comment_tree(thread.comments, socket.assigns.current_user)
 
         # Only track view count when connected (real page view)
         if connected?(socket) do
@@ -53,7 +54,10 @@ defmodule UrielmWeb.ThreadLive do
         {:ok,
          socket
          |> assign(:page_title, thread.title)
-         |> assign(:thread, LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user))
+         |> assign(
+           :thread,
+           LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user)
+         )
          |> assign(:comment_tree, comment_tree)
          |> assign(:thread_is_saved, is_saved)
          |> assign(:thread_is_subscribed, is_subscribed)

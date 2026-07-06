@@ -48,8 +48,21 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
     end
 
     test "shows multiple saved threads", %{conn: conn, user: user, board: board} do
-      thread2 = thread_fixture(%{board_id: board.id, author_id: user.id, title: "Second Thread", slug: "second-thread"})
-      thread3 = thread_fixture(%{board_id: board.id, author_id: user.id, title: "Third Thread", slug: "third-thread"})
+      thread2 =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: user.id,
+          title: "Second Thread",
+          slug: "second-thread"
+        })
+
+      thread3 =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: user.id,
+          title: "Third Thread",
+          slug: "third-thread"
+        })
 
       Forum.save_thread(user.id, thread2.id)
       Forum.save_thread(user.id, thread3.id)

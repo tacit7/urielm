@@ -15,7 +15,11 @@ defmodule UrielmWeb.NotificationsLive do
 
       user ->
         notifications =
-          Forum.list_notifications(user.id, limit: LiveHelpers.page_size(), offset: 0, unread_only: false)
+          Forum.list_notifications(user.id,
+            limit: LiveHelpers.page_size(),
+            offset: 0,
+            unread_only: false
+          )
 
         {:ok,
          socket
@@ -35,9 +39,17 @@ defmodule UrielmWeb.NotificationsLive do
 
     notifications =
       if unread_only do
-        Forum.list_notifications(user.id, limit: LiveHelpers.page_size(), offset: 0, unread_only: true)
+        Forum.list_notifications(user.id,
+          limit: LiveHelpers.page_size(),
+          offset: 0,
+          unread_only: true
+        )
       else
-        Forum.list_notifications(user.id, limit: LiveHelpers.page_size(), offset: 0, unread_only: false)
+        Forum.list_notifications(user.id,
+          limit: LiveHelpers.page_size(),
+          offset: 0,
+          unread_only: false
+        )
       end
 
     {:noreply,
@@ -117,7 +129,12 @@ defmodule UrielmWeb.NotificationsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="notifications" socket={@socket}>
+    <Layouts.app
+      flash={@flash}
+      current_user={@current_user}
+      current_page="notifications"
+      socket={@socket}
+    >
       <div class="min-h-screen bg-base-100">
         <div class="container mx-auto px-4 py-8 max-w-3xl">
           <div class="mb-8">

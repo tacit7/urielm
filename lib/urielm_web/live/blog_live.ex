@@ -123,17 +123,31 @@ defmodule UrielmWeb.BlogLive do
 
           <nav class="mt-16 pt-8 border-t border-base-300/30 flex justify-between gap-4">
             <%= if @prev_post do %>
-              <.link patch={~p"/blog/#{@prev_post.slug}"} class="group flex flex-col gap-1 max-w-[45%]">
-                <span class="text-xs text-base-content/40 group-hover:text-base-content/60">&larr; Older</span>
-                <span class="text-sm font-medium text-base-content/70 group-hover:text-primary transition-colors line-clamp-2">{@prev_post.title}</span>
+              <.link
+                patch={~p"/blog/#{@prev_post.slug}"}
+                class="group flex flex-col gap-1 max-w-[45%]"
+              >
+                <span class="text-xs text-base-content/40 group-hover:text-base-content/60">
+                  &larr; Older
+                </span>
+                <span class="text-sm font-medium text-base-content/70 group-hover:text-primary transition-colors line-clamp-2">
+                  {@prev_post.title}
+                </span>
               </.link>
             <% else %>
               <div></div>
             <% end %>
             <%= if @next_post do %>
-              <.link patch={~p"/blog/#{@next_post.slug}"} class="group flex flex-col gap-1 items-end max-w-[45%] text-right">
-                <span class="text-xs text-base-content/40 group-hover:text-base-content/60">Newer &rarr;</span>
-                <span class="text-sm font-medium text-base-content/70 group-hover:text-primary transition-colors line-clamp-2">{@next_post.title}</span>
+              <.link
+                patch={~p"/blog/#{@next_post.slug}"}
+                class="group flex flex-col gap-1 items-end max-w-[45%] text-right"
+              >
+                <span class="text-xs text-base-content/40 group-hover:text-base-content/60">
+                  Newer &rarr;
+                </span>
+                <span class="text-sm font-medium text-base-content/70 group-hover:text-primary transition-colors line-clamp-2">
+                  {@next_post.title}
+                </span>
               </.link>
             <% else %>
               <div></div>
@@ -181,7 +195,12 @@ defmodule UrielmWeb.BlogLive do
                     "border-base-300/50 bg-base-100 hover:shadow-sm"
                   end
                 ]}>
-                  <.link patch={~p"/blog/#{post.slug}"} class="absolute inset-0 z-0 rounded-lg" aria-label={post.title}></.link>
+                  <.link
+                    patch={~p"/blog/#{post.slug}"}
+                    class="absolute inset-0 z-0 rounded-lg"
+                    aria-label={post.title}
+                  >
+                  </.link>
                   <div class="relative z-10">
                     <div class="flex items-start justify-between gap-4 mb-2">
                       <h2 class="text-lg sm:text-xl font-semibold flex-1 leading-tight">
@@ -214,7 +233,6 @@ defmodule UrielmWeb.BlogLive do
             </div>
           <% end %>
         </div>
-
       </div>
     <% end %>
     """

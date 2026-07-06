@@ -77,7 +77,12 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
       assert Forum.get_thread!(thread.id).is_locked == false
     end
 
-    test "regular user cannot unlock a thread", %{conn: conn, mod: mod, regular: regular, thread: thread} do
+    test "regular user cannot unlock a thread", %{
+      conn: conn,
+      mod: mod,
+      regular: regular,
+      thread: thread
+    } do
       Forum.lock_thread(thread, mod)
 
       {:ok, live, _html} = live(log_in_user(conn, regular), "/forum/t/#{thread.id}")
@@ -127,7 +132,12 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
   end
 
   describe "mark_solved event" do
-    test "thread author can mark a comment as the solution", %{conn: conn, author: author, thread: thread, comment: comment} do
+    test "thread author can mark a comment as the solution", %{
+      conn: conn,
+      author: author,
+      thread: thread,
+      comment: comment
+    } do
       {:ok, live, _html} = live(log_in_user(conn, author), "/forum/t/#{thread.id}")
 
       render_click(live, "mark_solved", %{"comment_id" => to_string(comment.id)})
@@ -137,7 +147,12 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
       assert solved.solved_comment_id == comment.id
     end
 
-    test "admin can mark any thread as solved", %{conn: conn, admin: admin, thread: thread, comment: comment} do
+    test "admin can mark any thread as solved", %{
+      conn: conn,
+      admin: admin,
+      thread: thread,
+      comment: comment
+    } do
       {:ok, live, _html} = live(log_in_user(conn, admin), "/forum/t/#{thread.id}")
 
       render_click(live, "mark_solved", %{"comment_id" => to_string(comment.id)})
@@ -145,7 +160,12 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
       assert Forum.get_thread!(thread.id).is_solved == true
     end
 
-    test "non-author cannot mark thread as solved", %{conn: conn, regular: regular, thread: thread, comment: comment} do
+    test "non-author cannot mark thread as solved", %{
+      conn: conn,
+      regular: regular,
+      thread: thread,
+      comment: comment
+    } do
       {:ok, live, _html} = live(log_in_user(conn, regular), "/forum/t/#{thread.id}")
 
       render_click(live, "mark_solved", %{"comment_id" => to_string(comment.id)})
@@ -153,7 +173,12 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
       assert Forum.get_thread!(thread.id).is_solved == false
     end
 
-    test "solved thread shows solved indicator", %{conn: conn, author: author, thread: thread, comment: comment} do
+    test "solved thread shows solved indicator", %{
+      conn: conn,
+      author: author,
+      thread: thread,
+      comment: comment
+    } do
       {:ok, live, _html} = live(log_in_user(conn, author), "/forum/t/#{thread.id}")
 
       html = render_click(live, "mark_solved", %{"comment_id" => to_string(comment.id)})
@@ -163,7 +188,12 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
   end
 
   describe "unmark_solved event" do
-    test "thread author can unmark solved", %{conn: conn, author: author, thread: thread, comment: comment} do
+    test "thread author can unmark solved", %{
+      conn: conn,
+      author: author,
+      thread: thread,
+      comment: comment
+    } do
       Forum.mark_as_solved(thread, comment.id, author)
 
       {:ok, live, _html} = live(log_in_user(conn, author), "/forum/t/#{thread.id}")
@@ -175,7 +205,13 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
       assert unsolved.solved_comment_id == nil
     end
 
-    test "non-author cannot unmark solved", %{conn: conn, author: author, regular: regular, thread: thread, comment: comment} do
+    test "non-author cannot unmark solved", %{
+      conn: conn,
+      author: author,
+      regular: regular,
+      thread: thread,
+      comment: comment
+    } do
       Forum.mark_as_solved(thread, comment.id, author)
 
       {:ok, live, _html} = live(log_in_user(conn, regular), "/forum/t/#{thread.id}")
@@ -199,7 +235,11 @@ defmodule UrielmWeb.ThreadAdminLiveTest do
       refute html =~ "pin_thread"
     end
 
-    test "author sees delete control on their thread", %{conn: conn, author: author, thread: thread} do
+    test "author sees delete control on their thread", %{
+      conn: conn,
+      author: author,
+      thread: thread
+    } do
       {:ok, _live, html} = live(log_in_user(conn, author), "/forum/t/#{thread.id}")
       assert html =~ "delete_thread"
     end

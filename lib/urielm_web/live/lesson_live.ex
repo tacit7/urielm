@@ -38,13 +38,22 @@ defmodule UrielmWeb.LessonLive do
             changeset = Learning.change_lesson_comment(%LessonComment{})
             nav_items = build_nav_items(lesson, course)
             current_index = Enum.find_index(lessons, &(&1.id == lesson.id))
-            prev_lesson = if current_index && current_index > 0, do: Enum.at(lessons, current_index - 1), else: nil
+
+            prev_lesson =
+              if current_index && current_index > 0,
+                do: Enum.at(lessons, current_index - 1),
+                else: nil
+
             next_lesson = if current_index, do: Enum.at(lessons, current_index + 1), else: nil
 
             # Load vote data
             %{current_user: user} = socket.assigns
-            {upvotes, downvotes, _score} = Engagement.get_vote_counts("lesson", to_string(lesson.id))
-            user_vote = if user, do: Engagement.get_vote(user.id, "lesson", to_string(lesson.id)), else: nil
+
+            {upvotes, downvotes, _score} =
+              Engagement.get_vote_counts("lesson", to_string(lesson.id))
+
+            user_vote =
+              if user, do: Engagement.get_vote(user.id, "lesson", to_string(lesson.id)), else: nil
 
             {:ok,
              socket
@@ -115,7 +124,11 @@ defmodule UrielmWeb.LessonLive do
   end
 
   @impl true
-  def handle_event("vote", %{"target_type" => target_type, "target_id" => id, "value" => value}, socket) do
+  def handle_event(
+        "vote",
+        %{"target_type" => target_type, "target_id" => id, "value" => value},
+        socket
+      ) do
     LiveHelpers.handle_vote(target_type, id, value, socket)
   end
 
@@ -177,7 +190,7 @@ defmodule UrielmWeb.LessonLive do
             class="w-full h-full"
           />
         </div>
-
+        
     <!-- Prev / Next navigation -->
         <div class="max-w-[1800px] mx-auto w-full px-4 py-3 flex items-center justify-between border-b border-base-300">
           <div class="flex-1">
@@ -187,7 +200,12 @@ defmodule UrielmWeb.LessonLive do
               class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               <span class="line-clamp-1 max-w-[180px] md:max-w-xs">{@prev_lesson.title}</span>
             </.link>
@@ -198,14 +216,21 @@ defmodule UrielmWeb.LessonLive do
               navigate={~p"/courses/#{@course.slug}/lessons/#{@next_lesson.slug}"}
               class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors"
             >
-              <span class="line-clamp-1 max-w-[180px] md:max-w-xs text-right">{@next_lesson.title}</span>
+              <span class="line-clamp-1 max-w-[180px] md:max-w-xs text-right">
+                {@next_lesson.title}
+              </span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </.link>
           </div>
         </div>
-
+        
     <!-- Main Content -->
         <div class="max-w-[1800px] mx-auto w-full px-4 py-6">
           <!-- Mobile Sticky Header -->
@@ -228,15 +253,17 @@ defmodule UrielmWeb.LessonLive do
             <div class="flex items-center bg-base-200 rounded-full px-2 py-1 flex-shrink-0">
               <.svelte
                 name="VoteButtons"
-                props={%{
-                  target_type: "lesson",
-                  target_id: to_string(@lesson.id),
-                  upvotes: @upvotes,
-                  downvotes: @downvotes,
-                  user_vote: @user_vote,
-                  layout: "horizontal",
-                  size: "sm"
-                }}
+                props={
+                  %{
+                    target_type: "lesson",
+                    target_id: to_string(@lesson.id),
+                    upvotes: @upvotes,
+                    downvotes: @downvotes,
+                    user_vote: @user_vote,
+                    layout: "horizontal",
+                    size: "sm"
+                  }
+                }
                 socket={@socket}
               />
             </div>
@@ -263,20 +290,22 @@ defmodule UrielmWeb.LessonLive do
             <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
               <.svelte
                 name="VoteButtons"
-                props={%{
-                  target_type: "lesson",
-                  target_id: to_string(@lesson.id),
-                  upvotes: @upvotes,
-                  downvotes: @downvotes,
-                  user_vote: @user_vote,
-                  layout: "horizontal",
-                  size: "sm"
-                }}
+                props={
+                  %{
+                    target_type: "lesson",
+                    target_id: to_string(@lesson.id),
+                    upvotes: @upvotes,
+                    downvotes: @downvotes,
+                    user_vote: @user_vote,
+                    layout: "horizontal",
+                    size: "sm"
+                  }
+                }
                 socket={@socket}
               />
             </div>
           </div>
-
+          
     <!-- Desktop: UnderlineNav -->
           <div class="hidden lg:block mb-6">
             <.svelte
@@ -285,7 +314,7 @@ defmodule UrielmWeb.LessonLive do
               socket={@socket}
             />
           </div>
-
+          
     <!-- Dock Content Sections -->
           <div class="space-y-4 pb-24 lg:pb-0">
             <!-- HOME TAB -->
@@ -328,7 +357,11 @@ defmodule UrielmWeb.LessonLive do
             <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "notes")]}>
               <h3 class="text-lg font-semibold text-base-content">Lesson notes</h3>
               <div :if={@lesson.notes_md} class="prose prose-sm max-w-none">
-                <.svelte name="MarkdownRenderer" props={%{content: @lesson.notes_md}} socket={@socket} />
+                <.svelte
+                  name="MarkdownRenderer"
+                  props={%{content: @lesson.notes_md}}
+                  socket={@socket}
+                />
               </div>
               <div :if={!@lesson.notes_md} class="text-sm text-base-content/60 text-center py-8">
                 No notes available for this lesson.
@@ -364,7 +397,7 @@ defmodule UrielmWeb.LessonLive do
                 No timestamps available for this lesson.
               </div>
             </div>
-
+            
     <!-- COMMENTS TAB -->
             <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "comments")]}>
               <h3 class="text-lg font-semibold text-base-content">Comments</h3>
@@ -394,7 +427,12 @@ defmodule UrielmWeb.LessonLive do
               </ul>
 
               <%= if @current_user do %>
-                <.form for={@comment_form} id="lesson-comment-form" phx-submit="save_comment" class="mt-6">
+                <.form
+                  for={@comment_form}
+                  id="lesson-comment-form"
+                  phx-submit="save_comment"
+                  class="mt-6"
+                >
                   <div class="space-y-2">
                     <textarea
                       name="comment[body]"
@@ -514,7 +552,7 @@ defmodule UrielmWeb.LessonLive do
           </button>
         </div>
       </div>
-
+      
     <!-- Drawer Side (Up Next) -->
       <div class="drawer-side">
         <label for="lesson-drawer" class="drawer-overlay"></label>

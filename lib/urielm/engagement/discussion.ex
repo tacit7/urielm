@@ -15,10 +15,10 @@ defmodule Urielm.Engagement.Discussion do
   @valid_targets ~w(video lesson prompt post course)
 
   schema "discussions" do
-    field :target_type, :string
-    field :target_id, :integer
+    field(:target_type, :string)
+    field(:target_id, :integer)
 
-    belongs_to :thread, Urielm.Forum.Thread, type: :binary_id
+    belongs_to(:thread, Urielm.Forum.Thread, type: :binary_id)
 
     timestamps()
   end

@@ -40,8 +40,8 @@ defmodule UrielmWeb.CoursesLive do
         </div>
         <div class="mt-6 h-px bg-base-content/10" />
       </div>
-
-      <!-- Content -->
+      
+    <!-- Content -->
       <div class="px-6 md:px-12 lg:px-16 pb-16">
         <!-- Empty state -->
         <div :if={@courses == []} class="flex flex-col items-center justify-center py-36">
@@ -50,8 +50,8 @@ defmodule UrielmWeb.CoursesLive do
             No courses yet
           </p>
         </div>
-
-        <!-- Featured first + grid -->
+        
+    <!-- Featured first + grid -->
         <div :if={@courses != []}>
           <.featured_course course={hd(@courses)} index={1} />
 

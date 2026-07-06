@@ -86,7 +86,8 @@ defmodule Urielm.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:sobelow, "~> 0.13", only: [:dev], runtime: false},
       {:ex_slop, "~> 0.1", only: [:dev, :test], runtime: false},
-      {:ex_dna, github: "elixir-vibe/ex_dna", only: [:dev, :test], runtime: false, override: true},
+      {:ex_dna,
+       github: "elixir-vibe/ex_dna", only: [:dev, :test], runtime: false, override: true},
       {:reach, github: "elixir-vibe/reach", only: [:dev], runtime: false}
     ]
   end

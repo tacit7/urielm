@@ -57,12 +57,12 @@ defmodule UrielmWeb.CourseLive do
             class="w-full h-full bg-base-300"
           />
         </div>
-
-        <!-- Dual gradient: bottom-heavy + left edge -->
+        
+    <!-- Dual gradient: bottom-heavy + left edge -->
         <div class="absolute inset-0 bg-gradient-to-t from-base-content/95 via-base-content/40 to-base-content/10" />
         <div class="absolute inset-0 bg-gradient-to-r from-base-content/40 to-transparent" />
-
-        <!-- Back link -->
+        
+    <!-- Back link -->
         <div class="absolute top-6 left-6 md:left-12 lg:left-16">
           <.link
             navigate={~p"/courses"}
@@ -79,8 +79,8 @@ defmodule UrielmWeb.CourseLive do
             Courses
           </.link>
         </div>
-
-        <!-- Hero content -->
+        
+    <!-- Hero content -->
         <div class="absolute inset-0 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-10">
           <p class="font-mono text-xs tracking-widest uppercase text-base-100/50 mb-3">
             {length(@lessons)} {if length(@lessons) == 1, do: "lesson", else: "lessons"}
@@ -117,11 +117,14 @@ defmodule UrielmWeb.CourseLive do
           </div>
         </div>
       </div>
-
-      <!-- Description (YouTube-style) -->
+      
+    <!-- Description (YouTube-style) -->
       <div :if={@course.description} class="px-6 md:px-12 lg:px-16 pt-8 pb-2">
         <div class="max-w-3xl">
-          <div class={["text-base-content/80 text-sm leading-relaxed whitespace-pre-line", if(!@show_description, do: "line-clamp-2", else: "")]}>
+          <div class={[
+            "text-base-content/80 text-sm leading-relaxed whitespace-pre-line",
+            if(!@show_description, do: "line-clamp-2", else: "")
+          ]}>
             {@course.description}
           </div>
           <button
@@ -132,8 +135,8 @@ defmodule UrielmWeb.CourseLive do
           </button>
         </div>
       </div>
-
-      <!-- Lesson table of contents -->
+      
+    <!-- Lesson table of contents -->
       <div class="px-6 md:px-12 lg:px-16 py-10">
         <!-- Section header -->
         <div class="flex items-center gap-6 mb-8">
@@ -145,16 +148,16 @@ defmodule UrielmWeb.CourseLive do
             {length(@lessons)} lessons
           </p>
         </div>
-
-        <!-- Empty state -->
+        
+    <!-- Empty state -->
         <div :if={Enum.empty?(@lessons)} class="flex flex-col items-center justify-center py-24">
           <p class="font-mono font-black text-8xl text-base-content/10 select-none mb-4">00</p>
           <p class="font-mono text-xs tracking-[0.3em] uppercase text-base-content/30">
             No lessons yet
           </p>
         </div>
-
-        <!-- Lesson rows -->
+        
+    <!-- Lesson rows -->
         <div :if={!Enum.empty?(@lessons)}>
           <.lesson_row :for={lesson <- @lessons} lesson={lesson} course={@course} />
         </div>
@@ -189,18 +192,21 @@ defmodule UrielmWeb.CourseLive do
           </div>
         </div>
       </div>
-
-      <!-- Title + notes -->
+      
+    <!-- Title + notes -->
       <div class="flex-1 min-w-0">
         <h3 class="font-black text-lg md:text-xl text-base-content leading-snug group-hover:text-primary transition-colors duration-200 line-clamp-1">
           {@lesson.title}
         </h3>
-        <p :if={@lesson.notes_md} class="text-sm text-base-content/50 line-clamp-1 mt-1 leading-relaxed">
+        <p
+          :if={@lesson.notes_md}
+          class="text-sm text-base-content/50 line-clamp-1 mt-1 leading-relaxed"
+        >
           {String.replace(@lesson.notes_md, ~r/[#*_`\[\]>]/, "")}
         </p>
       </div>
-
-      <!-- Slide-in arrow -->
+      
+    <!-- Slide-in arrow -->
       <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-200">
         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
