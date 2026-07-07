@@ -188,6 +188,7 @@ defmodule UrielmWeb.LessonLive do
             props={%{videoId: @lesson.youtube_video_id, controls: true}}
             socket={@socket}
             class="w-full h-full"
+          ssr={false}
           />
         </div>
         
@@ -265,6 +266,7 @@ defmodule UrielmWeb.LessonLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
             </div>
             <label
@@ -302,6 +304,7 @@ defmodule UrielmWeb.LessonLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
             </div>
           </div>
@@ -312,6 +315,7 @@ defmodule UrielmWeb.LessonLive do
               name="UnderlineNav"
               props={%{items: @nav_items, activeKey: @active_section, showCounts: true, size: "md"}}
               socket={@socket}
+            ssr={false}
             />
           </div>
           
@@ -361,6 +365,7 @@ defmodule UrielmWeb.LessonLive do
                   name="MarkdownRenderer"
                   props={%{content: @lesson.notes_md}}
                   socket={@socket}
+                ssr={false}
                 />
               </div>
               <div :if={!@lesson.notes_md} class="text-sm text-base-content/60 text-center py-8">
@@ -376,6 +381,7 @@ defmodule UrielmWeb.LessonLive do
                   name="MarkdownRenderer"
                   props={%{content: @lesson.resources_md}}
                   socket={@socket}
+                ssr={false}
                 />
               </div>
               <div :if={!@lesson.resources_md} class="text-sm text-base-content/60 text-center py-8">
@@ -391,6 +397,7 @@ defmodule UrielmWeb.LessonLive do
                   name="MarkdownRenderer"
                   props={%{content: @lesson.timestamps_md}}
                   socket={@socket}
+                ssr={false}
                 />
               </div>
               <div :if={!@lesson.timestamps_md} class="text-sm text-base-content/60 text-center py-8">

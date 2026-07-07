@@ -416,6 +416,7 @@ defmodule UrielmWeb.VideoLive do
                   props={%{tiktokUrl: @video.tiktok_url, fullscreen: true}}
                   socket={@socket}
                   class="h-full w-full object-cover"
+                ssr={false}
                 />
               <% else %>
                 <.svelte
@@ -425,6 +426,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                   socket={@socket}
                   class="h-full w-full object-cover"
+                ssr={false}
                 />
               <% end %>
               
@@ -450,6 +452,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
               
     <!-- Comments drawer trigger -->
@@ -524,6 +527,7 @@ defmodule UrielmWeb.VideoLive do
                       name="MarkdownRenderer"
                       props={%{content: @video.description_md}}
                       socket={@socket}
+                    ssr={false}
                     />
                   </div>
                 <% end %>
@@ -570,6 +574,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
             <% else %>
               <p class="text-sm text-base-content/60 text-center py-8">
@@ -624,6 +629,7 @@ defmodule UrielmWeb.VideoLive do
             name="TikTokEmbed"
             props={%{tiktokUrl: @video.tiktok_url}}
             socket={@socket}
+          ssr={false}
           />
         <% else %>
           <div class="aspect-video bg-base-content overflow-hidden lg:rounded-xl">
@@ -632,6 +638,7 @@ defmodule UrielmWeb.VideoLive do
               props={%{videoId: extract_youtube_id(@video.youtube_url), controls: true}}
               socket={@socket}
               class="w-full h-full"
+            ssr={false}
             />
           </div>
         <% end %>
@@ -673,6 +680,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
             </div>
           </div>
@@ -724,6 +732,7 @@ defmodule UrielmWeb.VideoLive do
                 }
               }
               socket={@socket}
+            ssr={false}
             />
           </div>
         <% end %>
@@ -742,6 +751,7 @@ defmodule UrielmWeb.VideoLive do
                     name="MarkdownRenderer"
                     props={%{content: @video.description_md}}
                     socket={@socket}
+                  ssr={false}
                   />
                 </div>
               </div>
@@ -761,6 +771,7 @@ defmodule UrielmWeb.VideoLive do
                     name="MarkdownRenderer"
                     props={%{content: @video.resources_md}}
                     socket={@socket}
+                  ssr={false}
                   />
                 </div>
               </div>
@@ -797,6 +808,7 @@ defmodule UrielmWeb.VideoLive do
                       name="MarkdownRenderer"
                       props={%{content: @video.author_bio_md}}
                       socket={@socket}
+                    ssr={false}
                     />
                   </div>
                 <% end %>
@@ -882,6 +894,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
             <% else %>
               <p class="text-sm text-base-content/60 text-center py-8">

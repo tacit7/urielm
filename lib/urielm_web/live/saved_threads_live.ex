@@ -121,6 +121,7 @@ defmodule UrielmWeb.SavedThreadsLive do
                 name="ThreadCard"
                 props={thread}
                 socket={@socket}
+              ssr={false}
               />
             </div>
           </div>

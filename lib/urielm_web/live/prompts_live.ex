@@ -293,6 +293,7 @@ defmodule UrielmWeb.PromptsLive do
                 }
               }
               socket={@socket}
+            ssr={false}
             />
           </div>
 
@@ -402,6 +403,7 @@ defmodule UrielmWeb.PromptsLive do
                     name="MarkdownRenderer"
                     props={%{content: @selected_prompt.prompt}}
                     socket={@socket}
+                  ssr={false}
                   />
                 </div>
 

@@ -152,6 +152,7 @@ defmodule UrielmWeb.ChatLive do
                 }
               }
               socket={@socket}
+            ssr={false}
             />
           <% else %>
             <div class="flex-1 flex items-center justify-center text-base-content/50">

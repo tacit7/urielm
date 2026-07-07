@@ -221,6 +221,7 @@ defmodule UrielmWeb.PromptLive do
                 name="MarkdownRenderer"
                 props={%{content: @prompt.prompt}}
                 socket={@socket}
+              ssr={false}
               />
             </div>
 
@@ -269,6 +270,7 @@ defmodule UrielmWeb.PromptLive do
                   placeholder="Share your thoughts..."
                   class="textarea textarea-bordered w-full"
                   phx-focus="comment_focus"
+                ssr={false}
                 />
                 <button type="submit" class="btn btn-primary">Post Comment</button>
               </.form>

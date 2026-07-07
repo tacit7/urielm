@@ -695,6 +695,7 @@ defmodule UrielmWeb.ThreadLive do
                 name="MarkdownRenderer"
                 props={%{content: @thread.body}}
                 socket={@socket}
+              ssr={false}
               />
             </div>
 
@@ -710,6 +711,7 @@ defmodule UrielmWeb.ThreadLive do
                   }
                 }
                 socket={@socket}
+              ssr={false}
               />
               <span class="text-sm text-base-content/60">
                 {pluralize(@thread.comment_count, "comment")}
@@ -771,6 +773,7 @@ defmodule UrielmWeb.ThreadLive do
               }
             }
             socket={@socket}
+          ssr={false}
           />
         </div>
       </div>

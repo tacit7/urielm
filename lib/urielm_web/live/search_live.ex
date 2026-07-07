@@ -157,6 +157,7 @@ defmodule UrielmWeb.SearchLive do
                 name="ThreadCard"
                 props={result}
                 socket={@socket}
+              ssr={false}
               />
             </div>
           </div>

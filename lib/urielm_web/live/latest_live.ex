@@ -122,7 +122,7 @@ defmodule UrielmWeb.LatestLive do
             </div>
           </div>
           <div :for={{id, thread} <- @streams.threads} id={id}>
-            <.svelte name="ThreadCard" props={thread} socket={@socket} />
+            <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
           </div>
         </div>
       </div>
