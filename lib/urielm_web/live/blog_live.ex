@@ -11,54 +11,76 @@ defmodule UrielmWeb.BlogLive do
     socket =
       if slug = child_params["slug"] do
         # Show individual post
-        case Content.get_post_by_slug(slug) do
-          nil ->
-            socket
-            |> assign(:post, nil)
-            |> assign(:posts, nil)
-            |> assign(:meta_description, nil)
-            |> assign(:og_title, nil)
-            |> assign(:canonical_url, nil)
-            |> push_navigate(to: ~p"/blog")
+        if connected?(socket) do
+          case Content.get_post_by_slug(slug) do
+            nil ->
+              socket
+              |> assign(:post, nil)
+              |> assign(:posts, nil)
+              |> assign(:meta_description, nil)
+              |> assign(:og_title, nil)
+              |> assign(:canonical_url, nil)
+              |> push_navigate(to: ~p"/blog")
 
-          post ->
-            all_posts = Content.list_published_posts()
-            current_index = Enum.find_index(all_posts, &(&1.id == post.id))
+            post ->
+              all_posts = Content.list_published_posts()
+              current_index = Enum.find_index(all_posts, &(&1.id == post.id))
 
-            prev_post =
-              if current_index && current_index < length(all_posts) - 1,
-                do: Enum.at(all_posts, current_index + 1),
-                else: nil
+              prev_post =
+                if current_index && current_index < length(all_posts) - 1,
+                  do: Enum.at(all_posts, current_index + 1),
+                  else: nil
 
-            next_post =
-              if current_index && current_index > 0,
-                do: Enum.at(all_posts, current_index - 1),
-                else: nil
+              next_post =
+                if current_index && current_index > 0,
+                  do: Enum.at(all_posts, current_index - 1),
+                  else: nil
 
-            socket
-            |> assign(:post, post)
-            |> assign(:posts, nil)
-            |> assign(:prev_post, prev_post)
-            |> assign(:next_post, next_post)
-            |> assign(:page_title, post.title)
-            |> assign(:meta_description, post.excerpt || truncate_body(post.body, 160))
-            |> assign(:og_title, post.title)
-            |> assign(:og_type, "article")
-            |> assign(:og_image, post.hero_image)
-            |> assign(:canonical_url, "https://urielm.dev/blog/#{post.slug}")
+              socket
+              |> assign(:post, post)
+              |> assign(:posts, nil)
+              |> assign(:prev_post, prev_post)
+              |> assign(:next_post, next_post)
+              |> assign(:page_title, post.title)
+              |> assign(:meta_description, post.excerpt || truncate_body(post.body, 160))
+              |> assign(:og_title, post.title)
+              |> assign(:og_type, "article")
+              |> assign(:og_image, post.hero_image)
+              |> assign(:canonical_url, "https://urielm.dev/blog/#{post.slug}")
+          end
+        else
+          socket
+          |> assign(:post, nil)
+          |> assign(:posts, [])
+          |> assign(:prev_post, nil)
+          |> assign(:next_post, nil)
+          |> assign(:og_title, nil)
+          |> assign(:meta_description, nil)
+          |> assign(:canonical_url, nil)
         end
       else
         # Show blog index
-        posts = Content.list_published_posts()
+        if connected?(socket) do
+          posts = Content.list_published_posts()
 
-        socket
-        |> assign(:posts, posts)
-        |> assign(:post, nil)
-        |> assign(:prev_post, nil)
-        |> assign(:next_post, nil)
-        |> assign(:page_title, "Blog")
-        |> assign(:og_title, "Blog")
-        |> assign(:canonical_url, "https://urielm.dev/blog")
+          socket
+          |> assign(:posts, posts)
+          |> assign(:post, nil)
+          |> assign(:prev_post, nil)
+          |> assign(:next_post, nil)
+          |> assign(:page_title, "Blog")
+          |> assign(:og_title, "Blog")
+          |> assign(:canonical_url, "https://urielm.dev/blog")
+        else
+          socket
+          |> assign(:post, nil)
+          |> assign(:posts, [])
+          |> assign(:prev_post, nil)
+          |> assign(:next_post, nil)
+          |> assign(:og_title, nil)
+          |> assign(:meta_description, nil)
+          |> assign(:canonical_url, nil)
+        end
       end
 
     {:ok, socket}
