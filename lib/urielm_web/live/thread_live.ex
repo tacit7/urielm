@@ -123,6 +123,10 @@ defmodule UrielmWeb.ThreadLive do
           {:noreply, put_flash(socket, :error, "Invalid vote value")}
 
         value_int ->
+          # Intentionally uses Forum.cast_vote (upsert: always sets to given value) rather than
+          # Engagement.toggle_vote (toggle: removes vote when clicking the same value again).
+          # LiveHelpers.handle_vote uses toggle_vote for non-forum views. These are distinct
+          # behaviors: forum votes are sticky (cast), other content votes are toggleable.
           case Forum.cast_vote(user.id, target_type, target_id, value_int) do
             {:ok, _vote} ->
               {:noreply, socket |> refresh_thread(user)}
@@ -140,7 +144,7 @@ defmodule UrielmWeb.ThreadLive do
 
     LiveHelpers.with_auth(socket, "delete threads", fn socket, user ->
       # Fetch thread metadata only (no comments needed for deletion)
-      thread = Forum.get_thread!(thread_data.id)
+      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
 
       case Forum.remove_thread(thread, user) do
         {:ok, _} ->
@@ -165,7 +169,7 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "mark threads as solved", fn socket, user ->
       thread_id = thread_data.id
       # Fetch thread metadata only (no comments needed for mark as solved)
-      thread = Forum.get_thread!(thread_id)
+      thread = Forum.get_thread!(thread_id, allow_removed?: true)
 
       case Forum.mark_as_solved(thread, comment_id, user) do
         {:ok, _} ->
@@ -190,7 +194,7 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "unmark threads as solved", fn socket, user ->
       thread_id = thread_data.id
       # Fetch thread metadata only (no comments needed for unmark solved)
-      thread = Forum.get_thread!(thread_id)
+      thread = Forum.get_thread!(thread_id, allow_removed?: true)
 
       case Forum.unmark_as_solved(thread, user) do
         {:ok, _} ->
@@ -332,7 +336,7 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for locking)
-      thread = Forum.get_thread!(thread_data.id)
+      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
 
       case Forum.lock_thread(thread, user) do
         {:ok, _} ->
@@ -358,7 +362,7 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for unlocking)
-      thread = Forum.get_thread!(thread_data.id)
+      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
 
       case Forum.unlock_thread(thread, user) do
         {:ok, _} ->
@@ -384,7 +388,7 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for pinning)
-      thread = Forum.get_thread!(thread_data.id)
+      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
 
       case Forum.pin_thread(thread, user) do
         {:ok, _} ->
@@ -410,7 +414,7 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for unpinning)
-      thread = Forum.get_thread!(thread_data.id)
+      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
 
       case Forum.unpin_thread(thread, user) do
         {:ok, _} ->
