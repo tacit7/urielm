@@ -140,7 +140,7 @@ defmodule UrielmWeb.BlogLive do
           <% end %>
 
           <article class="prose" id="blog-article" phx-hook="HighlightCode">
-            {raw(markdown_to_html(@post.body))}
+            {UrielmWeb.Markdown.to_html!(@post.body, code_class_prefix: "language-")}
           </article>
 
           <nav class="mt-16 pt-8 border-t border-base-300/30 flex justify-between gap-4">
@@ -258,11 +258,6 @@ defmodule UrielmWeb.BlogLive do
       </div>
     <% end %>
     """
-  end
-
-  defp markdown_to_html(markdown) do
-    markdown
-    |> Earmark.as_html!(code_class_prefix: "language-")
   end
 
   defp read_time(body) do
