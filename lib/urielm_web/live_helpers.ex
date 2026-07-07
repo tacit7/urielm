@@ -49,7 +49,7 @@ defmodule UrielmWeb.LiveHelpers do
       is_locked: thread.is_locked || false,
       is_pinned: thread.is_pinned || false,
       author: %{
-        id: thread.author.id,
+        id: to_string(thread.author.id),
         username: thread.author.username
       },
       created_at: thread.inserted_at,
@@ -122,7 +122,7 @@ defmodule UrielmWeb.LiveHelpers do
       is_locked: thread.is_locked || false,
       is_pinned: thread.is_pinned || false,
       author: %{
-        id: thread.author.id,
+        id: to_string(thread.author.id),
         username: thread.author.username
       },
       created_at: thread.inserted_at,
@@ -139,7 +139,8 @@ defmodule UrielmWeb.LiveHelpers do
   Requires thread.author and thread.board to be preloaded.
   """
   def serialize_thread_full(thread, current_user) do
-    base = serialize_thread_card(thread, current_user)
+    bulk_state = load_bulk_thread_state(current_user, [thread.id])
+    base = serialize_thread_card_bulk(thread, current_user, bulk_state)
 
     Map.merge(base, %{
       body: thread.body,
@@ -189,7 +190,7 @@ defmodule UrielmWeb.LiveHelpers do
       id: to_string(comment.id),
       body: comment.body,
       author: %{
-        id: comment.author.id,
+        id: to_string(comment.author.id),
         username: comment.author.username,
         avatar_url: comment.author.avatar_url
       },

@@ -546,7 +546,17 @@ defmodule Urielm.Forum do
 
   def remove_comment(%Comment{} = comment, %{id: user_id} = user) do
     if authorized?(user, comment.author_id) do
-      update_comment(comment, %{is_removed: true, removed_by_id: user_id})
+      case update_comment(comment, %{is_removed: true, removed_by_id: user_id}) do
+        {:ok, _removed} = result ->
+          unless comment.is_removed do
+            change_thread_comment_count(comment.thread_id, -1)
+          end
+
+          result
+
+        error ->
+          error
+      end
     else
       {:error, :unauthorized}
     end
@@ -1462,8 +1472,12 @@ defmodule Urielm.Forum do
   # Helpers
 
   defp update_thread_comment_count(thread_id) do
+    change_thread_comment_count(thread_id, 1)
+  end
+
+  defp change_thread_comment_count(thread_id, delta) do
     from(t in Thread, where: t.id == ^thread_id)
-    |> Repo.update_all(inc: [comment_count: 1])
+    |> Repo.update_all(inc: [comment_count: delta])
   end
 
   # Generic rate limit wrapper; -1 means unlimited
