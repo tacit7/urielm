@@ -171,35 +171,9 @@ defmodule UrielmWeb.PromptsLive do
   @impl true
   def handle_event("toggle_save", %{"id" => id}, socket) do
     LiveHelpers.with_auth(socket, "save prompts", fn socket, user ->
-      prompt_id =
-        case Integer.parse(id) do
-          {n, ""} -> n
-          _ -> nil
-        end
-
-      case prompt_id do
-        nil ->
-          {:noreply, put_flash(socket, :error, "Invalid prompt")}
-
-        prompt_id ->
-          case Content.toggle_save(user.id, prompt_id) do
-            {:ok, _prompt} ->
-              updated_socket =
-                if socket.assigns.selected_prompt &&
-                     socket.assigns.selected_prompt.id == prompt_id do
-                  case Content.get_prompt(prompt_id) do
-                    nil -> socket
-                    prompt -> assign(socket, :selected_prompt, serialize_prompt(prompt, user))
-                  end
-                else
-                  socket
-                end
-
-              {:noreply, updated_socket}
-
-            {:error, _} ->
-              {:noreply, put_flash(socket, :error, "Failed to save prompt")}
-          end
+      case Integer.parse(id) do
+        {n, ""} -> do_toggle_save(n, user, socket)
+        _ -> {:noreply, put_flash(socket, :error, "Invalid prompt")}
       end
     end)
   end
@@ -218,6 +192,27 @@ defmodule UrielmWeb.PromptsLive do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to vote")}
+    end
+  end
+
+  defp do_toggle_save(prompt_id, user, socket) do
+    case Content.toggle_save(user.id, prompt_id) do
+      {:ok, _prompt} ->
+        updated_socket =
+          if socket.assigns.selected_prompt &&
+               socket.assigns.selected_prompt.id == prompt_id do
+            case Content.get_prompt(prompt_id) do
+              nil -> socket
+              prompt -> assign(socket, :selected_prompt, serialize_prompt(prompt, user))
+            end
+          else
+            socket
+          end
+
+        {:noreply, updated_socket}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to save prompt")}
     end
   end
 

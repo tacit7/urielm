@@ -31,24 +31,22 @@ defmodule Urielm.MentionParser do
 
     mentions_created =
       Enum.reduce(usernames, 0, fn username, acc ->
-        case Accounts.get_user_by_username(username) do
-          nil ->
-            acc
-
-          user ->
-            # Don't create mention if user is mentioning themselves
-            if user.id == mentioner_id do
-              acc
-            else
-              case create_mention(user.id, mentioner_id, target_type, target_id) do
-                {:ok, _mention} -> acc + 1
-                {:error, _} -> acc
-              end
-            end
-        end
+        process_single_mention(username, mentioner_id, target_type, target_id, acc)
       end)
 
     {:ok, mentions_created}
+  end
+
+  defp process_single_mention(username, mentioner_id, target_type, target_id, acc) do
+    case Accounts.get_user_by_username(username) do
+      nil -> acc
+      user when user.id == mentioner_id -> acc
+      user ->
+        case create_mention(user.id, mentioner_id, target_type, target_id) do
+          {:ok, _} -> acc + 1
+          {:error, _} -> acc
+        end
+    end
   end
 
   defp create_mention(user_id, mentioner_id, target_type, target_id) do

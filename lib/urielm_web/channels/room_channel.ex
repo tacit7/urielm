@@ -21,19 +21,7 @@ defmodule UrielmWeb.RoomChannel do
 
       room_id_int ->
         if user && Chat.member?(user.id, room_id_int) do
-          # Load recent messages with users preloaded
-          messages =
-            Chat.list_room_messages(room_id_int, 50)
-            |> Enum.map(fn msg ->
-              # Ensure user is loaded
-              if Ecto.assoc_loaded?(msg.user) do
-                msg
-              else
-                Urielm.Repo.preload(msg, :user)
-              end
-            end)
-            |> Enum.map(&serialize_message/1)
-
+          messages = load_room_messages(room_id_int)
           {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
         else
           {:error, %{reason: "unauthorized"}}
@@ -82,6 +70,14 @@ defmodule UrielmWeb.RoomChannel do
     })
 
     {:noreply, socket}
+  end
+
+  defp load_room_messages(room_id_int) do
+    Chat.list_room_messages(room_id_int, 50)
+    |> Enum.map(fn msg ->
+      if Ecto.assoc_loaded?(msg.user), do: msg, else: Urielm.Repo.preload(msg, :user)
+    end)
+    |> Enum.map(&serialize_message/1)
   end
 
   defp serialize_message(message) do
