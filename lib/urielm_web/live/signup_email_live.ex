@@ -124,8 +124,8 @@ defmodule UrielmWeb.SignupEmailLive do
 
     case Accounts.register_user_email_only(%{email: email, password: password}) do
       {:ok, user} ->
-        # Redirect to controller action that sets session and redirects to verification page
-        {:noreply, redirect(socket, to: "/auth/post-signup/#{user.id}")}
+        token = UrielmWeb.AuthController.sign_post_signup_token(socket, user.id)
+        {:noreply, redirect(socket, to: "/auth/post-signup/#{token}")}
 
       {:error, changeset} ->
         error_message = format_error(changeset)

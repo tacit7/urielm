@@ -6,6 +6,7 @@
   export let room
   export let messages = []
   export let userId
+  export let socketToken
 
   let newMessage = ""
   let channel = null
@@ -16,7 +17,7 @@
 
   onMount(async () => {
     socket = new Socket("/socket", {
-      params: { user_id: userId }
+      params: { token: socketToken }
     })
     socket.connect()
 

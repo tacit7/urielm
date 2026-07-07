@@ -135,22 +135,32 @@ defmodule UrielmWeb.AuthController do
     end
   end
 
+  # Tokens are valid for 10 minutes — enough to survive the redirect from signup.
+  @post_signup_token_max_age 600
+
   @doc """
-  Post-signup redirect - sets session and redirects to verification page or intended destination
+  Signs a short-lived token that authorizes the post-signup redirect for a specific user.
+  Called immediately after user record creation.
   """
-  def post_signup(conn, %{"user_id" => user_id}) do
-    parsed_id =
-      case Integer.parse(user_id) do
-        {n, ""} -> n
-        _ -> nil
-      end
+  def sign_post_signup_token(conn_or_endpoint, user_id) do
+    Phoenix.Token.sign(conn_or_endpoint, "post signup", user_id,
+      max_age: @post_signup_token_max_age
+    )
+  end
 
-    case parsed_id do
-      nil ->
-        conn |> put_flash(:error, "Invalid user ID") |> redirect(to: ~p"/")
+  @doc """
+  Post-signup redirect - verifies a signed token and sets the session.
+  The token is minted by sign_post_signup_token/2 immediately after registration.
+  """
+  def post_signup(conn, %{"token" => token}) do
+    case Phoenix.Token.verify(conn, "post signup", token,
+           max_age: @post_signup_token_max_age
+         ) do
+      {:error, _} ->
+        conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
-      parsed_id ->
-        case Accounts.get_user(parsed_id) do
+      {:ok, user_id} ->
+        case Accounts.get_user(user_id) do
           nil ->
             conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
@@ -163,7 +173,6 @@ defmodule UrielmWeb.AuthController do
               |> delete_session(:return_to)
               |> configure_session(renew: true)
 
-            # If email not verified, redirect to verification page
             cond do
               !user.email_verified ->
                 conn

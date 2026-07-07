@@ -153,7 +153,9 @@ defmodule UrielmWeb.ChatLive do
                 %{
                   room: serialize_room(@selected_room),
                   messages: Enum.map(@messages, &serialize_message/1),
-                  userId: to_string(@current_user.id)
+                  userId: to_string(@current_user.id),
+                  socketToken:
+                    Phoenix.Token.sign(@socket, "user socket", @current_user.id)
                 }
               }
               socket={@socket}

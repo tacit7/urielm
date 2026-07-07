@@ -34,7 +34,7 @@ defmodule UrielmWeb.Router do
     get "/:provider/callback", AuthController, :callback
     post "/:provider/callback", AuthController, :callback
     delete "/logout", AuthController, :delete
-    get "/post-signup/:user_id", AuthController, :post_signup
+    get "/post-signup/:token", AuthController, :post_signup
 
     # Email/password authentication
     post "/signup", AuthController, :signup

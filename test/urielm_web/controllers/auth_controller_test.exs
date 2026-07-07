@@ -458,7 +458,11 @@ defmodule UrielmWeb.AuthControllerTest do
     end
   end
 
-  describe "GET /auth/post-signup/:user_id" do
+  describe "GET /auth/post-signup/:token" do
+    defp post_signup_token(_conn, user_id) do
+      UrielmWeb.AuthController.sign_post_signup_token(UrielmWeb.Endpoint, user_id)
+    end
+
     test "post_signup sets user_id in session and redirects", %{conn: conn} do
       {:ok, user} =
         Accounts.register_user(%{
@@ -468,10 +472,10 @@ defmodule UrielmWeb.AuthControllerTest do
           password: "password123"
         })
 
-      conn = get(conn, ~p"/auth/post-signup/#{user.id}")
+      token = post_signup_token(conn, user.id)
+      conn = get(conn, ~p"/auth/post-signup/#{token}")
 
       assert get_session(conn, :user_id) == user.id
-      # Should redirect somewhere (home or to verification/handle page)
       assert redirected_to(conn) != nil
     end
 
@@ -484,7 +488,8 @@ defmodule UrielmWeb.AuthControllerTest do
           password: "password123"
         })
 
-      conn = get(conn, ~p"/auth/post-signup/#{user.id}")
+      token = post_signup_token(conn, user.id)
+      conn = get(conn, ~p"/auth/post-signup/#{token}")
 
       assert redirected_to(conn) == "/"
     end
@@ -498,11 +503,18 @@ defmodule UrielmWeb.AuthControllerTest do
           password: "password123"
         })
 
-      conn = get(conn, ~p"/auth/post-signup/#{user.id}")
+      token = post_signup_token(conn, user.id)
+      conn = get(conn, ~p"/auth/post-signup/#{token}")
 
-      # Should redirect and set user_id
       assert get_session(conn, :user_id) == user.id
       assert redirected_to(conn) != nil
+    end
+
+    test "post_signup rejects invalid token", %{conn: conn} do
+      conn = get(conn, ~p"/auth/post-signup/not_a_real_token")
+
+      assert get_session(conn, :user_id) == nil
+      assert redirected_to(conn) == "/"
     end
   end
 

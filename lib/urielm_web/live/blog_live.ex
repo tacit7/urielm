@@ -187,7 +187,7 @@ defmodule UrielmWeb.BlogLive do
             "datePublished" => if(@post.published_at, do: DateTime.to_iso8601(@post.published_at), else: nil),
             "image" => @post.hero_image,
             "author" => %{"@type" => "Person", "name" => "Uriel Maldonado"}
-          }))}
+          }) |> String.replace("<", "\\u003c"))}
         </script>
       </div>
     <% else %>

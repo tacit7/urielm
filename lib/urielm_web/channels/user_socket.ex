@@ -3,26 +3,24 @@ defmodule UrielmWeb.UserSocket do
 
   channel "room:*", UrielmWeb.RoomChannel
 
-  @impl true
-  def connect(params, socket, _connect_info) do
-    # Get user_id from params (passed from LiveView)
-    case params["user_id"] do
-      user_id when is_binary(user_id) ->
-        case Integer.parse(user_id) do
-          {id, ""} ->
-            case Urielm.Accounts.get_user(id) do
-              nil -> :error
-              user -> {:ok, assign(socket, :current_user, user)}
-            end
+  # Tokens are valid for 10 minutes — enough for page load + initial connect.
+  @max_age 600
 
-          :error ->
-            :error
+  @impl true
+  def connect(%{"token" => token}, socket, _connect_info) do
+    case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
+      {:ok, user_id} ->
+        case Urielm.Accounts.get_user(user_id) do
+          nil -> :error
+          user -> {:ok, assign(socket, :current_user, user)}
         end
 
-      _ ->
+      {:error, _} ->
         :error
     end
   end
+
+  def connect(_params, _socket, _connect_info), do: :error
 
   @impl true
   def id(socket) do
