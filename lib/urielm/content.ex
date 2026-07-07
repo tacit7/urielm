@@ -512,6 +512,7 @@ defmodule Urielm.Content do
   Gets a single comment.
   """
   def get_comment!(id), do: Repo.get!(Comment, id)
+  def get_comment(id), do: Repo.get(Comment, id)
 
   @doc """
   Updates a comment.

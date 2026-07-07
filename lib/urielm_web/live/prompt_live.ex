@@ -30,28 +30,37 @@ defmodule UrielmWeb.PromptLive do
         {:ok, socket |> put_flash(:error, "Invalid prompt") |> redirect(to: ~p"/prompts")}
 
       prompt_id ->
-        case Content.get_prompt_with_comments(prompt_id) do
-          nil ->
-            {:ok, socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
+        if connected?(socket) do
+          case Content.get_prompt_with_comments(prompt_id) do
+            nil ->
+              {:ok, socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
 
-          prompt ->
-            # Load vote data
-            %{current_user: user} = socket.assigns
-            target_id = to_string(prompt.id)
-            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
-            user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+            prompt ->
+              %{current_user: user} = socket.assigns
+              target_id = to_string(prompt.id)
+              {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+              user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+              user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
 
-            user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
-
-            {:ok,
-             socket
-             |> assign(:page_title, prompt.title)
-             |> assign(:prompt, prompt)
-             |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
-             |> assign(:upvotes, upvotes)
-             |> assign(:downvotes, downvotes)
-             |> assign(:user_vote, user_vote && user_vote.value)
-             |> assign(:user_saved, user_saved)}
+              {:ok,
+               socket
+               |> assign(:page_title, prompt.title)
+               |> assign(:prompt, prompt)
+               |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
+               |> assign(:upvotes, upvotes)
+               |> assign(:downvotes, downvotes)
+               |> assign(:user_vote, user_vote && user_vote.value)
+               |> assign(:user_saved, user_saved)}
+          end
+        else
+          {:ok,
+           socket
+           |> assign(:prompt, nil)
+           |> assign(:comment_form, nil)
+           |> assign(:upvotes, 0)
+           |> assign(:downvotes, 0)
+           |> assign(:user_vote, nil)
+           |> assign(:user_saved, nil)}
         end
     end
   end
@@ -120,25 +129,29 @@ defmodule UrielmWeb.PromptLive do
         {:noreply, put_flash(socket, :error, "Invalid comment ID")}
 
       parsed_id ->
-        comment = Content.get_comment!(parsed_id)
+        case Content.get_comment(parsed_id) do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Comment not found")}
 
-        if user && (comment.user_id == user.id or user.is_admin) do
-          case Content.delete_comment(comment) do
-            {:ok, _} ->
-              case Content.get_prompt_with_comments(prompt.id) do
-                nil ->
-                  {:noreply,
-                   socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
+          comment ->
+            if user && (comment.user_id == user.id or user.is_admin) do
+              case Content.delete_comment(comment) do
+                {:ok, _} ->
+                  case Content.get_prompt_with_comments(prompt.id) do
+                    nil ->
+                      {:noreply,
+                       socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
 
-                updated_prompt ->
-                  {:noreply, assign(socket, :prompt, updated_prompt)}
+                    updated_prompt ->
+                      {:noreply, assign(socket, :prompt, updated_prompt)}
+                  end
+
+                {:error, _} ->
+                  {:noreply, put_flash(socket, :error, "Failed to delete comment")}
               end
-
-            {:error, _} ->
-              {:noreply, put_flash(socket, :error, "Failed to delete comment")}
-          end
-        else
-          {:noreply, put_flash(socket, :error, "Not authorized")}
+            else
+              {:noreply, put_flash(socket, :error, "Not authorized")}
+            end
         end
     end
   end
@@ -191,6 +204,7 @@ defmodule UrielmWeb.PromptLive do
   def render(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 text-base-content pt-20">
+      <%= if @prompt do %>
       <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
           <.link
@@ -319,6 +333,7 @@ defmodule UrielmWeb.PromptLive do
           </div>
         </div>
       </div>
+      <% end %>
     </div>
     """
   end
