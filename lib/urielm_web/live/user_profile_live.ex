@@ -44,9 +44,24 @@ defmodule UrielmWeb.UserProfileLive do
               p
           end
 
-        stats = Accounts.get_user_stats(user.id)
         current_user = socket.assigns.current_user
-        is_following = current_user && Accounts.following?(current_user.id, user.id)
+
+        socket =
+          socket
+          |> assign(:page_title, "@#{user.username}")
+          |> assign(:user, user)
+          |> assign(:active_tab, tab)
+          |> assign(:editing_username, false)
+          |> assign(:editing_display_name, false)
+          |> assign(:show_delete_confirm, false)
+          |> assign(:show_suspend_modal, false)
+          |> assign(:show_silence_modal, false)
+          |> assign(:mod_reason, "")
+          |> assign(:mod_duration, "forever")
+          |> assign(:threads, [])
+          |> assign(:comments, [])
+          |> assign(:threads_meta, nil)
+          |> assign(:comments_meta, nil)
 
         form =
           if current_user && current_user.id == user.id do
@@ -55,25 +70,31 @@ defmodule UrielmWeb.UserProfileLive do
             nil
           end
 
-        socket =
-          socket
-          |> assign(:page_title, "@#{user.username}")
-          |> assign(:user, user)
-          |> assign(:stats, stats)
-          |> assign(:is_following, is_following || false)
-          |> assign(:active_tab, tab)
-          |> assign(:form, form)
-          |> assign(:editing_username, false)
-          |> assign(:editing_display_name, false)
-          |> assign(:show_delete_confirm, false)
-          |> assign(:show_suspend_modal, false)
-          |> assign(:show_silence_modal, false)
-          |> assign(:mod_reason, "")
-          |> assign(:mod_duration, "forever")
+        socket = assign(socket, :form, form)
 
-        socket = load_tab_data(socket, tab, page)
+        if connected?(socket) do
+          stats = Accounts.get_user_stats(user.id)
+          is_following = current_user && Accounts.following?(current_user.id, user.id)
 
-        {:ok, socket}
+          socket =
+            socket
+            |> assign(:stats, stats)
+            |> assign(:is_following, is_following || false)
+
+          {:ok, load_tab_data(socket, tab, page)}
+        else
+          socket =
+            socket
+            |> assign(:stats, %{
+              thread_count: 0,
+              comment_count: 0,
+              follower_count: 0,
+              following_count: 0
+            })
+            |> assign(:is_following, false)
+
+          {:ok, socket}
+        end
     end
   end
 
@@ -401,7 +422,7 @@ defmodule UrielmWeb.UserProfileLive do
              }) do
           {:ok, {threads, meta}} ->
             assign(socket,
-              threads: Enum.map(threads, &LiveHelpers.serialize_thread_card(&1, current_user)),
+              threads: LiveHelpers.serialize_thread_list(threads, current_user),
               threads_meta: meta,
               comments: [],
               comments_meta: nil
