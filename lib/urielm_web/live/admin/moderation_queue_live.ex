@@ -277,23 +277,12 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
       {target_title, thread_id} =
         case report.target_type do
           "thread" ->
-            thread =
-              try do
-                Forum.get_thread!(report.target_id)
-              rescue
-                Ecto.NoResultsError -> nil
-              end
-
+            thread = Forum.get_thread(report.target_id)
             title = if thread, do: thread.title, else: "Deleted thread"
             {title, to_string(report.target_id)}
 
           "comment" ->
-            comment =
-              try do
-                Forum.get_comment!(report.target_id)
-              rescue
-                Ecto.NoResultsError -> nil
-              end
+            comment = Forum.get_comment(report.target_id)
 
             target_title =
               if comment, do: String.slice(comment.body, 0, 80) <> "...", else: "Deleted comment"
