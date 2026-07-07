@@ -51,6 +51,18 @@ defmodule Urielm.ChatTest do
       assert is_nil(result)
     end
 
+    test "get_room/1 returns room by id" do
+      room = create_room(%{name: "test-get-room"})
+
+      fetched = Chat.get_room(room.id)
+
+      assert fetched.id == room.id
+    end
+
+    test "get_room/1 returns nil for non-existent id" do
+      assert is_nil(Chat.get_room(9_999_999))
+    end
+
     test "create_room/1 creates a room with valid data" do
       attrs = %{
         name: "new-room",

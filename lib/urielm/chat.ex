@@ -13,6 +13,10 @@ defmodule Urielm.Chat do
     Repo.all(Room)
   end
 
+  def get_room(id) do
+    Repo.get(Room, id)
+  end
+
   def get_room!(id) do
     Repo.get!(Room, id)
   end

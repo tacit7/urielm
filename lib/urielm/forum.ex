@@ -128,6 +128,13 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
+  def get_board(slug) do
+    case Repo.get_by(Board, slug: slug) do
+      nil -> nil
+      board -> Repo.preload(board, :category)
+    end
+  end
+
   def get_board!(slug) do
     Repo.get_by!(Board, slug: slug)
     |> Repo.preload(:category)
