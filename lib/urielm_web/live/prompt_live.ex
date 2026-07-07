@@ -86,13 +86,18 @@ defmodule UrielmWeb.PromptLive do
 
         case Content.create_comment(comment_data) do
           {:ok, _comment} ->
-            updated_prompt = Content.get_prompt_with_comments(prompt.id)
+            case Content.get_prompt_with_comments(prompt.id) do
+              nil ->
+                {:noreply,
+                 socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
 
-            {:noreply,
-             socket
-             |> assign(:prompt, updated_prompt)
-             |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
-             |> put_flash(:info, "Comment posted")}
+              updated_prompt ->
+                {:noreply,
+                 socket
+                 |> assign(:prompt, updated_prompt)
+                 |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
+                 |> put_flash(:info, "Comment posted")}
+            end
 
           {:error, changeset} ->
             {:noreply, assign(socket, :comment_form, to_form(changeset))}
@@ -120,8 +125,14 @@ defmodule UrielmWeb.PromptLive do
         if user && (comment.user_id == user.id or user.is_admin) do
           case Content.delete_comment(comment) do
             {:ok, _} ->
-              updated_prompt = Content.get_prompt_with_comments(prompt.id)
-              {:noreply, assign(socket, :prompt, updated_prompt)}
+              case Content.get_prompt_with_comments(prompt.id) do
+                nil ->
+                  {:noreply,
+                   socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
+
+                updated_prompt ->
+                  {:noreply, assign(socket, :prompt, updated_prompt)}
+              end
 
             {:error, _} ->
               {:noreply, put_flash(socket, :error, "Failed to delete comment")}
@@ -157,13 +168,19 @@ defmodule UrielmWeb.PromptLive do
   defp handle_toggle_save(user, prompt_id, socket) do
     case Content.toggle_save(user.id, prompt_id) do
       {:ok, _} ->
-        updated_prompt = Content.get_prompt_with_comments(prompt_id)
-        user_saved = Content.user_saved_prompt?(user.id, prompt_id)
+        case Content.get_prompt_with_comments(prompt_id) do
+          nil ->
+            {:noreply,
+             socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
 
-        {:noreply,
-         socket
-         |> assign(:prompt, updated_prompt)
-         |> assign(:user_saved, user_saved)}
+          updated_prompt ->
+            user_saved = Content.user_saved_prompt?(user.id, prompt_id)
+
+            {:noreply,
+             socket
+             |> assign(:prompt, updated_prompt)
+             |> assign(:user_saved, user_saved)}
+        end
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to save prompt")}
