@@ -18,54 +18,76 @@ defmodule UrielmWeb.VideoLive do
 
     slug = child_params["slug"]
 
-    video = Content.get_video_by_slug(slug)
-
-    if is_nil(video) do
+    if not connected?(socket) do
       {:ok,
        socket
-       |> put_flash(:error, "Video not found")
-       |> redirect(to: ~p"/")}
+       |> assign(:page_title, "Loading...")
+       |> assign(:video, nil)
+       |> assign(:completed, false)
+       |> assign(:thread, nil)
+       |> assign(:comment_tree, [])
+       |> assign(:nav_items, [])
+       |> assign(:active_section, "description")
+       |> assign(:dock_tab, "home")
+       |> assign(:reporting_comment_id, nil)
+       |> assign(:upvotes, 0)
+       |> assign(:downvotes, 0)
+       |> assign(:user_vote, nil)
+       |> assign(:meta_description, "")
+       |> assign(:canonical_url, "")
+       |> assign(:og_title, "")
+       |> assign(:og_type, "video.other")
+       |> assign(:og_image, nil)}
     else
-      %{current_user: user} = socket.assigns
+      video = Content.get_video_by_slug(slug)
 
-      # Enforce published check (unpublished = admin only)
-      if not Content.video_published?(video) and (is_nil(user) or not user.is_admin) do
+      if is_nil(video) do
         {:ok,
          socket
-         |> put_flash(:error, "This video is not yet published")
+         |> put_flash(:error, "Video not found")
          |> redirect(to: ~p"/")}
       else
-        # Enforce visibility authorization
-        if not Content.can_view_video?(user, video) do
-          handle_unauthorized(socket, video, user)
-        else
-          # Load thread and comments if thread_id present
-          {thread, comment_tree} = load_thread_and_comments(video, user)
+        %{current_user: user} = socket.assigns
 
-          completed = if user, do: Content.completed_video?(user, video), else: false
-
-          nav_items = build_nav_items(video, thread)
-          default_section = (List.first(nav_items) || %{key: "description"}).key
-
-          # Load vote data
-          {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", video.id)
-          user_vote = if user, do: Engagement.get_vote(user.id, "video", video.id), else: nil
-
+        # Enforce published check (unpublished = admin only)
+        if not Content.video_published?(video) and (is_nil(user) or not user.is_admin) do
           {:ok,
            socket
-           |> assign(:page_title, video.title)
-           |> assign(:video, video)
-           |> assign(:completed, completed)
-           |> assign(:thread, thread)
-           |> assign(:comment_tree, comment_tree)
-           |> assign(:nav_items, nav_items)
-           |> assign(:active_section, default_section)
-           |> assign(:dock_tab, "home")
-           |> assign(:reporting_comment_id, nil)
-           |> assign(:upvotes, upvotes)
-           |> assign(:downvotes, downvotes)
-           |> assign(:user_vote, user_vote && user_vote.value)
-           |> assign_meta_tags(video, slug)}
+           |> put_flash(:error, "This video is not yet published")
+           |> redirect(to: ~p"/")}
+        else
+          # Enforce visibility authorization
+          if not Content.can_view_video?(user, video) do
+            handle_unauthorized(socket, video, user)
+          else
+            # Load thread and comments if thread_id present
+            {thread, comment_tree} = load_thread_and_comments(video, user)
+
+            completed = if user, do: Content.completed_video?(user, video), else: false
+
+            nav_items = build_nav_items(video, thread)
+            default_section = (List.first(nav_items) || %{key: "description"}).key
+
+            # Load vote data
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", video.id)
+            user_vote = if user, do: Engagement.get_vote(user.id, "video", video.id), else: nil
+
+            {:ok,
+             socket
+             |> assign(:page_title, video.title)
+             |> assign(:video, video)
+             |> assign(:completed, completed)
+             |> assign(:thread, thread)
+             |> assign(:comment_tree, comment_tree)
+             |> assign(:nav_items, nav_items)
+             |> assign(:active_section, default_section)
+             |> assign(:dock_tab, "home")
+             |> assign(:reporting_comment_id, nil)
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)
+             |> assign_meta_tags(video, slug)}
+          end
         end
       end
     end
@@ -293,20 +315,24 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
-        comment = Forum.get_comment!(comment_id)
+        case Forum.get_comment(comment_id) do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Comment not found")}
 
-        case Forum.edit_comment(comment, body, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> refresh_video_comments(user)
-             |> put_flash(:info, "Comment updated")}
+          comment ->
+            case Forum.edit_comment(comment, body, user) do
+              {:ok, _} ->
+                {:noreply,
+                 socket
+                 |> refresh_video_comments(user)
+                 |> put_flash(:info, "Comment updated")}
 
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Not authorized")}
+              {:error, :unauthorized} ->
+                {:noreply, put_flash(socket, :error, "Not authorized")}
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to update comment")}
+              {:error, _} ->
+                {:noreply, put_flash(socket, :error, "Failed to update comment")}
+            end
         end
     end
   end
@@ -320,20 +346,24 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
-        comment = Forum.get_comment!(comment_id)
+        case Forum.get_comment(comment_id) do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Comment not found")}
 
-        case Forum.remove_comment(comment, user) do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> refresh_video_comments(user)
-             |> put_flash(:info, "Comment deleted")}
+          comment ->
+            case Forum.remove_comment(comment, user) do
+              {:ok, _} ->
+                {:noreply,
+                 socket
+                 |> refresh_video_comments(user)
+                 |> put_flash(:info, "Comment deleted")}
 
-          {:error, :unauthorized} ->
-            {:noreply, put_flash(socket, :error, "Not authorized")}
+              {:error, :unauthorized} ->
+                {:noreply, put_flash(socket, :error, "Not authorized")}
 
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+              {:error, _} ->
+                {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+            end
         end
     end
   end
@@ -379,20 +409,35 @@ defmodule UrielmWeb.VideoLive do
   end
 
   defp refresh_video_comments(socket, user) do
-    thread = Forum.get_thread!(socket.assigns.thread.id, include_comments?: true)
-    comment_tree = LiveHelpers.build_comment_tree(thread.comments, user)
+    case Forum.get_thread(socket.assigns.thread.id, include_comments?: true) do
+      nil ->
+        socket
+        |> assign(:thread, nil)
+        |> assign(:comment_tree, [])
 
-    socket
-    |> assign(:thread, thread)
-    |> assign(:comment_tree, comment_tree)
+      thread ->
+        comment_tree = LiveHelpers.build_comment_tree(thread.comments, user)
+
+        socket
+        |> assign(:thread, thread)
+        |> assign(:comment_tree, comment_tree)
+    end
   end
 
   @impl true
   def render(assigns) do
-    if assigns.video.format == "short" do
-      render_short(assigns)
+    if is_nil(assigns.video) do
+      ~H"""
+      <div class="min-h-screen bg-base-100 flex items-center justify-center">
+        <span class="loading loading-spinner loading-lg"></span>
+      </div>
+      """
     else
-      render_standard(assigns)
+      if assigns.video.format == "short" do
+        render_short(assigns)
+      else
+        render_standard(assigns)
+      end
     end
   end
 
