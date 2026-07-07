@@ -462,6 +462,13 @@ defmodule Urielm.Forum do
     |> Repo.preload(:author)
   end
 
+  def get_comment(id) do
+    case Repo.get(Comment, id) do
+      nil -> nil
+      comment -> Repo.preload(comment, :author)
+    end
+  end
+
   def create_comment(thread_id, author_id, attrs \\ %{}) do
     thread = Repo.get!(Thread, thread_id)
 
