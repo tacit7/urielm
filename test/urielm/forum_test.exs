@@ -792,7 +792,7 @@ defmodule Urielm.ForumTest do
 
       {:ok, _} = Forum.unsave_thread(user.id, thread.id)
 
-      assert !Forum.is_thread_saved?(user.id, thread.id)
+      assert !Forum.thread_saved?(user.id, thread.id)
     end
 
     test "unsave_thread/2 returns error if thread not saved" do
@@ -806,11 +806,11 @@ defmodule Urielm.ForumTest do
       user = user_fixture()
       thread = thread_fixture()
 
-      assert !Forum.is_thread_saved?(user.id, thread.id)
+      assert !Forum.thread_saved?(user.id, thread.id)
 
       {:ok, _} = Forum.save_thread(user.id, thread.id)
 
-      assert Forum.is_thread_saved?(user.id, thread.id)
+      assert Forum.thread_saved?(user.id, thread.id)
     end
 
     test "list_saved_threads/2 returns user's saved threads" do
@@ -1189,18 +1189,18 @@ defmodule Urielm.ForumTest do
 
       {:ok, _} = Forum.unsubscribe_from_thread(user.id, thread.id)
 
-      assert !Forum.is_subscribed?(user.id, thread.id)
+      assert !Forum.subscribed?(user.id, thread.id)
     end
 
     test "is_subscribed?/2 checks subscription status" do
       user = user_fixture()
       thread = thread_fixture()
 
-      assert !Forum.is_subscribed?(user.id, thread.id)
+      assert !Forum.subscribed?(user.id, thread.id)
 
       {:ok, _} = Forum.subscribe_to_thread(user.id, thread.id)
 
-      assert Forum.is_subscribed?(user.id, thread.id)
+      assert Forum.subscribed?(user.id, thread.id)
     end
 
     test "list_subscriptions/2 returns user's subscribed threads" do

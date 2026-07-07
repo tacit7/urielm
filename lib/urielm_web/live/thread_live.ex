@@ -36,12 +36,12 @@ defmodule UrielmWeb.ThreadLive do
 
         is_saved =
           if socket.assigns.current_user,
-            do: Forum.is_thread_saved?(socket.assigns.current_user.id, thread.id),
+            do: Forum.thread_saved?(socket.assigns.current_user.id, thread.id),
             else: false
 
         is_subscribed =
           if socket.assigns.current_user,
-            do: Forum.is_subscribed?(socket.assigns.current_user.id, thread.id),
+            do: Forum.subscribed?(socket.assigns.current_user.id, thread.id),
             else: false
 
         notification_level =
@@ -217,7 +217,7 @@ defmodule UrielmWeb.ThreadLive do
         {:ok, _} ->
           # No need to refetch thread; just update the saved status
           {:noreply,
-           assign(socket, :thread_is_saved, Forum.is_thread_saved?(user.id, thread_data.id))}
+           assign(socket, :thread_is_saved, Forum.thread_saved?(user.id, thread_data.id))}
 
         {:error, _} ->
           {:noreply, put_flash(socket, :error, "Failed to save thread")}

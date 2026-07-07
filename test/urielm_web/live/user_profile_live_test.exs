@@ -66,7 +66,7 @@ defmodule UrielmWeb.UserProfileLiveTest do
 
       render_click(profile_child(live), "toggle_follow", %{})
 
-      assert Accounts.is_following?(visitor.id, owner.id)
+      assert Accounts.following?(visitor.id, owner.id)
     end
 
     test "visitor can unfollow a user they already follow", %{
@@ -80,7 +80,7 @@ defmodule UrielmWeb.UserProfileLiveTest do
 
       render_click(profile_child(live), "toggle_follow", %{})
 
-      refute Accounts.is_following?(visitor.id, owner.id)
+      refute Accounts.following?(visitor.id, owner.id)
     end
 
     test "anonymous user cannot follow", %{conn: conn, owner: owner} do
@@ -147,7 +147,10 @@ defmodule UrielmWeb.UserProfileLiveTest do
       assert html =~ "Comments"
     end
 
-    test "mounts with saved tab when ?tab=saved and user is logged in", %{conn: conn, owner: owner} do
+    test "mounts with saved tab when ?tab=saved and user is logged in", %{
+      conn: conn,
+      owner: owner
+    } do
       {:ok, live, _html} = live(log_in_user(conn, owner), "/u/#{owner.username}?tab=saved")
       html = render(profile_child(live))
       assert html =~ owner.username

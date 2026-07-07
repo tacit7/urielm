@@ -359,7 +359,7 @@ defmodule Urielm.Forum do
   end
 
   def lock_thread(%Thread{} = thread, user) do
-    if is_moderator?(user) do
+    if moderator?(user) do
       update_thread(thread, %{is_locked: true})
     else
       {:error, :unauthorized}
@@ -367,7 +367,7 @@ defmodule Urielm.Forum do
   end
 
   def unlock_thread(%Thread{} = thread, user) do
-    if is_moderator?(user) do
+    if moderator?(user) do
       update_thread(thread, %{is_locked: false})
     else
       {:error, :unauthorized}
@@ -375,7 +375,7 @@ defmodule Urielm.Forum do
   end
 
   def pin_thread(%Thread{} = thread, %{id: user_id} = user) do
-    if is_moderator?(user) do
+    if moderator?(user) do
       update_thread(thread, %{
         is_pinned: true,
         pinned_at: DateTime.utc_now(),
@@ -387,7 +387,7 @@ defmodule Urielm.Forum do
   end
 
   def unpin_thread(%Thread{} = thread, user) do
-    if is_moderator?(user) do
+    if moderator?(user) do
       update_thread(thread, %{
         is_pinned: false,
         pinned_at: nil,
@@ -400,7 +400,7 @@ defmodule Urielm.Forum do
 
   def set_close_timer(%Thread{} = thread, days_from_now, %{id: user_id} = user)
       when is_integer(days_from_now) and days_from_now > 0 do
-    if is_moderator?(user) do
+    if moderator?(user) do
       close_at = DateTime.utc_now() |> DateTime.add(days_from_now * 86_400, :second)
 
       update_thread(thread, %{
@@ -415,7 +415,7 @@ defmodule Urielm.Forum do
   def set_close_timer(_thread, _days, _user), do: {:error, :unauthorized}
 
   def clear_close_timer(%Thread{} = thread, user) do
-    if is_moderator?(user) do
+    if moderator?(user) do
       update_thread(thread, %{
         close_at: nil,
         close_timer_set_by_id: nil
@@ -773,14 +773,14 @@ defmodule Urielm.Forum do
     end
   end
 
-  def is_thread_saved?(user_id, thread_id) do
+  def thread_saved?(user_id, thread_id) do
     Repo.exists?(
       from(st in SavedThread, where: st.user_id == ^user_id and st.thread_id == ^thread_id)
     )
   end
 
   def toggle_save_thread(user_id, thread_id) do
-    if is_thread_saved?(user_id, thread_id) do
+    if thread_saved?(user_id, thread_id) do
       unsave_thread(user_id, thread_id)
     else
       save_thread(user_id, thread_id)
@@ -837,14 +837,14 @@ defmodule Urielm.Forum do
     end
   end
 
-  def is_comment_saved?(user_id, comment_id) do
+  def comment_saved?(user_id, comment_id) do
     Repo.exists?(
       from(sc in SavedComment, where: sc.user_id == ^user_id and sc.comment_id == ^comment_id)
     )
   end
 
   def toggle_save_comment(user_id, comment_id) do
-    if is_comment_saved?(user_id, comment_id) do
+    if comment_saved?(user_id, comment_id) do
       unsave_comment(user_id, comment_id)
     else
       save_comment(user_id, comment_id)
@@ -1004,7 +1004,7 @@ defmodule Urielm.Forum do
     end
   end
 
-  def is_subscribed?(user_id, thread_id) do
+  def subscribed?(user_id, thread_id) do
     Repo.exists?(
       from(s in Subscription, where: s.user_id == ^user_id and s.thread_id == ^thread_id)
     )
@@ -1241,7 +1241,7 @@ defmodule Urielm.Forum do
     )
   end
 
-  def is_thread_unread?(user_id, thread_id) do
+  def thread_unread?(user_id, thread_id) do
     read = Repo.get_by(TopicRead, user_id: user_id, thread_id: thread_id)
     read == nil
   end
@@ -1340,15 +1340,15 @@ defmodule Urielm.Forum do
     end
   end
 
-  def is_watching?(user_id, thread_id) do
+  def watching?(user_id, thread_id) do
     get_notification_level(user_id, thread_id) == "watching"
   end
 
-  def is_tracking?(user_id, thread_id) do
+  def tracking?(user_id, thread_id) do
     get_notification_level(user_id, thread_id) == "tracking"
   end
 
-  def is_muted?(user_id, thread_id) do
+  def muted?(user_id, thread_id) do
     get_notification_level(user_id, thread_id) == "muted"
   end
 
@@ -1375,15 +1375,15 @@ defmodule Urielm.Forum do
     end
   end
 
-  def is_watching_category?(user_id, category_id) do
+  def watching_category?(user_id, category_id) do
     get_category_watch_level(user_id, category_id) == "watching"
   end
 
-  def is_tracking_category?(user_id, category_id) do
+  def tracking_category?(user_id, category_id) do
     get_category_watch_level(user_id, category_id) == "tracking"
   end
 
-  def is_category_muted?(user_id, category_id) do
+  def category_muted?(user_id, category_id) do
     get_category_watch_level(user_id, category_id) == "muted"
   end
 
@@ -1496,9 +1496,9 @@ defmodule Urielm.Forum do
   defp authorized?(_user, _owner_id), do: false
 
   # Moderator authorization (admin or moderator)
-  defp is_moderator?(%{is_admin: true}), do: true
-  defp is_moderator?(%{is_moderator: true}), do: true
-  defp is_moderator?(_user), do: false
+  defp moderator?(%{is_admin: true}), do: true
+  defp moderator?(%{is_moderator: true}), do: true
+  defp moderator?(_user), do: false
 
   # Post Revisions
 

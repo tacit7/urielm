@@ -232,11 +232,11 @@ defmodule Urielm.Accounts do
   @doc """
   Checks if a prompt is saved by a user.
   """
-  def is_prompt_saved?(%User{id: user_id}, prompt_id) do
+  def prompt_saved?(%User{id: user_id}, prompt_id) do
     Urielm.Content.user_saved_prompt?(user_id, prompt_id)
   end
 
-  def is_prompt_saved?(nil, _prompt_id), do: false
+  def prompt_saved?(nil, _prompt_id), do: false
 
   @doc """
   Gets all saved prompts for a user with prompt details.
@@ -292,11 +292,11 @@ defmodule Urielm.Accounts do
   @doc """
   Checks if a prompt is liked by a user.
   """
-  def is_prompt_liked?(%User{id: user_id}, prompt_id) do
+  def prompt_liked?(%User{id: user_id}, prompt_id) do
     Urielm.Content.user_liked_prompt?(user_id, prompt_id)
   end
 
-  def is_prompt_liked?(nil, _prompt_id), do: false
+  def prompt_liked?(nil, _prompt_id), do: false
 
   ## User Profiles
 
@@ -340,7 +340,7 @@ defmodule Urielm.Accounts do
     end
   end
 
-  def is_following?(follower_id, following_id) do
+  def following?(follower_id, following_id) do
     Repo.exists?(
       from(uf in UserFollow,
         where: uf.follower_id == ^follower_id and uf.following_id == ^following_id
@@ -349,7 +349,7 @@ defmodule Urielm.Accounts do
   end
 
   def toggle_follow(follower_id, following_id) do
-    if is_following?(follower_id, following_id) do
+    if following?(follower_id, following_id) do
       unfollow_user(follower_id, following_id)
     else
       follow_user(follower_id, following_id)

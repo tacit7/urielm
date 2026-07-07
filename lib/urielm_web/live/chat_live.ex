@@ -28,7 +28,7 @@ defmodule UrielmWeb.ChatLive do
         room = Chat.get_room!(id)
         user = socket.assigns[:current_user]
 
-        if Chat.is_member?(user.id, id) do
+        if Chat.member?(user.id, id) do
           messages = Chat.list_room_messages(id)
 
           {:noreply,

@@ -34,9 +34,9 @@ defmodule UrielmWeb.LiveHelpers do
       raise ArgumentError, "Thread ID serialized to empty string: #{inspect(thread.id)}"
     end
 
-    is_saved = current_user && Forum.is_thread_saved?(current_user.id, thread.id)
-    is_subscribed = current_user && Forum.is_subscribed?(current_user.id, thread.id)
-    is_unread = current_user && Forum.is_thread_unread?(current_user.id, thread.id)
+    is_saved = current_user && Forum.thread_saved?(current_user.id, thread.id)
+    is_subscribed = current_user && Forum.subscribed?(current_user.id, thread.id)
+    is_unread = current_user && Forum.thread_unread?(current_user.id, thread.id)
 
     %{
       id: thread_id_string,

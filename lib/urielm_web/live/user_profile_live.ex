@@ -46,7 +46,7 @@ defmodule UrielmWeb.UserProfileLive do
 
         stats = Accounts.get_user_stats(user.id)
         current_user = socket.assigns.current_user
-        is_following = current_user && Accounts.is_following?(current_user.id, user.id)
+        is_following = current_user && Accounts.following?(current_user.id, user.id)
 
         form =
           if current_user && current_user.id == user.id do
@@ -89,7 +89,7 @@ defmodule UrielmWeb.UserProfileLive do
       user ->
         case Accounts.toggle_follow(user.id, profile_user.id) do
           {:ok, _} ->
-            is_following = Accounts.is_following?(user.id, profile_user.id)
+            is_following = Accounts.following?(user.id, profile_user.id)
             stats = Accounts.get_user_stats(profile_user.id)
 
             {:noreply,

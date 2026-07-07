@@ -20,7 +20,7 @@ defmodule UrielmWeb.RoomChannel do
         {:error, %{reason: "invalid_room_id"}}
 
       room_id_int ->
-        if user && Chat.is_member?(user.id, room_id_int) do
+        if user && Chat.member?(user.id, room_id_int) do
           # Load recent messages with users preloaded
           messages =
             Chat.list_room_messages(room_id_int, 50)

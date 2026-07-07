@@ -48,7 +48,7 @@ defmodule Urielm.Chat do
     |> Repo.all()
   end
 
-  def is_member?(user_id, room_id) do
+  def member?(user_id, room_id) do
     Repo.exists?(
       from(m in RoomMembership,
         where: m.user_id == ^user_id and m.room_id == ^room_id
