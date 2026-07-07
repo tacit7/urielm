@@ -9,14 +9,19 @@ defmodule UrielmWeb.Admin.UserManagementLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:page_title, "User Management")
-     |> assign(:search, "")
-     |> assign(:status_filter, nil)
-     |> assign(:trust_filter, nil)
-     |> assign(:flop, default_flop())
-     |> load_users()}
+    base_socket =
+      socket
+      |> assign(:page_title, "User Management")
+      |> assign(:search, "")
+      |> assign(:status_filter, nil)
+      |> assign(:trust_filter, nil)
+      |> assign(:flop, default_flop())
+
+    if connected?(socket) do
+      {:ok, load_users(base_socket)}
+    else
+      {:ok, assign(base_socket, users: [], meta: nil)}
+    end
   end
 
   @impl true

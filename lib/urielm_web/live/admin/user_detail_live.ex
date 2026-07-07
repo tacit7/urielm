@@ -8,18 +8,28 @@ defmodule UrielmWeb.Admin.UserDetailLive do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    case Accounts.get_user(id) do
-      nil ->
-        {:ok, redirect(socket, to: "/admin/users")}
+    if connected?(socket) do
+      case Accounts.get_user(id) do
+        nil ->
+          {:ok, redirect(socket, to: "/admin/users")}
 
-      user ->
-        {:ok,
-         socket
-         |> assign(:page_title, "Manage #{user.username}")
-         |> assign(:user, user)
-         |> assign(:action, nil)
-         |> assign(:duration, "7d")
-         |> assign(:reason, "")}
+        user ->
+          {:ok,
+           socket
+           |> assign(:page_title, "Manage #{user.username}")
+           |> assign(:user, user)
+           |> assign(:action, nil)
+           |> assign(:duration, "7d")
+           |> assign(:reason, "")}
+      end
+    else
+      {:ok,
+       socket
+       |> assign(:page_title, "User Detail")
+       |> assign(:user, nil)
+       |> assign(:action, nil)
+       |> assign(:duration, "7d")
+       |> assign(:reason, "")}
     end
   end
 
@@ -193,6 +203,7 @@ defmodule UrielmWeb.Admin.UserDetailLive do
             </a>
           </div>
 
+          <%= if @user do %>
           <div class="card bg-base-200 border border-base-300 mb-6">
             <div class="card-body">
               <div class="flex items-start gap-4">
@@ -370,6 +381,7 @@ defmodule UrielmWeb.Admin.UserDetailLive do
               </div>
             </div>
           </div>
+          <% end %>
         </div>
       </div>
     </Layouts.app>
