@@ -7,31 +7,41 @@ defmodule UrielmWeb.LatestLive do
 
   @impl true
   def mount(params, _session, socket) do
-    categories = Forum.list_categories_with_boards()
     user = socket.assigns[:current_user]
-
     page = parse_page(params["page"])
 
-    flop_params = %{
-      page: page,
-      page_size: LiveHelpers.page_size(),
-      order_by: [:updated_at, :id],
-      order_directions: [:desc, :desc]
-    }
+    if connected?(socket) do
+      categories = Forum.list_categories_with_boards()
 
-    {threads, meta} =
-      case Forum.paginate_latest_threads(flop_params) do
-        {:ok, {data, meta}} -> {data, meta}
-        {:error, _meta} -> {[], nil}
-      end
+      flop_params = %{
+        page: page,
+        page_size: LiveHelpers.page_size(),
+        order_by: [:updated_at, :id],
+        order_directions: [:desc, :desc]
+      }
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Latest")
-     |> assign(:all_categories, categories)
-     |> assign(:page, page)
-     |> assign(:meta, meta)
-     |> stream(:threads, serialize_threads(threads, user), reset: true)}
+      {threads, meta} =
+        case Forum.paginate_latest_threads(flop_params) do
+          {:ok, {data, meta}} -> {data, meta}
+          {:error, _meta} -> {[], nil}
+        end
+
+      {:ok,
+       socket
+       |> assign(:page_title, "Latest")
+       |> assign(:all_categories, categories)
+       |> assign(:page, page)
+       |> assign(:meta, meta)
+       |> stream(:threads, serialize_threads(threads, user), reset: true)}
+    else
+      {:ok,
+       socket
+       |> assign(:page_title, "Latest")
+       |> assign(:all_categories, [])
+       |> assign(:page, page)
+       |> assign(:meta, nil)
+       |> stream(:threads, [])}
+    end
   end
 
   @impl true
