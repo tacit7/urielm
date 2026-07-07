@@ -157,33 +157,28 @@ defmodule UrielmWeb.PromptsLive do
         socket
       ) do
     LiveHelpers.with_auth(socket, "vote", fn socket, user ->
-      value_int =
-        case Integer.parse(value) do
-          {n, ""} -> n
-          _ -> nil
-        end
-
-      case value_int do
-        nil ->
-          {:noreply, put_flash(socket, :error, "Invalid vote value")}
-
-        value_int ->
-          case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
-            {:ok, _} ->
-              {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
-              user_vote = Engagement.get_vote(user.id, "prompt", id)
-
-              {:noreply,
-               socket
-               |> assign(:drawer_upvotes, upvotes)
-               |> assign(:drawer_downvotes, downvotes)
-               |> assign(:drawer_user_vote, user_vote && user_vote.value)}
-
-            {:error, _} ->
-              {:noreply, put_flash(socket, :error, "Failed to vote")}
-          end
+      case Integer.parse(value) do
+        {n, ""} -> do_drawer_vote(user, id, n, socket)
+        _ -> {:noreply, put_flash(socket, :error, "Invalid vote value")}
       end
     end)
+  end
+
+  defp do_drawer_vote(user, id, value_int, socket) do
+    case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
+      {:ok, _} ->
+        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
+        user_vote = Engagement.get_vote(user.id, "prompt", id)
+
+        {:noreply,
+         socket
+         |> assign(:drawer_upvotes, upvotes)
+         |> assign(:drawer_downvotes, downvotes)
+         |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to vote")}
+    end
   end
 
   @impl true
