@@ -144,20 +144,27 @@ defmodule UrielmWeb.ThreadLive do
 
     LiveHelpers.with_auth(socket, "delete threads", fn socket, user ->
       # Fetch thread metadata only (no comments needed for deletion)
-      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
-
-      case Forum.remove_thread(thread, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> put_flash(:info, "Thread deleted")
-           |> redirect(to: ~p"/forum/b/#{thread.board.slug}")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Not authorized")}
+        thread ->
+          case Forum.remove_thread(thread, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> put_flash(:info, "Thread deleted")
+               |> redirect(to: ~p"/forum/b/#{thread.board.slug}")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to delete thread")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Not authorized")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to delete thread")}
+          end
       end
     end)
   end
@@ -169,20 +176,27 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "mark threads as solved", fn socket, user ->
       thread_id = thread_data.id
       # Fetch thread metadata only (no comments needed for mark as solved)
-      thread = Forum.get_thread!(thread_id, allow_removed?: true)
-
-      case Forum.mark_as_solved(thread, comment_id, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Marked as solved")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Only the author can mark as solved")}
+        thread ->
+          case Forum.mark_as_solved(thread, comment_id, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Marked as solved")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to mark as solved")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Only the author can mark as solved")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to mark as solved")}
+          end
       end
     end)
   end
@@ -194,20 +208,27 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "unmark threads as solved", fn socket, user ->
       thread_id = thread_data.id
       # Fetch thread metadata only (no comments needed for unmark solved)
-      thread = Forum.get_thread!(thread_id, allow_removed?: true)
-
-      case Forum.unmark_as_solved(thread, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Unmarked as solved")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Only the author can unmark solved")}
+        thread ->
+          case Forum.unmark_as_solved(thread, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Unmarked as solved")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to unmark as solved")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Only the author can unmark solved")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to unmark as solved")}
+          end
       end
     end)
   end
@@ -262,20 +283,24 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def handle_event("edit_comment", %{"id" => comment_id, "body" => body}, socket) do
     LiveHelpers.with_auth(socket, "edit comments", fn socket, user ->
-      comment = Forum.get_comment!(comment_id)
+      case Forum.get_comment(comment_id) do
+        nil ->
+          {:noreply, put_flash(socket, :error, "Comment not found")}
 
-      case Forum.edit_comment(comment, body, user) do
-        {:ok, _} ->
-          {:noreply,
-           socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Comment updated")}
+        comment ->
+          case Forum.edit_comment(comment, body, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Comment updated")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Not authorized")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Not authorized")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to update comment")}
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to update comment")}
+          end
       end
     end)
   end
@@ -283,20 +308,24 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
     LiveHelpers.with_auth(socket, "delete comments", fn socket, user ->
-      comment = Forum.get_comment!(comment_id)
+      case Forum.get_comment(comment_id) do
+        nil ->
+          {:noreply, put_flash(socket, :error, "Comment not found")}
 
-      case Forum.remove_comment(comment, user) do
-        {:ok, _} ->
-          {:noreply,
-           socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Comment deleted")}
+        comment ->
+          case Forum.remove_comment(comment, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Comment deleted")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Not authorized")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Not authorized")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+          end
       end
     end)
   end
@@ -336,20 +365,27 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for locking)
-      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
-
-      case Forum.lock_thread(thread, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Thread locked")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Admin only")}
+        thread ->
+          case Forum.lock_thread(thread, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Thread locked")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to lock thread")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Admin only")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to lock thread")}
+          end
       end
     else
       {:noreply, put_flash(socket, :error, "Admin only")}
@@ -362,20 +398,27 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for unlocking)
-      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
-
-      case Forum.unlock_thread(thread, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Thread unlocked")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Admin only")}
+        thread ->
+          case Forum.unlock_thread(thread, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Thread unlocked")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to unlock thread")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Admin only")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to unlock thread")}
+          end
       end
     else
       {:noreply, put_flash(socket, :error, "Admin only")}
@@ -388,20 +431,27 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for pinning)
-      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
-
-      case Forum.pin_thread(thread, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Thread pinned")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Admin only")}
+        thread ->
+          case Forum.pin_thread(thread, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Thread pinned")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to pin thread")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Admin only")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to pin thread")}
+          end
       end
     else
       {:noreply, put_flash(socket, :error, "Admin only")}
@@ -414,20 +464,27 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for unpinning)
-      thread = Forum.get_thread!(thread_data.id, allow_removed?: true)
-
-      case Forum.unpin_thread(thread, user) do
-        {:ok, _} ->
+      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+        nil ->
           {:noreply,
            socket
-           |> refresh_thread(user)
-           |> put_flash(:info, "Thread unpinned")}
+           |> put_flash(:error, "Thread not found")
+           |> redirect(to: ~p"/forum/categories")}
 
-        {:error, :unauthorized} ->
-          {:noreply, put_flash(socket, :error, "Admin only")}
+        thread ->
+          case Forum.unpin_thread(thread, user) do
+            {:ok, _} ->
+              {:noreply,
+               socket
+               |> refresh_thread(user)
+               |> put_flash(:info, "Thread unpinned")}
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to unpin thread")}
+            {:error, :unauthorized} ->
+              {:noreply, put_flash(socket, :error, "Admin only")}
+
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to unpin thread")}
+          end
       end
     else
       {:noreply, put_flash(socket, :error, "Admin only")}
@@ -817,12 +874,17 @@ defmodule UrielmWeb.ThreadLive do
     thread_id = socket.assigns.thread.id
     is_admin = current_user && current_user.is_admin
     # Fetch thread with comments for refresh (no view count increment)
-    thread = Forum.get_thread!(thread_id, include_comments?: true, allow_removed?: is_admin)
-    comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)
+    case Forum.get_thread(thread_id, include_comments?: true, allow_removed?: is_admin) do
+      nil ->
+        socket
 
-    socket
-    |> assign(:thread, LiveHelpers.serialize_thread_full(thread, current_user))
-    |> assign(:comment_tree, comment_tree)
+      thread ->
+        comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)
+
+        socket
+        |> assign(:thread, LiveHelpers.serialize_thread_full(thread, current_user))
+        |> assign(:comment_tree, comment_tree)
+    end
   end
 
   # comment tree handled by LiveHelpers.build_comment_tree/2
