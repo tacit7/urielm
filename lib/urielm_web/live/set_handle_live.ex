@@ -230,8 +230,6 @@ defmodule UrielmWeb.SetHandleLive do
     |> Enum.join(" ")
   end
 
-  defp humanize_username(_), do: ""
-
   defp format_error(changeset) do
     UrielmWeb.LiveHelpers.format_changeset_errors(changeset)
   end

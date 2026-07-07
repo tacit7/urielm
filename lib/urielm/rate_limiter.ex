@@ -10,7 +10,6 @@ defmodule Urielm.RateLimiter do
   """
 
   use GenServer
-  require Logger
 
   @cleanup_interval :timer.minutes(5)
 

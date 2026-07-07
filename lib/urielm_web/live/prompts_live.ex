@@ -164,23 +164,6 @@ defmodule UrielmWeb.PromptsLive do
     end)
   end
 
-  defp do_drawer_vote(user, id, value_int, socket) do
-    case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
-      {:ok, _} ->
-        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
-        user_vote = Engagement.get_vote(user.id, "prompt", id)
-
-        {:noreply,
-         socket
-         |> assign(:drawer_upvotes, upvotes)
-         |> assign(:drawer_downvotes, downvotes)
-         |> assign(:drawer_user_vote, user_vote && user_vote.value)}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to vote")}
-    end
-  end
-
   @impl true
   def handle_event("toggle_save", %{"id" => id}, socket) do
     LiveHelpers.with_auth(socket, "save prompts", fn socket, user ->
@@ -216,6 +199,23 @@ defmodule UrielmWeb.PromptsLive do
           end
       end
     end)
+  end
+
+  defp do_drawer_vote(user, id, value_int, socket) do
+    case Engagement.toggle_vote(user.id, "prompt", id, value_int) do
+      {:ok, _} ->
+        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", id)
+        user_vote = Engagement.get_vote(user.id, "prompt", id)
+
+        {:noreply,
+         socket
+         |> assign(:drawer_upvotes, upvotes)
+         |> assign(:drawer_downvotes, downvotes)
+         |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to vote")}
+    end
   end
 
   defp handle_filter_change(category, socket) do
