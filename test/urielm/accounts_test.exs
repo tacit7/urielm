@@ -387,4 +387,54 @@ defmodule Urielm.AccountsTest do
       assert user.email_verified == true
     end
   end
+
+  describe "is_prompt_liked?/2" do
+    setup do
+      import Urielm.Fixtures
+      user = user_fixture()
+
+      {:ok, prompt} =
+        Urielm.Content.create_prompt(%{title: "Test Prompt", category: "coding"})
+
+      %{user: user, prompt: prompt}
+    end
+
+    test "returns true when user has liked the prompt", %{user: user, prompt: prompt} do
+      {:ok, _} = Accounts.like_prompt(user, prompt.id)
+      assert Accounts.is_prompt_liked?(user, prompt.id) == true
+    end
+
+    test "returns false when user has not liked the prompt", %{user: user, prompt: prompt} do
+      assert Accounts.is_prompt_liked?(user, prompt.id) == false
+    end
+
+    test "returns false for nil user", %{prompt: prompt} do
+      assert Accounts.is_prompt_liked?(nil, prompt.id) == false
+    end
+  end
+
+  describe "is_prompt_saved?/2" do
+    setup do
+      import Urielm.Fixtures
+      user = user_fixture()
+
+      {:ok, prompt} =
+        Urielm.Content.create_prompt(%{title: "Test Prompt", category: "coding"})
+
+      %{user: user, prompt: prompt}
+    end
+
+    test "returns true when user has saved the prompt", %{user: user, prompt: prompt} do
+      {:ok, _} = Accounts.save_prompt(user, prompt.id)
+      assert Accounts.is_prompt_saved?(user, prompt.id) == true
+    end
+
+    test "returns false when user has not saved the prompt", %{user: user, prompt: prompt} do
+      assert Accounts.is_prompt_saved?(user, prompt.id) == false
+    end
+
+    test "returns false for nil user", %{prompt: prompt} do
+      assert Accounts.is_prompt_saved?(nil, prompt.id) == false
+    end
+  end
 end

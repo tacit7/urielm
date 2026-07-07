@@ -124,4 +124,37 @@ defmodule UrielmWeb.UserProfileLiveTest do
       refute html =~ "show_suspend_modal"
     end
   end
+
+  describe "mount tab params" do
+    test "defaults to threads tab when no tab param", %{conn: conn, owner: owner} do
+      {:ok, live, _html} = live(conn, "/u/#{owner.username}")
+      html = render(profile_child(live))
+      assert html =~ "phx-value-tab=\"threads\""
+      assert html =~ "phx-value-tab=\"comments\""
+    end
+
+    test "mounts with threads tab active when ?tab=threads", %{conn: conn, owner: owner} do
+      {:ok, live, _html} = live(conn, "/u/#{owner.username}?tab=threads")
+      html = render(profile_child(live))
+      assert html =~ owner.username
+      assert html =~ "Threads"
+    end
+
+    test "mounts with comments tab active when ?tab=comments", %{conn: conn, owner: owner} do
+      {:ok, live, _html} = live(conn, "/u/#{owner.username}?tab=comments")
+      html = render(profile_child(live))
+      assert html =~ owner.username
+      assert html =~ "Comments"
+    end
+
+    test "mounts with saved tab when ?tab=saved and user is logged in", %{conn: conn, owner: owner} do
+      {:ok, live, _html} = live(log_in_user(conn, owner), "/u/#{owner.username}?tab=saved")
+      html = render(profile_child(live))
+      assert html =~ owner.username
+    end
+
+    test "unknown username redirects to home regardless of tab param", %{conn: conn} do
+      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/u/no_such_user_abc999?tab=threads")
+    end
+  end
 end

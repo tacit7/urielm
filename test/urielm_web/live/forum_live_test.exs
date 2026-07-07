@@ -51,7 +51,7 @@ defmodule UrielmWeb.ForumLiveTest do
 
   describe "ForumLive" do
     test "mount displays forum categories and boards", %{category: category, board: board} do
-      {:ok, _live, html} = live(build_conn(), ~p"/forum")
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/categories")
 
       assert html =~ category.name
       assert html =~ board.name
@@ -93,13 +93,13 @@ defmodule UrielmWeb.ForumLiveTest do
     test "shows new thread button for authenticated users", %{board: board, user: user} do
       {:ok, _live, html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}")
 
-      assert html =~ "New Topic"
+      assert html =~ "/forum/b/#{board.slug}/new"
     end
 
     test "hides new thread button for anonymous users", %{board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
 
-      refute html =~ "New Topic"
+      refute html =~ "/forum/b/#{board.slug}/new"
     end
 
     test "handles vote event for authenticated user", %{board: board, thread: thread, user: user} do
@@ -169,6 +169,128 @@ defmodule UrielmWeb.ForumLiveTest do
 
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=0")
       assert html =~ board.name
+    end
+  end
+
+  @tag :board_live
+  describe "BoardLive mount" do
+    test "renders board and threads for anonymous user", %{board: board, thread: thread} do
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
+
+      assert html =~ board.name
+      assert html =~ thread.title
+    end
+
+    test "renders board for logged-in user with Unread tab visible", %{board: board, user: user} do
+      {:ok, _live, html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}")
+
+      assert html =~ board.name
+      assert html =~ "Unread"
+    end
+
+    test "sort=top param activates top ordering", %{board: board, user: user} do
+      thread_a =
+        thread_fixture(%{board_id: board.id, author_id: user.id, title: "Low Score Thread"})
+
+      # Give thread_a a high score via votes
+      other = user_fixture()
+      vote_fixture(other, "thread", thread_a.id, 1)
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?sort=top")
+
+      assert html =~ board.name
+      assert html =~ "Low Score Thread"
+    end
+
+    test "sort=new param uses inserted_at ordering", %{board: board, user: user} do
+      thread_fixture(%{board_id: board.id, author_id: user.id, title: "Sort New Thread"})
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?sort=new")
+
+      assert html =~ board.name
+      assert html =~ "Sort New Thread"
+    end
+
+    test "filter=new param uses paginate_new_threads path", %{board: board, user: user} do
+      thread_fixture(%{board_id: board.id, author_id: user.id, title: "Filter New Thread"})
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?filter=new")
+
+      assert html =~ board.name
+      assert html =~ "Filter New Thread"
+    end
+
+    test "filter=solved shows only solved threads", %{board: board, user: user} do
+      solved =
+        thread_fixture(%{board_id: board.id, author_id: user.id, title: "Solved Thread Title"})
+
+      Urielm.Repo.update!(Ecto.Changeset.change(solved, is_solved: true))
+
+      unsolved =
+        thread_fixture(%{board_id: board.id, author_id: user.id, title: "Unsolved Thread Title"})
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?filter=solved")
+
+      assert html =~ "Solved Thread Title"
+      refute html =~ unsolved.title
+    end
+
+    test "filter=unsolved shows only unsolved threads", %{board: board, user: user} do
+      solved =
+        thread_fixture(%{board_id: board.id, author_id: user.id, title: "Solved Thread Title 2"})
+
+      Urielm.Repo.update!(Ecto.Changeset.change(solved, is_solved: true))
+
+      unsolved =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: user.id,
+          title: "Unsolved Thread Title 2"
+        })
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?filter=unsolved")
+
+      assert html =~ unsolved.title
+      refute html =~ "Solved Thread Title 2"
+    end
+
+    test "filter=unread for logged-in user loads unread path", %{board: board, user: user} do
+      thread_fixture(%{board_id: board.id, author_id: user.id, title: "Unread Filter Thread"})
+
+      {:ok, _live, html} =
+        live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}?filter=unread")
+
+      assert html =~ board.name
+    end
+
+    test "filter=unread for anonymous user falls back to default listing", %{
+      board: board,
+      thread: thread
+    } do
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?filter=unread")
+
+      assert html =~ board.name
+      assert html =~ thread.title
+    end
+
+    test "page param is applied on mount", %{board: board, user: user} do
+      for i <- 1..25 do
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: user.id,
+          title: "Paginated Thread #{i}"
+        })
+      end
+
+      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?page=2")
+
+      assert html =~ board.name
+    end
+
+    test "unknown board slug raises Ecto.NoResultsError" do
+      assert_raise Ecto.NoResultsError, fn ->
+        live(build_conn(), "/forum/b/board-that-does-not-exist-xyz-abc-999")
+      end
     end
   end
 
