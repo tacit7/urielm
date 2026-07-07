@@ -25,26 +25,31 @@ defmodule UrielmWeb.ChatLive do
   def handle_params(%{"room_id" => room_id}, _url, socket) do
     case Integer.parse(room_id) do
       {id, ""} ->
-        room = Chat.get_room!(id)
-        user = socket.assigns[:current_user]
+        case Chat.get_room(id) do
+          nil ->
+            {:noreply, push_navigate(socket, to: ~p"/")}
 
-        if Chat.member?(user.id, id) do
-          messages = Chat.list_room_messages(id)
+          room ->
+            user = socket.assigns[:current_user]
 
-          {:noreply,
-           socket
-           |> assign(:selected_room, room)
-           |> assign(:messages, messages)}
-        else
-          # Auto-join if not a member
-          Chat.add_member(user.id, id)
+            if Chat.member?(user.id, id) do
+              messages = Chat.list_room_messages(id)
 
-          messages = Chat.list_room_messages(id)
+              {:noreply,
+               socket
+               |> assign(:selected_room, room)
+               |> assign(:messages, messages)}
+            else
+              # Auto-join if not a member
+              Chat.add_member(user.id, id)
 
-          {:noreply,
-           socket
-           |> assign(:selected_room, room)
-           |> assign(:messages, messages)}
+              messages = Chat.list_room_messages(id)
+
+              {:noreply,
+               socket
+               |> assign(:selected_room, room)
+               |> assign(:messages, messages)}
+            end
         end
 
       :error ->

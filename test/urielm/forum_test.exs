@@ -59,6 +59,17 @@ defmodule Urielm.ForumTest do
       assert fetched.name == board.name
     end
 
+    test "get_board/1 returns board by slug" do
+      board = board_fixture()
+      fetched = Forum.get_board(board.slug)
+
+      assert fetched.id == board.id
+    end
+
+    test "get_board/1 returns nil for non-existent slug" do
+      assert is_nil(Forum.get_board("nonexistent-slug"))
+    end
+
     test "create_board/1 creates a board" do
       category = category_fixture()
       attrs = %{category_id: category.id, name: "Test Board", slug: "test-board"}

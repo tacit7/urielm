@@ -8,31 +8,36 @@ defmodule UrielmWeb.NewThreadLive do
 
   @impl true
   def mount(%{"board_slug" => slug}, _session, socket) do
-    board = Forum.get_board!(slug)
-    user = socket.assigns.current_user
+    case Forum.get_board(slug) do
+      nil ->
+        {:ok, push_navigate(socket, to: ~p"/forum/categories")}
 
-    cond do
-      board.is_locked ->
-        {:ok,
-         socket
-         |> put_flash(:error, "This board is locked and not accepting new threads")
-         |> redirect(to: ~p"/forum/b/#{board.slug}")}
+      board ->
+        user = socket.assigns.current_user
 
-      is_nil(user.username) ->
-        {:ok,
-         socket
-         |> put_flash(:info, "Please set a username before creating a thread")
-         |> redirect(to: ~p"/signup/set-handle")}
+        cond do
+          board.is_locked ->
+            {:ok,
+             socket
+             |> put_flash(:error, "This board is locked and not accepting new threads")
+             |> redirect(to: ~p"/forum/b/#{board.slug}")}
 
-      true ->
-        categories = Forum.list_categories_with_boards()
+          is_nil(user.username) ->
+            {:ok,
+             socket
+             |> put_flash(:info, "Please set a username before creating a thread")
+             |> redirect(to: ~p"/signup/set-handle")}
 
-        {:ok,
-         socket
-         |> assign(:page_title, "New Thread")
-         |> assign(:board, board)
-         |> assign(:all_categories, categories)
-         |> assign(:thread_form, to_form(Thread.changeset(%Thread{}, %{})))}
+          true ->
+            categories = Forum.list_categories_with_boards()
+
+            {:ok,
+             socket
+             |> assign(:page_title, "New Thread")
+             |> assign(:board, board)
+             |> assign(:all_categories, categories)
+             |> assign(:thread_form, to_form(Thread.changeset(%Thread{}, %{})))}
+        end
     end
   end
 
