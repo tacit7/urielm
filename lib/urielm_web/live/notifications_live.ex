@@ -14,21 +14,32 @@ defmodule UrielmWeb.NotificationsLive do
         {:ok, redirect(socket, to: ~p"/auth/signin")}
 
       user ->
-        notifications =
-          Forum.list_notifications(user.id,
-            limit: LiveHelpers.page_size(),
-            offset: 0,
-            unread_only: false
-          )
+        if connected?(socket) do
+          notifications =
+            Forum.list_notifications(user.id,
+              limit: LiveHelpers.page_size(),
+              offset: 0,
+              unread_only: false
+            )
 
-        {:ok,
-         socket
-         |> assign(:page_title, "Notifications")
-         |> assign(:page, 0)
-         |> assign(:unread_only, false)
-         |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
-         |> assign(:unread_count, Forum.count_unread_notifications(user.id))
-         |> stream(:notifications, serialize_notifications(notifications))}
+          {:ok,
+           socket
+           |> assign(:page_title, "Notifications")
+           |> assign(:page, 0)
+           |> assign(:unread_only, false)
+           |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
+           |> assign(:unread_count, Forum.count_unread_notifications(user.id))
+           |> stream(:notifications, serialize_notifications(notifications))}
+        else
+          {:ok,
+           socket
+           |> assign(:page_title, "Notifications")
+           |> assign(:page, 0)
+           |> assign(:unread_only, false)
+           |> assign(:has_more, false)
+           |> assign(:unread_count, 0)
+           |> stream(:notifications, [])}
+        end
     end
   end
 
