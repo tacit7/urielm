@@ -287,10 +287,9 @@ defmodule UrielmWeb.ForumLiveTest do
       assert html =~ board.name
     end
 
-    test "unknown board slug raises Ecto.NoResultsError" do
-      assert_raise Ecto.NoResultsError, fn ->
-        live(build_conn(), "/forum/b/board-that-does-not-exist-xyz-abc-999")
-      end
+    test "unknown board slug redirects to forum categories" do
+      assert {:error, {:live_redirect, %{to: "/forum/categories"}}} =
+               live(build_conn(), "/forum/b/board-that-does-not-exist-xyz-abc-999")
     end
   end
 

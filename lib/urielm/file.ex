@@ -23,7 +23,7 @@ defmodule Urielm.File do
     field(:height, :integer)
     field(:deleted_at, :utc_datetime)
 
-    belongs_to(:user, Urielm.Accounts.User)
+    belongs_to(:user, Urielm.Accounts.User, type: :integer)
 
     timestamps(type: :utc_datetime)
   end
@@ -69,6 +69,6 @@ defmodule Urielm.File do
   end
 
   def soft_delete_changeset(file) do
-    change(file, deleted_at: DateTime.utc_now())
+    change(file, deleted_at: DateTime.utc_now() |> DateTime.truncate(:second))
   end
 end

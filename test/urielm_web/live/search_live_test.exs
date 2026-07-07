@@ -69,7 +69,7 @@ defmodule UrielmWeb.SearchLiveTest do
 
       render_click(live, "save_thread", %{"thread_id" => to_string(thread.id)})
 
-      assert Forum.is_thread_saved?(user.id, thread.id)
+      assert Forum.thread_saved?(user.id, thread.id)
     end
   end
 
@@ -83,7 +83,7 @@ defmodule UrielmWeb.SearchLiveTest do
 
       render_click(live, "subscribe", %{"thread_id" => to_string(thread.id)})
 
-      assert Forum.is_subscribed?(user.id, thread.id)
+      assert Forum.subscribed?(user.id, thread.id)
     end
   end
 

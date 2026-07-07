@@ -39,9 +39,9 @@ defmodule Urielm.FilesTest do
     test "generates UUID v7 for file ID", %{user: user, thread: thread, upload: upload} do
       assert {:ok, file} = Files.create_file(upload, user.id, "thread", thread.id)
 
-      # UUID v7 format check - should have timestamp prefix
+      # UUID v7 string format: 36 chars with version nibble = 7
       assert is_binary(file.id)
-      assert byte_size(file.id) == 16
+      assert String.match?(file.id, ~r/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     end
 
     test "rejects invalid entity type", %{user: user, thread: thread, upload: upload} do
@@ -109,12 +109,12 @@ defmodule Urielm.FilesTest do
       thread = thread_fixture(%{author_id: user.id})
       upload = create_upload_fixture("test.jpg", "image/jpeg")
 
-      {:ok, file} = Files.create_file(upload, user.id, "thread", thread.id)
+      {:ok, uploaded_file} = Files.create_file(upload, user.id, "thread", thread.id)
 
-      %{file: file}
+      %{uploaded_file: uploaded_file}
     end
 
-    test "marks file as deleted", %{file: file} do
+    test "marks file as deleted", %{uploaded_file: file} do
       assert {:ok, updated_file} = Files.soft_delete_file(file)
 
       assert updated_file.deleted_at != nil

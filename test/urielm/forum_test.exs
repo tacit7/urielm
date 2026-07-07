@@ -93,10 +93,12 @@ defmodule Urielm.ForumTest do
       Forum.remove_thread(removed_thread, admin)
 
       # Fetch and verify count
-      [cat] = Forum.list_categories_with_boards()
-      [fetched_board] = cat.boards
+      categories = Forum.list_categories_with_boards()
+      cat = Enum.find(categories, &(&1.id == category.id))
+      assert cat != nil
+      fetched_board = Enum.find(cat.boards, &(&1.id == board.id))
+      assert fetched_board != nil
 
-      assert fetched_board.id == board.id
       assert fetched_board.thread_count == 2
     end
 
@@ -104,8 +106,11 @@ defmodule Urielm.ForumTest do
       category = category_fixture()
       board = board_fixture(%{category_id: category.id})
 
-      [cat] = Forum.list_categories_with_boards()
-      [fetched_board] = cat.boards
+      categories = Forum.list_categories_with_boards()
+      cat = Enum.find(categories, &(&1.id == category.id))
+      assert cat != nil
+      fetched_board = Enum.find(cat.boards, &(&1.id == board.id))
+      assert fetched_board != nil
 
       assert fetched_board.id == board.id
       assert fetched_board.thread_count == 0
@@ -813,7 +818,7 @@ defmodule Urielm.ForumTest do
       {:error, :not_found} = Forum.unsave_thread(user.id, thread.id)
     end
 
-    test "is_thread_saved?/2 checks if thread is saved" do
+    test "thread_saved?/2 checks if thread is saved" do
       user = user_fixture()
       thread = thread_fixture()
 
@@ -1203,7 +1208,7 @@ defmodule Urielm.ForumTest do
       assert !Forum.subscribed?(user.id, thread.id)
     end
 
-    test "is_subscribed?/2 checks subscription status" do
+    test "subscribed?/2 checks subscription status" do
       user = user_fixture()
       thread = thread_fixture()
 

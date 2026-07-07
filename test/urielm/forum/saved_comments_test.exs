@@ -42,7 +42,7 @@ defmodule Urielm.Forum.SavedCommentsTest do
       {:ok, _} = Forum.save_comment(user.id, comment.id)
       {:ok, _} = Forum.unsave_comment(user.id, comment.id)
 
-      refute Forum.is_comment_saved?(user.id, comment.id)
+      refute Forum.comment_saved?(user.id, comment.id)
     end
 
     test "returns error if comment not saved", %{user: user, comment: comment} do
@@ -50,27 +50,27 @@ defmodule Urielm.Forum.SavedCommentsTest do
     end
   end
 
-  describe "is_comment_saved?/2" do
+  describe "comment_saved?/2" do
     test "returns true when comment is saved", %{user: user, comment: comment} do
       Forum.save_comment(user.id, comment.id)
-      assert Forum.is_comment_saved?(user.id, comment.id)
+      assert Forum.comment_saved?(user.id, comment.id)
     end
 
     test "returns false when comment is not saved", %{user: user, comment: comment} do
-      refute Forum.is_comment_saved?(user.id, comment.id)
+      refute Forum.comment_saved?(user.id, comment.id)
     end
   end
 
   describe "toggle_save_comment/2" do
     test "saves when not saved", %{user: user, comment: comment} do
       {:ok, _} = Forum.toggle_save_comment(user.id, comment.id)
-      assert Forum.is_comment_saved?(user.id, comment.id)
+      assert Forum.comment_saved?(user.id, comment.id)
     end
 
     test "unsaves when already saved", %{user: user, comment: comment} do
       Forum.save_comment(user.id, comment.id)
       {:ok, _} = Forum.toggle_save_comment(user.id, comment.id)
-      refute Forum.is_comment_saved?(user.id, comment.id)
+      refute Forum.comment_saved?(user.id, comment.id)
     end
   end
 

@@ -199,9 +199,9 @@ defmodule Urielm.ModerationTest do
 
       {:ok, _setting} = Forum.set_notification_level(user.id, thread.id, "watching")
 
-      assert Forum.is_watching?(user.id, thread.id)
-      refute Forum.is_tracking?(user.id, thread.id)
-      refute Forum.is_muted?(user.id, thread.id)
+      assert Forum.watching?(user.id, thread.id)
+      refute Forum.tracking?(user.id, thread.id)
+      refute Forum.muted?(user.id, thread.id)
     end
 
     test "user can set thread notification level to tracking" do
@@ -212,9 +212,9 @@ defmodule Urielm.ModerationTest do
 
       {:ok, _setting} = Forum.set_notification_level(user.id, thread.id, "tracking")
 
-      assert Forum.is_tracking?(user.id, thread.id)
-      refute Forum.is_watching?(user.id, thread.id)
-      refute Forum.is_muted?(user.id, thread.id)
+      assert Forum.tracking?(user.id, thread.id)
+      refute Forum.watching?(user.id, thread.id)
+      refute Forum.muted?(user.id, thread.id)
     end
 
     test "user can mute a thread" do
@@ -225,9 +225,9 @@ defmodule Urielm.ModerationTest do
 
       {:ok, _setting} = Forum.set_notification_level(user.id, thread.id, "muted")
 
-      assert Forum.is_muted?(user.id, thread.id)
-      refute Forum.is_watching?(user.id, thread.id)
-      refute Forum.is_tracking?(user.id, thread.id)
+      assert Forum.muted?(user.id, thread.id)
+      refute Forum.watching?(user.id, thread.id)
+      refute Forum.tracking?(user.id, thread.id)
     end
 
     test "default notification level is watching" do
@@ -248,13 +248,13 @@ defmodule Urielm.ModerationTest do
       thread = Fixtures.thread_fixture(%{board_id: board.id})
 
       Forum.set_notification_level(user.id, thread.id, "watching")
-      assert Forum.is_watching?(user.id, thread.id)
+      assert Forum.watching?(user.id, thread.id)
 
       Forum.set_notification_level(user.id, thread.id, "muted")
-      assert Forum.is_muted?(user.id, thread.id)
+      assert Forum.muted?(user.id, thread.id)
 
       Forum.set_notification_level(user.id, thread.id, "tracking")
-      assert Forum.is_tracking?(user.id, thread.id)
+      assert Forum.tracking?(user.id, thread.id)
     end
   end
 

@@ -87,14 +87,14 @@ defmodule Urielm.Files do
     end
   end
 
-  defp can_access_file?(%{id: user_id}, %File{user_id: file_user_id, visibility: "private"}) do
+  def can_access_file?(%{id: user_id}, %File{user_id: file_user_id, visibility: "private"}) do
     user_id == file_user_id
   end
 
-  defp can_access_file?(_, %File{visibility: "public"}), do: true
+  def can_access_file?(_, %File{visibility: "public"}), do: true
 
   # TODO: Implement participants check - requires entity-specific membership logic
-  defp can_access_file?(_, %File{visibility: "participants"}), do: true
+  def can_access_file?(_, %File{visibility: "participants"}), do: true
 
   @doc """
   Check if a file is an image.

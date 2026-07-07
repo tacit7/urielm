@@ -226,7 +226,7 @@ defmodule Urielm.LearningTest do
         slug: "intro",
         lesson_number: 1,
         course_id: course.id,
-        body: "Lesson content here"
+        notes_md: "Lesson content here"
       }
 
       {:ok, lesson} = Learning.create_lesson(attrs)
@@ -235,7 +235,7 @@ defmodule Urielm.LearningTest do
       assert lesson.slug == "intro"
       assert lesson.lesson_number == 1
       assert lesson.course_id == course.id
-      assert lesson.body == "Lesson content here"
+      assert lesson.notes_md == "Lesson content here"
     end
 
     test "create_lesson/1 requires title" do

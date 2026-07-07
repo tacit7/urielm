@@ -149,14 +149,14 @@ defmodule Urielm.ChatTest do
       {:ok, room: room, user1: user1, user2: user2}
     end
 
-    test "is_member?/2 returns true for members", %{room: room, user1: user1} do
+    test "member?/2 returns true for members", %{room: room, user1: user1} do
       Chat.add_member(user1.id, room.id)
 
-      assert Chat.is_member?(user1.id, room.id)
+      assert Chat.member?(user1.id, room.id)
     end
 
-    test "is_member?/2 returns false for non-members", %{room: room, user1: user1} do
-      refute Chat.is_member?(user1.id, room.id)
+    test "member?/2 returns false for non-members", %{room: room, user1: user1} do
+      refute Chat.member?(user1.id, room.id)
     end
 
     test "list_room_members/1 returns all members", %{room: room, user1: user1, user2: user2} do
@@ -192,7 +192,7 @@ defmodule Urielm.ChatTest do
 
       assert membership.user_id == user1.id
       assert membership.room_id == room.id
-      assert Chat.is_member?(user1.id, room.id)
+      assert Chat.member?(user1.id, room.id)
     end
 
     test "add_member/2 with same user twice is idempotent", %{room: room, user1: user1} do
@@ -206,26 +206,26 @@ defmodule Urielm.ChatTest do
 
     test "remove_member/2 removes user from room", %{room: room, user1: user1} do
       Chat.add_member(user1.id, room.id)
-      assert Chat.is_member?(user1.id, room.id)
+      assert Chat.member?(user1.id, room.id)
 
       Chat.remove_member(user1.id, room.id)
 
-      refute Chat.is_member?(user1.id, room.id)
+      refute Chat.member?(user1.id, room.id)
     end
 
     test "remove_member/2 with non-member is safe", %{room: room, user1: user1} do
       # Should not raise error
       Chat.remove_member(user1.id, room.id)
 
-      refute Chat.is_member?(user1.id, room.id)
+      refute Chat.member?(user1.id, room.id)
     end
 
     test "multiple users can be added to same room", %{room: room, user1: user1, user2: user2} do
       Chat.add_member(user1.id, room.id)
       Chat.add_member(user2.id, room.id)
 
-      assert Chat.is_member?(user1.id, room.id)
-      assert Chat.is_member?(user2.id, room.id)
+      assert Chat.member?(user1.id, room.id)
+      assert Chat.member?(user2.id, room.id)
     end
 
     test "same user can be member of multiple rooms", %{user1: user1} do
@@ -235,8 +235,8 @@ defmodule Urielm.ChatTest do
       Chat.add_member(user1.id, room1.id)
       Chat.add_member(user1.id, room2.id)
 
-      assert Chat.is_member?(user1.id, room1.id)
-      assert Chat.is_member?(user1.id, room2.id)
+      assert Chat.member?(user1.id, room1.id)
+      assert Chat.member?(user1.id, room2.id)
     end
   end
 

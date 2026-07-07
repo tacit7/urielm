@@ -81,7 +81,7 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
 
       render_click(live, "unsave_thread", %{"thread_id" => to_string(thread.id)})
 
-      refute Forum.is_thread_saved?(user.id, thread.id)
+      refute Forum.thread_saved?(user.id, thread.id)
     end
   end
 
@@ -93,7 +93,7 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
 
       render_click(live, "subscribe", %{"thread_id" => to_string(thread.id)})
 
-      assert Forum.is_subscribed?(user.id, thread.id)
+      assert Forum.subscribed?(user.id, thread.id)
     end
   end
 
@@ -106,7 +106,7 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
 
       render_click(live, "unsubscribe", %{"thread_id" => to_string(thread.id)})
 
-      refute Forum.is_subscribed?(user.id, thread.id)
+      refute Forum.subscribed?(user.id, thread.id)
     end
   end
 end

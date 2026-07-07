@@ -36,7 +36,7 @@ defmodule Urielm.Accounts.UserSocialTest do
     test "removes a follow relationship", %{user_a: user_a, user_b: user_b} do
       Accounts.follow_user(user_a.id, user_b.id)
       {:ok, _} = Accounts.unfollow_user(user_a.id, user_b.id)
-      refute Accounts.is_following?(user_a.id, user_b.id)
+      refute Accounts.following?(user_a.id, user_b.id)
     end
 
     test "returns error if not following", %{user_a: user_a, user_b: user_b} do
@@ -44,32 +44,32 @@ defmodule Urielm.Accounts.UserSocialTest do
     end
   end
 
-  describe "is_following?/2" do
+  describe "following?/2" do
     test "returns true when following", %{user_a: user_a, user_b: user_b} do
       Accounts.follow_user(user_a.id, user_b.id)
-      assert Accounts.is_following?(user_a.id, user_b.id)
+      assert Accounts.following?(user_a.id, user_b.id)
     end
 
     test "returns false when not following", %{user_a: user_a, user_b: user_b} do
-      refute Accounts.is_following?(user_a.id, user_b.id)
+      refute Accounts.following?(user_a.id, user_b.id)
     end
 
     test "follow is directional", %{user_a: user_a, user_b: user_b} do
       Accounts.follow_user(user_a.id, user_b.id)
-      refute Accounts.is_following?(user_b.id, user_a.id)
+      refute Accounts.following?(user_b.id, user_a.id)
     end
   end
 
   describe "toggle_follow/2" do
     test "follows when not following", %{user_a: user_a, user_b: user_b} do
       {:ok, _} = Accounts.toggle_follow(user_a.id, user_b.id)
-      assert Accounts.is_following?(user_a.id, user_b.id)
+      assert Accounts.following?(user_a.id, user_b.id)
     end
 
     test "unfollows when already following", %{user_a: user_a, user_b: user_b} do
       Accounts.follow_user(user_a.id, user_b.id)
       {:ok, _} = Accounts.toggle_follow(user_a.id, user_b.id)
-      refute Accounts.is_following?(user_a.id, user_b.id)
+      refute Accounts.following?(user_a.id, user_b.id)
     end
   end
 

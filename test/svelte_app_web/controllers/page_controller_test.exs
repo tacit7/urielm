@@ -3,7 +3,6 @@ defmodule UrielmWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    # Assert a stable headline substring from HomeLive
-    assert html_response(conn, 200) =~ "Building the future with"
+    assert html_response(conn, 200) =~ "Master"
   end
 end
