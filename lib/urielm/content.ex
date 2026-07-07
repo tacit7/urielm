@@ -69,6 +69,14 @@ defmodule Urielm.Content do
     |> Repo.preload(:tag_records)
   end
 
+  def get_prompt(id) do
+    Repo.get(Prompt, id)
+    |> case do
+      nil -> nil
+      prompt -> Repo.preload(prompt, :tag_records)
+    end
+  end
+
   @doc """
   Creates a prompt.
 

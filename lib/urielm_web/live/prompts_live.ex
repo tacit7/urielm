@@ -117,31 +117,35 @@ defmodule UrielmWeb.PromptsLive do
         {:noreply, put_flash(socket, :error, "Invalid prompt")}
 
       prompt_id ->
-        prompt = Content.get_prompt!(prompt_id)
+        case Content.get_prompt(prompt_id) do
+          nil ->
+            {:noreply, put_flash(socket, :error, "Prompt not found")}
 
-        tag_names = Enum.map(prompt.tag_records, & &1.name)
+          prompt ->
+            tag_names = Enum.map(prompt.tag_records, & &1.name)
 
-        target_id = to_string(prompt.id)
-        {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
-        user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+            target_id = to_string(prompt.id)
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+            user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
 
-        serialized = %{
-          id: prompt.id,
-          title: prompt.title,
-          url: prompt.url,
-          prompt: prompt.prompt,
-          category: prompt.category,
-          tags: tag_names,
-          saves_count: prompt.saves_count,
-          user_saved: user && Content.user_saved_prompt?(user.id, prompt.id)
-        }
+            serialized = %{
+              id: prompt.id,
+              title: prompt.title,
+              url: prompt.url,
+              prompt: prompt.prompt,
+              category: prompt.category,
+              tags: tag_names,
+              saves_count: prompt.saves_count,
+              user_saved: user && Content.user_saved_prompt?(user.id, prompt.id)
+            }
 
-        {:noreply,
-         socket
-         |> assign(:selected_prompt, serialized)
-         |> assign(:drawer_upvotes, upvotes)
-         |> assign(:drawer_downvotes, downvotes)
-         |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+            {:noreply,
+             socket
+             |> assign(:selected_prompt, serialized)
+             |> assign(:drawer_upvotes, upvotes)
+             |> assign(:drawer_downvotes, downvotes)
+             |> assign(:drawer_user_vote, user_vote && user_vote.value)}
+        end
     end
   end
 
@@ -183,11 +187,10 @@ defmodule UrielmWeb.PromptsLive do
               updated_socket =
                 if socket.assigns.selected_prompt &&
                      socket.assigns.selected_prompt.id == prompt_id do
-                  prompt =
-                    prompt_id
-                    |> Content.get_prompt!()
-
-                  assign(socket, :selected_prompt, serialize_prompt(prompt, user))
+                  case Content.get_prompt(prompt_id) do
+                    nil -> socket
+                    prompt -> assign(socket, :selected_prompt, serialize_prompt(prompt, user))
+                  end
                 else
                   socket
                 end
