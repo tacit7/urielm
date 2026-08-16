@@ -17,24 +17,46 @@ config :urielm, :r2,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :urielm, UrielmWeb.Endpoint,
-  # Binding to loopback ipv4 address prevents access from other machines.
-  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "5000")],
-  https: [
-    port: 5443,
-    cipher_suite: :strong,
-    keyfile: "priv/certs/localhost+2-key.pem",
-    certfile: "priv/certs/localhost+2.pem"
-  ],
-  check_origin: false,
-  code_reloader: true,
-  debug_errors: true,
-  secret_key_base: "q4ozQA8byOkbqfIZ3cAxw9ZOFhR8SWvMjcoDcf59P6Q1HGh3tbZpLuyt1JMuxvC7",
-  watchers: [
-    node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)],
-    tailwind: {Tailwind, :install_and_run, [:urielm, ~w(--watch)]}
-  ]
+dev_https_keyfile = System.get_env("DEV_HTTPS_KEYFILE", "priv/certs/localhost+2-key.pem")
+dev_https_certfile = System.get_env("DEV_HTTPS_CERTFILE", "priv/certs/localhost+2.pem")
+
+dev_https? =
+  case System.get_env("DEV_HTTPS", "auto") |> String.downcase() do
+    enabled when enabled in ["1", "true", "yes"] -> true
+    disabled when disabled in ["0", "false", "no"] -> false
+    _ -> File.exists?(dev_https_keyfile) and File.exists?(dev_https_certfile)
+  end
+
+endpoint_config =
+  [
+    # Binding to loopback ipv4 address prevents access from other machines.
+    # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
+    http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT") || "5000")]
+  ] ++
+    if dev_https? do
+      [
+        https: [
+          port: 5443,
+          cipher_suite: :strong,
+          keyfile: dev_https_keyfile,
+          certfile: dev_https_certfile
+        ]
+      ]
+    else
+      []
+    end ++
+    [
+      check_origin: false,
+      code_reloader: true,
+      debug_errors: true,
+      secret_key_base: "q4ozQA8byOkbqfIZ3cAxw9ZOFhR8SWvMjcoDcf59P6Q1HGh3tbZpLuyt1JMuxvC7",
+      watchers: [
+        node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)],
+        tailwind: {Tailwind, :install_and_run, [:urielm, ~w(--watch)]}
+      ]
+    ]
+
+config :urielm, UrielmWeb.Endpoint, endpoint_config
 
 # ## SSL Support
 #
