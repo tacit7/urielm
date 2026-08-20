@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UI Quick Wins — Mockup</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --border: #2e3348;
+        --accent: #818cf8;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Inter, system-ui, sans-serif; }
+      nav { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 6vw; border-bottom: 1px solid var(--border); }
+      nav strong { font-size: 20px; }
+      nav div { display: flex; gap: 28px; color: var(--muted); }
+      nav .active { color: var(--accent); }
+      main { max-width: 1180px; margin: auto; padding: 64px 24px; }
+      .tabs { display: flex; gap: 8px; margin-bottom: 32px; }
+      .tab, button { border: 1px solid var(--border); border-radius: 10px; padding: 9px 14px; background: var(--surface); color: var(--text); }
+      .tab.active, button.primary { border-color: var(--accent); background: var(--accent); color: #0f1117; }
+      .hero { min-height: 520px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 64px; align-items: center; }
+      .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      h1 { margin: 12px 0 20px; font-size: clamp(46px, 7vw, 74px); line-height: .98; letter-spacing: -.05em; }
+      h2 { margin: 0; font-size: 36px; letter-spacing: -.03em; }
+      p { color: var(--muted); }
+      .actions, .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+      .feature, .card, .toolbar { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+      .feature { padding: 20px; transform: rotate(1deg); }
+      .preview { aspect-ratio: 16 / 10; border-radius: 11px; background: linear-gradient(135deg, #3730a3, #0f172a); margin-bottom: 18px; }
+      .stats { display: flex; gap: 32px; margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--border); }
+      .stats strong { display: block; font-size: 24px; }
+      .toolbar { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px; margin: 28px 0; }
+      input { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; background: var(--bg); color: var(--text); }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .card { padding: 20px; transition: transform .2s, border-color .2s; }
+      .card:hover { transform: translateY(-2px); border-color: var(--accent); }
+      .annotation { margin-top: 32px; border-left: 3px solid var(--accent); padding: 12px 16px; background: var(--surface2); color: var(--muted); }
+      .mobile { max-width: 390px; margin-top: 64px; border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
+      .mobile nav { padding: 0 18px; }
+      .mobile main { padding: 32px 18px; }
+      .mobile .grid { grid-template-columns: 1fr; }
+      .mobile .toolbar { grid-template-columns: 1fr; }
+
+      @media (max-width: 760px) {
+        body > nav div { display: none; }
+        .hero { grid-template-columns: 1fr; min-height: auto; }
+        .feature { display: none; }
+        .grid { grid-template-columns: 1fr; }
+        .toolbar { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav><strong>UrielM.dev</strong><div><span>Learn</span><span>Blog</span><span class="active">Prompts</span><span>Community</span></div><button>Sign up</button></nav>
+    <main>
+      <div class="tabs"><span class="tab active">Homepage</span><span class="tab">Prompt library</span><span class="tab">Mobile</span></div>
+
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Practical AI development</div>
+          <h1>Learn to build with AI.</h1>
+          <p>Tutorials, courses, and production-ready prompts for developers building with the latest AI tools.</p>
+          <div class="actions"><button class="primary">Start learning →</button><button>Browse prompts</button></div>
+          <div class="stats"><span><strong>48</strong>videos</span><span><strong>120</strong>prompts</span><span><strong>6</strong>courses</span></div>
+        </div>
+        <article class="feature"><div class="preview"></div><div class="eyebrow">Featured course</div><h3>Build your first AI agent</h3><p>A real content preview replaces the decorative card stack.</p></article>
+      </section>
+
+      <section>
+        <div class="eyebrow">Library</div><h2>Prompts</h2><p>Curated templates you can adapt and ship.</p>
+        <div class="toolbar"><input placeholder="Search prompts…" /><button>All categories ▾</button></div>
+        <div class="filters"><button class="primary">All</button><button>Software Engineers</button><button>Content Creation</button><button>Students</button><button>Business</button></div>
+        <div class="grid" style="margin-top: 20px">
+          <article class="card"><div class="eyebrow">Software engineering</div><h3>Review a pull request</h3><p>Find correctness, security, and maintainability risks.</p></article>
+          <article class="card"><div class="eyebrow">Content creation</div><h3>Shape a video outline</h3><p>Turn an idea into a concise, watchable structure.</p></article>
+          <article class="card"><div class="eyebrow">Students</div><h3>Build a study guide</h3><p>Convert notes into an active-recall learning plan.</p></article>
+        </div>
+      </section>
+
+      <div class="annotation">Implementation: retain existing LiveView events and data queries. Change only hierarchy, category presentation, card styling, and responsive behavior. The category select remains server-driven through the existing filter_changed event.</div>
+
+      <section class="mobile">
+        <nav><strong>UrielM</strong><button>Menu</button></nav>
+        <main><div class="eyebrow">Library</div><h2>Prompts</h2><div class="toolbar"><input placeholder="Search prompts…" /><button>All categories ▾</button></div><div class="grid"><article class="card"><h3>Review a pull request</h3><p>Card actions remain discoverable without hover.</p></article></div></main>
+      </section>
+    </main>
+  </body>
+</html>

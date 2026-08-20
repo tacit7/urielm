@@ -38,7 +38,7 @@ defmodule UrielmWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <div class="bg-base-100 min-h-screen">
-      <.hero stats={@stats} />
+      <.hero stats={@stats} courses={@courses} />
       <.shorts shorts={@shorts} />
       <.courses courses={@courses} />
       <.blog_posts posts={@posts} />
@@ -49,9 +49,10 @@ defmodule UrielmWeb.HomeLive do
   end
 
   defp hero(assigns) do
+    assigns = assign(assigns, :featured_course, List.first(assigns.courses))
+
     ~H"""
-    <section class="relative min-h-[90vh] flex items-center overflow-hidden">
-      <!-- Animated Background Grid -->
+    <section id="home-hero" class="relative flex min-h-[70vh] items-center overflow-hidden">
       <div class="absolute inset-0 opacity-[0.03]" aria-hidden="true">
         <div
           class="absolute inset-0"
@@ -59,134 +60,109 @@ defmodule UrielmWeb.HomeLive do
         >
         </div>
       </div>
-      
-    <!-- Glowing Orbs -->
+
       <div
-        class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-[100px] animate-pulse"
+        class="absolute left-[8%] top-20 h-64 w-64 rounded-full bg-primary/10 blur-[110px]"
         aria-hidden="true"
       >
       </div>
       <div
-        class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-[120px] animate-pulse"
-        style="animation-delay: 1s;"
-        aria-hidden="true"
-      >
-      </div>
-      <div
-        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[150px]"
+        class="absolute bottom-10 right-[6%] h-80 w-80 rounded-full bg-secondary/10 blur-[130px]"
         aria-hidden="true"
       >
       </div>
 
-      <div class="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
-        <div class="grid lg:grid-cols-2 gap-16 items-center">
-          <!-- Left: Text Content -->
-          <div class="space-y-8">
-            <!-- Main Headline -->
-            <h1 class="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95]">
-              <span class="text-base-content">Master</span>
-              <br />
-              <span class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                AI Development
+      <div class="relative z-10 mx-auto w-full max-w-7xl px-6 py-16 sm:py-20">
+        <div class="grid items-center gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20">
+          <div class="max-w-2xl">
+            <p class="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Practical AI development
+            </p>
+            <h1 class="text-5xl font-black leading-[0.95] tracking-[-0.045em] text-base-content md:text-6xl lg:text-7xl">
+              Learn to build
+              <span class="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                with AI.
               </span>
             </h1>
-            
-    <!-- Subheadline -->
-            <p class="text-xl text-base-content/60 max-w-lg leading-relaxed">
-              Tutorials, courses, and prompts to help you build with Claude, GPT-4, and the latest AI tools. From zero to production.
+
+            <p class="mt-7 max-w-xl text-lg leading-relaxed text-base-content/60 md:text-xl">
+              Practical tutorials, structured courses, and production-ready prompts for developers building with the latest AI tools.
             </p>
-            
-    <!-- CTA Buttons -->
-            <div class="flex flex-wrap gap-4 pt-4">
+
+            <div class="mt-8 flex flex-wrap items-center gap-3">
               <.link
+                id="hero-primary-cta"
                 navigate={~p"/courses"}
-                class="group btn btn-primary btn-lg rounded-full px-8 gap-2"
+                class="group btn btn-primary btn-lg rounded-full px-7 shadow-lg shadow-primary/15 transition duration-200 hover:-translate-y-0.5"
               >
                 Start Learning
-                <svg
-                  class="w-5 h-5 group-hover:translate-x-1 transition-transform"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
+                <.um_icon
+                  name="hero-arrow-right"
+                  class="size-5 transition-transform group-hover:translate-x-0.5"
+                />
               </.link>
               <.link
                 navigate={~p"/prompts"}
-                class="btn btn-outline btn-lg rounded-full px-8"
+                class="btn btn-ghost btn-lg rounded-full px-6 text-base-content/70 hover:text-base-content"
               >
-                Browse Prompts
+                Browse prompts
               </.link>
             </div>
-            
-    <!-- Stats Row -->
-            <div class="flex gap-8 pt-8 border-t border-base-300">
+
+            <div class="mt-10 flex gap-8 border-t border-base-300/70 pt-6">
               <div>
-                <div class="text-3xl font-bold text-base-content">{@stats.videos}</div>
-                <div class="text-sm text-base-content/50">Videos</div>
-              </div>
-              <div>
-                <div class="text-3xl font-bold text-base-content">{@stats.prompts}</div>
-                <div class="text-sm text-base-content/50">Prompts</div>
+                <div class="text-2xl font-bold tabular-nums text-base-content">{@stats.videos}</div>
+                <div class="text-xs font-medium uppercase tracking-wide text-base-content/45">
+                  Videos
+                </div>
               </div>
               <div>
-                <div class="text-3xl font-bold text-base-content">{@stats.courses}</div>
-                <div class="text-sm text-base-content/50">Courses</div>
-              </div>
-            </div>
-          </div>
-          
-    <!-- Right: Feature Cards Stack -->
-          <div class="relative hidden lg:block">
-            <!-- Floating Cards -->
-            <div class="relative h-[500px]">
-              <!-- Card 1: Code Preview -->
-              <div class="absolute top-0 right-0 w-80 bg-base-200 rounded-2xl p-5 border border-base-300 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <div class="flex items-center gap-2 mb-3">
-                  <div class="w-3 h-3 rounded-full bg-error"></div>
-                  <div class="w-3 h-3 rounded-full bg-warning"></div>
-                  <div class="w-3 h-3 rounded-full bg-success"></div>
-                  <span class="ml-2 text-xs text-base-content/50 font-mono">claude_agent.py</span>
-                </div>
-                <pre class="text-xs font-mono text-base-content/80 overflow-hidden"><code><span class="text-secondary">from</span> anthropic <span class="text-secondary">import</span> Anthropic&#10;&#10;client = Anthropic()&#10;response = client.messages.create(&#10;    model=<span class="text-success">"claude-sonnet-4-6"</span>,&#10;    max_tokens=<span class="text-warning">1024</span>,&#10;    messages=[...]&#10;)</code></pre>
-              </div>
-              
-    <!-- Card 2: Prompt Card -->
-              <div class="absolute top-32 left-0 w-72 bg-gradient-to-br from-primary/20 to-secondary/20 backdrop-blur rounded-2xl p-5 border border-primary/30 shadow-2xl transform -rotate-6 hover:rotate-0 transition-transform duration-500">
-                <div class="text-xs font-semibold text-primary uppercase tracking-wider mb-2">
-                  System Prompt
-                </div>
-                <p class="text-sm text-base-content/80 leading-relaxed">
-                  "You are an expert code reviewer. Analyze the following code for bugs, security issues, and..."
-                </p>
-                <div class="flex gap-2 mt-3">
-                  <span class="badge badge-primary badge-sm">coding</span>
-                  <span class="badge badge-secondary badge-sm">review</span>
+                <div class="text-2xl font-bold tabular-nums text-base-content">{@stats.prompts}</div>
+                <div class="text-xs font-medium uppercase tracking-wide text-base-content/45">
+                  Prompts
                 </div>
               </div>
-              
-    <!-- Card 3: Video Thumbnail -->
-              <div class="absolute bottom-0 right-8 w-64 bg-base-300 rounded-2xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                <div class="aspect-video bg-gradient-to-br from-base-200 to-base-300 flex items-center justify-center">
-                  <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center backdrop-blur">
-                    <svg class="w-8 h-8 text-primary ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="p-4">
-                  <div class="text-sm font-medium text-base-content">Build an AI Agent</div>
-                  <div class="text-xs text-base-content/50 mt-1">Watch now</div>
+              <div>
+                <div class="text-2xl font-bold tabular-nums text-base-content">{@stats.courses}</div>
+                <div class="text-xs font-medium uppercase tracking-wide text-base-content/45">
+                  Courses
                 </div>
               </div>
             </div>
           </div>
+
+          <.link
+            id="featured-learning-card"
+            navigate={
+              if(@featured_course, do: ~p"/courses/#{@featured_course.slug}", else: ~p"/courses")
+            }
+            class="group hidden overflow-hidden rounded-2xl border border-base-300/70 bg-base-200/70 p-3 shadow-xl shadow-base-300/10 transition duration-300 hover:-translate-y-1 hover:border-primary/40 lg:block"
+          >
+            <div class="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/25 via-secondary/15 to-base-300">
+              <div class="bg-card-glow absolute inset-0"></div>
+              <div class="relative flex size-20 items-center justify-center rounded-2xl border border-white/10 bg-base-100/70 shadow-2xl backdrop-blur">
+                <.um_icon name="bolt" class="size-9 text-primary" />
+              </div>
+            </div>
+            <div class="p-5">
+              <p class="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                Featured course
+              </p>
+              <h2 class="text-2xl font-bold tracking-tight text-base-content group-hover:text-primary">
+                {if(@featured_course, do: @featured_course.title, else: "Build your first AI project")}
+              </h2>
+              <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-base-content/55">
+                {if(@featured_course && @featured_course.description,
+                  do: @featured_course.description,
+                  else:
+                    "Follow a practical learning path from first concept to a production-ready result."
+                )}
+              </p>
+              <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-base-content/70 group-hover:text-primary">
+                Explore the course <.um_icon name="hero-arrow-right" class="size-4" />
+              </span>
+            </div>
+          </.link>
         </div>
       </div>
     </section>

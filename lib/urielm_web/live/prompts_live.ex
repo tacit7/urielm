@@ -56,12 +56,6 @@ defmodule UrielmWeb.PromptsLive do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
-    category = Map.get(params, "category", "all")
-    {:noreply, apply_filter(category, socket)}
-  end
-
-  @impl true
   def handle_event("search", %{"query" => query}, socket) do
     %{current_filter: filter} = socket.assigns
     opts = build_search_opts(filter, 0)
@@ -217,17 +211,7 @@ defmodule UrielmWeb.PromptsLive do
   end
 
   defp handle_filter_change(category, socket) do
-    patch_path =
-      if category == "all" do
-        ~p"/prompts"
-      else
-        ~p"/prompts?#{%{category: category}}"
-      end
-
-    {:noreply,
-     socket
-     |> apply_filter(category)
-     |> push_patch(to: patch_path)}
+    {:noreply, apply_filter(category, socket)}
   end
 
   defp apply_filter(category, socket) do
@@ -252,11 +236,14 @@ defmodule UrielmWeb.PromptsLive do
     end
   end
 
-  defp build_nav_items(categories) do
-    [%{key: "all", label: "All"}] ++
-      Enum.map(categories, fn cat ->
-        %{key: cat, label: cat}
-      end)
+  defp quick_filter_items do
+    [
+      %{key: "all", label: "All"},
+      %{key: "Software Engineers", label: "Developers"},
+      %{key: "Content Creation", label: "Content"},
+      %{key: "Students & School", label: "Students"},
+      %{key: "Entrepreneurs", label: "Business"}
+    ]
   end
 
   @impl true
@@ -271,66 +258,107 @@ defmodule UrielmWeb.PromptsLive do
       />
 
       <div class="drawer-content min-h-screen bg-base-100 text-base-content">
-        <div class="container mx-auto px-4 py-8">
-          <div class="mb-6">
-            <h1 class="text-4xl font-bold mb-2 text-base-content">Prompts</h1>
-            <p class="text-base-content/60">
-              Curated collection of AI prompts and templates
+        <div class="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div id="prompts-page-header" class="mb-8 max-w-2xl">
+            <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Prompt library
+            </p>
+            <h1 class="text-4xl font-black tracking-[-0.035em] text-base-content sm:text-5xl">
+              Prompts that help you ship.
+            </h1>
+            <p class="mt-3 text-base leading-relaxed text-base-content/55 sm:text-lg">
+              Curated, reusable templates for building, writing, learning, and getting better work from AI.
             </p>
           </div>
 
-          <div class="mb-6 border-b border-base-300">
-            <.svelte
-              name="UnderlineNav"
-              props={
-                %{
-                  items: build_nav_items(@categories),
-                  activeKey: @current_filter,
-                  showCounts: false,
-                  size: "md"
-                }
-              }
-              socket={@socket}
-            ssr={false}
-            />
-          </div>
+          <div
+            id="prompt-toolbar"
+            class="mb-5 grid gap-3 rounded-2xl border border-base-300/70 bg-base-200/40 p-3 md:grid-cols-[minmax(0,1fr)_18rem]"
+          >
+            <form
+              id="prompt-search-form"
+              phx-change="search"
+              phx-submit="search"
+              class="w-full"
+            >
+              <div class="relative">
+                <.um_icon
+                  name="search"
+                  class="pointer-events-none absolute left-3 top-1/2 z-10 size-5 -translate-y-1/2 text-base-content/35"
+                />
+                <.input
+                  type="text"
+                  name="query"
+                  value={@search_query}
+                  placeholder="Search prompts…"
+                  aria-label="Search prompts"
+                  class="input input-bordered w-full bg-base-100 pl-10"
+                  phx-debounce="300"
+                />
+              </div>
+            </form>
 
-          <div class="mb-6">
-            <form phx-change="search" phx-submit="search" class="w-full">
+            <form id="prompt-category-filter" phx-change="filter_changed" class="w-full">
               <.input
-                type="text"
-                name="query"
-                value={@search_query}
-                placeholder="Search prompts, e.g. 'tiktok hooks', 'email subject line'"
-                class="input input-bordered w-full"
-                phx-debounce="300"
+                type="select"
+                name="category"
+                value={@current_filter}
+                options={[{"All categories", "all"} | Enum.map(@categories, &{&1, &1})]}
+                aria-label="Filter prompts by category"
+                class="select select-bordered w-full bg-base-100"
               />
             </form>
+          </div>
+
+          <div id="prompt-quick-filters" class="mb-7 flex gap-2 overflow-x-auto pb-1">
+            <button
+              :for={item <- quick_filter_items()}
+              type="button"
+              phx-click="filter_changed"
+              phx-value-category={item.key}
+              class={[
+                "btn btn-sm flex-shrink-0 rounded-full px-4 transition duration-200",
+                if(@current_filter == item.key,
+                  do: "btn-primary",
+                  else:
+                    "btn-ghost border border-base-300/70 bg-base-100 text-base-content/65 hover:border-primary/35 hover:text-base-content"
+                )
+              ]}
+            >
+              {item.label}
+            </button>
           </div>
 
           <div id="prompts" phx-update="stream" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div
               id="empty-state"
-              class="hidden only:block col-span-full text-center py-12 text-base-content/50"
+              class="hidden only:block col-span-full rounded-2xl border border-dashed border-base-300 py-16 text-center text-base-content/50"
             >
-              No prompts found.
+              <.um_icon name="search" class="mx-auto mb-3 size-8 text-base-content/25" />
+              <p class="font-semibold text-base-content/70">No prompts found</p>
+              <p class="mt-1 text-sm">Try a broader search or another category.</p>
             </div>
             <div
               :for={{id, prompt} <- @streams.prompts}
               id={id}
-              class="card bg-base-200 border border-base-300 hover:bg-base-300 transition-colors cursor-pointer"
+              class="card group cursor-pointer border border-base-300/70 bg-base-100 transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg hover:shadow-base-300/10"
               phx-click="open_prompt_modal"
               phx-value-id={prompt.id}
             >
-              <div class="card-body p-4 gap-3">
-                <h2 class="card-title text-base-content text-lg">
+              <div class="card-body gap-3 p-5">
+                <p class="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-primary/80">
+                  {prompt.category || "Prompt"}
+                </p>
+                <h2 class="card-title text-lg leading-snug text-base-content transition-colors group-hover:text-primary">
                   {prompt.title}
                 </h2>
 
                 <%= if prompt.tags && prompt.tags != [] do %>
                   <div class="flex flex-wrap gap-1">
                     <%= for tag <- prompt.tags do %>
-                      <span class="badge badge-sm badge-secondary">{tag}</span>
+                      <span class="badge badge-sm border-base-300 bg-base-200 text-base-content/60">
+                        {tag}
+                      </span>
                     <% end %>
                   </div>
                 <% end %>
@@ -401,7 +429,7 @@ defmodule UrielmWeb.PromptsLive do
                     name="MarkdownRenderer"
                     props={%{content: @selected_prompt.prompt}}
                     socket={@socket}
-                  ssr={false}
+                    ssr={false}
                   />
                 </div>
 
