@@ -74,7 +74,20 @@ defmodule UrielmWeb.Layouts do
 
   def auth(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+    <div id="auth-shell" class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+      <header
+        id="auth-header"
+        class="absolute inset-x-0 top-0 z-20 mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-5 sm:px-7 lg:px-8"
+      >
+        <.link
+          navigate={~p"/"}
+          class="rounded-xl px-2 py-2 text-lg font-black tracking-[-0.04em] text-base-content transition hover:bg-base-200/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-xl"
+        >
+          UrielM<span class="text-base-content/40">.dev</span>
+        </.link>
+        <.theme_toggle />
+      </header>
+
       <main>
         {render_slot(@inner_block)}
       </main>
