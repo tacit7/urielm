@@ -6,8 +6,8 @@ Give the entire application one recognizable color identity with matching light 
 
 ## Themes
 
-- `tokyo-night`: deep navy page and surface colors with Tokyo blue, violet, cyan, green, amber, and red accents.
-- `tokyo-day`: cool lavender-gray page and surface colors with darker Tokyo blue, violet, and cyan accents for accessible contrast.
+- `tokyo-night`: deep navy page and surface colors with Tokyo blue, cyan, restrained teal, green, amber, and red accents.
+- `tokyo-day`: cool blue-gray page and surface colors with darker Tokyo blue, cyan, and teal accents for accessible contrast.
 
 ## Behavior
 

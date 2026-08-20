@@ -23,8 +23,8 @@ defmodule UrielmWeb.ThemesLive do
   end
 
   @theme_colors %{
-    "tokyo-night" => %{primary: "#7aa2f7", secondary: "#bb9af7", accent: "#7dcfff"},
-    "tokyo-day" => %{primary: "#2e7de9", secondary: "#7847bd", accent: "#007197"},
+    "tokyo-night" => %{primary: "#7aa2f7", secondary: "#7dcfff", accent: "#73daca"},
+    "tokyo-day" => %{primary: "#2e7de9", secondary: "#007197", accent: "#007c79"},
     "midnight" => %{primary: "#7aa2f7", secondary: "#bb9af7", accent: "#73daca"},
     "catppuccin-mocha" => %{primary: "#89b4fa", secondary: "#cba6f7", accent: "#94e2d5"},
     "catppuccin-latte" => %{primary: "#1e66f5", secondary: "#ea76cb", accent: "#179299"},
