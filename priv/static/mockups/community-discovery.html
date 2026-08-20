@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Community discovery mockup</title>
+    <style>
+      :root { --bg:#16161e; --surface:#1f2335; --surface2:#24283b; --border:#3b4261; --primary:#7dcfff; --accent:#73daca; --text:#c0caf5; --muted:#737aa2; font-family:Inter,ui-sans-serif,system-ui,sans-serif; color-scheme:dark; }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); }
+      a { color:inherit; text-decoration:none; } button,input { font:inherit; }
+      .app { min-height:100vh; display:grid; grid-template-columns:264px 1fr; }
+      .sidebar { padding:22px 16px; background:#1a1b26; border-right:1px solid #3b426177; }
+      .brand { display:flex; align-items:center; gap:10px; padding:8px 10px 24px; font-weight:850; letter-spacing:-.03em; }
+      .mark { width:34px; height:34px; display:grid; place-items:center; border-radius:11px; color:#16161e; background:var(--primary); }
+      .label { padding:16px 11px 7px; color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+      .nav { display:grid; gap:4px; }.nav a { display:flex; align-items:center; gap:11px; min-height:42px; padding:0 12px; border-radius:11px; color:#a9b1d6; font-size:14px; font-weight:650; }
+      .nav a.active { color:var(--primary); background:#7dcfff12; }.dot { width:7px; height:7px; border-radius:99px; background:var(--muted); }.active .dot { background:var(--primary); box-shadow:0 0 14px #7dcfffaa; }
+      .main { width:min(1050px,calc(100% - 48px)); margin:0 auto; padding:46px 0 80px; }
+      .eyebrow { color:var(--accent); font-size:11px; font-weight:850; letter-spacing:.17em; text-transform:uppercase; }
+      h1 { margin:9px 0 10px; font-size:44px; letter-spacing:-.05em; line-height:1; } .lede { max-width:620px; margin:0; color:#a9b1d6; font-size:16px; line-height:1.65; }
+      .search { display:flex; align-items:center; gap:12px; margin-top:26px; max-width:660px; height:52px; padding:0 16px; border:1px solid var(--border); border-radius:14px; background:var(--surface); color:var(--muted); }
+      .search input { width:100%; border:0; outline:0; background:transparent; color:var(--text); }.kbd { padding:4px 7px; border:1px solid var(--border); border-radius:6px; font-size:10px; }
+      .tabs { display:flex; align-items:center; gap:5px; margin:34px 0 18px; padding-bottom:12px; border-bottom:1px solid #3b426177; }.tabs a { padding:9px 13px; border-radius:10px; color:var(--muted); font-size:13px; font-weight:750; }.tabs a.active { color:var(--primary); background:#7dcfff12; }.tabs .count { margin-left:auto; color:var(--muted); font-size:12px; }
+      .category { margin-top:25px; }.category-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }.category-head h2 { margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#a9b1d6; }.category-head a { color:var(--primary); font-size:12px; }
+      .board-list { overflow:hidden; border:1px solid #3b4261aa; border-radius:16px; background:#1f233566; }.board { display:grid; grid-template-columns:1fr 230px 58px; align-items:center; gap:18px; min-height:84px; padding:15px 17px; border-bottom:1px solid #3b426177; }.board:last-child { border:0; }.board:hover { background:#24283b99; }
+      .board-main { display:flex; align-items:center; gap:13px; min-width:0; }.board-icon { width:40px; height:40px; display:grid; place-items:center; flex:none; border-radius:12px; color:#16161e; background:var(--accent); font-weight:900; }.board-icon.blue { background:var(--primary); }.board h3 { margin:0 0 4px; font-size:15px; }.board p,.latest small { margin:0; color:var(--muted); font-size:12px; }.latest { min-width:0; color:#a9b1d6; font-size:12px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }.topics { text-align:right; color:var(--muted); font:12px ui-monospace,monospace; }
+      .mobilebar { display:none; }.notes { margin-top:30px; padding:18px 20px; border:1px solid #73daca33; border-radius:15px; background:#73daca0b; color:#a9b1d6; font-size:13px; line-height:1.6; }
+      @media(max-width:760px){ .app { display:block; }.sidebar { display:none; }.mobilebar { position:sticky; top:0; z-index:3; display:flex; align-items:center; justify-content:space-between; height:60px; padding:0 16px; border-bottom:1px solid #3b426177; background:#16161eea; backdrop-filter:blur(14px); }.main { width:calc(100% - 30px); padding:30px 0 60px; } h1 { font-size:36px; }.search { margin-top:20px; }.tabs { overflow:auto; }.tabs .count { display:none; }.board { grid-template-columns:1fr; gap:6px; min-height:98px; }.latest,.topics { margin-left:53px; }.topics { display:none; }.board p { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.notes { font-size:12px; } }
+    </style>
+  </head>
+  <body>
+    <div class="mobilebar"><strong>Community</strong><span>☰</span></div>
+    <div class="app">
+      <aside class="sidebar">
+        <a class="brand" href="#"><span class="mark">U</span>Urielm</a>
+        <nav class="nav"><a class="active" href="#"><span class="dot"></span>Latest</a><a href="#"><span class="dot"></span>Categories</a><a href="#"><span class="dot"></span>Saved</a><a href="#"><span class="dot"></span>Notifications</a></nav>
+        <div class="label">Explore</div>
+        <nav class="nav"><a href="#"><span class="dot"></span>Start here</a><a href="#"><span class="dot"></span>Questions &amp; answers</a><a href="#"><span class="dot"></span>Building with AI</a><a href="#"><span class="dot"></span>Show and tell</a></nav>
+      </aside>
+      <main class="main">
+        <div class="eyebrow">Learn · build · share</div>
+        <h1>Find your next idea.</h1>
+        <p class="lede">Ask a thoughtful question, share what you are building, or learn alongside people turning AI ideas into useful work.</p>
+        <label class="search"><span>⌕</span><input placeholder="Search discussions, questions, and projects" /><span class="kbd">/</span></label>
+        <nav class="tabs"><a class="active" href="#">Latest</a><a href="#">Categories</a><a href="#">Top</a><a href="#">New</a><span class="count">24 active discussions</span></nav>
+        <section class="category">
+          <div class="category-head"><h2>Get started</h2><a href="#">View category →</a></div>
+          <div class="board-list">
+            <a class="board" href="#"><div class="board-main"><span class="board-icon">S</span><div><h3>Start here</h3><p>Introductions, community guidance, and the best place for your first post.</p></div></div><div class="latest">Welcome to the community<br /><small>12m ago</small></div><div class="topics">18 topics</div></a>
+            <a class="board" href="#"><div class="board-main"><span class="board-icon blue">Q</span><div><h3>Questions &amp; answers</h3><p>Get practical help with prompts, tools, workflows, and AI projects.</p></div></div><div class="latest">How do you evaluate prompt quality?<br /><small>38m ago</small></div><div class="topics">42 topics</div></a>
+          </div>
+        </section>
+        <aside class="notes"><strong>Responsive behavior:</strong> desktop keeps the compact forum sidebar. Mobile replaces it with a sticky bar and drawer. Search is the main discovery action, tabs remain reachable without a dropdown, and board metadata collapses gracefully. All accents use Tokyo Night cyan/teal; hierarchy comes from spacing and surfaces, never a decorative left border.</aside>
+      </main>
+    </div>
+  </body>
+</html>

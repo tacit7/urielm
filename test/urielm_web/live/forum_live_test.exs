@@ -50,6 +50,28 @@ defmodule UrielmWeb.ForumLiveTest do
   end
 
   describe "ForumLive" do
+    test "renders the shared community discovery shell" do
+      {:ok, view, _html} = live(build_conn(), ~p"/forum")
+
+      assert has_element?(view, "#forum-mobile-header")
+      assert has_element?(view, "#forum-sidebar-nav")
+      assert has_element?(view, "#community-discovery-header")
+      assert has_element?(view, "#forum-search-link[href='/forum/search']")
+      assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Latest")
+    end
+
+    test "categories view exposes discovery navigation and structured board groups", %{
+      category: category,
+      board: board
+    } do
+      {:ok, view, _html} = live(build_conn(), ~p"/forum/categories")
+
+      assert has_element?(view, "#community-discovery-header")
+      assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Categories")
+      assert has_element?(view, "#forum-category-#{category.id}")
+      assert has_element?(view, "#forum-board-#{board.id}[href='/forum/b/#{board.slug}']")
+    end
+
     test "mount displays forum categories and boards", %{category: category, board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/categories")
 

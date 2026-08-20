@@ -100,42 +100,50 @@ defmodule UrielmWeb.LatestLive do
       current_user={@current_user}
       current_path="/forum"
     >
-      <div class="mb-6">
-        <h1 class="text-3xl font-black tracking-tight text-base-content leading-none">Latest</h1>
-      </div>
+      <UrielmWeb.Components.ForumLayout.discovery_header active_view="latest" />
       
     <!-- Thread table -->
-      <div class="rounded-xl border border-base-300/60 overflow-hidden">
-        <!-- Column headers -->
-        <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
-          <div class="w-2" />
-          <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
-          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
-            Replies
-          </span>
-          <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
-            Views
-          </span>
-          <span class="text-xs font-medium text-base-content/35 tracking-wide text-right">
-            Activity
-          </span>
+      <section aria-labelledby="latest-discussions-title">
+        <div class="mb-3 flex items-center justify-between">
+          <h2
+            id="latest-discussions-title"
+            class="text-xs font-bold uppercase tracking-[0.15em] text-base-content/55"
+          >
+            Latest discussions
+          </h2>
         </div>
-        
+        <div class="rounded-2xl border border-base-300/60 overflow-hidden bg-base-100">
+          <!-- Column headers -->
+          <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
+            <div class="w-2" />
+            <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
+            <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
+              Replies
+            </span>
+            <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
+              Views
+            </span>
+            <span class="text-xs font-medium text-base-content/35 tracking-wide text-right">
+              Activity
+            </span>
+          </div>
+
     <!-- Threads -->
-        <div id="threads" phx-update="stream">
-          <div id="empty-state" class="hidden only:flex justify-center py-16">
-            <div class="text-center">
-              <p class="font-mono font-black text-6xl text-base-content/10 mb-3">0</p>
-              <p class="font-mono text-xs tracking-widest uppercase text-base-content/30">
-                No topics yet
-              </p>
+          <div id="threads" phx-update="stream">
+            <div id="empty-state" class="hidden only:flex justify-center py-16">
+              <div class="text-center">
+                <p class="font-mono font-black text-6xl text-base-content/10 mb-3">0</p>
+                <p class="font-mono text-xs tracking-widest uppercase text-base-content/30">
+                  No topics yet
+                </p>
+              </div>
+            </div>
+            <div :for={{id, thread} <- @streams.threads} id={id}>
+              <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
             </div>
           </div>
-          <div :for={{id, thread} <- @streams.threads} id={id}>
-            <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
-          </div>
         </div>
-      </div>
+      </section>
       
     <!-- Pagination -->
       <div class="flex items-center justify-center gap-2 mt-8">
