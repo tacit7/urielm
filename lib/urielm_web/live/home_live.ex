@@ -171,10 +171,10 @@ defmodule UrielmWeb.HomeLive do
 
   defp shorts(assigns) do
     ~H"""
-    <section class="py-20 bg-base-200/50">
-      <div class="max-w-7xl mx-auto px-6">
+    <section id="home-shorts" class="ui-section bg-base-200/50">
+      <div class="ui-section-shell">
         <!-- Section Header -->
-        <div class="flex items-center justify-between mb-10">
+        <div class="ui-section-header">
           <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center">
               <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -202,9 +202,9 @@ defmodule UrielmWeb.HomeLive do
           <%= for {short, index} <- Enum.with_index(@shorts) do %>
             <.link
               navigate={~p"/videos/#{short.slug}"}
-              class="flex-shrink-0 w-44 snap-start group cursor-pointer"
+              class="ui-card ui-card-interactive ui-card-compact group w-44 flex-shrink-0 cursor-pointer snap-start p-2"
             >
-              <div class={"relative aspect-[9/16] rounded-2xl overflow-hidden #{short_gradient(index)}"}>
+              <div class={"relative aspect-[9/16] overflow-hidden rounded-xl #{short_gradient(index)}"}>
                 <!-- Play Button Overlay -->
                 <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
@@ -214,7 +214,7 @@ defmodule UrielmWeb.HomeLive do
                   </div>
                 </div>
               </div>
-              <div class="mt-3">
+              <div class="px-1 pb-1 pt-3">
                 <h3 class="text-sm font-medium text-base-content line-clamp-2 group-hover:text-primary transition-colors">
                   {short.title}
                 </h3>
@@ -229,17 +229,15 @@ defmodule UrielmWeb.HomeLive do
 
   defp courses(assigns) do
     ~H"""
-    <section class="py-24 bg-base-100">
-      <div class="max-w-7xl mx-auto px-6">
+    <section id="home-courses" class="ui-section bg-base-100">
+      <div class="ui-section-shell">
         <!-- Section Header -->
-        <div class="text-center mb-16">
-          <span class="text-primary font-semibold text-sm uppercase tracking-wider">
+        <div class="ui-section-header ui-section-header-centered">
+          <span class="ui-eyebrow">
             Learn AI Development
           </span>
-          <h2 class="text-4xl md:text-5xl font-bold text-base-content mt-3 mb-4">
-            Featured Courses
-          </h2>
-          <p class="text-lg text-base-content/60 max-w-2xl mx-auto">
+          <h2 class="ui-section-title">Featured Courses</h2>
+          <p class="ui-section-copy">
             Structured learning paths to take you from curious beginner to confident AI developer.
           </p>
         </div>
@@ -252,7 +250,7 @@ defmodule UrielmWeb.HomeLive do
           <%= for {course, index} <- Enum.with_index(@courses) do %>
             <% color = course_color_classes(index) %>
             <.link navigate={~p"/courses/#{course.slug}"} class="group">
-              <div class="h-full bg-base-200 rounded-3xl p-8 border border-base-300 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1">
+              <div class="ui-card ui-card-interactive flex h-full flex-col p-8">
                 <!-- Icon -->
                 <div class={"w-14 h-14 rounded-2xl #{color.icon_bg} flex items-center justify-center mb-6"}>
                   <svg
@@ -308,15 +306,15 @@ defmodule UrielmWeb.HomeLive do
 
   defp blog_posts(assigns) do
     ~H"""
-    <section class="py-24 bg-base-200/30">
-      <div class="max-w-7xl mx-auto px-6">
+    <section id="home-articles" class="ui-section bg-base-200/30">
+      <div class="ui-section-shell">
         <!-- Section Header -->
-        <div class="flex items-end justify-between mb-12">
+        <div class="ui-section-header">
           <div>
-            <span class="text-secondary font-semibold text-sm uppercase tracking-wider">
+            <span class="ui-eyebrow">
               From the Blog
             </span>
-            <h2 class="text-4xl font-bold text-base-content mt-2">Latest Articles</h2>
+            <h2 class="ui-section-title">Latest Articles</h2>
           </div>
           <.link navigate={~p"/blog"} class="btn btn-ghost gap-2 hidden md:flex">
             Read All
@@ -339,7 +337,7 @@ defmodule UrielmWeb.HomeLive do
           <!-- Featured Post (Large) — first post -->
           <%= for post <- Enum.take(@posts, 1) do %>
             <.link navigate={~p"/blog/#{post.slug}"} class="group lg:row-span-2">
-              <div class="h-full bg-gradient-to-br from-primary/10 via-base-200 to-secondary/10 rounded-3xl p-8 border border-base-300 hover:border-primary/30 transition-all duration-300">
+              <div class="ui-card ui-card-interactive flex h-full flex-col p-8">
                 <h3 class="text-2xl md:text-3xl font-bold text-base-content mt-2 mb-4 group-hover:text-primary transition-colors leading-tight">
                   {post.title}
                 </h3>
@@ -358,7 +356,7 @@ defmodule UrielmWeb.HomeLive do
     <!-- Other Posts -->
           <%= for post <- Enum.drop(@posts, 1) do %>
             <.link navigate={~p"/blog/#{post.slug}"} class="group">
-              <div class="bg-base-200 rounded-2xl p-6 border border-base-300 hover:border-secondary/30 transition-all duration-300 hover:shadow-lg">
+              <div class="ui-card ui-card-interactive ui-card-compact p-6">
                 <div class="flex items-start justify-between gap-4">
                   <div class="flex-1">
                     <h3 class="text-lg font-semibold text-base-content mb-2 group-hover:text-secondary transition-colors">
@@ -383,7 +381,7 @@ defmodule UrielmWeb.HomeLive do
 
   defp prompts(assigns) do
     ~H"""
-    <section class="py-24 bg-base-100 relative overflow-hidden">
+    <section id="home-prompts" class="ui-section relative overflow-hidden bg-base-100">
       <!-- Background Pattern -->
       <div class="absolute inset-0 opacity-[0.02]" aria-hidden="true">
         <div
@@ -393,16 +391,14 @@ defmodule UrielmWeb.HomeLive do
         </div>
       </div>
 
-      <div class="relative max-w-7xl mx-auto px-6">
+      <div class="ui-section-shell relative">
         <!-- Section Header -->
-        <div class="text-center mb-16">
-          <span class="text-accent font-semibold text-sm uppercase tracking-wider">
+        <div class="ui-section-header ui-section-header-centered">
+          <span class="ui-eyebrow">
             Prompt Library
           </span>
-          <h2 class="text-4xl md:text-5xl font-bold text-base-content mt-3 mb-4">
-            Ready-to-Use Prompts
-          </h2>
-          <p class="text-lg text-base-content/60 max-w-2xl mx-auto">
+          <h2 class="ui-section-title">Ready-to-Use Prompts</h2>
+          <p class="ui-section-copy">
             Battle-tested prompts for common tasks. Copy, customize, and use in your projects.
           </p>
         </div>
@@ -414,7 +410,7 @@ defmodule UrielmWeb.HomeLive do
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <%= for prompt <- @prompts do %>
             <.link navigate={~p"/prompts/#{prompt.id}"} class="group">
-              <div class="flex items-center gap-4 p-5 bg-base-200 rounded-2xl border border-base-300 hover:border-accent/30 hover:bg-base-200/80 transition-all duration-300">
+              <div class="ui-card ui-card-interactive ui-card-compact flex items-center gap-4 p-5">
                 <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
                   <svg
                     class="w-6 h-6 text-accent"

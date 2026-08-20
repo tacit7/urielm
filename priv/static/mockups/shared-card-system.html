@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shared Cards and Sections — Mockup</title>
+    <style>
+      :root { --base:#1a1b26; --surface:#24283b; --surface-2:#2a2f45; --border:#3b4261; --text:#c0caf5; --muted:#8f98bd; --primary:#7aa2f7; --secondary:#7dcfff; --accent:#73daca; }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--base); color:var(--text); font:15px/1.55 Inter, ui-sans-serif, system-ui; }
+      nav { height:64px; display:flex; align-items:center; justify-content:space-between; padding:0 5vw; border-bottom:1px solid color-mix(in srgb,var(--border) 72%,transparent); background:color-mix(in srgb,var(--base) 92%,transparent); }
+      nav strong { letter-spacing:-.02em; } nav span { color:var(--muted); }
+      .tabs { display:flex; gap:8px; max-width:1180px; margin:28px auto 0; padding:0 24px; }
+      .tab { padding:8px 13px; border:1px solid var(--border); border-radius:999px; color:var(--muted); } .tab.active { background:var(--primary); color:#16161e; border-color:var(--primary); }
+      .section { padding:70px 24px; } .section.alt { background:color-mix(in srgb,var(--surface) 42%,var(--base)); }
+      .shell { max-width:1180px; margin:auto; }
+      .header { display:flex; align-items:end; justify-content:space-between; gap:32px; margin-bottom:32px; }
+      .eyebrow { color:var(--secondary); font-size:12px; font-weight:750; letter-spacing:.14em; text-transform:uppercase; }
+      h1 { margin:5px 0 5px; font-size:clamp(28px,4vw,42px); line-height:1.08; letter-spacing:-.035em; } p { margin:0; color:var(--muted); }
+      .more { color:var(--text); font-weight:650; text-decoration:none; }
+      .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+      .card { min-height:220px; display:flex; flex-direction:column; padding:24px; border:1px solid color-mix(in srgb,var(--border) 76%,transparent); border-radius:20px; background:color-mix(in srgb,var(--surface) 82%,transparent); box-shadow:0 12px 32px rgba(8,10,20,.12); transition:transform .2s,border-color .2s,box-shadow .2s; }
+      .card:hover { transform:translateY(-3px); border-color:color-mix(in srgb,var(--primary) 48%,var(--border)); box-shadow:0 18px 42px rgba(8,10,20,.22); }
+      .icon { width:44px; height:44px; display:grid; place-items:center; margin-bottom:22px; border-radius:14px; background:color-mix(in srgb,var(--primary) 14%,transparent); color:var(--primary); font-weight:800; }
+      .card h2 { margin:0 0 8px; font-size:19px; letter-spacing:-.015em; } .meta { margin-top:auto; padding-top:18px; border-top:1px solid color-mix(in srgb,var(--border) 66%,transparent); font-size:13px; color:var(--muted); }
+      .compact { min-height:auto; flex-direction:row; align-items:center; gap:16px; padding:18px; border-radius:16px; } .compact .icon { flex:none; margin:0; } .compact h2 { font-size:16px; margin:0; }
+      .annotation { max-width:1180px; margin:0 auto 44px; padding:16px 18px; border-left:3px solid var(--accent); background:color-mix(in srgb,var(--accent) 7%,var(--surface)); color:var(--muted); }
+      @media(max-width:720px) { .section { padding:52px 20px; } .header { align-items:start; flex-direction:column; gap:14px; } .grid { grid-template-columns:1fr; } .card { min-height:auto; } .tabs { overflow:auto; } }
+    </style>
+  </head>
+  <body>
+    <nav><strong>urielm.dev</strong><span>Learn · Prompts · Blog · ◐</span></nav>
+    <div class="tabs"><span class="tab active">Desktop cards</span><span class="tab">Mobile stack</span><span class="tab">Compact rows</span></div>
+    <section class="section">
+      <div class="shell">
+        <header class="header"><div><div class="eyebrow">Learn AI Development</div><h1>Featured Courses</h1><p>One section rhythm, one surface language, and restrained accents.</p></div><a class="more" href="#">View all →</a></header>
+        <div class="grid">
+          <article class="card"><div class="icon">01</div><h2>Build with language models</h2><p>Practical foundations for reliable AI applications.</p><div class="meta">6 lessons · Beginner</div></article>
+          <article class="card"><div class="icon">02</div><h2>Production prompt systems</h2><p>Design prompts that are testable and maintainable.</p><div class="meta">8 lessons · Intermediate</div></article>
+          <article class="card"><div class="icon">03</div><h2>Agent workflows</h2><p>Coordinate tools and models around clear outcomes.</p><div class="meta">5 lessons · Advanced</div></article>
+        </div>
+      </div>
+    </section>
+    <section class="section alt"><div class="shell"><header class="header"><div><div class="eyebrow">Prompt Library</div><h1>Ready-to-use prompts</h1></div></header><div class="grid"><article class="card compact"><div class="icon">›_</div><div><h2>Review a Phoenix LiveView</h2><p>Software engineering · 24 likes</p></div></article><article class="card compact"><div class="icon">›_</div><div><h2>Turn notes into a brief</h2><p>Writing · 18 likes</p></div></article><article class="card compact"><div class="icon">›_</div><div><h2>Plan a focused research pass</h2><p>Research · 31 likes</p></div></article></div></div></section>
+    <div class="annotation"><strong>Implementation note:</strong> shared theme-aware classes control radius, border, surface, shadow, and hover lift. Page markup keeps only layout-specific padding and content structure, so future visual changes remain centralized.</div>
+  </body>
+</html>

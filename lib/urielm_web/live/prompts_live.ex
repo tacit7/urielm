@@ -341,7 +341,7 @@ defmodule UrielmWeb.PromptsLive do
             <div
               :for={{id, prompt} <- @streams.prompts}
               id={id}
-              class="card group cursor-pointer border border-base-300/70 bg-base-100 transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-lg hover:shadow-base-300/10"
+              class="card ui-card ui-card-interactive group cursor-pointer bg-base-100"
               phx-click="open_prompt_modal"
               phx-value-id={prompt.id}
             >

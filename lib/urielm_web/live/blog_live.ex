@@ -210,11 +210,11 @@ defmodule UrielmWeb.BlogLive do
             <div class="space-y-5">
               <%= for {post, index} <- Enum.with_index(@posts) do %>
                 <article class={[
-                  "relative border rounded-lg p-5 sm:p-6 transition-all hover:border-primary/60",
+                  "ui-card ui-card-interactive ui-card-compact relative p-5 sm:p-6",
                   if index == 0 do
-                    "border-base-300 bg-base-200/60 shadow-sm"
+                    "bg-base-200/70"
                   else
-                    "border-base-300/50 bg-base-100 hover:shadow-sm"
+                    "bg-base-100/70"
                   end
                 ]}>
                   <.link

@@ -300,7 +300,7 @@ defmodule UrielmWeb.PromptLive do
           <div class="space-y-4">
             <%= if @prompt.comments && length(@prompt.comments) > 0 do %>
               <%= for comment <- @prompt.comments do %>
-                <div class="card bg-base-200">
+                <div class="card ui-card ui-card-compact">
                   <div class="card-body p-4">
                     <div class="flex justify-between items-start">
                       <div>

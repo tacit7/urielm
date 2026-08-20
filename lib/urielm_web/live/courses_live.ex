@@ -81,7 +81,7 @@ defmodule UrielmWeb.CoursesLive do
     ~H"""
     <.link
       navigate={~p"/courses/#{@course.slug}"}
-      class="group block relative rounded-2xl overflow-hidden h-[400px] md:h-[480px]"
+      class="ui-card ui-card-interactive group relative block h-[400px] md:h-[480px]"
     >
       <div class="absolute inset-0">
         <img
@@ -150,7 +150,7 @@ defmodule UrielmWeb.CoursesLive do
     ~H"""
     <.link
       navigate={~p"/courses/#{@course.slug}"}
-      class="group block relative rounded-2xl overflow-hidden h-[260px] md:h-[300px]"
+      class="ui-card ui-card-interactive group relative block h-[260px] md:h-[300px]"
     >
       <div class="absolute inset-0">
         <img
