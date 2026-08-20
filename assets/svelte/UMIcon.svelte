@@ -21,6 +21,7 @@
     ellipsis: 'ellipsis-horizontal',
     sun: 'sun',
     moon: 'moon',
+    search: 'magnifying-glass',
     play: 'play',
     bolt: 'bolt',
     briefcase: 'briefcase',
@@ -56,4 +57,3 @@
 </script>
 
 <span class={`${resolved} ${className}`}></span>
-

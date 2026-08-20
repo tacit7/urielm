@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Global navigation mockup</title>
+    <style>
+      :root { --bg:#16161e; --surface:#1f2335; --surface2:#24283b; --border:#3b4261; --primary:#7dcfff; --secondary:#2ac3de; --text:#c0caf5; --muted:#737aa2; font-family:Inter,ui-sans-serif,system-ui,sans-serif; color-scheme:dark; }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); }
+      .tabs { position:fixed; right:20px; bottom:20px; z-index:10; display:flex; gap:4px; padding:5px; border:1px solid var(--border); border-radius:999px; background:var(--surface); }
+      .tabs button { border:0; border-radius:999px; padding:8px 14px; color:var(--muted); background:transparent; cursor:pointer; } .tabs .active { color:#101014; background:var(--primary); }
+      .frame { min-height:100vh; } .bar { position:relative; height:68px; border-bottom:1px solid #3b426188; background:#16161edb; backdrop-filter:blur(18px); }
+      .nav { width:min(1180px,calc(100% - 32px)); height:100%; margin:auto; display:flex; align-items:center; gap:30px; }
+      .brand { font-size:19px; font-weight:850; letter-spacing:-.04em; color:var(--text); text-decoration:none; } .brand span { color:var(--muted); }
+      .links { display:flex; align-items:center; gap:5px; margin-left:18px; } .links a { padding:9px 13px; border-radius:10px; color:#a9b1d6; text-decoration:none; font-size:14px; font-weight:650; }
+      .links a.active { color:var(--primary); background:#7dcfff12; } .actions { margin-left:auto; display:flex; align-items:center; gap:7px; }
+      .icon,.button,.menu-button { display:grid; place-items:center; height:38px; border:1px solid transparent; border-radius:11px; color:#a9b1d6; background:transparent; }
+      .icon { width:38px; } .button { padding:0 17px; color:#101014; background:var(--primary); font-size:13px; font-weight:800; }
+      .hero { width:min(900px,calc(100% - 40px)); margin:100px auto; text-align:center; } .hero p { color:var(--secondary); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; } .hero h1 { margin:12px 0; font-size:54px; letter-spacing:-.05em; }
+      .mobile { display:none; width:390px; max-width:100%; margin:auto; border-inline:1px solid var(--border); } .mobile .nav { width:100%; padding:0 15px; gap:8px; } .mobile .actions { gap:3px; }
+      .panel { margin:10px 12px; padding:10px; border:1px solid var(--border); border-radius:18px; background:var(--surface); box-shadow:0 25px 60px #08090d99; }
+      .panel a { display:flex; align-items:center; justify-content:space-between; padding:14px; border-radius:12px; color:#a9b1d6; text-decoration:none; font-weight:700; } .panel a.active { color:var(--primary); background:#7dcfff12; } .panel .search { margin-top:8px; border-top:1px solid #3b426177; border-radius:0; padding-top:18px; }
+      .annotation { width:min(760px,calc(100% - 40px)); margin:60px auto; padding:20px 22px; border:1px solid #2ac3de33; border-radius:16px; background:#2ac3de0d; color:#a9b1d6; line-height:1.6; }
+      @media(max-width:700px){ .desktop { display:none; } .mobile { display:block; } .hero h1 { font-size:38px; } }
+    </style>
+  </head>
+  <body>
+    <div class="tabs"><button class="active">Responsive preview</button><button>Scrolled state</button></div>
+    <section class="frame desktop">
+      <header class="bar"><nav class="nav"><a class="brand" href="#">UrielM<span>.dev</span></a><div class="links"><a href="#">Courses</a><a class="active" href="#">Blog</a><a href="#">Prompts</a><a href="#">Community</a></div><div class="actions"><button class="icon" aria-label="Search">⌕</button><button class="icon" aria-label="Theme">☼</button><span class="button">Sign up</span></div></nav></header>
+      <div class="hero"><p>Writing &amp; notes</p><h1>Ideas worth building on.</h1></div>
+    </section>
+    <section class="frame mobile">
+      <header class="bar"><nav class="nav"><a class="brand" href="#">UrielM<span>.dev</span></a><div class="actions"><button class="icon" aria-label="Theme">☼</button><button class="menu-button icon" aria-label="Close menu">×</button></div></nav></header>
+      <div class="panel"><a href="#">Courses <span>→</span></a><a class="active" href="#">Blog <span>→</span></a><a href="#">Prompts <span>→</span></a><a href="#">Community <span>→</span></a><a class="search" href="#">Search community <span>⌕</span></a></div>
+      <div class="hero"><p>Mobile menu</p><h1>Focused and easy to reach.</h1></div>
+    </section>
+    <aside class="annotation"><strong>Behavior:</strong> the centered desktop bar gains a translucent surface after scrolling. Active state follows the URL after LiveView navigation. On small screens, the menu opens as a wide anchored panel, closes after navigation or Escape, and prevents ambiguous tiny targets. Search links to the existing community search rather than pretending the app has global search.</aside>
+  </body>
+</html>

@@ -1,149 +1,214 @@
 <script>
-  import AuthModal from './AuthModal.svelte';
-  import ThemeToggle from './ThemeToggle.svelte';
-  import UserMenu from './UserMenu.svelte';
+  import ThemeToggle from './ThemeToggle.svelte'
+  import UMIcon from './UMIcon.svelte'
+  import UserMenu from './UserMenu.svelte'
+  import { pageForPath } from '../js/navigation.js'
 
   let { currentPage = '', currentUser = null } = $props()
 
+  let browserPage = $state(null)
+  let activePage = $derived(browserPage || currentPage || 'home')
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
   let hideNavbar = $state(false)
-  let showAuthModal = $state(false)
-  let dropdownRef
+  let mobileMenuRef
 
+  const navItems = [
+    { page: 'videos', label: 'Courses', href: '/courses' },
+    { page: 'blog', label: 'Blog', href: '/blog' },
+    { page: 'prompts', label: 'Prompts', href: '/prompts' },
+    { page: 'community', label: 'Community', href: '/forum' }
+  ]
+
+  function syncPage() {
+    browserPage = pageForPath(window.location.pathname)
+    isMenuOpen = false
+  }
 
   function handleScroll() {
-    isScrolled = window.scrollY > 20
+    isScrolled = window.scrollY > 16
   }
 
-  function toggleMenu() {
+  function toggleMenu(event) {
+    event.stopPropagation()
     isMenuOpen = !isMenuOpen
   }
-
-  // Listen for composer fullscreen toggle
-  $effect(() => {
-    if (typeof window !== 'undefined') {
-      const handler = (e) => {
-        hideNavbar = e.detail.isFullscreen
-      }
-      window.addEventListener('composer-fullscreen', handler)
-      return () => window.removeEventListener('composer-fullscreen', handler)
-    }
-  })
 
   function closeMenu() {
     isMenuOpen = false
   }
 
   function handleClickOutside(event) {
-    if (dropdownRef && !dropdownRef.contains(event.target)) {
-      closeMenu()
-    }
+    if (isMenuOpen && mobileMenuRef && !mobileMenuRef.contains(event.target)) closeMenu()
+  }
+
+  function handleKeydown(event) {
+    if (event.key === 'Escape') closeMenu()
+  }
+
+  function desktopLinkClass(page) {
+    return activePage === page
+      ? 'bg-primary/10 text-primary'
+      : 'text-base-content/65 hover:bg-base-200/70 hover:text-base-content'
+  }
+
+  function mobileLinkClass(page) {
+    return activePage === page
+      ? 'bg-primary/10 text-primary'
+      : 'text-base-content/70 hover:bg-base-200 hover:text-base-content'
   }
 
   $effect(() => {
-    // run once on mount; re-run if handlers change (they don't)
+    const fullscreenHandler = (event) => {
+      hideNavbar = event.detail.isFullscreen
+    }
+
     handleScroll()
-    window.addEventListener('scroll', handleScroll)
+    syncPage()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('phx:page-loading-stop', syncPage)
+    window.addEventListener('popstate', syncPage)
+    window.addEventListener('composer-fullscreen', fullscreenHandler)
     document.addEventListener('click', handleClickOutside)
+    document.addEventListener('keydown', handleKeydown)
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('phx:page-loading-stop', syncPage)
+      window.removeEventListener('popstate', syncPage)
+      window.removeEventListener('composer-fullscreen', fullscreenHandler)
       document.removeEventListener('click', handleClickOutside)
+      document.removeEventListener('keydown', handleKeydown)
     }
   })
 </script>
 
-<div
-  class={`navbar fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-    isScrolled ? 'bg-base-100/80 backdrop-blur-md border-b border-base-300' : 'bg-transparent'
+<header
+  id="global-navbar"
+  class={`fixed inset-x-0 top-0 z-50 border-b transition duration-300 ${
+    isScrolled
+      ? 'border-base-300/70 bg-base-100/85 shadow-sm shadow-base-300/10 backdrop-blur-xl'
+      : 'border-transparent bg-base-100/55 backdrop-blur-md'
   } ${hideNavbar ? '-translate-y-full' : ''}`}
 >
-  <div class="navbar-start">
-    <!-- Mobile Dropdown -->
-    <div class="dropdown lg:hidden" class:dropdown-open={isMenuOpen} bind:this={dropdownRef}>
-      <button
-        onclick={toggleMenu}
-        aria-label="Toggle navigation menu"
-        aria-expanded={isMenuOpen}
-        aria-controls="mobile-nav"
-        class="btn btn-ghost"
+  <nav class="navbar mx-auto min-h-16 max-w-7xl gap-2 px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
+    <div class="navbar-start w-auto shrink-0">
+      <a
+        id="nav-brand"
+        href="/"
+        data-phx-link="redirect"
+        data-phx-link-state="push"
+        class="rounded-xl px-2 py-2 text-lg font-black tracking-[-0.04em] text-base-content transition hover:bg-base-200/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:text-xl"
+        onclick={closeMenu}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      {#if isMenuOpen}
-        <ul id="mobile-nav" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-          <li><a href="/courses" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'videos'} onclick={closeMenu}>Videos</a></li>
-          <li><a href="/blog" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'blog'} onclick={closeMenu}>Blog</a></li>
-          <li><a href="/prompts" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'prompts'} onclick={closeMenu}>Prompts</a></li>
-          <li><a href="/forum" data-phx-link="patch" data-phx-link-state="push" class:active={currentPage === 'community'} onclick={closeMenu}>Community</a></li>
-        </ul>
+        UrielM<span class="text-base-content/40">.dev</span>
+      </a>
+    </div>
+
+    <div class="hidden flex-1 items-center pl-5 lg:flex">
+      <div id="desktop-nav-links" class="flex items-center gap-1 rounded-2xl border border-base-300/45 bg-base-200/35 p-1">
+        {#each navItems as item}
+          <a
+            href={item.href}
+            data-phx-link="redirect"
+            data-phx-link-state="push"
+            data-nav-page={item.page}
+            aria-current={activePage === item.page ? 'page' : undefined}
+            class={`rounded-xl px-3.5 py-2 text-sm font-semibold transition duration-200 ${desktopLinkClass(item.page)}`}
+          >
+            {item.label}
+          </a>
+        {/each}
+      </div>
+    </div>
+
+    <div class="navbar-end ml-auto w-auto gap-1 sm:gap-1.5">
+      <a
+        id="nav-search"
+        href="/forum/search"
+        class="btn btn-ghost btn-circle btn-sm hidden text-base-content/60 transition hover:bg-secondary/10 hover:text-secondary sm:inline-flex"
+        aria-label="Search community"
+        title="Search community"
+      >
+        <UMIcon name="search" className="size-4" />
+      </a>
+
+      <ThemeToggle />
+
+      {#if currentUser}
+        <UserMenu {currentUser} />
+      {:else}
+        <div class="hidden items-center gap-1.5 lg:flex">
+          <a href="/signin" class="btn btn-ghost btn-sm rounded-full px-4 text-base-content/70">Sign in</a>
+          <a href="/signup" class="btn btn-primary btn-sm rounded-full px-5 shadow-sm shadow-primary/15">Sign up</a>
+        </div>
       {/if}
+
+      <div class="relative lg:hidden" bind:this={mobileMenuRef}>
+        <button
+          id="mobile-menu-toggle"
+          onclick={toggleMenu}
+          aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-nav"
+          class={`btn btn-ghost btn-circle btn-sm transition ${isMenuOpen ? 'bg-primary/10 text-primary' : 'text-base-content/70'}`}
+        >
+          <UMIcon name={isMenuOpen ? 'close' : 'bars_3'} className="size-5" />
+        </button>
+
+        {#if isMenuOpen}
+          <div
+            id="mobile-nav"
+            class="absolute right-0 top-[calc(100%+0.85rem)] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-base-300/70 bg-base-100/95 p-2 shadow-2xl shadow-base-300/30 backdrop-blur-xl"
+          >
+            <div class="grid gap-1">
+              {#each navItems as item}
+                <a
+                  href={item.href}
+                  data-phx-link="redirect"
+                  data-phx-link-state="push"
+                  data-nav-page={item.page}
+                  aria-current={activePage === item.page ? 'page' : undefined}
+                  class={`group flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold transition ${mobileLinkClass(item.page)}`}
+                  onclick={closeMenu}
+                >
+                  {item.label}
+                  <UMIcon name="hero-arrow-right" className="size-4 opacity-45 transition group-hover:translate-x-0.5 group-hover:opacity-80" />
+                </a>
+              {/each}
+            </div>
+
+            <div class="my-2 h-px bg-base-300/60"></div>
+
+            <a
+              href="/forum/search"
+              class="flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold text-base-content/65 transition hover:bg-secondary/10 hover:text-secondary"
+              onclick={closeMenu}
+            >
+              <UMIcon name="search" className="size-4" />
+              Search community
+            </a>
+
+            {#if currentUser}
+              <a
+                href={`/u/${currentUser.username}`}
+                data-phx-link="redirect"
+                data-phx-link-state="push"
+                class="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold text-base-content/65 transition hover:bg-base-200 hover:text-base-content"
+                onclick={closeMenu}
+              >
+                <UMIcon name="hero-user-circle" className="size-4" />
+                View profile
+              </a>
+            {:else}
+              <div class="grid grid-cols-2 gap-2 p-2 pt-3">
+                <a href="/signin" class="btn btn-ghost btn-sm rounded-full">Sign in</a>
+                <a href="/signup" class="btn btn-primary btn-sm rounded-full">Sign up</a>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
     </div>
-
-    <!-- Logo -->
-    <a href="/" data-phx-link="patch" data-phx-link-state="push" class="btn btn-ghost text-xl font-semibold tracking-tight">
-      UrielM<span class="text-base-content/50">.dev</span>
-    </a>
-  </div>
-
-  <!-- Desktop Navigation - Center -->
-  <div class="navbar-center hidden lg:flex">
-    <div class="flex items-center gap-8">
-      <a
-        href="/courses"
-        data-phx-link="patch"
-        data-phx-link-state="push"
-        class={`font-medium transition-colors ${currentPage === 'videos' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
-      >
-        Videos
-      </a>
-      <a
-        href="/blog"
-        data-phx-link="patch"
-        data-phx-link-state="push"
-        class={`font-medium transition-colors ${currentPage === 'blog' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
-      >
-        Blog
-      </a>
-      <a
-        href="/prompts"
-        data-phx-link="patch"
-        data-phx-link-state="push"
-        class={`font-medium transition-colors ${currentPage === 'prompts' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
-      >
-        Prompts
-      </a>
-      <a
-        href="/forum"
-        data-phx-link="patch"
-        data-phx-link-state="push"
-        class={`font-medium transition-colors ${currentPage === 'community' ? 'text-primary font-bold' : 'text-base-content hover:text-primary'}`}
-      >
-        Community
-      </a>
-    </div>
-  </div>
-
-  <!-- CTA Button - Right -->
-  <div class="navbar-end gap-2">
-    <ThemeToggle />
-    {#if currentUser}
-      <UserMenu {currentUser} />
-    {:else}
-      <a
-        href="/signin"
-        class="btn btn-sm btn-ghost"
-      >
-        Sign In
-      </a>
-      <a
-        href="/signup"
-        class="btn btn-sm btn-primary rounded-full px-6"
-      >
-        Sign Up
-      </a>
-    {/if}
-  </div>
-</div>
+  </nav>
+</header>
