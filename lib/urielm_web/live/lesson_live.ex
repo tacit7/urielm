@@ -197,487 +197,531 @@ defmodule UrielmWeb.LessonLive do
   def render(assigns) do
     ~H"""
     <%= if @lesson do %>
-    <div class="drawer drawer-end lg:drawer-open">
-      <input id="lesson-drawer" type="checkbox" class="drawer-toggle" />
-      
-    <!-- Drawer Content (Main) -->
-      <div class="drawer-content flex flex-col">
-        <!-- Video Player -->
-        <div class="aspect-video bg-base-content overflow-hidden max-w-[1800px] mx-auto w-full lg:rounded-xl">
-          <.svelte
-            name="YouTubePlayer"
-            props={%{videoId: @lesson.youtube_video_id, controls: true}}
-            socket={@socket}
-            class="w-full h-full"
-          ssr={false}
-          />
-        </div>
-        
-    <!-- Prev / Next navigation -->
-        <div class="max-w-[1800px] mx-auto w-full px-4 py-3 flex items-center justify-between border-b border-base-300">
-          <div class="flex-1">
-            <.link
-              :if={@prev_lesson}
-              navigate={~p"/courses/#{@course.slug}/lessons/#{@prev_lesson.slug}"}
-              class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
+      <div id="lesson-viewer" class="drawer drawer-end min-h-screen bg-base-100">
+        <input id="lesson-drawer" type="checkbox" class="drawer-toggle" />
+
+        <div class="drawer-content min-w-0">
+          <div class="mx-auto max-w-7xl px-5 pb-28 pt-6 sm:px-7 lg:px-10 lg:pb-16 lg:pt-10">
+            <nav class="mb-5 flex items-center justify-between gap-4" aria-label="Lesson breadcrumb">
+              <.link
+                navigate={~p"/courses/#{@course.slug}"}
+                class="inline-flex min-w-0 items-center gap-2 font-mono text-xs uppercase tracking-widest text-base-content/50 transition-colors hover:text-primary"
+              >
+                <.um_icon name="hero-arrow-left" class="size-3.5 flex-none" />
+                <span class="truncate">{@course.title}</span>
+              </.link>
+
+              <label
+                for="lesson-drawer"
+                class="btn btn-ghost btn-sm gap-2 lg:hidden"
+                title="Open course outline"
+              >
+                <.um_icon name="hero-queue-list" class="size-4" /> Outline
+              </label>
+            </nav>
+
+            <div class="grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1fr)_20rem] xl:gap-9">
+              <main class="min-w-0">
+                <section
+                  id="lesson-player"
+                  class="-mx-5 aspect-video overflow-hidden bg-[#10121f] shadow-2xl shadow-black/15 sm:mx-0 sm:rounded-2xl sm:border sm:border-base-content/10"
+                  aria-label="Lesson video"
+                >
+                  <.svelte
+                    name="YouTubePlayer"
+                    props={%{videoId: @lesson.youtube_video_id, controls: true}}
+                    socket={@socket}
+                    class="h-full w-full"
+                    ssr={false}
+                  />
+                </section>
+
+                <header
+                  id="lesson-header"
+                  class="flex flex-col gap-5 border-b border-base-content/10 py-6 sm:flex-row sm:items-start sm:justify-between sm:py-8"
+                >
+                  <div class="min-w-0 max-w-3xl">
+                    <p class="ui-eyebrow mb-2">
+                      Lesson {String.pad_leading(to_string(@lesson.lesson_number), 2, "0")} of {String.pad_leading(
+                        to_string(length(@lessons)),
+                        2,
+                        "0"
+                      )}
+                    </p>
+                    <h1 class="text-3xl font-black leading-tight tracking-tight text-base-content sm:text-4xl">
+                      {@lesson.title}
+                    </h1>
+                  </div>
+
+                  <div class="w-fit flex-none rounded-full border border-base-content/10 bg-base-200/65 px-2 py-1">
+                    <.svelte
+                      name="VoteButtons"
+                      props={
+                        %{
+                          target_type: "lesson",
+                          target_id: to_string(@lesson.id),
+                          upvotes: @upvotes,
+                          downvotes: @downvotes,
+                          user_vote: @user_vote,
+                          layout: "horizontal",
+                          size: "sm"
+                        }
+                      }
+                      socket={@socket}
+                      ssr={false}
+                    />
+                  </div>
+                </header>
+
+                <div
+                  id="lesson-section-nav"
+                  class="hidden overflow-x-auto border-b border-base-content/10 pt-1 lg:block"
+                >
+                  <.svelte
+                    name="UnderlineNav"
+                    props={
+                      %{
+                        items: @nav_items,
+                        activeKey: @active_section,
+                        showCounts: true,
+                        size: "md"
+                      }
+                    }
+                    socket={@socket}
+                    ssr={false}
+                  />
+                </div>
+
+                <div id="lesson-content" class="pt-6 sm:pt-8">
+                  <section
+                    id="lesson-overview"
+                    class={[
+                      "ui-card space-y-6 p-5 sm:p-7",
+                      section_visibility(@dock_tab, @active_section, "home")
+                    ]}
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="flex size-10 flex-none items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <.um_icon name="hero-academic-cap" class="size-5" />
+                      </div>
+                      <div class="min-w-0">
+                        <.link
+                          navigate={~p"/courses/#{@course.slug}"}
+                          class="font-black text-base-content transition-colors hover:text-primary"
+                        >
+                          {@course.title}
+                        </.link>
+                        <p class="text-xs text-base-content/50">
+                          Lesson {@lesson.lesson_number} · {length(@lessons)} total
+                        </p>
+                      </div>
+                    </div>
+
+                    <div :if={@course.description} class="border-t border-base-content/10 pt-5">
+                      <h2 class="mb-2 text-lg font-black text-base-content">About this course</h2>
+                      <p class="max-w-3xl text-sm leading-relaxed text-base-content/65 sm:text-base">
+                        {@course.description}
+                      </p>
+                    </div>
+                  </section>
+
+                  <section
+                    id="lesson-notes"
+                    class={[
+                      "ui-card p-5 sm:p-7",
+                      section_visibility(@dock_tab, @active_section, "notes")
+                    ]}
+                  >
+                    <p class="ui-eyebrow mb-2">Reference</p>
+                    <h2 class="mb-5 text-2xl font-black tracking-tight text-base-content">
+                      Lesson notes
+                    </h2>
+                    <div :if={@lesson.notes_md} class="prose prose-sm max-w-none sm:prose-base">
+                      <.svelte
+                        name="MarkdownRenderer"
+                        props={%{content: @lesson.notes_md}}
+                        socket={@socket}
+                        ssr={false}
+                      />
+                    </div>
+                    <.lesson_empty
+                      :if={!@lesson.notes_md}
+                      icon="hero-document-text"
+                      message="No notes are available for this lesson."
+                    />
+                  </section>
+
+                  <section
+                    id="lesson-resources"
+                    class={[
+                      "ui-card p-5 sm:p-7",
+                      section_visibility(@dock_tab, @active_section, "resources")
+                    ]}
+                  >
+                    <p class="ui-eyebrow mb-2">Continue learning</p>
+                    <h2 class="mb-5 text-2xl font-black tracking-tight text-base-content">
+                      Resources
+                    </h2>
+                    <div :if={@lesson.resources_md} class="prose prose-sm max-w-none sm:prose-base">
+                      <.svelte
+                        name="MarkdownRenderer"
+                        props={%{content: @lesson.resources_md}}
+                        socket={@socket}
+                        ssr={false}
+                      />
+                    </div>
+                    <.lesson_empty
+                      :if={!@lesson.resources_md}
+                      icon="hero-link"
+                      message="No additional resources are available."
+                    />
+                  </section>
+
+                  <section
+                    id="lesson-timestamps"
+                    class={[
+                      "ui-card p-5 sm:p-7",
+                      section_visibility(@dock_tab, @active_section, "timestamps")
+                    ]}
+                  >
+                    <p class="ui-eyebrow mb-2">Video guide</p>
+                    <h2 class="mb-5 text-2xl font-black tracking-tight text-base-content">
+                      Timestamps
+                    </h2>
+                    <div :if={@lesson.timestamps_md} class="prose prose-sm max-w-none sm:prose-base">
+                      <.svelte
+                        name="MarkdownRenderer"
+                        props={%{content: @lesson.timestamps_md}}
+                        socket={@socket}
+                        ssr={false}
+                      />
+                    </div>
+                    <.lesson_empty
+                      :if={!@lesson.timestamps_md}
+                      icon="hero-clock"
+                      message="No timestamps are available for this video."
+                    />
+                  </section>
+
+                  <section
+                    id="lesson-comments"
+                    class={[
+                      "ui-card p-5 sm:p-7",
+                      section_visibility(@dock_tab, @active_section, "comments")
+                    ]}
+                  >
+                    <div class="mb-6 flex items-end justify-between gap-4">
+                      <div>
+                        <p class="ui-eyebrow mb-2">Discussion</p>
+                        <h2 class="text-2xl font-black tracking-tight text-base-content">Comments</h2>
+                      </div>
+                      <span class="badge badge-outline h-auto px-3 py-2 font-mono text-xs text-base-content/60">
+                        {length(@lesson.comments)}
+                      </span>
+                    </div>
+
+                    <.lesson_empty
+                      :if={@lesson.comments == []}
+                      icon="hero-chat-bubble-left-right"
+                      message="No comments yet. Start the conversation."
+                    />
+
+                    <ul id="lesson-comment-list" class="grid gap-3">
+                      <li
+                        :for={comment <- @lesson.comments}
+                        id={"lesson-comment-#{comment.id}"}
+                        class="rounded-xl border border-base-content/10 bg-base-200/55 p-4"
+                      >
+                        <p class="mb-3 whitespace-pre-line text-sm text-base-content">
+                          {comment.body}
+                        </p>
+                        <p class="text-xs text-base-content/50">
+                          <span class="font-bold">
+                            {if comment.user,
+                              do: comment.user.name || comment.user.email,
+                              else: "Anonymous"}
+                          </span>
+                          · {Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M")}
+                        </p>
+                      </li>
+                    </ul>
+
+                    <%= if @current_user do %>
+                      <.form
+                        for={@comment_form}
+                        id="lesson-comment-form"
+                        phx-submit="save_comment"
+                        class="mt-6 border-t border-base-content/10 pt-6"
+                      >
+                        <.input
+                          field={@comment_form[:body]}
+                          type="textarea"
+                          label="Add a comment"
+                          placeholder="Share a useful question or observation..."
+                          rows="4"
+                        />
+                        <div class="mt-3 flex justify-end">
+                          <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
+                            Comment
+                          </button>
+                        </div>
+                      </.form>
+                    <% else %>
+                      <div class="mt-6 rounded-xl border border-base-content/10 bg-base-200/55 p-5 text-center">
+                        <p class="mb-3 text-sm text-base-content/60">
+                          Sign in to join the discussion.
+                        </p>
+                        <.link navigate={~p"/signin"} class="btn btn-primary btn-sm rounded-full px-5">
+                          Sign in
+                        </.link>
+                      </div>
+                    <% end %>
+                  </section>
+                </div>
+
+                <nav
+                  id="lesson-progress"
+                  class="mt-5 grid gap-3 sm:grid-cols-2"
+                  aria-label="Lesson progression"
+                >
+                  <.link
+                    :if={@prev_lesson}
+                    id="previous-lesson-link"
+                    navigate={~p"/courses/#{@course.slug}/lessons/#{@prev_lesson.slug}"}
+                    class="ui-card ui-card-interactive group p-4 sm:p-5"
+                  >
+                    <span class="mb-2 flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-widest text-base-content/45">
+                      <.um_icon name="hero-arrow-left" class="size-3.5" /> Previous lesson
+                    </span>
+                    <strong class="line-clamp-2 text-base-content transition-colors group-hover:text-primary">
+                      {@prev_lesson.title}
+                    </strong>
+                  </.link>
+
+                  <.link
+                    :if={@next_lesson}
+                    id="next-lesson-link"
+                    navigate={~p"/courses/#{@course.slug}/lessons/#{@next_lesson.slug}"}
+                    class="ui-card ui-card-interactive group p-4 text-left sm:p-5 sm:text-right"
+                  >
+                    <span class="mb-2 flex items-center gap-1.5 font-mono text-[0.68rem] uppercase tracking-widest text-base-content/45 sm:justify-end">
+                      Next lesson <.um_icon name="hero-arrow-right" class="size-3.5" />
+                    </span>
+                    <strong class="line-clamp-2 text-base-content transition-colors group-hover:text-primary">
+                      {@next_lesson.title}
+                    </strong>
+                  </.link>
+                </nav>
+              </main>
+
+              <div class="hidden lg:block">
+                <.course_outline
+                  id="course-outline"
+                  course={@course}
+                  lesson={@lesson}
+                  lessons={@lessons}
                 />
-              </svg>
-              <span class="line-clamp-1 max-w-[180px] md:max-w-xs">{@prev_lesson.title}</span>
-            </.link>
-          </div>
-          <div class="flex-1 flex justify-end">
-            <.link
-              :if={@next_lesson}
-              navigate={~p"/courses/#{@course.slug}/lessons/#{@next_lesson.slug}"}
-              class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-primary transition-colors"
-            >
-              <span class="line-clamp-1 max-w-[180px] md:max-w-xs text-right">
-                {@next_lesson.title}
-              </span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </.link>
-          </div>
-        </div>
-        
-    <!-- Main Content -->
-        <div class="max-w-[1800px] mx-auto w-full px-4 py-6">
-          <!-- Mobile Sticky Header -->
-          <div class="flex items-center gap-2 mb-4 lg:hidden">
-            <.link
-              navigate={~p"/courses/#{@course.slug}"}
-              class="btn btn-ghost btn-sm btn-circle flex-shrink-0"
-              title="Back to course"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </.link>
-            <h1 class="text-lg font-bold text-base-content truncate flex-1">{@lesson.title}</h1>
-            <div class="flex items-center bg-base-200 rounded-full px-2 py-1 flex-shrink-0">
-              <.svelte
-                name="VoteButtons"
-                props={
-                  %{
-                    target_type: "lesson",
-                    target_id: to_string(@lesson.id),
-                    upvotes: @upvotes,
-                    downvotes: @downvotes,
-                    user_vote: @user_vote,
-                    layout: "horizontal",
-                    size: "sm"
-                  }
-                }
-                socket={@socket}
-              ssr={false}
-              />
+              </div>
             </div>
-            <label
-              for="lesson-drawer"
-              class="btn btn-ghost btn-sm btn-circle flex-shrink-0"
-              title="Course videos"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </label>
           </div>
-          
-    <!-- Video Title & Actions -->
-          <div class="hidden lg:flex items-start justify-between gap-4 mb-3">
-            <h1 class="text-2xl font-bold text-base-content">{@lesson.title}</h1>
-            <!-- Vote Buttons -->
-            <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
-              <.svelte
-                name="VoteButtons"
-                props={
-                  %{
-                    target_type: "lesson",
-                    target_id: to_string(@lesson.id),
-                    upvotes: @upvotes,
-                    downvotes: @downvotes,
-                    user_vote: @user_vote,
-                    layout: "horizontal",
-                    size: "sm"
-                  }
-                }
-                socket={@socket}
-              ssr={false}
-              />
-            </div>
-          </div>
-          
-    <!-- Desktop: UnderlineNav -->
-          <div class="hidden lg:block mb-6">
-            <.svelte
-              name="UnderlineNav"
-              props={%{items: @nav_items, activeKey: @active_section, showCounts: true, size: "md"}}
-              socket={@socket}
-            ssr={false}
+
+          <div
+            id="lesson-mobile-dock"
+            class="dock fixed inset-x-0 bottom-0 z-20 border-t border-base-content/10 bg-base-200 lg:hidden"
+          >
+            <.dock_button
+              id="lesson-mobile-overview"
+              tab="home"
+              active={@dock_tab}
+              icon="hero-home"
+              label="Overview"
+            />
+            <.dock_button
+              :if={@lesson.notes_md}
+              id="lesson-mobile-notes"
+              tab="notes"
+              active={@dock_tab}
+              icon="hero-document-text"
+              label="Notes"
+            />
+            <.dock_button
+              :if={@lesson.resources_md}
+              id="lesson-mobile-resources"
+              tab="resources"
+              active={@dock_tab}
+              icon="hero-link"
+              label="Resources"
+            />
+            <.dock_button
+              :if={@lesson.timestamps_md}
+              id="lesson-mobile-timestamps"
+              tab="timestamps"
+              active={@dock_tab}
+              icon="hero-clock"
+              label="Times"
+            />
+            <.dock_button
+              id="lesson-mobile-comments"
+              tab="comments"
+              active={@dock_tab}
+              icon="hero-chat-bubble-left-right"
+              label="Comments"
             />
           </div>
-          
-    <!-- Dock Content Sections -->
-          <div class="space-y-4 pb-24 lg:pb-0">
-            <!-- HOME TAB -->
-            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "home")]}>
-              <!-- Course/Channel Info -->
-              <div class="flex items-center gap-3 pb-4 border-b border-base-300 mb-4">
-                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <svg
-                    class="w-5 h-5 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <.link
-                    navigate={~p"/courses/#{@course.slug}"}
-                    class="font-semibold text-base-content hover:text-primary"
-                  >
-                    {@course.title}
-                  </.link>
-                  <p class="text-xs text-base-content/60">Lesson {@lesson.lesson_number}</p>
-                </div>
-              </div>
-
-              <div :if={@course.description} class="mt-4 bg-base-200 rounded-xl p-4">
-                <h3 class="font-semibold text-base-content mb-2">About this course</h3>
-                <p class="text-sm text-base-content/70">{@course.description}</p>
-              </div>
-            </div>
-            
-    <!-- NOTES TAB -->
-            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "notes")]}>
-              <h3 class="text-lg font-semibold text-base-content">Lesson notes</h3>
-              <div :if={@lesson.notes_md} class="prose prose-sm max-w-none">
-                <.svelte
-                  name="MarkdownRenderer"
-                  props={%{content: @lesson.notes_md}}
-                  socket={@socket}
-                ssr={false}
-                />
-              </div>
-              <div :if={!@lesson.notes_md} class="text-sm text-base-content/60 text-center py-8">
-                No notes available for this lesson.
-              </div>
-            </div>
-            
-    <!-- RESOURCES TAB -->
-            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "resources")]}>
-              <h3 class="text-lg font-semibold text-base-content">Resources</h3>
-              <div :if={@lesson.resources_md} class="prose prose-sm max-w-none">
-                <.svelte
-                  name="MarkdownRenderer"
-                  props={%{content: @lesson.resources_md}}
-                  socket={@socket}
-                ssr={false}
-                />
-              </div>
-              <div :if={!@lesson.resources_md} class="text-sm text-base-content/60 text-center py-8">
-                No resources available for this lesson.
-              </div>
-            </div>
-            
-    <!-- TIMESTAMPS TAB -->
-            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "timestamps")]}>
-              <h3 class="text-lg font-semibold text-base-content">Timestamps</h3>
-              <div :if={@lesson.timestamps_md} class="prose prose-sm max-w-none">
-                <.svelte
-                  name="MarkdownRenderer"
-                  props={%{content: @lesson.timestamps_md}}
-                  socket={@socket}
-                ssr={false}
-                />
-              </div>
-              <div :if={!@lesson.timestamps_md} class="text-sm text-base-content/60 text-center py-8">
-                No timestamps available for this lesson.
-              </div>
-            </div>
-            
-    <!-- COMMENTS TAB -->
-            <div class={["space-y-4", section_visibility(@dock_tab, @active_section, "comments")]}>
-              <h3 class="text-lg font-semibold text-base-content">Comments</h3>
-
-              <%= if @lesson.comments == [] do %>
-                <p class="text-sm text-base-content/60 text-center py-8">
-                  No comments yet. Be the first to share your thoughts!
-                </p>
-              <% end %>
-
-              <ul class="space-y-3">
-                <%= for comment <- @lesson.comments do %>
-                  <li class="bg-base-200 rounded-xl p-4">
-                    <p class="text-sm text-base-content whitespace-pre-line mb-3">
-                      {comment.body}
-                    </p>
-                    <p class="text-xs text-base-content/60">
-                      <%= if comment.user do %>
-                        <span class="font-medium">{comment.user.name || comment.user.email}</span>
-                      <% else %>
-                        <span class="font-medium">Anonymous</span>
-                      <% end %>
-                      · {Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M")}
-                    </p>
-                  </li>
-                <% end %>
-              </ul>
-
-              <%= if @current_user do %>
-                <.form
-                  for={@comment_form}
-                  id="lesson-comment-form"
-                  phx-submit="save_comment"
-                  class="mt-6"
-                >
-                  <div class="space-y-2">
-                    <textarea
-                      name="comment[body]"
-                      placeholder="Add a comment..."
-                      class="w-full bg-base-200 rounded-lg p-3 text-sm text-base-content placeholder-base-content/50 border-0 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                      rows="3"
-                    />
-                    <div class="flex justify-end gap-2">
-                      <button type="reset" class="btn btn-ghost btn-sm">Cancel</button>
-                      <button type="submit" class="btn btn-primary btn-sm">Comment</button>
-                    </div>
-                  </div>
-                </.form>
-              <% else %>
-                <div class="mt-6 bg-base-200 rounded-xl p-4 text-center">
-                  <p class="text-sm text-base-content/60 mb-3">Sign in to join the discussion</p>
-                  <.link navigate={~p"/signin"} class="btn btn-primary btn-sm">Sign in</.link>
-                </div>
-              <% end %>
-            </div>
-          </div>
         </div>
-        
-    <!-- Mobile Lesson Dock -->
-        <div class="dock fixed bottom-0 left-0 right-0 z-20 lg:hidden bg-base-200 border-t border-base-300">
-          <button
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="home"
-            class={["dock-item", if(@dock_tab == "home", do: "dock-active", else: "")]}
-            aria-label="Home tab"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span class="dock-label text-xs">Home</span>
-          </button>
 
-          <button
-            :if={@lesson.notes_md}
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="notes"
-            class={["dock-item", if(@dock_tab == "notes", do: "dock-active", else: "")]}
-            aria-label="Notes tab"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <span class="dock-label text-xs">Notes</span>
-          </button>
-
-          <button
-            :if={@lesson.resources_md}
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="resources"
-            class={["dock-item", if(@dock_tab == "resources", do: "dock-active", else: "")]}
-            aria-label="Resources tab"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            <span class="dock-label text-xs">Resources</span>
-          </button>
-
-          <button
-            :if={@lesson.timestamps_md}
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="timestamps"
-            class={["dock-item", if(@dock_tab == "timestamps", do: "dock-active", else: "")]}
-            aria-label="Timestamps tab"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span class="dock-label text-xs">Times</span>
-          </button>
-
-          <button
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="comments"
-            class={["dock-item", if(@dock_tab == "comments", do: "dock-active", else: "")]}
-            aria-label="Comments tab"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            <span class="dock-label text-xs">Comments</span>
-          </button>
+        <div class="drawer-side z-40 lg:hidden">
+          <label for="lesson-drawer" class="drawer-overlay" aria-label="Close course outline"></label>
+          <.course_outline
+            id="course-outline-mobile"
+            course={@course}
+            lesson={@lesson}
+            lessons={@lessons}
+            mobile
+          />
         </div>
       </div>
-      
-    <!-- Drawer Side (Up Next) -->
-      <div class="drawer-side">
-        <label for="lesson-drawer" class="drawer-overlay"></label>
-        <aside class="bg-base-200 w-80 flex flex-col">
-          <div class="p-4 border-b border-base-300">
-            <div class="flex items-center justify-between">
-              <div>
-                <h2 class="font-semibold text-base-content">Course Videos</h2>
-                <p class="text-xs text-base-content/60">{@course.title}</p>
-              </div>
-              <label for="lesson-drawer" class="btn btn-ghost btn-sm lg:hidden">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </label>
-            </div>
-          </div>
-
-          <div class="overflow-y-auto flex-1">
-            <div :for={course_lesson <- @lessons} class="group">
-              <.link
-                navigate={~p"/courses/#{@course.slug}/lessons/#{course_lesson.slug}"}
-                class={[
-                  "flex gap-2 p-2 transition-colors",
-                  if(course_lesson.id == @lesson.id,
-                    do: "bg-primary/10 border-l-4 border-primary",
-                    else: "hover:bg-base-300 border-l-4 border-transparent"
-                  )
-                ]}
-              >
-                <div class="relative flex-shrink-0 w-32 aspect-video bg-base-300 rounded overflow-hidden">
-                  <img
-                    :if={course_lesson.youtube_video_id}
-                    src={"https://i.ytimg.com/vi/#{course_lesson.youtube_video_id}/mqdefault.jpg"}
-                    alt={course_lesson.title}
-                    class="w-full h-full object-cover"
-                  />
-                  <div :if={!course_lesson.youtube_video_id} class="w-full h-full bg-base-300" />
-                  <div
-                    :if={course_lesson.id == @lesson.id}
-                    class="absolute inset-0 bg-base-content/20 flex items-center justify-center"
-                  >
-                    <div class="bg-base-content/90 text-base-100 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
-                      </svg>
-                      NOW PLAYING
-                    </div>
-                  </div>
-                  <div class="absolute top-1 left-1 bg-base-content text-base-100 px-1.5 py-0.5 rounded text-xs font-bold">
-                    #{course_lesson.lesson_number}
-                  </div>
-                </div>
-
-                <div class="flex-1 min-w-0">
-                  <h3 class={[
-                    "text-sm font-medium line-clamp-2 mb-1",
-                    if(course_lesson.id == @lesson.id,
-                      do: "text-primary",
-                      else: "text-base-content group-hover:text-primary"
-                    )
-                  ]}>
-                    {course_lesson.title}
-                  </h3>
-                  <p class="text-xs text-base-content/60">
-                    Lesson {course_lesson.lesson_number}
-                  </p>
-                </div>
-              </.link>
-            </div>
-          </div>
-
-          <div class="p-3 border-t border-base-300">
-            <.link
-              navigate={~p"/courses/#{@course.slug}"}
-              class="btn btn-ghost btn-sm w-full justify-start"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-              View all lessons
-            </.link>
-          </div>
-        </aside>
-      </div>
-    </div>
     <% end %>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :course, :map, required: true
+  attr :lesson, :map, required: true
+  attr :lessons, :list, required: true
+  attr :mobile, :boolean, default: false
+
+  defp course_outline(assigns) do
+    ~H"""
+    <aside
+      id={@id}
+      class={[
+        "overflow-hidden border border-base-content/10 bg-base-200/70",
+        if(@mobile,
+          do: "flex h-full w-80 flex-col rounded-none",
+          else: "sticky top-24 rounded-2xl"
+        )
+      ]}
+    >
+      <header class="flex items-start justify-between gap-4 border-b border-base-content/10 p-5">
+        <div class="min-w-0">
+          <p class="ui-eyebrow mb-1">Course outline</p>
+          <h2 class="truncate font-black text-base-content">{@course.title}</h2>
+          <p class="mt-1 text-xs text-base-content/50">
+            {length(@lessons)} {if length(@lessons) == 1, do: "lesson", else: "lessons"}
+          </p>
+        </div>
+        <label
+          :if={@mobile}
+          for="lesson-drawer"
+          class="btn btn-ghost btn-sm btn-circle"
+          title="Close course outline"
+        >
+          <.um_icon name="hero-x-mark" class="size-4" />
+        </label>
+      </header>
+
+      <div class={["grid gap-1 p-2", @mobile && "flex-1 overflow-y-auto"]}>
+        <.link
+          :for={course_lesson <- @lessons}
+          id={
+            if(@mobile,
+              do: "outline-mobile-lesson-#{course_lesson.id}",
+              else: "outline-lesson-#{course_lesson.id}"
+            )
+          }
+          aria-current={if(course_lesson.id == @lesson.id, do: "page", else: nil)}
+          navigate={~p"/courses/#{@course.slug}/lessons/#{course_lesson.slug}"}
+          class={[
+            "group flex gap-3 rounded-xl border p-2.5 transition duration-200",
+            if(course_lesson.id == @lesson.id,
+              do: "border-primary/30 bg-primary/10",
+              else: "border-transparent hover:border-base-content/10 hover:bg-base-300/65"
+            )
+          ]}
+        >
+          <div class="relative aspect-video w-24 flex-none overflow-hidden rounded-lg bg-[#10121f]">
+            <img
+              :if={course_lesson.youtube_video_id}
+              src={"https://i.ytimg.com/vi/#{course_lesson.youtube_video_id}/mqdefault.jpg"}
+              alt=""
+              class="h-full w-full object-cover opacity-80 transition duration-300 group-hover:opacity-100"
+            />
+            <div
+              :if={course_lesson.id == @lesson.id}
+              class="absolute inset-0 flex items-center justify-center bg-[#10121f]/45 text-white"
+            >
+              <span class="flex size-7 items-center justify-center rounded-full bg-primary text-primary-content">
+                <.um_icon name="hero-play" class="ml-0.5 size-3.5" />
+              </span>
+            </div>
+            <span class="absolute left-1.5 top-1.5 rounded bg-[#10121f]/85 px-1.5 py-0.5 font-mono text-[0.62rem] text-[#f2f4ff]">
+              {String.pad_leading(to_string(course_lesson.lesson_number), 2, "0")}
+            </span>
+          </div>
+
+          <div class="min-w-0 py-0.5">
+            <p class="mb-1 font-mono text-[0.62rem] uppercase tracking-widest text-base-content/45">
+              {if course_lesson.id == @lesson.id, do: "Now playing", else: "Lesson"}
+            </p>
+            <h3 class={[
+              "line-clamp-2 text-sm font-bold leading-snug transition-colors",
+              if(course_lesson.id == @lesson.id,
+                do: "text-primary",
+                else: "text-base-content group-hover:text-primary"
+              )
+            ]}>
+              {course_lesson.title}
+            </h3>
+          </div>
+        </.link>
+      </div>
+
+      <footer class="border-t border-base-content/10 p-3">
+        <.link
+          navigate={~p"/courses/#{@course.slug}"}
+          class="btn btn-ghost btn-sm w-full justify-start gap-2"
+        >
+          <.um_icon name="hero-squares-2x2" class="size-4" /> View course
+        </.link>
+      </footer>
+    </aside>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :tab, :string, required: true
+  attr :active, :string, required: true
+  attr :icon, :string, required: true
+  attr :label, :string, required: true
+
+  defp dock_button(assigns) do
+    ~H"""
+    <button
+      id={@id}
+      type="button"
+      phx-click="set_dock_tab"
+      phx-value-tab={@tab}
+      class={["dock-item", @active == @tab && "dock-active"]}
+      aria-label={"#{@label} tab"}
+    >
+      <.um_icon name={@icon} class="size-5" />
+      <span class="dock-label text-[0.68rem]">{@label}</span>
+    </button>
+    """
+  end
+
+  attr :icon, :string, required: true
+  attr :message, :string, required: true
+
+  defp lesson_empty(assigns) do
+    ~H"""
+    <div class="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-base-content/15 px-5 text-center">
+      <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <.um_icon name={@icon} class="size-5" />
+      </div>
+      <p class="text-sm text-base-content/55">{@message}</p>
+    </div>
     """
   end
 end
