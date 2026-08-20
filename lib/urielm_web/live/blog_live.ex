@@ -90,23 +90,34 @@ defmodule UrielmWeb.BlogLive do
   def render(assigns) do
     ~H"""
     <%= if @post do %>
-      <div class="min-h-screen bg-base-100 flex flex-col">
-        <div class="flex-1 mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 lg:py-14 max-w-[70ch]">
-          <p class="text-xs sm:text-[13px] text-base-content/50 lg:text-base-content/40 mb-6">
+      <div id="blog-reading-shell" class="flex min-h-screen flex-col bg-base-100">
+        <div class="mx-auto w-full max-w-[72ch] flex-1 px-5 py-12 sm:px-7 lg:py-20">
+          <p class="mb-8 text-sm text-base-content/50">
             <.link
               patch={~p"/blog"}
-              class="inline-flex items-center gap-1 hover:text-primary transition-colors"
+              class="group inline-flex items-center gap-2 font-medium transition-colors hover:text-primary"
             >
-              &larr; Back to blog
+              <.um_icon
+                name="hero-arrow-left"
+                class="size-4 transition-transform group-hover:-translate-x-0.5"
+              /> Back to blog
             </.link>
           </p>
 
-          <header class="mb-12 lg:mb-16">
-            <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-base-content mb-4">
+          <header id="blog-article-header" class="mb-12 lg:mb-16">
+            <p class="ui-eyebrow text-secondary">Practical AI</p>
+            <h1 class="mt-3 text-4xl font-black leading-[1.03] tracking-[-0.045em] text-base-content sm:text-5xl lg:text-6xl">
               {@post.title}
             </h1>
 
-            <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-base-content/50 lg:text-base-content/35">
+            <p
+              :if={@post.excerpt}
+              class="mt-5 text-lg leading-relaxed text-base-content/60 sm:text-xl"
+            >
+              {@post.excerpt}
+            </p>
+
+            <div class="mt-6 flex flex-wrap items-center gap-2.5 text-sm text-base-content/45">
               <span>
                 <%= if @post.published_at do %>
                   {Calendar.strftime(@post.published_at, "%b %d, %Y")}
@@ -115,16 +126,13 @@ defmodule UrielmWeb.BlogLive do
                 <% end %>
               </span>
 
-              <span class="hidden sm:inline text-base-content/30 lg:text-base-content/25">•</span>
+              <span class="size-1 rounded-full bg-base-content/20" aria-hidden="true"></span>
 
-              <span class="inline-flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary/50 lg:bg-primary/30"></span>
-                <span>Blog</span>
-              </span>
+              <span id="blog-reading-time">{read_time(@post.body)} min read</span>
 
-              <span class="hidden sm:inline text-base-content/30 lg:text-base-content/25">•</span>
+              <span class="size-1 rounded-full bg-base-content/20" aria-hidden="true"></span>
 
-              <span>{read_time(@post.body)} min read</span>
+              <span>Uriel Maldonado</span>
             </div>
           </header>
 
@@ -139,11 +147,28 @@ defmodule UrielmWeb.BlogLive do
             </div>
           <% end %>
 
-          <article class="prose" id="blog-article" phx-hook="HighlightCode">
+          <article class="prose blog-prose" id="blog-article" phx-hook="HighlightCode">
             {UrielmWeb.Markdown.to_html!(@post.body, code_class_prefix: "language-")}
           </article>
 
-          <nav class="mt-16 pt-8 border-t border-base-300/30 flex justify-between gap-4">
+          <footer
+            id="blog-article-footer"
+            class="ui-card mt-16 flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center"
+          >
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.14em] text-base-content/40">
+                Continue exploring
+              </p>
+              <p class="mt-1 font-semibold text-base-content">
+                More practical notes on building with AI
+              </p>
+            </div>
+            <.link patch={~p"/blog"} class="btn btn-outline btn-sm rounded-full">
+              Back to all posts
+            </.link>
+          </footer>
+
+          <nav class="mt-8 flex justify-between gap-4 border-t border-base-300/30 pt-8">
             <%= if @prev_post do %>
               <.link
                 patch={~p"/blog/#{@prev_post.slug}"}
@@ -191,32 +216,39 @@ defmodule UrielmWeb.BlogLive do
         </script>
       </div>
     <% else %>
-      <div class="min-h-screen bg-base-100 flex flex-col">
-        <div class="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-          <header class="mb-12 lg:mb-16">
-            <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Blog
-            </h1>
-            <p class="text-base sm:text-lg text-base-content/75 max-w-[70ch] leading-relaxed">
+      <div id="blog-index" class="flex min-h-screen flex-col bg-base-100">
+        <div class="mx-auto w-full max-w-4xl flex-1 px-5 py-16 sm:px-7 lg:py-24">
+          <header id="blog-index-header" class="mb-12 lg:mb-14">
+            <p class="ui-eyebrow">Writing & notes</p>
+            <h1 class="ui-section-title">Blog</h1>
+            <p class="ui-section-copy">
               Essays, notes, and deep dives on Elixir, Phoenix, AI workflows, and building products that matter. A space to think out loud.
             </p>
           </header>
 
           <%= if @posts == [] do %>
-            <p class="text-base-content/60 text-center py-12">
-              No posts yet.
-            </p>
+            <div
+              id="blog-empty-state"
+              class="ui-card border-dashed px-6 py-14 text-center text-base-content/55"
+            >
+              <.um_icon name="hero-document-text" class="mx-auto mb-3 size-7 text-primary/60" />
+              <p class="font-medium text-base-content/70">No posts yet</p>
+              <p class="mt-1 text-sm">New notes will appear here when they are published.</p>
+            </div>
           <% else %>
-            <div class="space-y-5">
+            <div id="blog-posts" class="space-y-5">
               <%= for {post, index} <- Enum.with_index(@posts) do %>
-                <article class={[
-                  "ui-card ui-card-interactive ui-card-compact relative p-5 sm:p-6",
-                  if index == 0 do
-                    "bg-base-200/70"
-                  else
-                    "bg-base-100/70"
-                  end
-                ]}>
+                <article
+                  id={"blog-post-#{post.id}"}
+                  class={[
+                    "ui-card ui-card-interactive ui-card-compact relative p-5 sm:p-6",
+                    if index == 0 do
+                      "bg-base-200/70"
+                    else
+                      "bg-base-100/70"
+                    end
+                  ]}
+                >
                   <.link
                     patch={~p"/blog/#{post.slug}"}
                     class="absolute inset-0 z-0 rounded-lg"

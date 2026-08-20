@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blog Reading Experience — Mockup</title>
+    <style>
+      :root { --base:#1a1b26; --surface:#24283b; --border:#3b4261; --text:#c0caf5; --muted:#8992b5; --primary:#7aa2f7; --secondary:#7dcfff; --accent:#73daca; }
+      * { box-sizing:border-box; } body { margin:0; background:var(--base); color:var(--text); font:16px/1.75 Inter,ui-sans-serif,system-ui; }
+      nav { height:64px; display:flex; align-items:center; justify-content:space-between; padding:0 5vw; border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent); } nav span { color:var(--muted); font-size:14px; }
+      .tabs { display:flex; gap:8px; max-width:1060px; margin:26px auto 0; padding:0 22px; overflow:auto; } .tab { white-space:nowrap; padding:7px 12px; border:1px solid var(--border); border-radius:999px; color:var(--muted); font-size:13px; } .tab.active { color:#16161e; background:var(--primary); border-color:var(--primary); }
+      .reader { width:min(100% - 40px, 720px); margin:64px auto 80px; } .back { display:inline-flex; gap:7px; color:var(--muted); font-size:13px; text-decoration:none; }
+      header { margin:30px 0 48px; } .eyebrow { color:var(--secondary); font-size:12px; font-weight:750; letter-spacing:.14em; text-transform:uppercase; } h1 { margin:10px 0 16px; font-size:clamp(38px,7vw,58px); line-height:1.02; letter-spacing:-.045em; } .dek { max-width:620px; color:var(--muted); font-size:18px; line-height:1.6; }
+      .meta { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:22px; color:var(--muted); font-size:13px; } .dot { width:3px; height:3px; border-radius:50%; background:var(--border); }
+      article { font-size:18px; } article p { color:color-mix(in srgb,var(--text) 84%,var(--muted)); margin:0 0 24px; } article h2 { margin:46px 0 14px; font-size:27px; line-height:1.2; letter-spacing:-.025em; } blockquote { margin:30px 0; padding:18px 22px; border:1px solid color-mix(in srgb,var(--border) 76%,transparent); border-radius:14px; background:color-mix(in srgb,var(--surface) 72%,transparent); color:var(--text); }
+      .footer { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:64px; padding:24px 0; border-top:1px solid color-mix(in srgb,var(--border) 65%,transparent); } .footer strong { display:block; } .footer small { color:var(--muted); } .button { padding:10px 15px; border:1px solid var(--border); border-radius:999px; color:var(--text); text-decoration:none; font-size:14px; }
+      .annotation { width:min(100% - 40px, 900px); margin:0 auto 48px; padding:15px 18px; border:1px solid color-mix(in srgb,var(--border) 76%,transparent); border-radius:14px; background:color-mix(in srgb,var(--accent) 7%,var(--surface)); color:var(--muted); font-size:14px; }
+      @media(max-width:600px) { .reader { margin-top:42px; } header { margin-bottom:38px; } article { font-size:17px; } .footer { align-items:flex-start; flex-direction:column; } }
+    </style>
+  </head>
+  <body>
+    <nav><strong>urielm.dev</strong><span>Learn · Prompts · Blog · ◐</span></nav>
+    <div class="tabs"><span class="tab">Blog index</span><span class="tab active">Desktop reader</span><span class="tab">Mobile reader</span></div>
+    <main class="reader">
+      <a class="back" href="#">← Back to blog</a>
+      <header><div class="eyebrow">Practical AI</div><h1>How to Write Effective AI Prompts</h1><p class="dek">A practical framework for writing clearer prompts that produce more useful AI responses.</p><div class="meta"><span>Aug 20, 2026</span><i class="dot"></i><span>3 min read</span><i class="dot"></i><span>Uriel Maldonado</span></div></header>
+      <article><p>Good prompts are less about finding magic words and more about giving clear direction. The better the context, the more useful the response.</p><h2>Begin with the outcome</h2><p>State what the response should help you accomplish, who it is for, and what a useful answer should contain.</p><blockquote>Write a beginner-friendly introduction to Phoenix LiveView. Explain when to use it and include one small example.</blockquote><h2>Refine the result</h2><p>Prompting is an iterative conversation. Review the first response and add direction where it is missing.</p></article>
+      <footer class="footer"><div><small>Continue exploring</small><strong>More practical notes on building with AI</strong></div><a class="button" href="#">Back to all posts</a></footer>
+    </main>
+    <div class="annotation"><strong>Implementation note:</strong> the excerpt becomes the article dek, reading time is calculated from Markdown body text, and the footer always provides a clear return path. The 70-character reading measure and responsive type scale remain consistent in light and dark themes.</div>
+  </body>
+</html>
