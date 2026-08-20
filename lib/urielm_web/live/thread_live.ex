@@ -63,6 +63,7 @@ defmodule UrielmWeb.ThreadLive do
          |> assign(:thread_is_subscribed, is_subscribed)
          |> assign(:notification_level, notification_level)
          |> assign(:reporting_comment_id, nil)
+         |> assign(:comment_form, to_form(%{"body" => ""}))
          |> assign(:all_categories, all_categories)}
     end
   end
@@ -94,6 +95,7 @@ defmodule UrielmWeb.ThreadLive do
             {:noreply,
              socket
              |> refresh_thread(user)
+             |> assign(:comment_form, to_form(%{"body" => ""}))
              |> put_flash(:info, "Comment posted")}
 
           {:error, :thread_locked} ->
@@ -587,237 +589,299 @@ defmodule UrielmWeb.ThreadLive do
       current_user={@current_user}
       current_board={@thread.board_slug}
     >
-      <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <.link navigate={~p"/forum/b/#{@thread.board_slug}"} class="link link-hover text-sm mb-4">
-          ← Back to {@thread.board_name}
+      <main id="thread-reading-view" class="mx-auto max-w-4xl pb-12">
+        <.link
+          navigate={~p"/forum/b/#{@thread.board_slug}"}
+          class="group mb-5 inline-flex items-center gap-2 text-sm font-medium text-base-content/45 transition-colors hover:text-secondary"
+        >
+          <.um_icon
+            name="arrow_left"
+            class="size-4 transition-transform group-hover:-translate-x-0.5"
+          />
+          {@thread.board_name}
         </.link>
 
-        <div class="card bg-base-200 border border-base-300 mb-8">
-          <div class="card-body">
-            <div class="flex justify-between items-start">
-              <div>
-                <h1 class="text-3xl font-bold text-base-content mb-2">{@thread.title}</h1>
-                <div class="flex items-center gap-3 text-sm text-base-content/60">
-                  <%= if Map.get(@thread, :author_avatar_url) do %>
-                    <img
-                      src={Map.get(@thread, :author_avatar_url)}
-                      alt={Map.get(@thread, :author_username) || "User"}
-                      class="w-6 h-6 rounded-full object-cover"
-                    />
-                  <% else %>
-                    <div class="w-6 h-6 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
-                      {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
-                      |> String.upcase()}
-                    </div>
-                  <% end %>
-                  <span>By {Map.get(@thread, :author_username) || "Unknown"}</span>
-                  <span>{Calendar.strftime(@thread.created_at, "%B %d, %Y")}</span>
-                  <.link
-                    navigate={~p"/forum/b/#{@thread.board_slug}"}
-                    class="text-primary hover:underline text-sm"
-                  >
-                    {@thread.board_name}
-                  </.link>
-                </div>
-              </div>
-
-              <div class="flex gap-2 items-start">
-                <%= if @current_user do %>
-                  <div class="dropdown dropdown-end">
-                    <button
-                      data-testid="notification-button"
-                      class="btn btn-xs btn-ghost"
-                      title="Notification settings"
-                    >
-                      <.um_icon name="bell" class="w-4 h-4" />
-                    </button>
-                    <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                      <li>
-                        <a
-                          data-testid="notification-watching"
-                          phx-click="set_notification_level"
-                          phx-value-level="watching"
-                          class={(@notification_level == "watching" && "active") || ""}
-                        >
-                          Watching
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          data-testid="notification-tracking"
-                          phx-click="set_notification_level"
-                          phx-value-level="tracking"
-                          class={(@notification_level == "tracking" && "active") || ""}
-                        >
-                          Tracking
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          data-testid="notification-muted"
-                          phx-click="set_notification_level"
-                          phx-value-level="muted"
-                          class={(@notification_level == "muted" && "active") || ""}
-                        >
-                          Muted
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <button
-                    class="btn btn-xs btn-ghost"
-                    phx-click={if @thread_is_subscribed, do: "unsubscribe", else: "subscribe"}
-                    title={if @thread_is_subscribed, do: "Unsubscribe", else: "Subscribe"}
-                  >
-                    <.um_icon
-                      name={if @thread_is_subscribed, do: "bell_solid", else: "bell"}
-                      class="w-4 h-4"
-                    />
-                  </button>
-
-                  <button
-                    class="btn btn-xs btn-ghost"
-                    phx-click="save_thread"
-                    title="Save this thread"
-                  >
-                    <.um_icon
-                      name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"}
-                      class="w-4 h-4"
-                    />
-                  </button>
-
-                  <%= if @current_user && (@current_user.is_admin || @current_user.is_moderator) do %>
-                    <%= if @thread.is_pinned do %>
-                      <button
-                        class="btn btn-xs btn-ghost"
-                        phx-click="unpin_thread"
-                        title="Unpin thread"
-                      >
-                        <.um_icon name="bookmark_slash" class="w-4 h-4" />
-                      </button>
-                    <% else %>
-                      <button
-                        class="btn btn-xs btn-ghost text-info"
-                        phx-click="pin_thread"
-                        title="Pin thread to top"
-                      >
-                        <.um_icon name="bookmark" class="w-4 h-4" />
-                      </button>
-                    <% end %>
-
-                    <%= if @thread.is_locked do %>
-                      <button
-                        class="btn btn-xs btn-ghost text-warning"
-                        phx-click="unlock_thread"
-                        title="Unlock thread"
-                      >
-                        <.um_icon name="lock_open" class="w-4 h-4" />
-                      </button>
-                    <% else %>
-                      <button
-                        class="btn btn-xs btn-ghost"
-                        phx-click="lock_thread"
-                        title="Lock thread"
-                      >
-                        <.um_icon name="lock_closed" class="w-4 h-4" />
-                      </button>
-                    <% end %>
-                  <% end %>
-
-                  <button
-                    data-testid="report-button"
-                    class="btn btn-xs btn-ghost text-warning"
-                    onclick="document.getElementById('report_thread_modal').showModal()"
-                    title="Report this thread"
-                  >
-                    <.um_icon name="warning" class="w-4 h-4" />
-                  </button>
-                <% end %>
-
-                <%= if @current_user && (@current_user.is_admin or @current_user.id == Map.get(@thread, :author_id)) do %>
-                  <button
-                    phx-click="delete_thread"
-                    class="btn btn-xs btn-ghost text-error"
-                    data-confirm="Delete this thread?"
-                  >
-                    Delete
-                  </button>
-                <% end %>
-              </div>
-            </div>
-
-            <div class="p-4 my-4">
-              <.svelte
-                name="MarkdownRenderer"
-                props={%{content: @thread.body}}
-                socket={@socket}
-              ssr={false}
-              />
-            </div>
-
-            <div class="flex items-center gap-4">
-              <.svelte
-                name="VoteButtons"
-                props={
-                  %{
-                    target_type: "thread",
-                    target_id: @thread.id,
-                    score: @thread.score,
-                    user_vote: @thread.user_vote
-                  }
-                }
-                socket={@socket}
-              ssr={false}
-              />
-              <span class="text-sm text-base-content/60">
-                {pluralize(@thread.comment_count, "comment")}
-              </span>
-            </div>
+        <article
+          id="thread-topic"
+          class="rounded-2xl border border-base-300/60 bg-base-200/35 p-5 sm:p-7 lg:p-8"
+        >
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]">
+            <.link
+              navigate={~p"/forum/b/#{@thread.board_slug}"}
+              class="rounded-full bg-secondary/10 px-3 py-1.5 text-secondary transition-colors hover:bg-secondary/15"
+            >
+              {@thread.board_name}
+            </.link>
+            <span :if={@thread.is_pinned} class="badge badge-info badge-sm gap-1">
+              <.um_icon name="bookmark" class="size-3" /> Pinned
+            </span>
+            <span :if={@thread.is_locked} class="badge badge-warning badge-sm gap-1">
+              <.um_icon name="lock_closed" class="size-3" /> Locked
+            </span>
+            <span :if={@thread.solved_comment_id} class="badge badge-success badge-sm gap-1">
+              <.um_icon name="check_circle" class="size-3" /> Solved
+            </span>
           </div>
-        </div>
 
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-base-content mb-4">
-            Comments
-            <%= if @thread.is_locked do %>
-              <span class="badge badge-warning badge-sm ml-2">
-                <.um_icon name="lock_closed" class="w-3 h-3 mr-1" /> Locked
-              </span>
-            <% end %>
-          </h2>
+          <h1 class="mt-4 max-w-3xl text-3xl font-black leading-tight tracking-[-0.04em] text-base-content sm:text-4xl lg:text-5xl">
+            {@thread.title}
+          </h1>
 
-          <%= if @thread.is_locked do %>
-            <div class="alert alert-warning mb-6">
-              <.um_icon name="lock_closed" class="w-5 h-5" />
-              <span>This thread is locked. New comments cannot be added.</span>
-            </div>
-          <% else %>
-            <%= if @current_user do %>
-              <div class="card bg-base-200 border border-base-300 mb-6">
-                <div class="card-body">
-                  <form phx-submit="create_comment" class="space-y-4">
-                    <textarea
-                      name="body"
-                      placeholder="Share your thoughts... (Markdown supported)"
-                      required
-                      class="textarea textarea-bordered w-full min-h-24"
-                    >
-                  </textarea>
-                    <button type="submit" class="btn btn-primary">Post Comment</button>
-                  </form>
+          <div class="mt-5 flex items-start justify-between gap-4">
+            <div id="thread-author" class="flex items-center gap-3 text-sm text-base-content/45">
+              <%= if Map.get(@thread, :author_avatar_url) do %>
+                <img
+                  src={Map.get(@thread, :author_avatar_url)}
+                  alt={Map.get(@thread, :author_username) || "User"}
+                  class="size-9 rounded-full object-cover"
+                />
+              <% else %>
+                <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-black text-accent-content">
+                  {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
+                  |> String.upcase()}
                 </div>
-              </div>
-            <% else %>
-              <div class="alert alert-info mb-6">
-                <span>
-                  <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
-                  to comment on this thread
+              <% end %>
+              <div class="leading-5">
+                <span class="font-semibold text-base-content/75">
+                  {Map.get(@thread, :author_username) || "Unknown"}
+                </span>
+                <span class="block text-xs">
+                  {Calendar.strftime(@thread.created_at, "%B %d, %Y")} · {Map.get(
+                    @thread,
+                    :view_count,
+                    0
+                  )} views
                 </span>
               </div>
-            <% end %>
-          <% end %>
+            </div>
+          </div>
 
+          <div class="prose prose-base mt-7 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary">
+            <.svelte
+              name="MarkdownRenderer"
+              props={%{content: @thread.body}}
+              socket={@socket}
+              ssr={false}
+            />
+          </div>
+
+          <div
+            id="thread-actions"
+            class="mt-7 flex flex-wrap items-center gap-2 border-t border-base-300/50 pt-5"
+          >
+            <.svelte
+              name="VoteButtons"
+              props={
+                %{
+                  target_type: "thread",
+                  target_id: @thread.id,
+                  score: @thread.score,
+                  user_vote: @thread.user_vote
+                }
+              }
+              socket={@socket}
+              ssr={false}
+            />
+            <span class="mr-auto text-xs text-base-content/40">
+              {pluralize(@thread.comment_count, "reply")}
+            </span>
+
+            <a
+              :if={!@thread.is_locked && @current_user}
+              href="#comment-form"
+              class="btn btn-sm border-0 bg-secondary/10 text-secondary hover:bg-secondary/20"
+            >
+              <.um_icon name="reply" class="size-4" />
+              <span class="hidden sm:inline">Reply</span>
+            </a>
+
+            <%= if @current_user do %>
+              <button
+                id="thread-save-action"
+                class={[
+                  "btn btn-sm btn-ghost",
+                  @thread_is_saved && "bg-secondary/10 text-secondary"
+                ]}
+                phx-click="save_thread"
+                aria-label={if @thread_is_saved, do: "Remove saved thread", else: "Save thread"}
+              >
+                <.um_icon
+                  name={if @thread_is_saved, do: "bookmark_solid", else: "bookmark"}
+                  class="size-4"
+                />
+                <span class="hidden sm:inline">
+                  {if @thread_is_saved, do: "Saved", else: "Save"}
+                </span>
+              </button>
+
+              <button
+                id="thread-subscribe-action"
+                class={[
+                  "btn btn-sm btn-ghost",
+                  @thread_is_subscribed && "bg-secondary/10 text-secondary"
+                ]}
+                phx-click={if @thread_is_subscribed, do: "unsubscribe", else: "subscribe"}
+                aria-label={
+                  if @thread_is_subscribed, do: "Stop watching thread", else: "Watch thread"
+                }
+              >
+                <.um_icon
+                  name={if @thread_is_subscribed, do: "bell_solid", else: "bell"}
+                  class="size-4"
+                />
+                <span class="hidden sm:inline">
+                  {if @thread_is_subscribed, do: "Watching", else: "Watch"}
+                </span>
+              </button>
+
+              <div class="dropdown dropdown-end">
+                <button
+                  data-testid="notification-button"
+                  class="btn btn-sm btn-ghost btn-square"
+                  aria-label="More thread actions"
+                >
+                  <.um_icon name="ellipsis_horizontal" class="size-5" />
+                </button>
+                <ul class="dropdown-content menu z-10 mt-2 w-56 rounded-2xl border border-base-300 bg-base-100 p-2 shadow-xl">
+                  <li class="menu-title">Notifications</li>
+                  <li>
+                    <button
+                      data-testid="notification-watching"
+                      phx-click="set_notification_level"
+                      phx-value-level="watching"
+                      class={if(@notification_level == "watching", do: "active", else: nil)}
+                    >
+                      Watching
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      data-testid="notification-tracking"
+                      phx-click="set_notification_level"
+                      phx-value-level="tracking"
+                      class={if(@notification_level == "tracking", do: "active", else: nil)}
+                    >
+                      Tracking
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      data-testid="notification-muted"
+                      phx-click="set_notification_level"
+                      phx-value-level="muted"
+                      class={if(@notification_level == "muted", do: "active", else: nil)}
+                    >
+                      Muted
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      data-testid="report-button"
+                      class="text-warning"
+                      onclick="document.getElementById('report_thread_modal').showModal()"
+                    >
+                      <.um_icon name="warning" class="size-4" /> Report
+                    </button>
+                  </li>
+                  <li :if={@current_user.is_admin || @current_user.is_moderator}>
+                    <button phx-click={if @thread.is_pinned, do: "unpin_thread", else: "pin_thread"}>
+                      <.um_icon name="bookmark" class="size-4" />
+                      {if @thread.is_pinned, do: "Unpin", else: "Pin"}
+                    </button>
+                  </li>
+                  <li :if={@current_user.is_admin || @current_user.is_moderator}>
+                    <button phx-click={if @thread.is_locked, do: "unlock_thread", else: "lock_thread"}>
+                      <.um_icon name="lock_closed" class="size-4" />
+                      {if @thread.is_locked, do: "Unlock", else: "Lock"}
+                    </button>
+                  </li>
+                  <li :if={@current_user.is_admin || @current_user.id == Map.get(@thread, :author_id)}>
+                    <button
+                      phx-click="delete_thread"
+                      class="text-error"
+                      data-confirm="Delete this thread?"
+                    >
+                      Delete
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        </article>
+
+        <section class="mt-10" aria-labelledby="join-discussion-title">
+          <div class="mb-4 flex items-end justify-between gap-4 px-1">
+            <h2 id="join-discussion-title" class="text-xl font-bold tracking-tight text-base-content">
+              Join the discussion
+            </h2>
+            <span class="hidden text-xs text-base-content/35 sm:inline">Markdown supported</span>
+          </div>
+
+          <%= cond do %>
+            <% @thread.is_locked -> %>
+              <div
+                id="thread-locked-state"
+                class="flex items-start gap-3 rounded-2xl border border-warning/25 bg-warning/8 p-5 text-sm"
+              >
+                <.um_icon name="lock_closed" class="mt-0.5 size-5 shrink-0 text-warning" />
+                <div>
+                  <p class="font-semibold text-base-content">This discussion is locked</p>
+                  <p class="mt-1 text-base-content/55">Existing replies remain available to read.</p>
+                </div>
+              </div>
+            <% @current_user -> %>
+              <.form
+                for={@comment_form}
+                id="comment-form"
+                phx-submit="create_comment"
+                class="rounded-2xl border border-base-300/70 bg-base-200/45 p-4 sm:p-5"
+              >
+                <.input
+                  field={@comment_form[:body]}
+                  type="textarea"
+                  label="Your reply"
+                  placeholder="Share a useful answer or ask a follow-up…"
+                  required
+                  class="textarea min-h-28 w-full resize-y rounded-xl border-base-300 bg-base-100/65 text-base-content placeholder:text-base-content/30 focus:border-secondary focus:outline-none"
+                />
+                <div class="mt-3 flex items-center justify-between gap-3 border-t border-base-300/50 pt-4">
+                  <p class="text-xs text-base-content/40">Be specific, kind, and useful.</p>
+                  <button
+                    id="comment-submit"
+                    type="submit"
+                    class="btn btn-sm border-0 bg-secondary text-secondary-content hover:bg-secondary/85"
+                    phx-disable-with="Posting…"
+                  >
+                    Post reply
+                  </button>
+                </div>
+              </.form>
+            <% true -> %>
+              <div
+                id="thread-sign-in-to-reply"
+                class="flex flex-col items-start justify-between gap-4 rounded-2xl border border-base-300/60 bg-base-200/35 p-5 sm:flex-row sm:items-center"
+              >
+                <div>
+                  <p class="font-semibold text-base-content">Have something useful to add?</p>
+                  <p class="mt-1 text-sm text-base-content/50">
+                    Sign in to reply to this discussion.
+                  </p>
+                </div>
+                <.link navigate={~p"/auth/signin"} class="btn btn-sm btn-secondary">
+                  Sign in to reply
+                </.link>
+              </div>
+          <% end %>
+        </section>
+
+        <section id="thread-replies" class="mt-10" aria-labelledby="thread-replies-title">
+          <div class="mb-4 flex items-end justify-between gap-4 px-1">
+            <h2 id="thread-replies-title" class="text-xl font-bold tracking-tight text-base-content">
+              {pluralize(@thread.comment_count, "reply")}
+            </h2>
+            <span class="text-xs text-base-content/35">Oldest first</span>
+          </div>
           <.svelte
             name="CommentTree"
             props={
@@ -830,10 +894,10 @@ defmodule UrielmWeb.ThreadLive do
               }
             }
             socket={@socket}
-          ssr={false}
+            ssr={false}
           />
-        </div>
-      </div>
+        </section>
+      </main>
       
     <!-- Report Modal -->
       <.report_modal

@@ -400,21 +400,25 @@ defmodule UrielmWeb.ForumLiveTest do
     end
 
     test "shows comment form for authenticated users", %{thread: thread, user: user} do
-      {:ok, _live, html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
+      {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
 
-      assert html =~ "Post Comment"
+      assert has_element?(live, "#comment-form")
+      assert has_element?(live, "#comment-submit")
     end
 
     test "hides comment form for anonymous users", %{thread: thread} do
-      {:ok, _live, html} = live(build_conn(), ~p"/forum/t/#{thread.id}")
+      {:ok, live, _html} = live(build_conn(), ~p"/forum/t/#{thread.id}")
 
-      refute html =~ "Post Comment"
+      refute has_element?(live, "#comment-form")
+      assert has_element?(live, "#thread-sign-in-to-reply")
     end
 
     test "authenticated user can create comment", %{thread: thread, user: user} do
       {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
 
-      render_submit(live, "create_comment", %{"body" => "New comment"})
+      live
+      |> form("#comment-form", %{"body" => "New comment"})
+      |> render_submit()
 
       # Verify comment was created
       updated_thread = Forum.get_thread!(thread.id)

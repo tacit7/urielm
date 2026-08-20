@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Discussion reading experience mockup</title>
+    <style>
+      :root { --bg:#16161e; --surface:#1f2335; --surface2:#24283b; --border:#3b4261; --primary:#7dcfff; --accent:#73daca; --text:#c0caf5; --muted:#737aa2; --success:#9ece6a; font-family:Inter,ui-sans-serif,system-ui,sans-serif; color-scheme:dark; }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); } a { color:inherit; text-decoration:none; } button,textarea { font:inherit; }
+      .switcher { position:fixed; right:20px; bottom:20px; z-index:10; display:flex; gap:4px; padding:5px; border:1px solid var(--border); border-radius:999px; background:var(--surface); box-shadow:0 15px 40px #090a0e99; }.switcher button { border:0; border-radius:999px; padding:8px 13px; color:var(--muted); background:transparent; }.switcher .active { color:#16161e; background:var(--primary); font-weight:800; }
+      .app { min-height:100vh; display:grid; grid-template-columns:250px 1fr; }.sidebar { padding:22px 16px; border-right:1px solid #3b426177; background:#1a1b26; }.brand { display:flex; align-items:center; gap:10px; padding:8px 10px 24px; font-weight:850; }.mark { display:grid; place-items:center; width:34px; height:34px; border-radius:11px; color:#16161e; background:var(--primary); }.nav { display:grid; gap:4px; }.nav a { min-height:40px; padding:11px 12px; border-radius:11px; color:#a9b1d6; font-size:14px; }.nav a.active { color:var(--primary); background:#7dcfff12; }.label { padding:22px 12px 8px; color:var(--muted); font-size:10px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+      .mobilebar { display:none; }.main { width:min(850px,calc(100% - 44px)); margin:auto; padding:38px 0 90px; }.back { display:inline-flex; gap:8px; color:var(--muted); font-size:13px; }.back:hover { color:var(--primary); }
+      .topic { margin-top:20px; padding:28px; border:1px solid #3b426199; border-radius:20px; background:#1f233577; }.tags { display:flex; align-items:center; gap:8px; color:var(--primary); font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }.tag { padding:5px 8px; border-radius:99px; background:#7dcfff12; }.solved { color:var(--success); background:#9ece6a12; }.topic h1 { max-width:720px; margin:13px 0 16px; font-size:38px; line-height:1.1; letter-spacing:-.045em; }.author { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; }.avatar { display:grid; place-items:center; width:34px; height:34px; border-radius:99px; color:#16161e; background:var(--accent); font-weight:900; }.author strong { color:#a9b1d6; }.body { padding:29px 2px 23px; color:#c8d1f7; font-size:16px; line-height:1.8; }.body p { margin:0 0 18px; }
+      .actions { display:flex; flex-wrap:wrap; align-items:center; gap:7px; padding-top:17px; border-top:1px solid #3b426177; }.action { min-height:38px; display:flex; align-items:center; gap:7px; padding:0 12px; border:1px solid transparent; border-radius:11px; color:#a9b1d6; background:transparent; }.action:hover { border-color:#3b4261; background:var(--surface2); }.action.primary { color:var(--primary); background:#7dcfff12; }.score { margin-right:auto; color:var(--muted); font:12px ui-monospace,monospace; }
+      .section-head { display:flex; align-items:end; justify-content:space-between; margin:38px 2px 13px; }.section-head h2 { margin:0; font-size:19px; }.section-head span { color:var(--muted); font-size:12px; }.composer { padding:18px; border:1px solid #3b4261bb; border-radius:17px; background:var(--surface); }.composer textarea { width:100%; min-height:94px; resize:vertical; border:0; outline:0; color:var(--text); background:transparent; line-height:1.6; }.composer-foot { display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px solid #3b426166; color:var(--muted); font-size:11px; }.submit { margin-left:auto; border:0; border-radius:10px; padding:9px 14px; color:#16161e; background:var(--primary); font-weight:850; }
+      .replies { display:grid; gap:11px; margin-top:14px; }.reply { padding:18px; border:1px solid #3b426177; border-radius:17px; background:#1f23354d; }.reply.nested { margin-left:44px; background:#24283b66; }.reply-head { display:flex; align-items:center; gap:10px; }.mini-avatar { display:grid; place-items:center; width:30px; height:30px; border-radius:99px; color:#16161e; background:var(--primary); font-size:11px; font-weight:900; }.reply-head strong { font-size:13px; }.reply-head time { color:var(--muted); font-size:11px; }.reply-menu { margin-left:auto; color:var(--muted); }.reply-body { margin:14px 0; color:#aeb8df; font-size:14px; line-height:1.65; }.reply-actions { display:flex; gap:13px; color:var(--muted); font-size:12px; }.reply-actions .reply-link { color:var(--primary); }
+      .annotation { margin-top:28px; padding:17px 19px; border:1px solid #73daca33; border-radius:15px; background:#73daca0b; color:#a9b1d6; font-size:12px; line-height:1.6; }
+      .mobile-frame { display:none; }
+      @media(max-width:760px){ .app { display:block; }.sidebar { display:none; }.mobilebar { position:sticky; top:0; z-index:4; display:flex; align-items:center; justify-content:space-between; height:60px; padding:0 15px; border-bottom:1px solid #3b426177; background:#16161eea; backdrop-filter:blur(14px); }.main { width:calc(100% - 28px); padding:24px 0 74px; }.topic { padding:20px 17px; border-radius:17px; }.topic h1 { font-size:30px; }.body { padding-top:24px; }.action span { display:none; }.action { width:40px; justify-content:center; padding:0; }.score { margin-right:auto; }.reply { padding:15px; }.reply.nested { margin-left:22px; }.composer-foot .hint { display:none; }.switcher { display:none; } }
+    </style>
+  </head>
+  <body>
+    <div class="switcher"><button class="active">Reading</button><button>Replying</button><button>Locked</button></div>
+    <div class="mobilebar"><strong>Discussion</strong><span>⌕ &nbsp; ☰</span></div>
+    <div class="app">
+      <aside class="sidebar"><a class="brand" href="#"><span class="mark">U</span>Urielm</a><nav class="nav"><a href="#">Latest</a><a href="#">Categories</a><a href="#">Saved</a><a href="#">Notifications</a></nav><div class="label">Current board</div><nav class="nav"><a class="active" href="#">Questions &amp; answers</a><a href="#">Prompting</a><a href="#">Building with AI</a></nav></aside>
+      <main class="main">
+        <a class="back" href="#">← Questions &amp; answers</a>
+        <article class="topic">
+          <div class="tags"><span class="tag">Questions &amp; answers</span><span class="tag solved">Solved</span></div>
+          <h1>How do you evaluate whether a prompt is actually effective?</h1>
+          <div class="author"><span class="avatar">UM</span><div><strong>urielm</strong><br />Posted Aug 20 · 142 views</div></div>
+          <div class="body"><p>I can usually tell when a prompt produces a good answer, but I struggle to evaluate whether it will stay reliable across different inputs.</p><p>What signals or lightweight tests do you use before turning a prompt into part of a real workflow?</p></div>
+          <div class="actions"><span class="score">▲ 18 · 6 replies</span><button class="action primary">↩ <span>Reply</span></button><button class="action">♧ <span>Save</span></button><button class="action">♢ <span>Watch</span></button><button class="action">••• <span>More</span></button></div>
+        </article>
+        <div class="section-head"><h2>Join the discussion</h2><span>Markdown supported</span></div>
+        <form class="composer"><textarea placeholder="Share a useful answer or ask a follow-up…"></textarea><div class="composer-foot"><span class="hint">Be specific, kind, and useful.</span><button type="button">Preview</button><button class="submit" type="button">Post reply</button></div></form>
+        <div class="section-head"><h2>6 replies</h2><span>Oldest first</span></div>
+        <section class="replies">
+          <article class="reply"><div class="reply-head"><span class="mini-avatar">AK</span><div><strong>alexk</strong><br /><time>24 minutes ago</time></div><span class="reply-menu">•••</span></div><p class="reply-body">I start with a tiny evaluation set: a straightforward case, a vague case, and one adversarial input. Then I score usefulness, factuality, and format consistency separately.</p><div class="reply-actions"><span>▲ 7</span><span class="reply-link">Reply</span><span>Save</span></div></article>
+          <article class="reply nested"><div class="reply-head"><span class="mini-avatar">UM</span><div><strong>urielm</strong><br /><time>10 minutes ago</time></div><span class="reply-menu">•••</span></div><p class="reply-body">Separating the criteria is the missing piece for me. That makes regressions much easier to identify.</p><div class="reply-actions"><span>▲ 3</span><span class="reply-link">Reply</span></div></article>
+        </section>
+        <aside class="annotation"><strong>Behavior:</strong> topic actions gain labels on desktop and remain compact on mobile. The primary composer sits after the original post, while contextual reply composers still open beside a selected reply. Nested replies use indentation and softer surfaces—no left borders. Locked topics replace the composer with a calm status panel.</aside>
+      </main>
+    </div>
+  </body>
+</html>

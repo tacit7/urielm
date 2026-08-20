@@ -7,6 +7,60 @@ defmodule UrielmWeb.ThreadLiveTest do
   alias Urielm.Forum
   alias Urielm.Repo
 
+  describe "discussion reading experience" do
+    setup do
+      author = Fixtures.user_fixture()
+      category = Fixtures.category_fixture()
+      board = Fixtures.board_fixture(%{category_id: category.id})
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+
+      %{author: author, board: board, thread: thread}
+    end
+
+    test "renders focused topic and reply landmarks", %{
+      conn: conn,
+      author: author,
+      thread: thread
+    } do
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      assert has_element?(view, "#thread-reading-view")
+      assert has_element?(view, "#thread-topic")
+      assert has_element?(view, "#thread-author")
+      assert has_element?(view, "#thread-actions")
+      assert has_element?(view, "#thread-replies")
+      assert has_element?(view, "#comment-form")
+      assert has_element?(view, "#comment-form textarea[name='body']")
+    end
+
+    test "shows a clear sign-in state instead of the reply form", %{conn: conn, thread: thread} do
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      refute has_element?(view, "#comment-form")
+      assert has_element?(view, "#thread-sign-in-to-reply a[href='/auth/signin']")
+    end
+
+    test "locked topics replace the composer with a status panel", %{
+      conn: conn,
+      author: author,
+      board: board
+    } do
+      thread =
+        Fixtures.thread_fixture(%{
+          board_id: board.id,
+          author_id: author.id,
+          is_locked: true
+        })
+
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      refute has_element?(view, "#comment-form")
+      assert has_element?(view, "#thread-locked-state")
+    end
+  end
+
   describe "thread reporting" do
     test "user can report a thread successfully", %{conn: conn} do
       reporter = Fixtures.user_fixture()

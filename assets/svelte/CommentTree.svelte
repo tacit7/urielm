@@ -123,30 +123,33 @@
   }
 </script>
 
-<div class="space-y-3">
+<div class="space-y-3" data-comment-depth={depth}>
   {#if comments && comments.length > 0}
     {#each comments as comment (comment.id)}
-      <div class="p-4">
+      <article
+        id="comment-{comment.id}"
+        class="rounded-2xl border border-base-300/50 bg-base-200/30 p-4 transition-colors duration-150 hover:bg-base-200/45 sm:p-5"
+      >
         <div>
-          <div class="flex justify-between items-start gap-4">
+          <div class="flex items-start justify-between gap-4">
             <div class="flex-1">
-              <div class="flex items-center gap-3 mb-2">
+              <div class="mb-3 flex items-center gap-3">
                 {#if comment.author?.avatar_url}
                   <img
                     src={comment.author.avatar_url}
                     alt={comment.author?.username || "User"}
-                    class="w-8 h-8 rounded-full object-cover"
+                    class="size-9 rounded-full object-cover"
                   />
                 {:else}
-                  <div class="w-8 h-8 rounded-full bg-base-300 flex items-center justify-center text-xs font-bold">
+                  <div class="flex size-9 items-center justify-center rounded-full bg-secondary text-xs font-black text-secondary-content">
                     {(comment.author?.username || "U")[0].toUpperCase()}
                   </div>
                 {/if}
                 <div>
-                  <p class="font-semibold text-base-content text-sm">
+                  <p class="text-sm font-semibold text-base-content">
                     {comment.author?.username || "Unknown"}
                   </p>
-                  <span class="text-xs text-base-content/50">
+                  <span class="text-xs text-base-content/40">
                     {formatDate(comment.inserted_at)}
                   </span>
                 </div>
@@ -164,7 +167,7 @@
                   />
                 </div>
               {:else}
-                <div class="text-base-content mb-3">
+                <div class="mb-4 text-sm leading-7 text-base-content/80 sm:text-base">
                   <MarkdownRenderer content={comment.body} enableEmbeds={false} />
                   {#if comment.edited_at}
                     <span class="text-xs text-base-content/50 ml-2">(edited)</span>
@@ -172,7 +175,7 @@
                 </div>
               {/if}
 
-              <div class="flex items-center gap-4">
+              <div class="flex items-center gap-3">
                 <VoteButtons
                   target_type="comment"
                   target_id={comment.id}
@@ -190,7 +193,7 @@
                 {#if canEdit(comment.author?.id) && editingId !== comment.id}
                   <button
                     onclick={() => startEdit(comment.id, comment.body)}
-                    class="btn btn-ghost btn-xs text-base-content/60 hover:text-base-content"
+                    class="btn btn-ghost btn-xs text-base-content/45 hover:text-base-content"
                   >
                     Edit
                   </button>
@@ -199,7 +202,7 @@
                 {#if canDelete(comment.author?.id)}
                   <button
                     onclick={() => handleDelete(comment.id)}
-                    class="btn btn-ghost btn-xs text-base-content/60 hover:text-error"
+                    class="btn btn-ghost btn-xs text-base-content/45 hover:text-error"
                   >
                     Delete
                   </button>
@@ -208,7 +211,7 @@
                 {#if current_user_id}
                   <button
                     onclick={() => handleReport(comment.id)}
-                    class="btn btn-ghost btn-xs text-base-content/60 hover:text-base-content"
+                    class="btn btn-ghost btn-xs text-base-content/45 hover:text-base-content"
                   >
                     Report
                   </button>
@@ -217,7 +220,7 @@
                 {#if current_user_id && depth < MAX_DEPTH}
                   <button
                     onclick={() => startReply(comment.id)}
-                    class="btn btn-ghost btn-xs gap-1 text-primary hover:text-primary-focus"
+                    class="btn btn-ghost btn-xs gap-1 text-secondary hover:bg-secondary/10 hover:text-secondary"
                   >
                     <UMIcon name="reply" className="w-4 h-4" />
                     Reply
@@ -229,7 +232,7 @@
 
           <!-- Nested replies -->
           {#if comment.replies && comment.replies.length > 0 && depth < MAX_DEPTH}
-            <div class="mt-4 ml-4 border-l-2 border-base-300 pl-4">
+            <div class="mt-3 ml-4 rounded-2xl bg-base-200/20 p-2 sm:ml-8">
               <CommentTree
                 comments={comment.replies}
                 current_user_id={current_user_id}
@@ -242,12 +245,13 @@
             </div>
           {/if}
         </div>
-      </div>
+      </article>
     {/each}
   {:else}
-    <p class="text-center text-base-content/50 py-8">
-      No comments yet. Be the first to reply!
-    </p>
+    <div class="rounded-2xl border border-dashed border-base-300/70 px-5 py-12 text-center">
+      <p class="font-semibold text-base-content/65">No replies yet</p>
+      <p class="mt-1 text-sm text-base-content/40">Be the first to add something useful.</p>
+    </div>
   {/if}
 </div>
 
