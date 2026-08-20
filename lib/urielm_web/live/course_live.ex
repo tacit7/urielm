@@ -41,10 +41,8 @@ defmodule UrielmWeb.CourseLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div>
-      <!-- Cinematic hero -->
-      <div class="relative w-full h-[480px] md:h-[560px] overflow-hidden">
-        <!-- Background -->
+    <div id="course-detail" class="min-h-screen bg-base-100">
+      <section id="course-detail-hero" class="relative h-[420px] w-full overflow-hidden md:h-[500px]">
         <div class="absolute inset-0">
           <img
             :if={@first_lesson && @first_lesson.youtube_video_id}
@@ -57,49 +55,34 @@ defmodule UrielmWeb.CourseLive do
             class="w-full h-full bg-base-300"
           />
         </div>
-        
-    <!-- Dual gradient: bottom-heavy + left edge -->
-        <div class="absolute inset-0 bg-gradient-to-t from-base-content/95 via-base-content/40 to-base-content/10" />
-        <div class="absolute inset-0 bg-gradient-to-r from-base-content/40 to-transparent" />
-        
-    <!-- Back link -->
-        <div class="absolute top-6 left-6 md:left-12 lg:left-16">
+
+        <div class="absolute inset-0 bg-gradient-to-t from-[#10121f]/95 via-[#10121f]/45 to-[#10121f]/15" />
+
+        <div class="absolute inset-x-0 top-0 mx-auto max-w-7xl px-5 pt-6 sm:px-7 lg:px-10">
           <.link
             navigate={~p"/courses"}
-            class="inline-flex items-center gap-2 font-mono text-xs tracking-widest uppercase text-base-100/60 hover:text-base-100 transition-colors"
+            class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[#c0caf5] transition-colors hover:text-white"
           >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2.5"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Courses
+            <.um_icon name="hero-arrow-left" class="size-3.5" /> Courses
           </.link>
         </div>
-        
-    <!-- Hero content -->
-        <div class="absolute inset-0 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-10">
-          <p class="font-mono text-xs tracking-widest uppercase text-base-100/50 mb-3">
+
+        <div class="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-5 pb-9 sm:px-7 md:pb-11 lg:px-10">
+          <p class="mb-3 font-mono text-xs uppercase tracking-widest text-[#c0caf5]">
             {length(@lessons)} {if length(@lessons) == 1, do: "lesson", else: "lessons"}
           </p>
 
-          <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-base-100 leading-none tracking-tight mb-4 max-w-3xl">
+          <h1 class="mb-5 max-w-4xl text-4xl font-black leading-none tracking-tight text-[#f2f4ff] md:text-5xl lg:text-6xl">
             {@course.title}
           </h1>
 
-          <div class="flex items-center gap-6">
+          <div class="flex flex-wrap items-center gap-4 sm:gap-6">
             <.link
               :if={@first_lesson}
               navigate={~p"/courses/#{@course.slug}/lessons/#{@first_lesson.slug}"}
-              class="inline-flex items-center gap-2.5 bg-primary text-primary-content font-bold text-sm px-6 py-3 rounded-full hover:opacity-90 transition-opacity"
+              class="btn btn-primary btn-sm gap-2 rounded-full px-5 sm:btn-md"
             >
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              Start watching
+              <.um_icon name="hero-play" class="size-4" /> Start watching
             </.link>
 
             <a
@@ -107,60 +90,69 @@ defmodule UrielmWeb.CourseLive do
               href={"https://www.youtube.com/playlist?list=#{@course.youtube_playlist_id}"}
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 font-mono text-xs tracking-widest uppercase text-base-100/50 hover:text-base-100 transition-colors"
+              class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[#c0caf5] transition-colors hover:text-white"
             >
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-              YouTube
+              <.um_icon name="hero-arrow-top-right-on-square" class="size-4" /> YouTube
             </a>
           </div>
         </div>
-      </div>
-      
-    <!-- Description (YouTube-style) -->
-      <div :if={@course.description} class="px-6 md:px-12 lg:px-16 pt-8 pb-2">
-        <div class="max-w-3xl">
-          <div class={[
-            "text-base-content/80 text-sm leading-relaxed whitespace-pre-line",
-            if(!@show_description, do: "line-clamp-2", else: "")
-          ]}>
-            {@course.description}
+      </section>
+
+      <div class="mx-auto max-w-7xl px-5 sm:px-7 lg:px-10">
+        <section
+          :if={@course.description}
+          id="course-description"
+          class="border-b border-base-content/10 py-8 md:py-10"
+        >
+          <div class="max-w-3xl">
+            <p class="ui-eyebrow mb-3">About this course</p>
+            <div class={[
+              "whitespace-pre-line text-sm leading-relaxed text-base-content/70 sm:text-base",
+              if(!@show_description, do: "line-clamp-2", else: "")
+            ]}>
+              {@course.description}
+            </div>
+            <button
+              id="course-description-toggle"
+              phx-click="toggle_description"
+              class="mt-3 font-mono text-xs font-bold tracking-wide text-base-content transition-colors hover:text-primary"
+            >
+              {if @show_description, do: "Show less", else: "Show more"}
+            </button>
           </div>
-          <button
-            phx-click="toggle_description"
-            class="mt-2 font-mono text-xs font-bold tracking-wide text-base-content hover:text-primary transition-colors"
+        </section>
+
+        <section id="course-lessons" class="py-10 md:py-14">
+          <div class="mb-7 flex items-end justify-between gap-5">
+            <div>
+              <p class="ui-eyebrow mb-2">Course content</p>
+              <h2 class="text-2xl font-black tracking-tight text-base-content md:text-3xl">
+                Lessons
+              </h2>
+            </div>
+            <span class="badge badge-outline h-auto px-3 py-2 font-mono text-xs text-base-content/60">
+              {length(@lessons)} {if length(@lessons) == 1, do: "lesson", else: "lessons"}
+            </span>
+          </div>
+
+          <div
+            :if={Enum.empty?(@lessons)}
+            id="course-lessons-empty"
+            class="ui-card flex min-h-56 flex-col items-center justify-center border-dashed px-6 text-center"
           >
-            {if @show_description, do: "Show less", else: "Show more"}
-          </button>
-        </div>
-      </div>
-      
-    <!-- Lesson table of contents -->
-      <div class="px-6 md:px-12 lg:px-16 py-10">
-        <!-- Section header -->
-        <div class="flex items-center gap-6 mb-8">
-          <p class="font-mono text-xs tracking-widest uppercase text-base-content/40 flex-shrink-0">
-            Course content
-          </p>
-          <div class="flex-1 h-px bg-base-content/10" />
-          <p class="font-mono text-xs text-base-content/40 flex-shrink-0">
-            {length(@lessons)} lessons
-          </p>
-        </div>
-        
-    <!-- Empty state -->
-        <div :if={Enum.empty?(@lessons)} class="flex flex-col items-center justify-center py-24">
-          <p class="font-mono font-black text-8xl text-base-content/10 select-none mb-4">00</p>
-          <p class="font-mono text-xs tracking-[0.3em] uppercase text-base-content/30">
-            No lessons yet
-          </p>
-        </div>
-        
-    <!-- Lesson rows -->
-        <div :if={!Enum.empty?(@lessons)}>
-          <.lesson_row :for={lesson <- @lessons} lesson={lesson} course={@course} />
-        </div>
+            <div class="mb-4 flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <.um_icon name="hero-video-camera" class="size-5" />
+            </div>
+            <h3 class="font-black text-base-content">Lessons are coming soon</h3>
+            <p class="mt-2 max-w-md text-sm text-base-content/55">
+              This course outline is ready and the first lessons are being prepared.
+            </p>
+          </div>
+
+          <div :if={!Enum.empty?(@lessons)} id="course-lessons-list" class="grid gap-3">
+            <.lesson_row :for={lesson <- @lessons} lesson={lesson} course={@course} />
+          </div>
+        </section>
       </div>
     </div>
     """
@@ -172,11 +164,11 @@ defmodule UrielmWeb.CourseLive do
   defp lesson_row(assigns) do
     ~H"""
     <.link
+      id={"lesson-#{@lesson.id}"}
       navigate={~p"/courses/#{@course.slug}/lessons/#{@lesson.slug}"}
-      class="group flex items-center gap-6 md:gap-8 py-5 border-t border-base-content/8 hover:border-primary/20 transition-colors last:border-b"
+      class="ui-card ui-card-interactive ui-card-compact group flex items-center gap-4 p-3 sm:gap-5 sm:p-4"
     >
-      <!-- Thumbnail -->
-      <div class="relative flex-shrink-0 w-28 md:w-36 aspect-video rounded-lg overflow-hidden bg-base-300">
+      <div class="relative aspect-video w-24 flex-shrink-0 overflow-hidden rounded-lg bg-base-300 sm:w-32 md:w-36">
         <img
           :if={@lesson.youtube_video_id}
           src={"https://i.ytimg.com/vi/#{@lesson.youtube_video_id}/mqdefault.jpg"}
@@ -184,39 +176,32 @@ defmodule UrielmWeb.CourseLive do
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
         <div :if={!@lesson.youtube_video_id} class="w-full h-full bg-base-300" />
-        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div class="w-8 h-8 rounded-full bg-base-100/90 flex items-center justify-center shadow-md">
-            <svg class="w-3.5 h-3.5 text-base-content ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+        <div class="absolute inset-0 flex items-center justify-center bg-[#10121f]/15 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <div class="flex size-8 items-center justify-center rounded-full bg-white/90 text-[#10121f] shadow-md">
+            <.um_icon name="hero-play" class="ml-0.5 size-3.5" />
           </div>
         </div>
       </div>
-      
-    <!-- Title + notes -->
+
       <div class="flex-1 min-w-0">
-        <h3 class="font-black text-lg md:text-xl text-base-content leading-snug group-hover:text-primary transition-colors duration-200 line-clamp-1">
+        <p class="mb-1 font-mono text-[0.68rem] uppercase tracking-widest text-base-content/45">
+          Lesson {String.pad_leading(to_string(@lesson.lesson_number), 2, "0")}
+        </p>
+        <h3 class="line-clamp-2 text-base font-black leading-snug text-base-content transition-colors duration-200 group-hover:text-primary sm:text-lg md:text-xl">
           {@lesson.title}
         </h3>
         <p
           :if={@lesson.notes_md}
-          class="text-sm text-base-content/50 line-clamp-1 mt-1 leading-relaxed"
+          class="mt-1 hidden line-clamp-1 text-sm leading-relaxed text-base-content/50 sm:block"
         >
           {String.replace(@lesson.notes_md, ~r/[#*_`\[\]>]/, "")}
         </p>
       </div>
-      
-    <!-- Slide-in arrow -->
-      <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-200">
-        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2.5"
-            d="M17 8l4 4m0 0l-4 4m4-4H3"
-          />
-        </svg>
-      </div>
+
+      <.um_icon
+        name="hero-arrow-right"
+        class="size-5 flex-shrink-0 text-primary transition-transform duration-200 group-hover:translate-x-1"
+      />
     </.link>
     """
   end

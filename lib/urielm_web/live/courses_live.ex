@@ -22,40 +22,41 @@ defmodule UrielmWeb.CoursesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen">
-      <!-- Header -->
-      <div class="px-6 md:px-12 lg:px-16 pt-12 pb-10">
-        <div class="flex items-end justify-between">
-          <div>
-            <p class="text-xs font-mono tracking-widest text-base-content/40 uppercase mb-2">
-              Learning / Courses
-            </p>
-            <h1 class="text-5xl font-black tracking-tight text-base-content leading-none">
-              Courses
-            </h1>
+    <div id="courses-index" class="min-h-screen bg-base-100">
+      <div class="mx-auto max-w-7xl px-5 py-16 sm:px-7 lg:px-10 lg:py-24">
+        <header id="courses-index-header" class="mb-9 md:mb-12">
+          <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div class="max-w-2xl">
+              <p class="ui-eyebrow mb-3">Learning / Courses</p>
+              <h1 class="ui-section-title">Courses</h1>
+              <p class="ui-section-copy mt-4">
+                Practical, focused paths for building useful things with AI.
+              </p>
+            </div>
+            <span class="badge badge-outline h-auto self-start px-3 py-2 font-mono text-xs text-base-content/60 sm:self-auto">
+              {length(@courses)} {if length(@courses) == 1, do: "course", else: "courses"}
+            </span>
           </div>
-          <p class="text-sm font-mono text-base-content/40 pb-1">
-            {length(@courses)} {if length(@courses) == 1, do: "course", else: "courses"}
+        </header>
+
+        <div
+          :if={@courses == []}
+          id="courses-empty-state"
+          class="ui-card flex min-h-72 flex-col items-center justify-center border-dashed px-6 text-center"
+        >
+          <div class="mb-5 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <.um_icon name="hero-academic-cap" class="size-6" />
+          </div>
+          <h2 class="text-xl font-black text-base-content">New courses are on the way</h2>
+          <p class="mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
+            Check back soon for guided lessons, practical examples, and complete learning paths.
           </p>
         </div>
-        <div class="mt-6 h-px bg-base-content/10" />
-      </div>
-      
-    <!-- Content -->
-      <div class="px-6 md:px-12 lg:px-16 pb-16">
-        <!-- Empty state -->
-        <div :if={@courses == []} class="flex flex-col items-center justify-center py-36">
-          <p class="font-mono font-black text-8xl text-base-content/10 select-none mb-6">00</p>
-          <p class="text-base-content/40 text-xs font-mono tracking-[0.3em] uppercase">
-            No courses yet
-          </p>
-        </div>
-        
-    <!-- Featured first + grid -->
-        <div :if={@courses != []}>
+
+        <div :if={@courses != []} id="courses-collection">
           <.featured_course course={hd(@courses)} index={1} />
 
-          <div :if={tl(@courses) != []} class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div :if={tl(@courses) != []} class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
             <.course_card
               :for={{course, i} <- Enum.with_index(tl(@courses), 2)}
               course={course}
@@ -80,8 +81,9 @@ defmodule UrielmWeb.CoursesLive do
 
     ~H"""
     <.link
+      id={"featured-course-#{@course.id}"}
       navigate={~p"/courses/#{@course.slug}"}
-      class="ui-card ui-card-interactive group relative block h-[400px] md:h-[480px]"
+      class="ui-card ui-card-interactive group relative block h-[330px] overflow-hidden sm:h-[380px] lg:h-[420px]"
     >
       <div class="absolute inset-0">
         <img
@@ -93,44 +95,35 @@ defmodule UrielmWeb.CoursesLive do
         <div :if={!@thumb} class="w-full h-full bg-base-300" />
       </div>
 
-      <div class="absolute inset-0 bg-gradient-to-t from-base-content/90 via-base-content/30 to-base-content/5" />
+      <div class="absolute inset-0 bg-gradient-to-t from-[#10121f]/95 via-[#10121f]/45 to-[#10121f]/10" />
 
-      <div class="absolute top-4 right-6 font-mono font-black text-[8rem] leading-none select-none text-base-100/10 group-hover:text-primary/20 transition-colors duration-500">
-        {@num}
-      </div>
-
-      <div class="absolute inset-0 flex flex-col justify-end p-8">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="font-mono text-xs tracking-widest uppercase text-base-100/50">
-            Course {@num}
+      <div class="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10">
+        <div class="mb-4 flex flex-wrap items-center gap-2.5">
+          <span class="badge border-white/20 bg-white/10 font-mono text-[0.68rem] uppercase tracking-widest text-[#f2f4ff]">
+            {@num} · Featured
           </span>
-          <span class="w-1 h-1 rounded-full bg-base-100/30" />
-          <span class="font-mono text-xs text-base-100/50">
+          <span class="font-mono text-xs text-[#c0caf5]">
             {@lesson_count} {if @lesson_count == 1, do: "lesson", else: "lessons"}
           </span>
         </div>
 
-        <h2 class="text-3xl md:text-4xl font-black text-base-100 leading-tight mb-3 group-hover:text-primary transition-colors duration-300">
+        <h2 class="mb-3 max-w-3xl text-3xl font-black leading-tight text-[#f2f4ff] transition-colors duration-300 group-hover:text-primary sm:text-4xl lg:text-5xl">
           {@course.title}
         </h2>
 
         <p
           :if={@course.description}
-          class="text-base-100/70 text-sm leading-relaxed max-w-xl line-clamp-2 mb-6"
+          class="mb-6 max-w-2xl line-clamp-2 text-sm leading-relaxed text-[#c0caf5] sm:text-base"
         >
           {@course.description}
         </p>
 
-        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-          <span class="text-sm font-bold text-primary">Start watching</span>
-          <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2.5"
-              d="M17 8l4 4m0 0l-4 4m4-4H3"
-            />
-          </svg>
+        <div class="flex items-center gap-2 text-sm font-bold text-primary">
+          <span>Start course</span>
+          <.um_icon
+            name="hero-arrow-right"
+            class="size-4 transition-transform duration-300 group-hover:translate-x-1"
+          />
         </div>
       </div>
     </.link>
@@ -149,8 +142,9 @@ defmodule UrielmWeb.CoursesLive do
 
     ~H"""
     <.link
+      id={"course-card-#{@course.id}"}
       navigate={~p"/courses/#{@course.slug}"}
-      class="ui-card ui-card-interactive group relative block h-[260px] md:h-[300px]"
+      class="ui-card ui-card-interactive group relative block h-[230px] overflow-hidden sm:h-[260px] lg:h-[280px]"
     >
       <div class="absolute inset-0">
         <img
@@ -162,44 +156,35 @@ defmodule UrielmWeb.CoursesLive do
         <div :if={!@thumb} class="w-full h-full bg-base-300" />
       </div>
 
-      <div class="absolute inset-0 bg-gradient-to-t from-base-content/88 via-base-content/20 to-transparent" />
+      <div class="absolute inset-0 bg-gradient-to-t from-[#10121f]/95 via-[#10121f]/35 to-transparent" />
 
-      <div class="absolute top-3 right-5 font-mono font-black text-[5rem] leading-none select-none text-base-100/10 group-hover:text-primary/20 transition-colors duration-500">
-        {@num}
-      </div>
-
-      <div class="absolute inset-0 flex flex-col justify-end p-5">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="font-mono text-xs tracking-widest uppercase text-base-100/50">
+      <div class="absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+        <div class="mb-2.5 flex items-center gap-2.5">
+          <span class="badge border-white/20 bg-white/10 font-mono text-[0.68rem] text-[#f2f4ff]">
             {@num}
           </span>
-          <span class="w-1 h-1 rounded-full bg-base-100/30" />
-          <span class="font-mono text-xs text-base-100/50">
+          <span class="font-mono text-xs text-[#c0caf5]">
             {@lesson_count} {if @lesson_count == 1, do: "lesson", else: "lessons"}
           </span>
         </div>
 
-        <h2 class="text-xl font-black text-base-100 leading-tight mb-1 group-hover:text-primary transition-colors duration-300 line-clamp-2">
+        <h2 class="mb-1 line-clamp-2 text-xl font-black leading-tight text-[#f2f4ff] transition-colors duration-300 group-hover:text-primary sm:text-2xl">
           {@course.title}
         </h2>
 
         <p
           :if={@course.description}
-          class="text-base-100/60 text-xs leading-relaxed line-clamp-1 mb-4"
+          class="mb-4 line-clamp-1 text-xs leading-relaxed text-[#c0caf5]"
         >
           {@course.description}
         </p>
 
-        <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-1.5 group-hover:translate-y-0 transition-all duration-300">
-          <span class="text-xs font-bold text-primary">View course</span>
-          <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2.5"
-              d="M17 8l4 4m0 0l-4 4m4-4H3"
-            />
-          </svg>
+        <div class="flex items-center gap-1.5 text-xs font-bold text-primary">
+          <span>View course</span>
+          <.um_icon
+            name="hero-arrow-right"
+            class="size-3.5 transition-transform duration-300 group-hover:translate-x-1"
+          />
         </div>
       </div>
     </.link>
