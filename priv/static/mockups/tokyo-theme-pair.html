@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tokyo Theme Pair — Mockup</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 36px; background: #11121a; color: #c0caf5; font: 15px/1.5 Inter, system-ui, sans-serif; }
+      h1 { margin: 0 0 8px; font-size: 34px; }
+      body > p { margin: 0 0 28px; color: #a9b1d6; }
+      .tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+      .tab { padding: 8px 13px; border: 1px solid #3b4261; border-radius: 999px; }
+      .tab.active { background: #7aa2f7; color: #1a1b26; border-color: #7aa2f7; }
+      .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+      .frame { overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--base); color: var(--text); box-shadow: 0 24px 60px #0005; }
+      .night { --base: #1a1b26; --surface: #24283b; --border: #3b4261; --text: #c0caf5; --muted: #a9b1d6; --primary: #7aa2f7; --secondary: #bb9af7; --accent: #7dcfff; }
+      .day { --base: #e1e2e7; --surface: #d5d6db; --border: #b4b5be; --text: #2e3c64; --muted: #6172b0; --primary: #2e7de9; --secondary: #7847bd; --accent: #007197; }
+      nav { display: flex; justify-content: space-between; align-items: center; height: 58px; padding: 0 22px; border-bottom: 1px solid var(--border); }
+      nav span { color: var(--muted); }
+      main { padding: 38px 28px 48px; }
+      .eyebrow { color: var(--primary); text-transform: uppercase; letter-spacing: .16em; font-size: 11px; font-weight: 800; }
+      h2 { margin: 10px 0; font-size: 38px; line-height: 1; letter-spacing: -.04em; }
+      .muted { color: var(--muted); }
+      .actions { display: flex; gap: 10px; margin: 24px 0; }
+      button { padding: 9px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); }
+      button.primary { background: var(--primary); color: var(--base); border-color: var(--primary); font-weight: 700; }
+      .card { padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+      .swatches { display: flex; gap: 7px; margin-top: 16px; }
+      .swatches i { width: 28px; height: 28px; border-radius: 8px; background: var(--primary); }
+      .swatches i:nth-child(2) { background: var(--secondary); }
+      .swatches i:nth-child(3) { background: var(--accent); }
+      .annotation { margin-top: 24px; padding: 14px 16px; border-left: 3px solid #7aa2f7; background: #24283b; color: #a9b1d6; }
+      @media (max-width: 760px) { body { padding: 18px; } .pair { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1>Tokyo Night, from sunrise to midnight</h1>
+    <p>One visual identity with a carefully matched light and dark palette.</p>
+    <div class="tabs"><span class="tab active">Desktop pair</span><span class="tab">Mobile uses the same toggle</span></div>
+    <div class="pair">
+      <section class="frame night">
+        <nav><strong>UrielM.dev</strong><span>☀ Light</span></nav>
+        <main><div class="eyebrow">Tokyo Night</div><h2>Dark mode</h2><p class="muted">Deep navy surfaces, cool blue actions, violet details, and soft high-contrast copy.</p><div class="actions"><button class="primary">Start learning</button><button>Browse prompts</button></div><div class="card"><strong>Build your first AI project</strong><p class="muted">Cards stay dimensional without stark black or pure-white borders.</p><div class="swatches"><i></i><i></i><i></i></div></div></main>
+      </section>
+      <section class="frame day">
+        <nav><strong>UrielM.dev</strong><span>☾ Dark</span></nav>
+        <main><div class="eyebrow">Tokyo Day</div><h2>Light mode</h2><p class="muted">Cool lavender-gray surfaces preserve the Tokyo character without becoming a generic white theme.</p><div class="actions"><button class="primary">Start learning</button><button>Browse prompts</button></div><div class="card"><strong>Build your first AI project</strong><p class="muted">The same semantic colors and elevation relationships carry across modes.</p><div class="swatches"><i></i><i></i><i></i></div></div></main>
+      </section>
+    </div>
+    <div class="annotation">Behavior: the UI exposes only Tokyo Day and Tokyo Night. The selected mode persists in localStorage and the existing cookie, and legacy theme values migrate to the matching Tokyo mode.</div>
+  </body>
+</html>

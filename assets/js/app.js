@@ -1,4 +1,6 @@
-// Theme management: keep theme in sync with localStorage and custom events
+import {normalizeTheme} from "./theme.js"
+
+// Theme management: keep the Tokyo pair in sync with localStorage and cookies.
 (() => {
   const setCookie = (name, value, options = {}) => {
     const opts = {path: '/', 'max-age': 60*60*24*365, ...options}
@@ -13,31 +15,20 @@
   }
 
   const setTheme = (theme) => {
-    if (theme === "system") {
-      try { localStorage.removeItem("phx:theme") } catch (_) {}
-      try { setCookie('phx_theme', '', {'max-age': 0}) } catch (_) {}
-      document.documentElement.removeAttribute("data-theme")
-    } else {
-      try { localStorage.setItem("phx:theme", theme) } catch (_) {}
-      try { setCookie('phx_theme', theme) } catch (_) {}
-      document.documentElement.setAttribute("data-theme", theme)
-    }
+    const normalizedTheme = normalizeTheme(theme)
+    try { localStorage.setItem("phx:theme", normalizedTheme) } catch (_) {}
+    try { setCookie('phx_theme', normalizedTheme) } catch (_) {}
+    document.documentElement.setAttribute("data-theme", normalizedTheme)
   }
-  if (!document.documentElement.hasAttribute("data-theme")) {
-    try {
-      let savedTheme = localStorage.getItem("phx:theme") || "system"
-      // Migrate old themes to 'midnight'
-      if (savedTheme === "dark" || savedTheme === "tokyo-night") {
-        savedTheme = "midnight"
-        localStorage.setItem("phx:theme", "midnight")
-      }
-      setTheme(savedTheme)
-    } catch (_) {
-      setTheme("dark")
-    }
+
+  try {
+    const savedTheme = localStorage.getItem("phx:theme") || document.documentElement.dataset.theme
+    setTheme(savedTheme)
+  } catch (_) {
+    setTheme(document.documentElement.dataset.theme)
   }
-  window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"))
-  window.addEventListener("phx:set-theme", (e) => setTheme(e.detail?.theme ?? e.target?.dataset?.phxTheme ?? "system"))
+  window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue))
+  window.addEventListener("phx:set-theme", (e) => setTheme(e.detail?.theme ?? e.target?.dataset?.phxTheme))
 })()
 
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`

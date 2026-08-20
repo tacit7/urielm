@@ -134,32 +134,23 @@ defmodule UrielmWeb.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=midnight]_&]:left-2/3 transition-[left]" />
-
+    <div class="join border border-base-300 bg-base-200 rounded-full p-1">
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="btn btn-ghost btn-xs btn-circle join-item [[data-theme=tokyo-day]_&]:bg-primary [[data-theme=tokyo-day]_&]:text-primary-content"
         phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="system"
+        data-phx-theme="tokyo-day"
+        aria-label="Use Tokyo Day"
       >
-        <.um_icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.um_icon name="sun" variant="micro" class="size-4" />
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="btn btn-ghost btn-xs btn-circle join-item [[data-theme=tokyo-night]_&]:bg-primary [[data-theme=tokyo-night]_&]:text-primary-content"
         phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="light"
+        data-phx-theme="tokyo-night"
+        aria-label="Use Tokyo Night"
       >
-        <.um_icon name="moon" class="hidden" />
-        <.um_icon name="sun" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
-
-      <button
-        class="flex p-2 cursor-pointer w-1/3"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="midnight"
-      >
-        <.um_icon name="moon" variant="micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.um_icon name="moon" variant="micro" class="size-4" />
       </button>
     </div>
     """

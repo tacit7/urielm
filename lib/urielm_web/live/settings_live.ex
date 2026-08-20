@@ -254,23 +254,15 @@ defmodule UrielmWeb.SettingsLive do
                   <div class="join">
                     <button
                       class="btn btn-sm join-item"
-                      data-theme="light"
-                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})}
+                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-day"})}
                     >
-                      Light
+                      Tokyo Day
                     </button>
                     <button
                       class="btn btn-sm join-item"
-                      data-theme="dark"
-                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
+                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-night"})}
                     >
-                      Dark
-                    </button>
-                    <button
-                      class="btn btn-sm join-item"
-                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})}
-                    >
-                      System
+                      Tokyo Night
                     </button>
                   </div>
                 </div>

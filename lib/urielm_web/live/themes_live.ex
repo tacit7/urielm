@@ -1,45 +1,8 @@
 defmodule UrielmWeb.ThemesLive do
   use UrielmWeb, :live_view
 
-  @daisyui_themes [
-    "light",
-    "dark",
-    "cupcake",
-    "bumblebee",
-    "emerald",
-    "corporate",
-    "synthwave",
-    "retro",
-    "cyberpunk",
-    "valentine",
-    "halloween",
-    "garden",
-    "forest",
-    "aqua",
-    "lofi",
-    "pastel",
-    "fantasy",
-    "wireframe",
-    "black",
-    "luxury",
-    "cmyk",
-    "autumn",
-    "business",
-    "acid",
-    "lemonade",
-    "night",
-    "coffee",
-    "winter"
-  ]
-
-  @custom_themes [
-    "midnight",
-    "catppuccin-mocha",
-    "catppuccin-latte",
-    "dracula-custom",
-    "github-light",
-    "github-dark"
-  ]
+  @daisyui_themes []
+  @custom_themes ["tokyo-day", "tokyo-night"]
 
   @all_themes @daisyui_themes ++ @custom_themes
 
@@ -51,7 +14,7 @@ defmodule UrielmWeb.ThemesLive do
      |> assign(:daisyui_themes, @daisyui_themes)
      |> assign(:custom_themes, @custom_themes)
      |> assign(:all_themes, @all_themes)
-     |> assign(:selected_theme, "midnight")}
+     |> assign(:selected_theme, "tokyo-night")}
   end
 
   @impl true
@@ -60,6 +23,8 @@ defmodule UrielmWeb.ThemesLive do
   end
 
   @theme_colors %{
+    "tokyo-night" => %{primary: "#7aa2f7", secondary: "#bb9af7", accent: "#7dcfff"},
+    "tokyo-day" => %{primary: "#2e7de9", secondary: "#7847bd", accent: "#007197"},
     "midnight" => %{primary: "#7aa2f7", secondary: "#bb9af7", accent: "#73daca"},
     "catppuccin-mocha" => %{primary: "#89b4fa", secondary: "#cba6f7", accent: "#94e2d5"},
     "catppuccin-latte" => %{primary: "#1e66f5", secondary: "#ea76cb", accent: "#179299"},
@@ -106,8 +71,8 @@ defmodule UrielmWeb.ThemesLive do
     ~H"""
     <div class="min-h-screen flex flex-col">
       <div class="px-4 py-6 border-b border-base-300">
-        <h1 class="text-3xl font-bold">Themes</h1>
-        <p class="text-base-content/70">Select from a variety of beautiful color schemes</p>
+        <h1 class="text-3xl font-bold">Tokyo themes</h1>
+        <p class="text-base-content/70">Choose the light or dark side of the same palette</p>
       </div>
 
       <div class="flex flex-1 overflow-hidden">
@@ -116,7 +81,7 @@ defmodule UrielmWeb.ThemesLive do
           <div class="p-4 space-y-6">
             <%!-- Custom Themes Section --%>
             <div>
-              <h2 class="text-sm font-bold uppercase text-base-content/60 mb-3">Custom Themes</h2>
+              <h2 class="text-sm font-bold uppercase text-base-content/60 mb-3">Color mode</h2>
               <div class="space-y-2">
                 <%= for theme <- @custom_themes do %>
                   <% colors = theme_colors(theme) %>
@@ -144,7 +109,7 @@ defmodule UrielmWeb.ThemesLive do
             </div>
 
             <%!-- DaisyUI Themes Section --%>
-            <div>
+            <div :if={@daisyui_themes != []}>
               <h2 class="text-sm font-bold uppercase text-base-content/60 mb-3">DaisyUI Themes</h2>
               <div class="space-y-2 max-h-96 overflow-y-auto">
                 <%= for theme <- @daisyui_themes do %>

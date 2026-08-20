@@ -1,5 +1,6 @@
 <script>
   import AuthModal from './AuthModal.svelte';
+  import ThemeToggle from './ThemeToggle.svelte';
   import UserMenu from './UserMenu.svelte';
 
   let { currentPage = '', currentUser = null } = $props()
@@ -127,6 +128,7 @@
 
   <!-- CTA Button - Right -->
   <div class="navbar-end gap-2">
+    <ThemeToggle />
     {#if currentUser}
       <UserMenu {currentUser} />
     {:else}

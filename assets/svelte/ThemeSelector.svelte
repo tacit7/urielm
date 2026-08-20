@@ -1,30 +1,18 @@
 <script>
   import UMIcon from "./UMIcon.svelte"
+  import { DARK_THEME, LIGHT_THEME, normalizeTheme } from '../js/theme.js'
 
   const themes = [
-    { value: 'light', label: 'Light', icon: 'sun' },
-    { value: 'midnight', label: 'Midnight', icon: 'moon' },
-    { value: 'dracula', label: 'Dracula', icon: 'sparkles' },
-    { value: 'synthwave', label: 'Synthwave', icon: 'bolt' },
-    { value: 'business', label: 'Business', icon: 'briefcase' },
-    { value: 'dim', label: 'Dim', icon: 'adjustments_vertical' }
+    { value: LIGHT_THEME, label: 'Tokyo Day', icon: 'sun' },
+    { value: DARK_THEME, label: 'Tokyo Night', icon: 'moon' }
   ]
 
-  let currentTheme = $state('midnight')
+  let currentTheme = $state(DARK_THEME)
   let isOpen = $state(false)
 
   function applyTheme(theme) {
-    currentTheme = theme
-    if (theme === 'system') {
-      document.documentElement.removeAttribute('data-theme')
-      localStorage.removeItem('phx:theme')
-    } else {
-      document.documentElement.setAttribute('data-theme', theme)
-      // Use the same storage key as Phoenix + other toggles
-      localStorage.setItem('phx:theme', theme)
-    }
-    // Notify listeners (e.g., Phoenix head script)
-    window.dispatchEvent(new CustomEvent('phx:set-theme', { detail: { theme } }))
+    currentTheme = normalizeTheme(theme)
+    window.dispatchEvent(new CustomEvent('phx:set-theme', { detail: { theme: currentTheme } }))
   }
 
   function selectTheme(theme) {
@@ -45,31 +33,18 @@
 
   $effect(() => {
     // Sync from page/head initialization
-    let savedTheme = localStorage.getItem('phx:theme') || 'system'
-
-    // Migrate old themes to 'midnight'
-    if (savedTheme === 'dark' || savedTheme === 'tokyo-night') {
-      savedTheme = 'midnight'
-      localStorage.setItem('phx:theme', 'midnight')
-      document.documentElement.setAttribute('data-theme', 'midnight')
-    }
-
-    if (savedTheme === 'system') {
-      currentTheme = document.documentElement.getAttribute('data-theme') || 'light'
-    } else {
-      currentTheme = savedTheme
-    }
+    currentTheme = normalizeTheme(
+      localStorage.getItem('phx:theme') || document.documentElement.dataset.theme
+    )
 
     // Keep in sync with other controls (Layouts.theme_toggle, other tabs)
     const storageHandler = (e) => {
       if (e.key === 'phx:theme') {
-        const next = e.newValue || 'system'
-        currentTheme = next === 'system' ? (document.documentElement.getAttribute('data-theme') || 'light') : next
+        currentTheme = normalizeTheme(e.newValue)
       }
     }
     const themeEventHandler = (e) => {
-      const next = e.detail?.theme ?? e.target?.dataset?.phxTheme ?? 'system'
-      currentTheme = next === 'system' ? (document.documentElement.getAttribute('data-theme') || 'light') : next
+      currentTheme = normalizeTheme(e.detail?.theme ?? e.target?.dataset?.phxTheme)
     }
 
     document.addEventListener('click', handleClickOutside)

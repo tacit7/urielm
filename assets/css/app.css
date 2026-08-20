@@ -24,32 +24,58 @@
   themes: all;
 }
 
-/* Custom Midnight Theme tuned to VS Code background (#1A1B27)
-   Note: Using Tailwind gray-900 (#111827) for base-100 to avoid color drift.
-   Original Tokyo Night uses #1A1B27, but color space conversion causes green drift (+8 units).
-   Tailwind gray-900 has minimal drift (±2 units) and matches auth pages. */
+/* Tokyo Night — the primary dark palette. */
 @plugin "daisyui/theme" {
-  name: "midnight";
+  name: "tokyo-night";
   color-scheme: "dark";
+  --color-base-100: #1a1b26;
+  --color-base-200: #24283b;
+  --color-base-300: #3b4261;
+  --color-base-content: #c0caf5;
+  --color-primary: #7aa2f7;
+  --color-primary-content: #16161e;
+  --color-secondary: #bb9af7;
+  --color-secondary-content: #16161e;
+  --color-accent: #7dcfff;
+  --color-accent-content: #16161e;
+  --color-neutral: #414868;
+  --color-neutral-content: #c0caf5;
+  --color-info: #7dcfff;
+  --color-info-content: #16161e;
+  --color-success: #9ece6a;
+  --color-success-content: #16161e;
+  --color-warning: #e0af68;
+  --color-warning-content: #16161e;
+  --color-error: #f7768e;
+  --color-error-content: #16161e;
+  --surface-glow: #565f89;
+}
 
-  /* Elevation Stack: 10% Lightness increments */
-  --color-base-100: #111827; /* Page background: Bottom */
-  --color-base-200: #1B2334; /* Containers/Cards: Middle */
-  --color-base-300: #2A3449; /* Active/Hover elements: Top */
-
-  /* Content Colors */
-  --color-base-content: oklch(80.71% 0.038 265.68);
-
-  /* Depth Highlight: For the 'Shiny' top edge */
-  --surface-glow: #3D4963;
-
-  /* Your existing OKLCH brand colors */
-  --color-primary: oklch(74.84% 0.149 263.94);
-  --color-primary-content: oklch(12.51% 0.01 247.36);
-  --color-secondary: oklch(75.12% 0.176 284.26);
-  --color-accent: oklch(76.83% 0.146 168.48);
-  --color-success: oklch(80.95% 0.174 133.4);
-  --color-error: oklch(70.18% 0.22 15.48);
+/* Tokyo Day — a light companion that keeps the cool Tokyo character. */
+@plugin "daisyui/theme" {
+  name: "tokyo-day";
+  color-scheme: "light";
+  --color-base-100: #e6e7ed;
+  --color-base-200: #dcdde3;
+  --color-base-300: #c4c8da;
+  --color-base-content: #2e3c64;
+  --color-primary: #2e7de9;
+  --color-primary-content: #f7f8fc;
+  --color-secondary: #7847bd;
+  --color-secondary-content: #f7f8fc;
+  --color-accent: #007197;
+  --color-accent-content: #f7f8fc;
+  --color-neutral: #6172b0;
+  --color-neutral-content: #f7f8fc;
+  --color-info: #007197;
+  --color-info-content: #f7f8fc;
+  --color-success: #587539;
+  --color-success-content: #f7f8fc;
+  --color-warning: #8c6c3e;
+  --color-warning-content: #f7f8fc;
+  --color-error: #c64343;
+  --color-error-content: #f7f8fc;
+  --surface-glow: #99a7df;
 }
 
 /* Custom Catppuccin Mocha Theme (OKLCH) */
@@ -173,7 +199,7 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Use the data attribute for dark mode  */
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@custom-variant dark (&:where([data-theme=tokyo-night], [data-theme=tokyo-night] *));
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
