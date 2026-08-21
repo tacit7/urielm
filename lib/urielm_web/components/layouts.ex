@@ -35,6 +35,7 @@ defmodule UrielmWeb.Layouts do
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
   attr :socket, :any, default: nil, doc: "LiveView socket (for LiveSvelte components)"
+  attr :unread_notification_count, :integer, default: 0
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -45,6 +46,7 @@ defmodule UrielmWeb.Layouts do
           socket={@socket}
           currentPage={@current_page || "home"}
           currentUser={serialize_user(@current_user)}
+          unreadNotificationCount={@unread_notification_count}
         />
       </div>
 

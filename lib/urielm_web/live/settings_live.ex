@@ -92,7 +92,13 @@ defmodule UrielmWeb.SettingsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="settings" socket={@socket}>
+    <Layouts.app
+      flash={@flash}
+      current_user={@current_user}
+      current_page="settings"
+      socket={@socket}
+      unread_notification_count={@unread_notification_count}
+    >
       <div class="container mx-auto px-4 py-8 max-w-4xl">
         <div class="mb-8">
           <h1 class="text-3xl font-bold">Settings</h1>

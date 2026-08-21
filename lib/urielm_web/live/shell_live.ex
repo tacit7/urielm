@@ -44,6 +44,7 @@ defmodule UrielmWeb.ShellLive do
       current_user={@current_user}
       current_page={@current_page}
       socket={@socket}
+      unread_notification_count={@unread_notification_count}
     >
       {live_render(@socket, child_module(@live_action),
         id: "page-#{@live_action}",

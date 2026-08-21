@@ -20,7 +20,12 @@ defmodule UrielmWeb.CounterLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} socket={@socket}>
+    <Layouts.app
+      flash={@flash}
+      current_user={@current_user}
+      socket={@socket}
+      unread_notification_count={@unread_notification_count}
+    >
       <div class="min-h-screen bg-gray-100 flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-lg p-8">
           <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">

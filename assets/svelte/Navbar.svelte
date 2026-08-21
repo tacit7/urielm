@@ -4,10 +4,16 @@
   import UserMenu from './UserMenu.svelte'
   import { pageForPath } from '../js/navigation.js'
 
-  let { currentPage = '', currentUser = null } = $props()
+  let { currentPage = '', currentUser = null, unreadNotificationCount = 0 } = $props()
 
   let browserPage = $state(null)
   let activePage = $derived(browserPage || currentPage || 'home')
+  let pushedUnreadCount = $state(null)
+  let unreadCount = $derived(
+    pushedUnreadCount === null
+      ? Math.max(0, Number(unreadNotificationCount) || 0)
+      : pushedUnreadCount,
+  )
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
   let hideNavbar = $state(false)
@@ -46,6 +52,10 @@
     if (event.key === 'Escape') closeMenu()
   }
 
+  function syncUnreadCount(event) {
+    pushedUnreadCount = Math.max(0, Number(event.detail?.count) || 0)
+  }
+
   function desktopLinkClass(page) {
     return activePage === page
       ? 'bg-primary/10 text-primary'
@@ -69,6 +79,7 @@
     window.addEventListener('phx:page-loading-stop', syncPage)
     window.addEventListener('popstate', syncPage)
     window.addEventListener('composer-fullscreen', fullscreenHandler)
+    window.addEventListener('phx:unread-notification-count', syncUnreadCount)
     document.addEventListener('click', handleClickOutside)
     document.addEventListener('keydown', handleKeydown)
 
@@ -77,6 +88,7 @@
       window.removeEventListener('phx:page-loading-stop', syncPage)
       window.removeEventListener('popstate', syncPage)
       window.removeEventListener('composer-fullscreen', fullscreenHandler)
+      window.removeEventListener('phx:unread-notification-count', syncUnreadCount)
       document.removeEventListener('click', handleClickOutside)
       document.removeEventListener('keydown', handleKeydown)
     }
@@ -132,6 +144,26 @@
       >
         <UMIcon name="search" className="size-4" />
       </a>
+
+      {#if currentUser}
+        <a
+          id="nav-notifications"
+          href="/notifications"
+          class="btn btn-ghost btn-circle btn-sm relative text-base-content/60 transition hover:bg-info/10 hover:text-info"
+          aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+          title="Notifications"
+        >
+          <UMIcon name="bell" className="size-4" />
+          {#if unreadCount > 0}
+            <span
+              id="nav-notification-badge"
+              class="badge badge-info absolute -right-1 -top-1 h-5 min-w-5 border-2 border-base-100 px-1 text-[0.625rem] font-black text-info-content"
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          {/if}
+        </a>
+      {/if}
 
       <ThemeToggle />
 

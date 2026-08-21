@@ -83,7 +83,10 @@ defmodule UrielmWeb.UserAuth do
         |> assign(:unread_notification_count, Forum.count_unread_notifications(user.id))
         |> attach_hook(:unread_notification_count, :handle_info, fn
           {:unread_notification_count, count}, socket ->
-            {:halt, assign(socket, :unread_notification_count, count)}
+            {:halt,
+             socket
+             |> assign(:unread_notification_count, count)
+             |> push_event("unread-notification-count", %{count: count})}
 
           _message, socket ->
             {:cont, socket}

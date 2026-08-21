@@ -33,6 +33,44 @@ defmodule UrielmWeb.NotificationsLiveTest do
     end
   end
 
+  describe "global navbar" do
+    test "signed-in users receive the initial unread count in the persistent navbar", %{
+      conn: conn,
+      user: user,
+      thread: thread
+    } do
+      {:ok, _notification} = Forum.create_notification(user.id, "comment", thread.id)
+
+      {:ok, view, _html} = live(log_in_user(conn, user), "/")
+
+      assert has_element?(
+               view,
+               ~s([data-name="Navbar"][data-props*='"unreadNotificationCount":1'])
+             )
+    end
+
+    test "signed-out users receive an anonymous navbar", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/")
+
+      assert has_element?(
+               view,
+               ~s([data-name="Navbar"][data-props*='"currentUser":null'])
+             )
+    end
+
+    test "new notifications push the unread count across the persistent navbar boundary", %{
+      conn: conn,
+      user: user,
+      thread: thread
+    } do
+      {:ok, view, _html} = live(log_in_user(conn, user), "/")
+
+      {:ok, _notification} = Forum.create_notification(user.id, "comment", thread.id)
+
+      assert_push_event(view, "unread-notification-count", %{count: 1})
+    end
+  end
+
   describe "listing notifications" do
     test "shows empty state when no notifications", %{conn: conn, user: user} do
       {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")

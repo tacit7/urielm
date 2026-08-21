@@ -110,6 +110,7 @@ defmodule UrielmWeb.NotificationsLive do
       current_user={@current_user}
       current_page="notifications"
       socket={@socket}
+      unread_notification_count={@unread_notification_count}
     >
       <div
         id="notifications-page"

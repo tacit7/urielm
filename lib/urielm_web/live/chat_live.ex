@@ -65,7 +65,13 @@ defmodule UrielmWeb.ChatLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} current_page="chat" socket={@socket}>
+    <Layouts.app
+      flash={@flash}
+      current_user={@current_user}
+      current_page="chat"
+      socket={@socket}
+      unread_notification_count={@unread_notification_count}
+    >
       <div class="flex h-[calc(100vh-4rem)] bg-base-200">
         <%!-- Create Room Modal --%>
         <dialog id="create_room_modal" class="modal">
