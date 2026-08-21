@@ -10,6 +10,7 @@ defmodule UrielmWeb.Components.ForumLayout do
   attr :categories, :list, default: [], doc: "list of forum categories with boards"
   attr :current_path, :string, default: "/forum", doc: "current request path for active state"
   attr :current_board, :string, default: nil, doc: "current board slug for active state"
+  attr :unread_notification_count, :integer, default: 0
   slot :inner_block, required: true
 
   def forum_layout(assigns) do
@@ -105,6 +106,7 @@ defmodule UrielmWeb.Components.ForumLayout do
                 icon="bell"
                 label="Notifications"
                 active={@current_path == "/notifications"}
+                badge_count={@unread_notification_count}
               />
             </div>
             
@@ -152,6 +154,7 @@ defmodule UrielmWeb.Components.ForumLayout do
   attr :icon, :string, required: true
   attr :label, :string, required: true
   attr :active, :boolean, default: false
+  attr :badge_count, :integer, default: 0
 
   def nav_link(assigns) do
     ~H"""
@@ -168,6 +171,14 @@ defmodule UrielmWeb.Components.ForumLayout do
       >
         <.um_icon name={@icon} class="w-4 h-4" />
         <span>{@label}</span>
+        <span
+          :if={@badge_count > 0}
+          id="forum-notification-badge"
+          class="badge badge-info badge-sm ml-auto min-w-6 border-0 bg-info/15 px-1.5 font-bold text-info"
+          aria-label={"#{@badge_count} unread notifications"}
+        >
+          {if(@badge_count > 99, do: "99+", else: @badge_count)}
+        </span>
       </a>
     </label>
     """

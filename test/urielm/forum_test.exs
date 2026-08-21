@@ -325,6 +325,56 @@ defmodule Urielm.ForumTest do
       assert comment.parent_id == parent.id
     end
 
+    test "create_comment/3 notifies the thread author and subscribers once" do
+      thread_author = user_fixture()
+      subscriber = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture(%{author_id: thread_author.id})
+
+      {:ok, _} = Forum.subscribe_to_thread(thread_author.id, thread.id)
+      {:ok, _} = Forum.subscribe_to_thread(subscriber.id, thread.id)
+      {:ok, _comment} = Forum.create_comment(thread.id, actor.id, %{"body" => "New comment"})
+
+      assert [%{subject_type: "comment", actor_id: actor_id}] =
+               Forum.list_notifications(thread_author.id)
+
+      assert actor_id == actor.id
+      assert length(Forum.list_notifications(subscriber.id)) == 1
+      assert Forum.list_notifications(actor.id) == []
+    end
+
+    test "create_comment/3 notifies a parent comment author about a reply" do
+      thread_author = user_fixture()
+      parent_author = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture(%{author_id: thread_author.id})
+      parent = comment_fixture(thread, parent_author)
+
+      {:ok, _reply} =
+        Forum.create_comment(thread.id, actor.id, %{
+          "body" => "Nested reply",
+          "parent_id" => parent.id
+        })
+
+      assert [%{subject_type: "reply", actor_id: actor_id}] =
+               Forum.list_notifications(parent_author.id)
+
+      assert actor_id == actor.id
+      assert Enum.any?(Forum.list_notifications(thread_author.id), &(&1.subject_type == "reply"))
+    end
+
+    test "create_comment/3 respects muted topic settings for every recipient source" do
+      thread_author = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture(%{author_id: thread_author.id})
+
+      {:ok, _} = Forum.subscribe_to_thread(thread_author.id, thread.id)
+      {:ok, _} = Forum.set_notification_level(thread_author.id, thread.id, "muted")
+      {:ok, _comment} = Forum.create_comment(thread.id, actor.id, %{"body" => "Quiet update"})
+
+      assert Forum.list_notifications(thread_author.id) == []
+    end
+
     test "create_comment/3 rejects parent_id from different thread" do
       thread1 = thread_fixture()
       thread2 = thread_fixture()
@@ -1271,6 +1321,20 @@ defmodule Urielm.ForumTest do
       assert is_nil(notification.read_at)
     end
 
+    test "notification mutations broadcast the recipient's unread count" do
+      user = user_fixture()
+      thread = thread_fixture()
+
+      :ok = Forum.subscribe_to_notification_updates(user.id)
+      {:ok, notification} = Forum.create_notification(user.id, "comment", thread.id)
+
+      assert_receive {:unread_notification_count, 1}
+
+      {:ok, _notification} = Forum.mark_notification_as_read(user.id, notification.id)
+
+      assert_receive {:unread_notification_count, 0}
+    end
+
     test "list_notifications/2 returns user's notifications" do
       user = user_fixture()
       actor = user_fixture()
@@ -1402,6 +1466,20 @@ defmodule Urielm.ForumTest do
 
       actor_notifications = Forum.list_notifications(actor.id)
       assert length(actor_notifications) == 0
+    end
+
+    test "notify_thread_subscribers/4 excludes muted subscribers" do
+      subscriber = user_fixture()
+      actor = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, _} = Forum.subscribe_to_thread(subscriber.id, thread.id)
+      {:ok, _} = Forum.set_notification_level(subscriber.id, thread.id, "muted")
+
+      assert {:ok, 0} =
+               Forum.notify_thread_subscribers(thread.id, actor.id, "comment", "New comment")
+
+      assert Forum.list_notifications(subscriber.id) == []
     end
   end
 end

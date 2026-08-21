@@ -60,6 +60,27 @@ defmodule UrielmWeb.ForumLiveTest do
       assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Latest")
     end
 
+    test "updates the signed-in user's unread badge without a reload", %{
+      user: user,
+      thread: thread
+    } do
+      {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum")
+
+      refute has_element?(view, "#forum-notification-badge")
+
+      {:ok, _notification} = Forum.create_notification(user.id, "comment", thread.id)
+
+      assert has_element?(view, "#forum-notification-badge", "1")
+    end
+
+    test "caps the unread badge at 99+", %{user: user} do
+      {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum")
+
+      send(view.pid, {:unread_notification_count, 100})
+
+      assert has_element?(view, "#forum-notification-badge", "99+")
+    end
+
     test "categories view exposes discovery navigation and structured board groups", %{
       category: category,
       board: board

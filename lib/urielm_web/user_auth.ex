@@ -7,9 +7,13 @@ defmodule UrielmWeb.UserAuth do
   import Phoenix.LiveView
   alias Urielm.Accounts
   alias Urielm.Accounts.User
+  alias Urielm.Forum
 
   def on_mount(:mount_current_user, _params, session, socket) do
-    socket = load_current_user(session, socket)
+    socket =
+      session
+      |> load_current_user(socket)
+      |> mount_notification_updates()
 
     # Check if user is suspended and redirect to suspended page
     if socket.assigns.current_user && User.suspended?(socket.assigns.current_user) do
@@ -62,6 +66,28 @@ defmodule UrielmWeb.UserAuth do
 
       %{} ->
         assign_new(socket, :current_user, fn -> nil end)
+    end
+  end
+
+  defp mount_notification_updates(socket) do
+    case socket.assigns.current_user do
+      nil ->
+        assign(socket, :unread_notification_count, 0)
+
+      user ->
+        if connected?(socket) do
+          Forum.subscribe_to_notification_updates(user.id)
+        end
+
+        socket
+        |> assign(:unread_notification_count, Forum.count_unread_notifications(user.id))
+        |> attach_hook(:unread_notification_count, :handle_info, fn
+          {:unread_notification_count, count}, socket ->
+            {:halt, assign(socket, :unread_notification_count, count)}
+
+          _message, socket ->
+            {:cont, socket}
+        end)
     end
   end
 

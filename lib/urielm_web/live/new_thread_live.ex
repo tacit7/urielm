@@ -108,6 +108,7 @@ defmodule UrielmWeb.NewThreadLive do
       categories={@all_categories}
       flash={@flash}
       current_user={@current_user}
+      unread_notification_count={@unread_notification_count}
       current_board={@board.slug}
     >
       <div id="new-thread-page">

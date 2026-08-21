@@ -10,6 +10,7 @@ defmodule Urielm.Forum do
   """
 
   import Ecto.Query, warn: false
+  require Logger
   alias Urielm.Repo
   alias Urielm.TrustLevel
   alias Flop
@@ -498,6 +499,7 @@ defmodule Urielm.Forum do
               # Process mentions
               body = Map.get(attrs, "body", "")
               MentionParser.process_mentions(body, author_id, "comment", comment.id)
+              notify_comment_recipients(thread, comment, user)
               {:ok, comment}
 
             error ->
@@ -1065,6 +1067,14 @@ defmodule Urielm.Forum do
     %Notification{}
     |> Notification.changeset(attrs)
     |> Repo.insert()
+    |> tap(fn
+      {:ok, _notification} -> broadcast_unread_notification_count(user_id)
+      _error -> :ok
+    end)
+  end
+
+  def subscribe_to_notification_updates(user_id) do
+    Phoenix.PubSub.subscribe(Urielm.PubSub, notification_topic(user_id))
   end
 
   def list_notifications(user_id, opts \\ []) do
@@ -1122,16 +1132,24 @@ defmodule Urielm.Forum do
     case notification
          |> Notification.changeset(%{read_at: DateTime.utc_now()})
          |> Repo.update() do
-      {:ok, updated} -> {:ok, Repo.preload(updated, [:actor, :thread])}
-      error -> error
+      {:ok, updated} ->
+        broadcast_unread_notification_count(updated.user_id)
+        {:ok, Repo.preload(updated, [:actor, :thread])}
+
+      error ->
+        error
     end
   end
 
   def mark_all_notifications_as_read(user_id) do
-    from(n in Notification,
-      where: n.user_id == ^user_id and is_nil(n.read_at)
-    )
-    |> Repo.update_all(set: [read_at: DateTime.utc_now()])
+    result =
+      from(n in Notification,
+        where: n.user_id == ^user_id and is_nil(n.read_at)
+      )
+      |> Repo.update_all(set: [read_at: DateTime.utc_now()])
+
+    broadcast_unread_notification_count(user_id)
+    result
   end
 
   def count_unread_notifications(user_id) do
@@ -1155,7 +1173,10 @@ defmodule Urielm.Forum do
       true ->
         subscribers =
           from(s in Subscription,
+            left_join: setting in TopicNotificationSetting,
+            on: setting.user_id == s.user_id and setting.thread_id == s.thread_id,
             where: s.thread_id == ^thread_id and s.user_id != ^actor_id,
+            where: is_nil(setting.id) or setting.notification_level != "muted",
             select: s.user_id
           )
           |> Repo.all()
@@ -1178,9 +1199,104 @@ defmodule Urielm.Forum do
           end)
 
         {count, _} = Repo.insert_all(Notification, attrs_list)
+        Enum.each(subscribers, &broadcast_unread_notification_count/1)
         {:ok, count}
     end
   end
+
+  defp notify_comment_recipients(thread, comment, actor) do
+    try do
+      parent_author_id =
+        if comment.parent_id do
+          from(c in Comment, where: c.id == ^comment.parent_id, select: c.author_id)
+          |> Repo.one()
+        end
+
+      subscriber_ids =
+        from(s in Subscription,
+          where: s.thread_id == ^thread.id,
+          select: s.user_id
+        )
+        |> Repo.all()
+
+      recipient_ids =
+        [thread.author_id, parent_author_id | subscriber_ids]
+        |> Enum.reject(&is_nil/1)
+        |> Enum.uniq()
+        |> Enum.reject(&(&1 == actor.id))
+        |> exclude_muted_recipients(thread.id)
+
+      subject_type = if comment.parent_id, do: "reply", else: "comment"
+      actor_name = actor.username || actor.display_name || actor.email
+
+      message =
+        if comment.parent_id do
+          "#{actor_name} replied in #{thread.title}"
+        else
+          "#{actor_name} commented on #{thread.title}"
+        end
+
+      insert_notifications(recipient_ids, thread.id, actor.id, subject_type, message)
+    rescue
+      error ->
+        Logger.error(
+          "Failed to create comment notifications for #{comment.id}: #{Exception.message(error)}"
+        )
+
+        :ok
+    end
+  end
+
+  defp exclude_muted_recipients([], _thread_id), do: []
+
+  defp exclude_muted_recipients(recipient_ids, thread_id) do
+    muted_ids =
+      from(setting in TopicNotificationSetting,
+        where:
+          setting.thread_id == ^thread_id and setting.user_id in ^recipient_ids and
+            setting.notification_level == "muted",
+        select: setting.user_id
+      )
+      |> Repo.all()
+      |> MapSet.new()
+
+    Enum.reject(recipient_ids, &MapSet.member?(muted_ids, &1))
+  end
+
+  defp insert_notifications([], _thread_id, _actor_id, _subject_type, _message), do: :ok
+
+  defp insert_notifications(recipient_ids, thread_id, actor_id, subject_type, message) do
+    now = DateTime.utc_now()
+
+    attrs_list =
+      Enum.map(recipient_ids, fn user_id ->
+        %{
+          id: Ecto.UUID.generate(),
+          user_id: user_id,
+          subject_type: subject_type,
+          subject_id: thread_id,
+          actor_id: actor_id,
+          thread_id: thread_id,
+          message: message,
+          inserted_at: now,
+          updated_at: now
+        }
+      end)
+
+    Repo.insert_all(Notification, attrs_list)
+    Enum.each(recipient_ids, &broadcast_unread_notification_count/1)
+    :ok
+  end
+
+  defp broadcast_unread_notification_count(user_id) do
+    Phoenix.PubSub.broadcast(
+      Urielm.PubSub,
+      notification_topic(user_id),
+      {:unread_notification_count, count_unread_notifications(user_id)}
+    )
+  end
+
+  defp notification_topic(user_id), do: "forum_notifications:#{user_id}"
 
   # Search
 

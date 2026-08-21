@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Automatic notifications — navigation badge</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1a1b26;
+        --surface: #202331;
+        --hover: #292e42;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+        --cyan: #7dcfff;
+        --blue: #2ac3de;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 ui-sans-serif, system-ui, sans-serif;
+      }
+      .stage { display: grid; min-height: 100vh; place-items: center; padding: 32px; }
+      .frame { width: min(100%, 680px); }
+      .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+      .tab, .annotation { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+      .tab { padding: 7px 11px; color: var(--muted); }
+      .tab.active { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 55%, var(--border)); }
+      .app { display: grid; grid-template-columns: 256px 1fr; min-height: 430px; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; }
+      aside { padding: 20px 16px; background: var(--surface); border-right: 1px solid var(--border); }
+      .brand { margin: 0 8px 28px; font-size: 17px; font-weight: 750; }
+      nav { display: grid; gap: 5px; }
+      .nav-item { display: flex; min-height: 42px; align-items: center; gap: 11px; padding: 8px 12px; border-radius: 12px; color: var(--muted); }
+      .nav-item.active { background: var(--hover); color: var(--text); }
+      .icon { width: 16px; text-align: center; color: var(--cyan); }
+      .badge { margin-left: auto; min-width: 24px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--blue) 18%, transparent); color: var(--cyan); font-size: 11px; font-weight: 800; text-align: center; }
+      main { padding: 42px; background: var(--bg); }
+      h1 { margin: 0 0 8px; font-size: 26px; }
+      p { margin: 0; color: var(--muted); }
+      .annotation { margin-top: 12px; padding: 14px 16px; color: var(--muted); }
+      .annotation strong { color: var(--cyan); }
+      @media (max-width: 580px) {
+        .stage { padding: 16px; }
+        .app { grid-template-columns: 1fr; }
+        aside { border-right: 0; border-bottom: 1px solid var(--border); }
+        main { padding: 28px 22px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="frame">
+        <div class="tabs" aria-label="Mockup states">
+          <span class="tab">Zero unread: hidden</span>
+          <span class="tab active">Unread updates</span>
+          <span class="tab">Overflow: 99+</span>
+        </div>
+        <div class="app">
+          <aside>
+            <div class="brand">Urielm</div>
+            <nav aria-label="Community navigation">
+              <div class="nav-item"><span class="icon">◫</span><span>Latest</span></div>
+              <div class="nav-item"><span class="icon">◇</span><span>Categories</span></div>
+              <div class="nav-item"><span class="icon">☆</span><span>Saved</span></div>
+              <div class="nav-item active">
+                <span class="icon">●</span><span>Notifications</span><span class="badge">3</span>
+              </div>
+            </nav>
+          </aside>
+          <main>
+            <h1>Notifications</h1>
+            <p>The count updates while the user remains anywhere in the community.</p>
+          </main>
+        </div>
+        <div class="annotation">
+          <strong>Behavior:</strong> subscribe each signed-in LiveView to a user-specific PubSub topic. New notifications and read actions broadcast the latest count. The pill is hidden at zero and capped at 99+.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

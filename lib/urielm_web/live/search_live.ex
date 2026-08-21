@@ -125,6 +125,7 @@ defmodule UrielmWeb.SearchLive do
       categories={@all_categories}
       flash={@flash}
       current_user={@current_user}
+      unread_notification_count={@unread_notification_count}
       current_path="/forum/search"
     >
       <div class="container mx-auto px-4 py-8 max-w-3xl">
