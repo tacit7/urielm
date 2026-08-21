@@ -33,10 +33,10 @@ defmodule UrielmWeb.NewThreadLive do
 
             {:ok,
              socket
-             |> assign(:page_title, "New Thread")
+             |> assign(:page_title, "New Discussion")
              |> assign(:board, board)
              |> assign(:all_categories, categories)
-             |> assign(:thread_form, to_form(Thread.changeset(%Thread{}, %{})))}
+             |> assign_composer(Thread.changeset(%Thread{}, %{}), %{})}
         end
     end
   end
@@ -48,12 +48,24 @@ defmodule UrielmWeb.NewThreadLive do
       |> Thread.changeset(Params.normalize(thread_params0))
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :thread_form, to_form(changeset))}
+    {:noreply, assign_composer(socket, changeset, thread_params0)}
   end
 
   @impl true
   def handle_event("validate", _params, socket) do
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("restore_draft", draft_params, socket) do
+    params =
+      draft_params
+      |> Map.take(["title", "body"])
+      |> Params.normalize()
+
+    changeset = Thread.changeset(%Thread{}, params)
+
+    {:noreply, assign_composer(socket, changeset, params)}
   end
 
   @impl true
@@ -74,6 +86,7 @@ defmodule UrielmWeb.NewThreadLive do
       {:ok, thread} ->
         {:noreply,
          socket
+         |> push_event("clear_draft", %{})
          |> put_flash(:info, "Thread created successfully")
          |> redirect(to: ~p"/forum/t/#{thread.id}")}
 
@@ -84,7 +97,7 @@ defmodule UrielmWeb.NewThreadLive do
          |> redirect(to: ~p"/forum/b/#{board.slug}")}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, :thread_form, to_form(changeset))}
+        {:noreply, assign_composer(socket, changeset, params)}
     end
   end
 
@@ -97,61 +110,206 @@ defmodule UrielmWeb.NewThreadLive do
       current_user={@current_user}
       current_board={@board.slug}
     >
-      <div class="mb-8">
-        <.link navigate={~p"/forum/b/#{@board.slug}"} class="link link-hover text-sm mb-4">
-          ← Back to {@board.name}
-        </.link>
+      <div id="new-thread-page">
+        <header class="mb-7 max-w-3xl sm:mb-9">
+          <.link
+            id="new-thread-back-link"
+            navigate={~p"/forum/b/#{@board.slug}"}
+            class="group inline-flex items-center gap-2 text-sm font-medium text-base-content/50 transition-colors hover:text-secondary"
+          >
+            <.um_icon
+              name="hero-arrow-left"
+              class="size-4 transition-transform group-hover:-translate-x-0.5"
+            /> Back to {@board.name}
+          </.link>
 
-        <h1 class="text-4xl font-bold text-base-content mb-2">New Thread</h1>
-        <p class="text-base-content/60">Start a discussion in {@board.name}</p>
-      </div>
+          <p class="ui-eyebrow mt-7">New discussion</p>
+          <h1 class="mt-2 text-3xl font-black tracking-tight text-base-content sm:text-4xl lg:text-5xl">
+            Start something useful
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-base-content/55 sm:text-base">
+            Share a clear question, useful idea, or practical lesson with the community.
+          </p>
+        </header>
 
-      <div class="card bg-base-200 border border-base-300">
-        <div class="card-body">
-          <.form for={@thread_form} phx-change="validate" phx-submit="save" class="space-y-6">
-            <div>
-              <.input
-                field={@thread_form[:title]}
-                type="text"
-                label="Title"
-                placeholder="What's your thread about?"
-                class="input input-bordered w-full"
-                required
-              />
-              <%= for {msg, _opts} <- @thread_form[:title].errors do %>
-                <p class="text-error text-sm mt-1">{msg}</p>
-              <% end %>
-            </div>
+        <section
+          id="new-thread-board-context"
+          class="mb-5 flex items-center gap-3 rounded-2xl border border-base-300/70 bg-base-200/45 px-4 py-3.5 sm:px-5"
+          aria-label="Publishing destination"
+        >
+          <span class={[
+            "badge badge-sm shrink-0",
+            UrielmWeb.ForumColors.badge_class(@board.slug)
+          ]}>
+          </span>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-bold text-base-content">{@board.name}</p>
+            <p class="text-xs text-base-content/45">
+              Your discussion will be published to this board.
+            </p>
+          </div>
+          <.um_icon name="check_circle" class="ml-auto size-5 shrink-0 text-accent" />
+        </section>
 
-            <div>
-              <.input
-                field={@thread_form[:body]}
-                type="textarea"
-                label="Description"
-                placeholder="Share your thoughts... (Markdown supported)"
-                class="textarea textarea-bordered w-full min-h-80"
-                required
-              />
-              <%= for {msg, _opts} <- @thread_form[:body].errors do %>
-                <p class="text-error text-sm mt-1">{msg}</p>
-              <% end %>
-            </div>
+        <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.7fr)]">
+          <section class="rounded-3xl border border-base-300/70 bg-base-200/45 shadow-sm">
+            <.form
+              for={@thread_form}
+              id="new-thread-form"
+              phx-change="validate"
+              phx-submit="save"
+              phx-hook="DiscussionDraft"
+              data-draft-key={"forum:new-thread:#{@board.id}:#{@current_user.id}"}
+              class="p-5 sm:p-7"
+            >
+              <div>
+                <div class="mb-2 flex items-center justify-between gap-4">
+                  <label for="new-thread-title" class="text-sm font-bold text-base-content">
+                    Title
+                  </label>
+                  <span id="new-thread-title-count" class="text-xs tabular-nums text-base-content/40">
+                    {@title_count} / 300
+                  </span>
+                </div>
+                <.input
+                  field={@thread_form[:title]}
+                  id="new-thread-title"
+                  type="text"
+                  placeholder="Summarize the discussion in one clear sentence"
+                  class="input input-lg w-full rounded-xl border-base-300 bg-base-100/75 text-base shadow-none transition focus:border-secondary focus:outline-none"
+                  error_class="input-error"
+                  maxlength="300"
+                  phx-debounce="250"
+                  required
+                />
+                <p class="mt-1.5 text-xs leading-5 text-base-content/40">
+                  A specific title helps the right people find your discussion.
+                </p>
+              </div>
 
-            <div class="flex gap-4 justify-end">
-              <.link
-                navigate={~p"/forum/b/#{@board.slug}"}
-                class="btn btn-ghost"
+              <div class="mt-6">
+                <div class="mb-2 flex items-center justify-between gap-4">
+                  <label for="new-thread-body" class="text-sm font-bold text-base-content">
+                    Discussion
+                  </label>
+                  <span id="new-thread-body-count" class="text-xs tabular-nums text-base-content/40">
+                    {@body_count} / 10,000
+                  </span>
+                </div>
+                <.input
+                  field={@thread_form[:body]}
+                  id="new-thread-body"
+                  type="textarea"
+                  placeholder="Add context, what you tried, and what kind of response would help…"
+                  class="textarea min-h-72 w-full resize-y rounded-xl border-base-300 bg-base-100/75 px-4 py-3 text-base leading-7 shadow-none transition focus:border-secondary focus:outline-none sm:min-h-80"
+                  error_class="textarea-error"
+                  maxlength="10000"
+                  phx-debounce="250"
+                  required
+                />
+                <div class="mt-1.5 flex items-center gap-2 text-xs leading-5 text-base-content/40">
+                  <.um_icon name="hero-pencil-square" class="size-4 shrink-0" />
+                  Markdown is supported. Examples and relevant context make discussions easier to answer.
+                </div>
+              </div>
+
+              <div class="mt-7 flex flex-col-reverse gap-3 border-t border-base-300/50 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <p class="flex items-center gap-2 text-xs text-base-content/40">
+                  <.um_icon name="check_circle" class="size-4 text-accent" />
+                  Drafts are kept on this device.
+                </p>
+                <div class="grid grid-cols-2 gap-2 sm:flex">
+                  <.link
+                    navigate={~p"/forum/b/#{@board.slug}"}
+                    class="btn btn-ghost rounded-xl"
+                  >
+                    Cancel
+                  </.link>
+                  <button
+                    id="new-thread-submit"
+                    type="submit"
+                    phx-disable-with="Publishing…"
+                    class="btn btn-primary rounded-xl px-5 shadow-sm transition-transform hover:-translate-y-0.5"
+                  >
+                    Publish discussion
+                  </button>
+                </div>
+              </div>
+            </.form>
+          </section>
+
+          <aside class="grid gap-4 lg:sticky lg:top-8">
+            <section
+              id="new-thread-preview"
+              class="rounded-3xl border border-base-300/70 bg-base-200/45 p-5 sm:p-6"
+              aria-labelledby="new-thread-preview-label"
+            >
+              <p id="new-thread-preview-label" class="ui-eyebrow">Live preview</p>
+              <h2
+                id="new-thread-preview-title"
+                class="mt-3 break-words text-lg font-bold leading-snug text-base-content"
               >
-                Cancel
-              </.link>
-              <button type="submit" class="btn btn-primary">
-                Create Thread
-              </button>
-            </div>
-          </.form>
+                {if @draft_title == "", do: "Your title will appear here", else: @draft_title}
+              </h2>
+              <div
+                id="new-thread-preview-body"
+                class="mt-3 min-h-16 break-words text-sm leading-6 text-base-content/60"
+              >
+                <%= if @draft_body == "" do %>
+                  <p>Your formatted discussion will appear here as you write.</p>
+                <% else %>
+                  <.svelte
+                    name="MarkdownRenderer"
+                    props={%{content: @draft_body}}
+                    socket={@socket}
+                    ssr={false}
+                  />
+                <% end %>
+              </div>
+            </section>
+
+            <section
+              id="new-thread-guidance"
+              class="rounded-3xl border border-base-300/70 bg-base-100 p-5 sm:p-6"
+              aria-labelledby="new-thread-guidance-title"
+            >
+              <div class="flex items-center gap-2 text-secondary">
+                <.um_icon name="hero-sparkles" class="size-5" />
+                <h2 id="new-thread-guidance-title" class="text-sm font-bold text-base-content">
+                  A useful discussion
+                </h2>
+              </div>
+              <ul class="mt-4 space-y-3 text-sm leading-5 text-base-content/55">
+                <li class="flex gap-3">
+                  <span class="mt-2 size-1.5 shrink-0 rounded-full bg-secondary"></span>
+                  Lead with the goal or question.
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent"></span>
+                  Add context and explain what you tried.
+                </li>
+                <li class="flex gap-3">
+                  <span class="mt-2 size-1.5 shrink-0 rounded-full bg-info"></span>
+                  Say what a helpful answer would look like.
+                </li>
+              </ul>
+            </section>
+          </aside>
         </div>
       </div>
     </UrielmWeb.Components.ForumLayout.forum_layout>
     """
+  end
+
+  defp assign_composer(socket, changeset, params) do
+    title = Map.get(params, "title", "") || ""
+    body = Map.get(params, "body", "") || ""
+
+    socket
+    |> assign(:thread_form, to_form(changeset))
+    |> assign(:draft_title, title)
+    |> assign(:draft_body, body)
+    |> assign(:title_count, String.length(title))
+    |> assign(:body_count, String.length(body))
   end
 end

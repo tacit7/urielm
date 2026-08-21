@@ -335,12 +335,18 @@ defmodule UrielmWeb.ForumLiveTest do
     end
 
     test "authenticated user can view form", %{board: board, user: user} do
-      {:ok, _live, html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}/new")
+      {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}/new")
 
-      assert html =~ "New Thread"
-      assert html =~ "Title"
-      assert html =~ "Description"
-      assert html =~ "Create Thread"
+      assert has_element?(view, "#new-thread-page")
+      assert has_element?(view, "#new-thread-board-context", board.name)
+      assert has_element?(view, "#new-thread-form[phx-hook='DiscussionDraft']")
+      assert has_element?(view, "#new-thread-title[maxlength='300']")
+      assert has_element?(view, "#new-thread-body[maxlength='10000']")
+      assert has_element?(view, "#new-thread-title-count", "0 / 300")
+      assert has_element?(view, "#new-thread-body-count", "0 / 10,000")
+      assert has_element?(view, "#new-thread-preview")
+      assert has_element?(view, "#new-thread-guidance")
+      assert has_element?(view, "#new-thread-submit[phx-disable-with='Publishing…']")
     end
 
     test "back link navigates to board", %{board: board, user: user} do
@@ -352,11 +358,33 @@ defmodule UrielmWeb.ForumLiveTest do
     test "validates on form input", %{board: board, user: user} do
       {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}/new")
 
-      # Submit empty form
-      _html = render_change(live, "validate", %{"thread" => %{}})
+      render_change(live, "validate", %{
+        "thread" => %{
+          "title" => "A clearer discussion title",
+          "body" => "Some useful **Markdown** context."
+        }
+      })
 
-      # Should still render without crashing
-      assert has_element?(live, "form")
+      assert has_element?(live, "#new-thread-title-count", "26 / 300")
+      assert has_element?(live, "#new-thread-body-count", "33 / 10,000")
+      assert has_element?(live, "#new-thread-preview-title", "A clearer discussion title")
+      assert has_element?(live, "#new-thread-preview-body")
+    end
+
+    test "restores a locally saved draft without showing validation errors", %{
+      board: board,
+      user: user
+    } do
+      {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}/new")
+
+      render_hook(live, "restore_draft", %{
+        "title" => "Restored draft",
+        "body" => "Draft body restored from local storage."
+      })
+
+      assert has_element?(live, "#new-thread-title[value='Restored draft']")
+      assert has_element?(live, "#new-thread-preview-title", "Restored draft")
+      refute has_element?(live, "#new-thread-form .text-error")
     end
 
     test "creates thread successfully", %{board: board, user: user} do

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>New discussion composer</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #16161e;
+        --surface: #1a1b26;
+        --surface-2: #202231;
+        --border: #34364a;
+        --text: #c0caf5;
+        --muted: #7f849c;
+        --blue: #7aa2f7;
+        --cyan: #7dcfff;
+        --teal: #73daca;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, sans-serif; }
+      button, input, textarea { font: inherit; }
+      .tabs { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; padding: 12px; background: #101018e8; }
+      .tabs button { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); padding: 8px 12px; }
+      .tabs button.active { background: #7aa2f720; border-color: var(--blue); color: var(--cyan); }
+      .frame { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100vh - 61px); }
+      .sidebar { padding: 28px 20px; border-right: 1px solid var(--border); background: var(--surface); }
+      .sidebar strong { display: block; margin-bottom: 28px; font-size: 18px; }
+      .nav { display: grid; gap: 7px; color: var(--muted); }
+      .nav span { padding: 9px 12px; border-radius: 10px; }
+      .nav .active { background: #7aa2f714; color: var(--cyan); }
+      main { width: min(980px, 100%); margin: 0 auto; padding: 46px 32px 80px; }
+      .back { color: var(--muted); }
+      h1 { margin: 22px 0 6px; font-size: clamp(30px, 4vw, 44px); letter-spacing: -0.04em; }
+      .lede { margin: 0 0 26px; color: var(--muted); }
+      .board { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+      .board i { width: 10px; height: 10px; border-radius: 999px; background: var(--teal); box-shadow: 0 0 18px #73daca70; }
+      .board small { display: block; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr); gap: 18px; align-items: start; }
+      .card { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); box-shadow: 0 18px 55px #09091040; }
+      .form { padding: 24px; }
+      label { display: flex; justify-content: space-between; margin: 0 0 8px; font-weight: 700; }
+      label span { color: var(--muted); font-size: 12px; font-weight: 500; }
+      input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 12px; background: #12131c; color: var(--text); padding: 13px 14px; outline: 0; }
+      input:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #7aa2f720; }
+      textarea { min-height: 260px; resize: vertical; }
+      .help { margin: 7px 0 22px; color: var(--muted); font-size: 12px; }
+      .actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 4px; }
+      .saved { color: var(--muted); font-size: 12px; }
+      .buttons { display: flex; gap: 9px; }
+      .btn { border: 0; border-radius: 11px; padding: 10px 15px; font-weight: 700; }
+      .ghost { background: transparent; color: var(--muted); }
+      .primary { background: var(--blue); color: #15161f; }
+      .aside { display: grid; gap: 14px; }
+      .preview, .tips, .annotation { padding: 18px; }
+      .eyebrow { margin: 0 0 10px; color: var(--cyan); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+      .preview h2 { margin: 0 0 8px; font-size: 18px; }
+      .preview p, .tips li, .annotation { color: var(--muted); }
+      .tips ul { margin: 0; padding-left: 18px; }
+      .annotation { margin-top: 18px; border: 1px dashed var(--border); border-radius: 14px; font-size: 13px; }
+      [data-view="mobile"] .frame { display: block; }
+      [data-view="mobile"] .sidebar { display: none; }
+      [data-view="mobile"] main { max-width: 430px; padding: 28px 16px 56px; }
+      [data-view="mobile"] .grid { display: block; }
+      [data-view="mobile"] .aside { margin-top: 14px; }
+      [data-view="mobile"] .actions { align-items: stretch; flex-direction: column; }
+      [data-view="mobile"] .buttons { display: grid; grid-template-columns: 1fr 1.4fr; }
+      [data-view="mobile"] .btn { width: 100%; }
+    </style>
+  </head>
+  <body data-view="desktop">
+    <div class="tabs">
+      <button class="active" data-target="desktop">Desktop</button>
+      <button data-target="mobile">Mobile</button>
+    </div>
+    <div class="frame">
+      <aside class="sidebar">
+        <strong>Urielm</strong>
+        <div class="nav"><span>Latest</span><span>Categories</span><span class="active">Prompt engineering</span></div>
+      </aside>
+      <main>
+        <span class="back">← Back to Prompt engineering</span>
+        <h1>Start a discussion</h1>
+        <p class="lede">Share a clear question, useful idea, or practical lesson with the community.</p>
+        <div class="board"><i></i><div><strong>Prompt engineering</strong><small>Your discussion will be published to this board.</small></div></div>
+        <div class="grid">
+          <section class="card form">
+            <label>Title <span>0 / 300</span></label>
+            <input placeholder="Summarize the discussion in one clear sentence" />
+            <p class="help">A specific title helps the right people find your discussion.</p>
+            <label>Discussion <span>0 / 10,000</span></label>
+            <textarea placeholder="Add context, what you tried, and what kind of response would help…"></textarea>
+            <p class="help">Markdown is supported. Include examples when they make the question easier to answer.</p>
+            <div class="actions"><span class="saved">Drafts are kept on this device.</span><div class="buttons"><button class="btn ghost">Cancel</button><button class="btn primary">Publish discussion</button></div></div>
+          </section>
+          <aside class="aside">
+            <section class="card preview"><p class="eyebrow">Live preview</p><h2>Your title will appear here</h2><p>Your formatted discussion will appear here as you write.</p></section>
+            <section class="card tips"><p class="eyebrow">A useful post</p><ul><li>Leads with the goal or question</li><li>Adds relevant context</li><li>Explains what a good answer looks like</li></ul></section>
+          </aside>
+        </div>
+        <div class="annotation">The board context stays visible, validation appears beside each field, the publish button exposes its loading state, and the draft is restored locally. On mobile, guidance stacks below the form and actions become full width.</div>
+      </main>
+    </div>
+    <script>
+      document.querySelectorAll("[data-target]").forEach((button) => button.addEventListener("click", () => {
+        document.body.dataset.view = button.dataset.target;
+        document.querySelectorAll("[data-target]").forEach((item) => item.classList.toggle("active", item === button));
+      }));
+    </script>
+  </body>
+</html>

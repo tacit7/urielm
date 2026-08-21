@@ -345,10 +345,50 @@ const ExpandingTextarea = {
   }
 }
 
+// Preserve in-progress forum discussions locally, scoped to the board and author.
+const DiscussionDraft = {
+  mounted() {
+    this.storageKey = this.el.dataset.draftKey
+    this.saveTimer = null
+
+    try {
+      const draft = JSON.parse(localStorage.getItem(this.storageKey) || "null")
+      if (draft?.title || draft?.body) this.pushEvent("restore_draft", draft)
+    } catch (_) {}
+
+    this.saveDraft = () => {
+      clearTimeout(this.saveTimer)
+      this.saveTimer = setTimeout(() => {
+        const title = this.el.querySelector("#new-thread-title")?.value || ""
+        const body = this.el.querySelector("#new-thread-body")?.value || ""
+
+        try {
+          if (title || body) {
+            localStorage.setItem(this.storageKey, JSON.stringify({title, body}))
+          } else {
+            localStorage.removeItem(this.storageKey)
+          }
+        } catch (_) {}
+      }, 200)
+    }
+
+    this.el.addEventListener("input", this.saveDraft)
+    this.handleEvent("clear_draft", () => {
+      try { localStorage.removeItem(this.storageKey) } catch (_) {}
+    })
+  },
+
+  destroyed() {
+    clearTimeout(this.saveTimer)
+    this.el.removeEventListener("input", this.saveDraft)
+  }
+}
+
 // Add custom hooks
 Hooks.InfiniteScroll = InfiniteScroll
 Hooks.CopyToClipboard = CopyToClipboard
 Hooks.ExpandingTextarea = ExpandingTextarea
+Hooks.DiscussionDraft = DiscussionDraft
 Hooks.SigninForm = SigninForm
 Hooks.SignupForm = SignupForm
 Hooks.HighlightCode = HighlightCode
