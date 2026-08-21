@@ -103,27 +103,31 @@
   </div>
 
   <!-- Activity + actions -->
-  <div class="flex flex-col items-end gap-1 flex-shrink-0 min-w-[72px]">
+  <div class="flex flex-col items-end gap-1 flex-shrink-0 min-w-[84px]">
     <span class="font-mono text-xs text-base-content/50 tabular-nums">{activityTime}</span>
-    <!-- inline actions on hover -->
-    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+    <!-- Always visible for touch; revealed on hover or keyboard focus on desktop -->
+    <div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
       <button
         on:click|preventDefault={handleSave}
-        class="p-0.5 rounded text-base-content/30 hover:text-primary transition-colors"
+        class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-base-content/45 hover:bg-base-200 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-colors"
         class:text-primary={is_saved}
+        aria-label={is_saved ? "Remove saved thread" : "Save thread"}
+        aria-pressed={is_saved}
         title={is_saved ? "Saved" : "Save"}
       >
-        <svg class="w-3.5 h-3.5" fill={is_saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-4 w-4" fill={is_saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
       </button>
       <button
         on:click|preventDefault={handleSubscribe}
-        class="p-0.5 rounded text-base-content/30 hover:text-primary transition-colors"
+        class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-base-content/45 hover:bg-base-200 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-colors"
         class:text-primary={is_subscribed}
+        aria-label={is_subscribed ? "Unsubscribe from thread" : "Subscribe to thread"}
+        aria-pressed={is_subscribed}
         title={is_subscribed ? "Unsubscribe" : "Subscribe"}
       >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       </button>
