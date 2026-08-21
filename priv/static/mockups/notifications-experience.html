@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Notifications experience</title>
+    <style>
+      :root { color-scheme: dark; --bg:#16161e; --surface:#1a1b26; --raised:#202231; --border:#34364a; --text:#c0caf5; --muted:#7f849c; --blue:#7aa2f7; --cyan:#7dcfff; --teal:#73daca; }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,sans-serif; } button { font:inherit; }
+      .switcher { position:sticky; top:0; z-index:2; display:flex; gap:8px; padding:12px; background:#101018e8; }
+      .switcher button { border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); padding:8px 12px; }
+      .switcher .active { border-color:var(--blue); background:#7aa2f720; color:var(--cyan); }
+      .shell { display:grid; grid-template-columns:240px minmax(0,1fr); min-height:calc(100vh - 61px); }
+      nav { padding:28px 20px; border-right:1px solid var(--border); background:var(--surface); } nav strong { display:block; margin-bottom:28px; font-size:18px; }
+      nav span { display:block; margin:6px 0; padding:9px 12px; border-radius:10px; color:var(--muted); } nav .active { background:#7aa2f714; color:var(--cyan); }
+      main { width:min(820px,100%); margin:0 auto; padding:48px 28px 80px; }
+      header { display:flex; justify-content:space-between; gap:24px; align-items:end; } .eyebrow { color:var(--cyan); font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+      h1 { margin:7px 0 4px; font-size:42px; line-height:1.05; letter-spacing:-.04em; } .sub { margin:0; color:var(--muted); } .mark { border:1px solid var(--border); border-radius:11px; background:var(--surface); color:var(--text); padding:9px 13px; }
+      .filters { display:flex; align-items:center; gap:8px; margin:28px 0 30px; border-bottom:1px solid var(--border); } .filters span { padding:10px 12px; color:var(--muted); }
+      .filters .active { color:var(--cyan); box-shadow:inset 0 -2px var(--blue); } .count { margin-left:auto; font-size:12px; }
+      .day { margin:24px 0 10px; color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+      .item { display:grid; grid-template-columns:44px minmax(0,1fr) auto; gap:14px; margin-bottom:10px; padding:17px; border:1px solid var(--border); border-radius:16px; background:var(--surface); }
+      .item.unread { background:linear-gradient(135deg,#7aa2f710,var(--surface) 45%); border-color:#7aa2f750; }
+      .avatar { display:grid; place-items:center; width:44px; height:44px; border-radius:50%; background:#7dcfff20; color:var(--cyan); font-weight:900; }
+      .meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:var(--muted); font-size:12px; } .type { color:var(--teal); font-weight:800; } .message { margin:5px 0; color:var(--text); } .thread { color:var(--muted); font-size:13px; }
+      .dot { width:8px; height:8px; margin-top:8px; border-radius:50%; background:var(--blue); box-shadow:0 0 14px #7aa2f7aa; } .action { margin-top:10px; color:var(--cyan); font-size:13px; font-weight:700; }
+      .annotation { margin-top:24px; padding:15px; border:1px dashed var(--border); border-radius:14px; color:var(--muted); font-size:13px; }
+      [data-view="mobile"] .shell { display:block; } [data-view="mobile"] nav { display:none; } [data-view="mobile"] main { max-width:430px; padding:28px 16px 60px; }
+      [data-view="mobile"] header { display:block; } [data-view="mobile"] h1 { font-size:34px; } [data-view="mobile"] .mark { width:100%; margin-top:18px; }
+      [data-view="mobile"] .item { grid-template-columns:40px minmax(0,1fr); padding:15px; } [data-view="mobile"] .dot { grid-column:2; grid-row:1; justify-self:end; } [data-view="mobile"] .avatar { width:40px; height:40px; }
+    </style>
+  </head>
+  <body data-view="desktop">
+    <div class="switcher"><button class="active" data-target="desktop">Desktop</button><button data-target="mobile">Mobile</button></div>
+    <div class="shell">
+      <nav><strong>Urielm</strong><span>Latest</span><span>Categories</span><span>Saved</span><span class="active">Notifications</span></nav>
+      <main>
+        <header><div><div class="eyebrow">Community inbox</div><h1>Notifications</h1><p class="sub">Three updates are waiting for you.</p></div><button class="mark">✓ Mark all read</button></header>
+        <div class="filters"><span class="active">All</span><span>Unread</span><span class="count">3 unread</span></div>
+        <div class="day">Today</div>
+        <article class="item unread"><div class="avatar">A</div><div><div class="meta"><span class="type">Reply</span><span>12 minutes ago</span></div><p class="message"><strong>alice</strong> replied to your discussion.</p><div class="thread">How to write effective prompts</div><div class="action">View discussion →</div></div><i class="dot"></i></article>
+        <article class="item unread"><div class="avatar">B</div><div><div class="meta"><span class="type">New comment</span><span>2 hours ago</span></div><p class="message"><strong>bob</strong> added a comment.</p><div class="thread">Building a useful evaluation set</div><div class="action">View discussion →</div></div><i class="dot"></i></article>
+        <div class="day">Earlier</div>
+        <article class="item"><div class="avatar">C</div><div><div class="meta"><span class="type">Thread update</span><span>August 18, 2026</span></div><p class="message">A discussion you follow was updated.</p><div class="thread">Model release notes</div><div class="action">View discussion →</div></div></article>
+        <div class="annotation">Notifications are grouped into Today, Yesterday, and Earlier. Unread state uses a subtle blue wash and dot, never a decorative left border. Opening a linked discussion marks that item read; explicit read actions remain available and filters preserve URL state.</div>
+      </main>
+    </div>
+    <script>document.querySelectorAll("[data-target]").forEach(button=>button.addEventListener("click",()=>{document.body.dataset.view=button.dataset.target;document.querySelectorAll("[data-target]").forEach(item=>item.classList.toggle("active",item===button));}));</script>
+  </body>
+</html>

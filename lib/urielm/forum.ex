@@ -1104,12 +1104,26 @@ defmodule Urielm.Forum do
         {:error, :not_found}
 
       notification ->
-        case notification
-             |> Notification.changeset(%{read_at: DateTime.utc_now()})
-             |> Repo.update() do
-          {:ok, updated} -> {:ok, Repo.preload(updated, :actor)}
-          error -> error
-        end
+        update_notification_read_at(notification)
+    end
+  end
+
+  def mark_notification_as_read(user_id, notification_id) do
+    case Repo.get_by(Notification, id: notification_id, user_id: user_id) do
+      nil ->
+        {:error, :not_found}
+
+      notification ->
+        update_notification_read_at(notification)
+    end
+  end
+
+  defp update_notification_read_at(notification) do
+    case notification
+         |> Notification.changeset(%{read_at: DateTime.utc_now()})
+         |> Repo.update() do
+      {:ok, updated} -> {:ok, Repo.preload(updated, [:actor, :thread])}
+      error -> error
     end
   end
 

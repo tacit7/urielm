@@ -13,33 +13,16 @@ defmodule UrielmWeb.NotificationsLive do
       nil ->
         {:ok, redirect(socket, to: ~p"/auth/signin")}
 
-      user ->
-        if connected?(socket) do
-          notifications =
-            Forum.list_notifications(user.id,
-              limit: LiveHelpers.page_size(),
-              offset: 0,
-              unread_only: false
-            )
-
-          {:ok,
-           socket
-           |> assign(:page_title, "Notifications")
-           |> assign(:page, 0)
-           |> assign(:unread_only, false)
-           |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
-           |> assign(:unread_count, Forum.count_unread_notifications(user.id))
-           |> stream(:notifications, serialize_notifications(notifications))}
-        else
-          {:ok,
-           socket
-           |> assign(:page_title, "Notifications")
-           |> assign(:page, 0)
-           |> assign(:unread_only, false)
-           |> assign(:has_more, false)
-           |> assign(:unread_count, 0)
-           |> stream(:notifications, [])}
-        end
+      _user ->
+        {:ok,
+         socket
+         |> assign(:page_title, "Notifications")
+         |> assign(:page, 0)
+         |> assign(:unread_only, false)
+         |> assign(:has_more, false)
+         |> assign(:unread_count, 0)
+         |> assign(:last_day_group, nil)
+         |> stream(:notifications, [])}
     end
   end
 
@@ -48,32 +31,28 @@ defmodule UrielmWeb.NotificationsLive do
     %{current_user: user} = socket.assigns
     unread_only = Map.get(params, "unread", "false") == "true"
 
-    notifications =
-      if unread_only do
-        Forum.list_notifications(user.id,
-          limit: LiveHelpers.page_size(),
-          offset: 0,
-          unread_only: true
-        )
-      else
-        Forum.list_notifications(user.id,
-          limit: LiveHelpers.page_size(),
-          offset: 0,
-          unread_only: false
-        )
-      end
+    notifications = list_notifications(user.id, unread_only, LiveHelpers.page_size(), 0)
+    {serialized, last_day_group} = serialize_notifications(notifications)
 
     {:noreply,
      socket
      |> assign(:unread_only, unread_only)
      |> assign(:page, 0)
      |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
-     |> stream(:notifications, serialize_notifications(notifications), reset: true)}
+     |> assign(:unread_count, Forum.count_unread_notifications(user.id))
+     |> assign(:last_day_group, last_day_group)
+     |> stream(:notifications, serialized, reset: true)}
   end
 
   @impl true
   def handle_event("load_more", _params, socket) do
-    %{current_user: user, page: page, has_more: has_more, unread_only: unread_only} =
+    %{
+      current_user: user,
+      page: page,
+      has_more: has_more,
+      unread_only: unread_only,
+      last_day_group: last_day_group
+    } =
       socket.assigns
 
     if not has_more do
@@ -81,39 +60,25 @@ defmodule UrielmWeb.NotificationsLive do
     else
       offset = (page + 1) * LiveHelpers.page_size()
 
-      notifications =
-        Forum.list_notifications(user.id,
-          limit: LiveHelpers.page_size(),
-          offset: offset,
-          unread_only: unread_only
-        )
+      notifications = list_notifications(user.id, unread_only, LiveHelpers.page_size(), offset)
+      {serialized, next_last_day_group} = serialize_notifications(notifications, last_day_group)
 
       {:noreply,
        socket
        |> assign(:page, page + 1)
        |> assign(:has_more, length(notifications) == LiveHelpers.page_size())
-       |> stream(:notifications, serialize_notifications(notifications))}
+       |> assign(:last_day_group, next_last_day_group)
+       |> stream(:notifications, serialized)}
     end
   end
 
   @impl true
   def handle_event("mark_as_read", %{"notification_id" => notif_id}, socket) do
-    %{current_user: user, unread_only: unread_only} = socket.assigns
+    %{current_user: user} = socket.assigns
 
-    case Forum.mark_notification_as_read(notif_id) do
-      {:ok, updated_notif} ->
-        socket =
-          socket
-          |> assign(:unread_count, Forum.count_unread_notifications(user.id))
-
-        socket =
-          if unread_only do
-            stream_delete(socket, :notifications, %{id: notif_id})
-          else
-            stream_insert(socket, :notifications, serialize_notification(updated_notif))
-          end
-
-        {:noreply, socket}
+    case Forum.mark_notification_as_read(user.id, notif_id) do
+      {:ok, _updated_notif} ->
+        {:noreply, refresh_notifications(socket)}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to mark as read")}
@@ -146,137 +111,250 @@ defmodule UrielmWeb.NotificationsLive do
       current_page="notifications"
       socket={@socket}
     >
-      <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-3xl">
-          <div class="mb-8">
-            <div class="flex items-center justify-between">
-              <div>
-                <h1 class="text-4xl font-bold text-base-content mb-2">Notifications</h1>
-                <%= if @unread_count > 0 do %>
-                  <p class="text-base-content/60">
-                    You have <span class="font-semibold">{@unread_count}</span>
-                    unread notification{if @unread_count != 1, do: "s"}
-                  </p>
+      <div
+        id="notifications-page"
+        class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12 lg:py-16"
+      >
+        <header
+          id="notifications-header"
+          class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <p class="ui-eyebrow">Community inbox</p>
+            <h1 class="mt-2 text-3xl font-black tracking-tight text-base-content sm:text-4xl lg:text-5xl">
+              Notifications
+            </h1>
+            <p
+              id="notifications-summary"
+              class="mt-3 text-sm leading-6 text-base-content/55 sm:text-base"
+            >
+              <%= if @unread_count > 0 do %>
+                {@unread_count} {if @unread_count == 1, do: "update is", else: "updates are"} waiting for you.
+              <% else %>
+                You're all caught up. Nice work.
+              <% end %>
+            </p>
+          </div>
+
+          <button
+            :if={@unread_count > 0}
+            id="notifications-mark-all"
+            phx-click="mark_all_as_read"
+            phx-disable-with="Marking read…"
+            class="btn btn-outline btn-sm w-full rounded-xl border-base-300 sm:w-auto"
+          >
+            <.um_icon name="check_circle" class="size-4" /> Mark all read
+          </button>
+        </header>
+
+        <nav
+          id="notification-filters"
+          class="mt-7 flex items-center gap-1 border-b border-base-300/60 sm:mt-9"
+          aria-label="Notification filters"
+        >
+          <.link
+            id="notification-filter-all"
+            patch={~p"/notifications"}
+            aria-current={if(!@unread_only, do: "page", else: nil)}
+            class={[
+              "min-h-11 px-3 py-3 text-sm font-semibold transition-colors",
+              if(!@unread_only,
+                do: "border-b-2 border-secondary text-secondary",
+                else: "text-base-content/50 hover:text-base-content"
+              )
+            ]}
+          >
+            All
+          </.link>
+          <.link
+            id="notification-filter-unread"
+            patch={~p"/notifications?unread=true"}
+            aria-current={if(@unread_only, do: "page", else: nil)}
+            class={[
+              "min-h-11 px-3 py-3 text-sm font-semibold transition-colors",
+              if(@unread_only,
+                do: "border-b-2 border-secondary text-secondary",
+                else: "text-base-content/50 hover:text-base-content"
+              )
+            ]}
+          >
+            Unread
+          </.link>
+          <span class="ml-auto pb-1 text-xs font-medium tabular-nums text-base-content/40">
+            {@unread_count} unread
+          </span>
+        </nav>
+
+        <div id="notifications" phx-update="stream" class="mt-6">
+          <div
+            id={if(@unread_only, do: "notifications-empty-unread", else: "notifications-empty-state")}
+            class="hidden only:flex min-h-80 flex-col items-center justify-center rounded-3xl border border-base-300/60 bg-base-200/35 px-6 py-14 text-center"
+          >
+            <div class="flex size-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+              <.um_icon
+                name={if(@unread_only, do: "check_circle", else: "bell")}
+                class="size-7"
+              />
+            </div>
+            <h2 class="mt-5 text-lg font-bold text-base-content">
+              {if(@unread_only, do: "Nothing unread", else: "No notifications yet")}
+            </h2>
+            <p class="mt-2 max-w-sm text-sm leading-6 text-base-content/50">
+              <%= if @unread_only do %>
+                You've seen every update. New replies and discussion activity will appear here.
+              <% else %>
+                Replies and updates from discussions you follow will show up here.
+              <% end %>
+            </p>
+            <.link
+              navigate={if(@unread_only, do: ~p"/notifications", else: ~p"/forum")}
+              class="btn btn-ghost btn-sm mt-5 rounded-xl text-secondary"
+            >
+              {if(@unread_only, do: "View all notifications", else: "Explore discussions")}
+              <.um_icon name="hero-arrow-right" class="size-4" />
+            </.link>
+          </div>
+
+          <div
+            :for={{id, notif} <- @streams.notifications}
+            id={id}
+            data-notification-id={notif.id}
+          >
+            <h2
+              :if={notif.show_day_heading}
+              data-day-heading={notif.day_label}
+              class="mb-3 mt-8 first:mt-0 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-base-content/40"
+            >
+              {notif.day_label}
+            </h2>
+
+            <article class={[
+              "group mb-3 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] gap-3 rounded-2xl border p-4 transition duration-200 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-4 sm:p-5",
+              if(notif.read_at,
+                do: "border-base-300/60 bg-base-200/35 hover:bg-base-200/60",
+                else:
+                  "border-secondary/30 bg-secondary/7 shadow-sm hover:border-secondary/45 hover:bg-secondary/10"
+              )
+            ]}>
+              <div class="relative">
+                <%= if notif.actor && notif.actor.avatar_url do %>
+                  <img
+                    src={notif.actor.avatar_url}
+                    alt={notif.actor.username || "Community member"}
+                    class="size-11 rounded-full object-cover sm:size-12"
+                  />
                 <% else %>
-                  <p class="text-base-content/60">All caught up!</p>
+                  <div class="flex size-11 items-center justify-center rounded-full bg-accent/15 text-sm font-black uppercase text-accent sm:size-12">
+                    {actor_initial(notif.actor)}
+                  </div>
+                <% end %>
+                <span class="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full border-2 border-base-100 bg-base-300 text-base-content/65">
+                  <.um_icon name={notification_icon(notif.subject_type)} class="size-3" />
+                </span>
+              </div>
+
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                  <span class="font-bold text-accent">
+                    {notification_label(notif.subject_type)}
+                  </span>
+                  <span class="text-base-content/35">•</span>
+                  <time class="text-base-content/40" datetime={DateTime.to_iso8601(notif.inserted_at)}>
+                    {LiveHelpers.format_relative(notif.inserted_at)}
+                  </time>
+                </div>
+                <p class="mt-1.5 break-words text-sm leading-6 text-base-content/80 sm:text-base">
+                  {notif.message || fallback_message(notif)}
+                </p>
+                <p :if={notif.thread_title} class="mt-1 truncate text-sm text-base-content/40">
+                  {notif.thread_title}
+                </p>
+                <.link
+                  :if={notif.thread_id}
+                  id={"notification-thread-#{notif.id}"}
+                  navigate={~p"/forum/t/#{notif.thread_id}"}
+                  phx-click="mark_as_read"
+                  phx-value-notification_id={notif.id}
+                  class="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-secondary transition-colors hover:text-secondary/75"
+                >
+                  View discussion <.um_icon name="hero-arrow-right" class="size-4" />
+                </.link>
+              </div>
+
+              <div class="col-start-3 row-start-1 flex justify-end">
+                <%= if notif.read_at do %>
+                  <span class="badge badge-ghost badge-sm border-base-300/60 text-base-content/40">
+                    Read
+                  </span>
+                <% else %>
+                  <div class="flex items-center gap-2">
+                    <span
+                      data-unread-indicator
+                      class="size-2 rounded-full bg-secondary shadow-[0_0_12px_color-mix(in_oklab,var(--color-secondary)_65%,transparent)]"
+                      aria-label="Unread"
+                    >
+                    </span>
+                    <button
+                      id={"notification-read-#{notif.id}"}
+                      phx-click="mark_as_read"
+                      phx-value-notification_id={notif.id}
+                      phx-disable-with="Marking…"
+                      class="btn btn-ghost btn-xs hidden rounded-lg text-base-content/45 sm:inline-flex"
+                    >
+                      Mark read
+                    </button>
+                  </div>
                 <% end %>
               </div>
-
-              <%= if @unread_count > 0 do %>
-                <button
-                  phx-click="mark_all_as_read"
-                  class="btn btn-sm btn-ghost"
-                >
-                  Mark all as read
-                </button>
-              <% end %>
-            </div>
-
-            <div class="flex gap-2 mt-4">
-              <.link
-                patch={~p"/notifications"}
-                class={[
-                  "px-4 py-2 rounded text-sm font-medium transition-colors",
-                  if(!@unread_only,
-                    do: "bg-primary text-primary-content",
-                    else: "bg-base-200 text-base-content hover:bg-base-300"
-                  )
-                ]}
-              >
-                All
-              </.link>
-              <.link
-                patch={~p"/notifications?unread=true"}
-                class={[
-                  "px-4 py-2 rounded text-sm font-medium transition-colors",
-                  if(@unread_only,
-                    do: "bg-primary text-primary-content",
-                    else: "bg-base-200 text-base-content hover:bg-base-300"
-                  )
-                ]}
-              >
-                Unread
-              </.link>
-            </div>
+            </article>
           </div>
+        </div>
 
-          <div id="notifications" phx-update="stream" class="space-y-4">
-            <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
-              <%= if @unread_only do %>
-                <p>No unread notifications. Check back later!</p>
-              <% else %>
-                <p>You're all caught up on notifications!</p>
-              <% end %>
-            </div>
-
-            <div :for={{id, notif} <- @streams.notifications} id={id}>
-              <div class={[
-                "card border",
-                if(notif.read_at,
-                  do: "bg-base-200 border-base-300",
-                  else: "bg-primary/5 border-primary/20"
-                )
-              ]}>
-                <div class="card-body">
-                  <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                      <p class="text-sm font-medium text-base-content/60">
-                        {get_notification_label(notif.subject_type)}
-                      </p>
-                      <p class="text-base text-base-content">
-                        {notif.message}
-                      </p>
-                      <p class="text-xs text-base-content/40 mt-2">
-                        {LiveHelpers.format_relative(notif.inserted_at)}
-                      </p>
-                    </div>
-
-                    <%= if notif.read_at do %>
-                      <div class="badge badge-ghost">Read</div>
-                    <% else %>
-                      <button
-                        phx-click="mark_as_read"
-                        phx-value-notification_id={notif.id}
-                        class="btn btn-xs btn-primary"
-                      >
-                        Mark read
-                      </button>
-                    <% end %>
-                  </div>
-
-                  <%= if notif.thread_id do %>
-                    <.link
-                      navigate={~p"/forum/t/#{notif.thread_id}"}
-                      class="link link-primary text-sm mt-2"
-                    >
-                      View thread →
-                    </.link>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <%= if @has_more do %>
-            <div
-              id="infinite-scroll-marker"
-              phx-hook="InfiniteScroll"
-              class="h-20 flex items-center justify-center mt-8"
-            >
-              <div class="text-base-content/40 text-sm">Loading more...</div>
-            </div>
-          <% end %>
+        <div
+          :if={@has_more}
+          id="infinite-scroll-marker"
+          phx-hook="InfiniteScroll"
+          class="mt-7 flex h-16 items-center justify-center gap-2 text-sm text-base-content/40"
+        >
+          <span class="loading loading-spinner loading-sm text-secondary"></span> Loading more
         </div>
       </div>
     </Layouts.app>
     """
   end
 
-  defp serialize_notifications(notifications) do
-    Enum.map(notifications, &serialize_notification/1)
+  defp list_notifications(user_id, unread_only, limit, offset) do
+    Forum.list_notifications(user_id,
+      limit: limit,
+      offset: offset,
+      unread_only: unread_only
+    )
   end
 
-  defp serialize_notification(notif) do
+  defp refresh_notifications(socket) do
+    %{current_user: user, unread_only: unread_only, page: page} = socket.assigns
+    limit = (page + 1) * LiveHelpers.page_size()
+    notifications = list_notifications(user.id, unread_only, limit, 0)
+    {serialized, last_day_group} = serialize_notifications(notifications)
+
+    socket
+    |> assign(:unread_count, Forum.count_unread_notifications(user.id))
+    |> assign(:has_more, length(notifications) == limit)
+    |> assign(:last_day_group, last_day_group)
+    |> stream(:notifications, serialized, reset: true)
+  end
+
+  defp serialize_notifications(notifications, previous_day_group \\ nil) do
+    {serialized, last_day_group} =
+      Enum.map_reduce(notifications, previous_day_group, fn notif, prior_group ->
+        day_group = notification_day_group(notif.inserted_at)
+        {serialize_notification(notif, day_group != prior_group, day_group), day_group}
+      end)
+
+    {serialized, last_day_group}
+  end
+
+  defp serialize_notification(notif, show_day_heading, day_group) do
     %{
       id: to_string(notif.id),
       subject_type: notif.subject_type,
@@ -284,24 +362,65 @@ defmodule UrielmWeb.NotificationsLive do
       message: notif.message,
       read_at: notif.read_at,
       thread_id: notif.thread_id && to_string(notif.thread_id),
+      thread_title: notif.thread && notif.thread.title,
       actor:
         notif.actor &&
           %{
             id: notif.actor.id,
-            username: notif.actor.username
+            username: notif.actor.username,
+            avatar_url: notif.actor.avatar_url
           },
-      inserted_at: notif.inserted_at
+      inserted_at: notif.inserted_at,
+      show_day_heading: show_day_heading,
+      day_label: notification_day_label(day_group)
     }
   end
 
-  defp get_notification_label(subject_type) do
+  defp notification_day_group(inserted_at) do
+    date = DateTime.to_date(inserted_at)
+    today = Date.utc_today()
+
+    cond do
+      date == today -> :today
+      date == Date.add(today, -1) -> :yesterday
+      true -> :earlier
+    end
+  end
+
+  defp notification_day_label(:today), do: "Today"
+  defp notification_day_label(:yesterday), do: "Yesterday"
+  defp notification_day_label(:earlier), do: "Earlier"
+
+  defp notification_label(subject_type) do
     case subject_type do
       "comment" -> "New comment"
-      "reply" -> "Reply to your comment"
+      "reply" -> "Reply"
       "thread_update" -> "Thread updated"
       _ -> "Notification"
     end
   end
+
+  defp notification_icon("comment"), do: "reply"
+  defp notification_icon("reply"), do: "reply"
+  defp notification_icon("thread_update"), do: "bell"
+  defp notification_icon(_subject_type), do: "bell"
+
+  defp actor_initial(%{username: username}) when is_binary(username) and username != "" do
+    username |> String.first() |> String.upcase()
+  end
+
+  defp actor_initial(_actor), do: "U"
+
+  defp fallback_message(%{actor: %{username: username}, subject_type: "reply"}),
+    do: "#{username} replied to your comment."
+
+  defp fallback_message(%{actor: %{username: username}, subject_type: "comment"}),
+    do: "#{username} commented on a discussion you follow."
+
+  defp fallback_message(%{subject_type: "thread_update"}),
+    do: "A discussion you follow was updated."
+
+  defp fallback_message(_notif), do: "There's new activity in the community."
 
   # relative time formatting moved to LiveHelpers
 end

@@ -1320,6 +1320,20 @@ defmodule Urielm.ForumTest do
       assert updated.read_at != nil
     end
 
+    test "mark_notification_as_read/2 scopes the notification to its owner" do
+      owner = user_fixture()
+      other_user = user_fixture()
+      thread = thread_fixture()
+
+      {:ok, notification} = Forum.create_notification(owner.id, "comment", thread.id)
+
+      assert {:error, :not_found} =
+               Forum.mark_notification_as_read(other_user.id, notification.id)
+
+      assert {:ok, updated} = Forum.mark_notification_as_read(owner.id, notification.id)
+      assert updated.read_at != nil
+    end
+
     test "mark_all_notifications_as_read/1 marks all as read" do
       user = user_fixture()
       thread = thread_fixture()

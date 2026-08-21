@@ -23,28 +23,42 @@ defmodule UrielmWeb.NotificationsLiveTest do
     end
 
     test "authenticated user can access notifications page", %{conn: conn, user: user} do
-      {:ok, _live, html} = live(log_in_user(conn, user), "/notifications")
-      assert html =~ "Notifications"
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
+
+      assert has_element?(view, "#notifications-page")
+      assert has_element?(view, "#notifications-header")
+      assert has_element?(view, "#notification-filters")
+      assert has_element?(view, "#notification-filter-all[aria-current='page']")
+      assert has_element?(view, "#notification-filter-unread")
     end
   end
 
   describe "listing notifications" do
     test "shows empty state when no notifications", %{conn: conn, user: user} do
-      {:ok, _live, html} = live(log_in_user(conn, user), "/notifications")
-      assert html =~ "Notifications"
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
+
+      assert has_element?(view, "#notifications-empty-state")
+      assert has_element?(view, "#notifications-empty-state a[href='/forum']")
     end
 
     test "displays notifications for current user", %{conn: conn, user: user, thread: thread} do
       actor = user_fixture()
 
-      Forum.create_notification(user.id, "comment", thread.id, %{
-        actor_id: actor.id,
-        thread_id: thread.id,
-        message: "#{actor.username} replied to your thread"
-      })
+      {:ok, notif} =
+        Forum.create_notification(user.id, "comment", thread.id, %{
+          actor_id: actor.id,
+          thread_id: thread.id,
+          message: "#{actor.username} replied to your thread"
+        })
 
-      {:ok, _live, html} = live(log_in_user(conn, user), "/notifications")
-      assert html =~ actor.username
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
+
+      assert has_element?(view, "[data-notification-id='#{notif.id}']", actor.username)
+      assert has_element?(view, "[data-notification-id='#{notif.id}']", thread.title)
+      assert has_element?(view, "[data-notification-id='#{notif.id}'] [data-unread-indicator]")
+      assert has_element?(view, "[data-day-heading='Today']")
+      assert has_element?(view, "#notification-read-#{notif.id}")
+      assert has_element?(view, "#notification-thread-#{notif.id}[href='/forum/t/#{thread.id}']")
     end
 
     test "does not show other users' notifications", %{
@@ -78,6 +92,27 @@ defmodule UrielmWeb.NotificationsLiveTest do
       render_click(live, "mark_as_read", %{"notification_id" => to_string(notif.id)})
 
       assert Forum.count_unread_notifications(user.id) == 0
+      refute has_element?(live, "#notification-read-#{notif.id}")
+      refute has_element?(live, "[data-notification-id='#{notif.id}'] [data-unread-indicator]")
+    end
+
+    test "cannot mark another user's notification as read", %{
+      conn: conn,
+      user: user,
+      other: other,
+      thread: thread
+    } do
+      {:ok, notif} =
+        Forum.create_notification(other.id, "comment", thread.id, %{
+          actor_id: user.id,
+          thread_id: thread.id,
+          message: "Private notification"
+        })
+
+      {:ok, live, _html} = live(log_in_user(conn, user), "/notifications")
+      render_click(live, "mark_as_read", %{"notification_id" => to_string(notif.id)})
+
+      assert Forum.count_unread_notifications(other.id) == 1
     end
   end
 
@@ -96,9 +131,11 @@ defmodule UrielmWeb.NotificationsLiveTest do
       assert Forum.count_unread_notifications(user.id) == 3
 
       {:ok, live, _html} = live(log_in_user(conn, user), "/notifications")
+      assert has_element?(live, "#notifications-mark-all")
       render_click(live, "mark_all_as_read", %{})
 
       assert Forum.count_unread_notifications(user.id) == 0
+      refute has_element?(live, "#notifications-mark-all")
     end
 
     test "updates unread count in UI after marking all read", %{
@@ -142,8 +179,18 @@ defmodule UrielmWeb.NotificationsLiveTest do
         message: "Still unread notification"
       })
 
-      {:ok, _live, html} = live(log_in_user(conn, user), "/notifications?unread=true")
-      assert html =~ "Still unread notification"
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications?unread=true")
+
+      assert has_element?(view, "#notification-filter-unread[aria-current='page']")
+      assert has_element?(view, "#notifications", "Still unread notification")
+      refute has_element?(view, "[data-notification-id='#{notif.id}']")
+    end
+
+    test "shows a dedicated empty state for the unread filter", %{conn: conn, user: user} do
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications?unread=true")
+
+      assert has_element?(view, "#notifications-empty-unread")
+      assert has_element?(view, "#notifications-empty-unread a[href='/notifications']")
     end
   end
 end
