@@ -149,7 +149,7 @@
         <a
           id="nav-notifications"
           href="/notifications"
-          class="btn btn-ghost btn-circle btn-sm relative text-base-content/60 transition hover:bg-info/10 hover:text-info"
+          class="btn btn-ghost btn-circle btn-sm relative hidden text-base-content/60 transition hover:bg-info/10 hover:text-info lg:inline-flex"
           aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
           title="Notifications"
         >

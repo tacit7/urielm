@@ -94,6 +94,7 @@ defmodule UrielmWeb.NotificationsLive do
         {:noreply,
          socket
          |> assign(:unread_count, 0)
+         |> assign(:unread_notification_count, 0)
          |> put_flash(:info, "All notifications marked as read")
          |> push_patch(to: ~p"/notifications")}
 
@@ -338,8 +339,11 @@ defmodule UrielmWeb.NotificationsLive do
     notifications = list_notifications(user.id, unread_only, limit, 0)
     {serialized, last_day_group} = serialize_notifications(notifications)
 
+    unread_count = Forum.count_unread_notifications(user.id)
+
     socket
-    |> assign(:unread_count, Forum.count_unread_notifications(user.id))
+    |> assign(:unread_count, unread_count)
+    |> assign(:unread_notification_count, unread_count)
     |> assign(:has_more, length(notifications) == limit)
     |> assign(:last_day_group, last_day_group)
     |> stream(:notifications, serialized, reset: true)

@@ -31,6 +31,14 @@ import {normalizeTheme} from "./theme.js"
   window.addEventListener("phx:set-theme", (e) => setTheme(e.detail?.theme ?? e.target?.dataset?.phxTheme))
 })()
 
+// Keep fixed mobile chrome out of the way while a composer owns the viewport.
+window.addEventListener("composer-fullscreen", (event) => {
+  document.documentElement.toggleAttribute(
+    "data-composer-fullscreen",
+    Boolean(event.detail?.isFullscreen)
+  )
+})
+
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"

@@ -33,7 +33,7 @@ defmodule UrielmWeb.ShellLive do
   defp page_name_for_action(:lesson), do: "videos"
   defp page_name_for_action(:video), do: "videos"
   defp page_name_for_action(:themes), do: "home"
-  defp page_name_for_action(:user_profile), do: "community"
+  defp page_name_for_action(:user_profile), do: "profile"
   defp page_name_for_action(_), do: "home"
 
   @impl true

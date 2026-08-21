@@ -50,12 +50,120 @@ defmodule UrielmWeb.Layouts do
         />
       </div>
 
-      <main class="pt-16">
+      <main class="pt-16 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         {if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block)}
       </main>
 
+      <.mobile_bottom_nav
+        current_user={@current_user}
+        current_page={@current_page}
+        unread_notification_count={@unread_notification_count}
+      />
+
       <.flash_group flash={@flash} />
     </div>
+    """
+  end
+
+  attr :current_user, :any, default: nil
+  attr :current_page, :string, default: "home"
+  attr :unread_notification_count, :integer, default: 0
+
+  def mobile_bottom_nav(assigns) do
+    assigns = assign(assigns, :profile_path, profile_path(assigns.current_user))
+
+    ~H"""
+    <nav
+      id="mobile-bottom-nav"
+      aria-label="Mobile navigation"
+      class="dock dock-sm z-40 border-base-300/70 bg-base-100/90 shadow-[0_-10px_30px_color-mix(in_oklab,var(--color-base-300)_18%,transparent)] backdrop-blur-xl transition-transform duration-200 lg:hidden"
+    >
+      <.mobile_nav_link
+        id="mobile-nav-home"
+        href="/"
+        icon="home"
+        label="Home"
+        active={@current_page == "home"}
+      />
+      <.mobile_nav_link
+        id="mobile-nav-forum"
+        href="/forum"
+        icon="topics"
+        label="Forum"
+        active={@current_page == "community"}
+      />
+      <.mobile_nav_link
+        id="mobile-nav-search"
+        href="/forum/search"
+        icon="search"
+        label="Search"
+        active={@current_page == "search"}
+      />
+
+      <%= if @current_user do %>
+        <.mobile_nav_link
+          id="mobile-nav-notifications"
+          href="/notifications"
+          icon="bell"
+          label="Alerts"
+          active={@current_page == "notifications"}
+          badge_count={@unread_notification_count}
+          badge_id="mobile-nav-notification-badge"
+        />
+        <.mobile_nav_link
+          id="mobile-nav-profile"
+          href={@profile_path}
+          icon="user_circle"
+          label="Profile"
+          active={@current_page == "profile"}
+        />
+      <% else %>
+        <.mobile_nav_link
+          id="mobile-nav-sign-in"
+          href="/signin"
+          icon="user_circle"
+          label="Sign in"
+          active={false}
+        />
+      <% end %>
+    </nav>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :href, :string, required: true
+  attr :icon, :string, required: true
+  attr :label, :string, required: true
+  attr :active, :boolean, default: false
+  attr :badge_count, :integer, default: 0
+  attr :badge_id, :string, default: nil
+
+  defp mobile_nav_link(assigns) do
+    ~H"""
+    <a
+      id={@id}
+      href={@href}
+      data-phx-link="redirect"
+      data-phx-link-state="push"
+      aria-current={if(@active, do: "page", else: nil)}
+      class={[
+        "group min-w-0 rounded-xl text-base-content/55 transition duration-150 hover:bg-info/5 hover:text-base-content focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-info",
+        @active && "dock-active bg-info/10 text-info"
+      ]}
+    >
+      <span class="relative">
+        <.um_icon name={@icon} class="size-5 transition-transform group-active:scale-90" />
+        <span
+          :if={@badge_count > 0}
+          id={@badge_id}
+          class="badge badge-info badge-xs absolute -right-3 -top-2 min-w-4.5 border-2 border-base-100 px-1 text-[0.55rem] font-black text-info-content"
+          aria-label={"#{@badge_count} unread notifications"}
+        >
+          {if(@badge_count > 99, do: "99+", else: @badge_count)}
+        </span>
+      </span>
+      <span class="dock-label truncate font-bold">{@label}</span>
+    </a>
     """
   end
 
@@ -188,4 +296,9 @@ defmodule UrielmWeb.Layouts do
       isAdmin: user.is_admin || false
     }
   end
+
+  defp profile_path(%{username: username}) when is_binary(username) and username != "",
+    do: "/u/#{username}"
+
+  defp profile_path(_user), do: "/profile"
 end

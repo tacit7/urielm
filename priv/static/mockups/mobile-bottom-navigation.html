@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mobile bottom navigation — mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #16161e;
+        --surface: #1f2335;
+        --surface-soft: #24283b;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+        --cyan: #7dcfff;
+        --blue: #2ac3de;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; }
+      .stage { display: grid; min-height: 100vh; place-items: center; padding: 28px; }
+      .frame { width: min(100%, 900px); }
+      .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+      .tab, .annotation { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+      .tab { padding: 7px 11px; color: var(--muted); }
+      .tab.active { border-color: var(--cyan); color: var(--cyan); }
+      .phones { display: grid; grid-template-columns: repeat(2, minmax(0, 390px)); justify-content: center; gap: 24px; }
+      .phone { position: relative; min-height: 650px; overflow: hidden; border: 1px solid var(--border); border-radius: 26px; background: var(--bg); box-shadow: 0 28px 70px #08090d80; }
+      header { display: flex; min-height: 64px; align-items: center; gap: 8px; padding: 0 16px; border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent); background: color-mix(in srgb, var(--surface) 84%, transparent); }
+      .brand { font-size: 18px; font-weight: 850; letter-spacing: -0.04em; }
+      .actions { display: flex; gap: 6px; margin-left: auto; }
+      .icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 999px; background: var(--surface-soft); color: var(--muted); }
+      main { padding: 50px 24px 110px; }
+      .eyebrow { margin: 0 0 10px; color: var(--blue); font-size: 11px; font-weight: 850; letter-spacing: 0.16em; text-transform: uppercase; }
+      h1 { margin: 0; font-size: 34px; line-height: 1.05; letter-spacing: -0.045em; }
+      main p:last-child { color: var(--muted); line-height: 1.7; }
+      .dock { position: absolute; inset: auto 0 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; min-height: 68px; padding: 7px 8px 10px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(18px); }
+      .dock-item { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 13px; color: var(--muted); font-size: 10px; font-weight: 750; }
+      .dock-item.active { color: var(--cyan); background: color-mix(in srgb, var(--cyan) 9%, transparent); }
+      .glyph { font-size: 17px; line-height: 1; }
+      .badge { position: absolute; top: 4px; left: calc(50% + 7px); min-width: 18px; padding: 1px 4px; border: 2px solid var(--surface); border-radius: 999px; background: var(--blue); color: #10202c; font-size: 9px; font-weight: 900; text-align: center; }
+      .annotation { margin-top: 16px; padding: 14px 16px; color: var(--muted); }
+      .annotation strong { color: var(--cyan); }
+      @media (max-width: 760px) { .stage { padding: 14px; } .phones { grid-template-columns: minmax(0, 390px); } .phone.secondary { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="frame">
+        <div class="tabs" aria-label="Mockup states">
+          <span class="tab active">Signed in · Forum active</span>
+          <span class="tab">Unread notification</span>
+          <span class="tab">Signed out · Sign in action</span>
+          <span class="tab">Desktop · dock hidden</span>
+        </div>
+        <div class="phones">
+          <section class="phone" aria-label="Signed-in mobile navigation">
+            <header><span class="brand">UrielM.dev</span><div class="actions"><span class="icon">☾</span><span class="icon">UM</span><span class="icon">☰</span></div></header>
+            <main><p class="eyebrow">Community</p><h1>Easy to reach with one thumb.</h1><p>The primary mobile destinations remain available while reading, learning, or joining a discussion.</p></main>
+            <nav class="dock" aria-label="Mobile navigation">
+              <span class="dock-item"><span class="glyph">⌂</span>Home</span>
+              <span class="dock-item active"><span class="glyph">◉</span>Forum</span>
+              <span class="dock-item"><span class="glyph">⌕</span>Search</span>
+              <span class="dock-item"><span class="glyph">♢</span><span class="badge">3</span>Alerts</span>
+              <span class="dock-item"><span class="glyph">○</span>Profile</span>
+            </nav>
+          </section>
+          <section class="phone secondary" aria-label="Signed-out mobile navigation">
+            <header><span class="brand">UrielM.dev</span><div class="actions"><span class="icon">☾</span><span class="icon">☰</span></div></header>
+            <main><p class="eyebrow">Explore</p><h1>Useful before signing in, too.</h1><p>Private destinations stay hidden. A clear account action replaces notifications and profile controls.</p></main>
+            <nav class="dock" aria-label="Mobile navigation">
+              <span class="dock-item active"><span class="glyph">⌂</span>Home</span>
+              <span class="dock-item"><span class="glyph">◉</span>Forum</span>
+              <span class="dock-item"><span class="glyph">⌕</span>Search</span>
+              <span class="dock-item"><span class="glyph">○</span>Sign in</span>
+            </nav>
+          </section>
+        </div>
+        <div class="annotation"><strong>Responsive behavior:</strong> the dock is fixed only below the desktop breakpoint, includes safe-area padding, and disappears during fullscreen composition. The page receives matching bottom padding so controls never cover content.</div>
+      </div>
+    </div>
+  </body>
+</html>

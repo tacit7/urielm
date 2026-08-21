@@ -47,11 +47,17 @@ defmodule UrielmWeb.Components.ForumLayout do
         </header>
         
     <!-- Page content -->
-        <main class="flex-1 overflow-y-auto">
+        <main class="flex-1 overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
           <div class="max-w-5xl mx-auto px-4 sm:px-6 py-7 lg:py-12">
             {render_slot(@inner_block)}
           </div>
         </main>
+
+        <UrielmWeb.Layouts.mobile_bottom_nav
+          current_user={@current_user}
+          current_page={if(@current_path == "/forum/search", do: "search", else: "community")}
+          unread_notification_count={@unread_notification_count}
+        />
       </div>
       
     <!-- Sidebar -->

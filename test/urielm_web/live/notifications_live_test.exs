@@ -34,7 +34,7 @@ defmodule UrielmWeb.NotificationsLiveTest do
   end
 
   describe "global navbar" do
-    test "signed-in users receive the initial unread count in the persistent navbar", %{
+    test "signed-in users receive the initial unread count in global navigation", %{
       conn: conn,
       user: user,
       thread: thread
@@ -47,15 +47,37 @@ defmodule UrielmWeb.NotificationsLiveTest do
                view,
                ~s([data-name="Navbar"][data-props*='"unreadNotificationCount":1'])
              )
+
+      assert has_element?(view, "#mobile-bottom-nav[aria-label='Mobile navigation']")
+      assert has_element?(view, "#mobile-nav-home[aria-current='page']")
+      assert has_element?(view, "#mobile-nav-forum[href='/forum']")
+      assert has_element?(view, "#mobile-nav-search[href='/forum/search']")
+      assert has_element?(view, "#mobile-nav-notifications[href='/notifications']")
+      assert has_element?(view, "#mobile-nav-notification-badge", "1")
+      assert has_element?(view, "#mobile-nav-profile[href='/u/#{user.username}']")
     end
 
-    test "signed-out users receive an anonymous navbar", %{conn: conn} do
+    test "signed-out users receive public mobile navigation", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
       assert has_element?(
                view,
                ~s([data-name="Navbar"][data-props*='"currentUser":null'])
              )
+
+      assert has_element?(view, "#mobile-nav-sign-in[href='/signin']")
+      refute has_element?(view, "#mobile-nav-notifications")
+      refute has_element?(view, "#mobile-nav-profile")
+    end
+
+    test "forum pages keep the shared mobile dock and forum active state", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, view, _html} = live(log_in_user(conn, user), "/forum")
+
+      assert has_element?(view, "#mobile-bottom-nav")
+      assert has_element?(view, "#mobile-nav-forum[aria-current='page']")
     end
 
     test "new notifications push the unread count across the persistent navbar boundary", %{
@@ -192,9 +214,10 @@ defmodule UrielmWeb.NotificationsLiveTest do
       end
 
       {:ok, live, _html} = live(log_in_user(conn, user), "/notifications")
-      html = render_click(live, "mark_all_as_read", %{})
+      render_click(live, "mark_all_as_read", %{})
 
-      refute html =~ "2 unread"
+      assert has_element?(live, "#notifications-summary", "You're all caught up. Nice work.")
+      refute has_element?(live, "#mobile-nav-notification-badge")
     end
   end
 

@@ -634,3 +634,7 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+html[data-composer-fullscreen] #mobile-bottom-nav {
+  transform: translateY(100%);
+}
