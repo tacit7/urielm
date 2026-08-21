@@ -6,6 +6,7 @@
 @source "../js";
 @source "../svelte";
 @source "../../lib/urielm_web";
+@source inline("hero-magnifying-glass");
 
 /* Highlight.js theme for syntax highlighting */
 @import "highlight.js/styles/atom-one-dark";

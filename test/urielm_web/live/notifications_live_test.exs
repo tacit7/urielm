@@ -34,6 +34,12 @@ defmodule UrielmWeb.NotificationsLiveTest do
   end
 
   describe "global navbar" do
+    test "includes the dynamically resolved search icon in Tailwind's generated styles" do
+      css = File.read!(Path.expand("../../../assets/css/app.css", __DIR__))
+
+      assert css =~ ~s|@source inline("hero-magnifying-glass")|
+    end
+
     test "signed-in users receive the initial unread count in global navigation", %{
       conn: conn,
       user: user,
