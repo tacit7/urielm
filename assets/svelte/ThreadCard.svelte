@@ -66,31 +66,33 @@
   </div>
 
   <!-- Topic column -->
-  <a href="/forum/t/{id}" class="min-w-0 block">
-    <div class="flex items-center gap-2 flex-wrap">
-      {#if is_pinned}
-        <span class="inline-flex items-center gap-0.5 text-xs font-mono text-info font-semibold">↑ pinned</span>
-      {/if}
-      <span class="font-semibold text-sm text-base-content group-hover:text-primary transition-colors line-clamp-1 leading-snug">
-        {title}
-      </span>
-      {#if is_solved}
-        <span class="badge badge-success badge-xs">solved</span>
-      {/if}
-      {#if is_locked}
-        <span class="badge badge-warning badge-xs">locked</span>
-      {/if}
-    </div>
+  <div class="min-w-0 block">
+    <a href="/forum/t/{id}" class="block">
+      <div class="flex items-center gap-2 flex-wrap">
+        {#if is_pinned}
+          <span class="inline-flex items-center gap-0.5 text-xs font-mono text-info font-semibold">↑ pinned</span>
+        {/if}
+        <span class="font-semibold text-sm text-base-content group-hover:text-primary transition-colors line-clamp-1 leading-snug">
+          {title}
+        </span>
+        {#if is_solved}
+          <span class="badge badge-success badge-xs">solved</span>
+        {/if}
+        {#if is_locked}
+          <span class="badge badge-warning badge-xs">locked</span>
+        {/if}
+      </div>
+    </a>
     <div class="flex items-center gap-2 mt-0.5 text-xs text-base-content/40 font-mono">
       <span>{author?.username || "unknown"}</span>
       {#if board}
         <span class="text-base-content/20">·</span>
-        <a href="/forum/b/{board.slug}" class="hover:text-primary transition-colors" on:click|stopPropagation>
+        <a href="/forum/b/{board.slug}" class="hover:text-primary transition-colors">
           {board.name}
         </a>
       {/if}
     </div>
-  </a>
+  </div>
 
   <!-- Replies (desktop) -->
   <div class="hidden md:flex flex-col items-center justify-center flex-shrink-0">

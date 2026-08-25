@@ -23,4 +23,14 @@ defmodule UrielmWeb.ThreadCardTest do
 
     assert source =~ "aria-pressed={is_subscribed}"
   end
+
+  test "keeps the board link outside of the thread link" do
+    source = File.read!(@thread_card)
+
+    [_, thread_link_contents] =
+      Regex.run(~r|<a href="/forum/t/\{id\}".*?>(.*?)</a>|s, source)
+
+    refute thread_link_contents =~ "<a"
+    assert source =~ ~s|<a href="/forum/b/{board.slug}"|
+  end
 end
