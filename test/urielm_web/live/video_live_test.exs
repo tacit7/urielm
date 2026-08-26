@@ -267,6 +267,70 @@ defmodule UrielmWeb.VideoLiveTest do
       assert render(child) =~ "CommentTree"
     end
 
+    test "locked video discussion replaces the authenticated composer", %{} do
+      author = user_fixture()
+      viewer = user_fixture()
+      moderator = admin_fixture()
+      board = board_fixture()
+
+      thread =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: author.id,
+          kind: "video"
+        })
+
+      _comment = comment_fixture(thread, author)
+      {:ok, _locked_thread} = Urielm.Forum.lock_thread(thread, moderator)
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: thread.id
+        })
+
+      conn = log_in_user(build_conn(), viewer)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      child
+      |> element("#video-tab-comments")
+      |> render_click()
+
+      assert has_element?(child, "#video-discussion-locked")
+      refute has_element?(child, "#video-comment-form")
+      assert has_element?(child, ~s([data-name="CommentTree"]))
+    end
+
+    test "locked video discussion replaces the anonymous sign-in prompt", %{conn: conn} do
+      author = user_fixture()
+      board = board_fixture()
+
+      thread =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: author.id,
+          kind: "video",
+          is_locked: true
+        })
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: thread.id
+        })
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      child
+      |> element("#video-tab-comments")
+      |> render_click()
+
+      assert has_element?(child, "#video-discussion-locked")
+      refute has_element?(child, "#video-sign-in-to-comment")
+    end
+
     test "posting a comment refreshes the discussion and tab count", %{} do
       user = user_fixture()
       board = board_fixture()

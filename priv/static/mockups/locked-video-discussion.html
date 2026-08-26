@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Locked video discussion — Mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --canvas: #1a1b26;
+        --surface: #24283b;
+        --surface-soft: #202334;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #8b95bd;
+        --blue: #7aa2f7;
+        --amber: #e0af68;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+
+      .page {
+        min-height: 100vh;
+      }
+
+      .topbar {
+        display: flex;
+        min-height: 4.25rem;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1.5rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+      }
+
+      .brand {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .topbar-meta {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .workspace {
+        width: min(100% - 2rem, 72rem);
+        margin: 0 auto;
+        padding: 2.5rem 0 4rem;
+      }
+
+      .view-label {
+        margin: 0 0 0.75rem;
+        color: var(--blue);
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .frame {
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+        border-radius: 1.25rem;
+        background: color-mix(in srgb, var(--surface) 88%, var(--canvas));
+        box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.5rem;
+        overflow-x: auto;
+        border-bottom: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+      }
+
+      .tab {
+        min-height: 2.75rem;
+        padding: 0.65rem 1rem;
+        border-radius: 0.75rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .tab.active {
+        background: color-mix(in srgb, var(--blue) 14%, transparent);
+        color: var(--blue);
+      }
+
+      .discussion {
+        padding: 1.75rem;
+      }
+
+      .discussion-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.25rem;
+        line-height: 1.4;
+        letter-spacing: -0.02em;
+      }
+
+      .count {
+        flex: none;
+        padding: 0.3rem 0.65rem;
+        border-radius: 9999px;
+        background: color-mix(in srgb, var(--border) 42%, transparent);
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, monospace;
+        font-size: 0.72rem;
+      }
+
+      .locked {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+        margin-top: 1.25rem;
+        padding: 1rem;
+        border: 1px solid color-mix(in srgb, var(--amber) 26%, transparent);
+        border-radius: 1rem;
+        background: color-mix(in srgb, var(--amber) 8%, transparent);
+      }
+
+      .lock-icon {
+        display: grid;
+        width: 2.25rem;
+        height: 2.25rem;
+        flex: none;
+        place-items: center;
+        border-radius: 0.75rem;
+        background: color-mix(in srgb, var(--amber) 13%, transparent);
+        color: var(--amber);
+      }
+
+      .lock-icon svg {
+        width: 1.1rem;
+        height: 1.1rem;
+      }
+
+      .locked-title {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 750;
+      }
+
+      .locked-copy {
+        max-width: 36rem;
+        margin: 0.3rem 0 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.55;
+      }
+
+      .comments {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+      }
+
+      .comment {
+        display: grid;
+        grid-template-columns: 2.25rem minmax(0, 1fr);
+        gap: 0.75rem;
+      }
+
+      .avatar {
+        display: grid;
+        width: 2.25rem;
+        height: 2.25rem;
+        place-items: center;
+        border-radius: 9999px;
+        background: color-mix(in srgb, var(--blue) 16%, var(--surface-soft));
+        color: var(--blue);
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+
+      .comment-line {
+        width: min(100%, 33rem);
+        height: 0.65rem;
+        margin-top: 0.25rem;
+        border-radius: 9999px;
+        background: color-mix(in srgb, var(--border) 52%, transparent);
+      }
+
+      .comment-line.short {
+        width: 52%;
+        margin-top: 0.6rem;
+        opacity: 0.65;
+      }
+
+      .annotation {
+        margin-top: 1rem;
+        padding: 1rem 1.1rem;
+        border: 1px dashed color-mix(in srgb, var(--blue) 34%, transparent);
+        border-radius: 1rem;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.6;
+      }
+
+      .mobile-wrap {
+        width: min(100%, 25rem);
+        margin-top: 3rem;
+      }
+
+      .mobile-wrap .discussion {
+        padding: 1.25rem;
+      }
+
+      .mobile-wrap .locked {
+        padding: 0.9rem;
+      }
+
+      @media (max-width: 640px) {
+        .topbar {
+          padding-inline: 1rem;
+        }
+
+        .workspace {
+          width: 100%;
+          padding-top: 1.25rem;
+        }
+
+        .view-label,
+        .annotation {
+          margin-inline: 1rem;
+        }
+
+        .frame {
+          border-inline: 0;
+          border-radius: 0;
+        }
+
+        .desktop-annotation {
+          margin-bottom: 2rem;
+        }
+
+        .mobile-wrap {
+          width: 100%;
+          margin-top: 2.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">Urielm</div>
+        <div class="topbar-meta">Locked discussion state</div>
+      </header>
+
+      <main class="workspace">
+        <p class="view-label">Desktop</p>
+        <section class="frame" aria-label="Desktop locked video discussion mockup">
+          <nav class="tabs" aria-label="Video details">
+            <span class="tab">Overview</span>
+            <span class="tab active">Comments&nbsp; 3</span>
+            <span class="tab">Resources</span>
+          </nav>
+
+          <div class="discussion">
+            <div class="discussion-header">
+              <h1>Discussion</h1>
+              <span class="count">3 comments</span>
+            </div>
+
+            <div class="locked" role="status">
+              <span class="lock-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                </svg>
+              </span>
+              <div>
+                <p class="locked-title">This discussion is locked</p>
+                <p class="locked-copy">
+                  New comments are closed, but the existing conversation remains available to read.
+                </p>
+              </div>
+            </div>
+
+            <div class="comments" aria-label="Existing comments remain visible">
+              <div class="comment">
+                <span class="avatar">U</span>
+                <div><div class="comment-line"></div><div class="comment-line short"></div></div>
+              </div>
+              <div class="comment">
+                <span class="avatar">M</span>
+                <div><div class="comment-line"></div><div class="comment-line short"></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="annotation desktop-annotation">
+          The locked panel occupies the composer position, so the restriction is visible before a user
+          tries to submit. Existing comments stay immediately below it and retain all reading actions.
+        </div>
+
+        <div class="mobile-wrap">
+          <p class="view-label">Mobile</p>
+          <section class="frame" aria-label="Mobile locked video discussion mockup">
+            <nav class="tabs" aria-label="Video details">
+              <span class="tab">Overview</span>
+              <span class="tab active">Comments&nbsp; 3</span>
+              <span class="tab">Resources</span>
+            </nav>
+            <div class="discussion">
+              <div class="discussion-header">
+                <h1>Discussion</h1>
+                <span class="count">3 comments</span>
+              </div>
+              <div class="locked" role="status">
+                <span class="lock-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                  </svg>
+                </span>
+                <div>
+                  <p class="locked-title">This discussion is locked</p>
+                  <p class="locked-copy">New comments are closed. Existing comments remain readable.</p>
+                </div>
+              </div>
+              <div class="comments" aria-label="Existing comments remain visible">
+                <div class="comment">
+                  <span class="avatar">U</span>
+                  <div><div class="comment-line"></div><div class="comment-line short"></div></div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div class="annotation">
+            On small screens the same state stays compact, wraps naturally, and does not introduce a
+            separate action or modal.
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

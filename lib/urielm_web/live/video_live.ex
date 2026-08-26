@@ -696,57 +696,77 @@ defmodule UrielmWeb.VideoLive do
                   class="mt-5"
                 />
               <% else %>
-                <%= if @current_user do %>
-                  <div class="mt-5 flex gap-3 border-b border-base-300/60 pb-6">
-                    <span class="grid size-10 flex-none place-items-center rounded-full bg-primary text-sm font-black text-primary-content">
-                      {user_initial(@current_user)}
-                    </span>
-                    <.form
-                      for={@comment_form}
-                      id="video-comment-form"
-                      phx-submit="create_comment"
-                      class="min-w-0 flex-1 space-y-3"
+                <%= cond do %>
+                  <% @thread.is_locked -> %>
+                    <div
+                      id="video-discussion-locked"
+                      role="status"
+                      class="mt-5 flex items-start gap-3 rounded-2xl border border-warning/25 bg-warning/8 p-4 text-sm"
                     >
-                      <.input
-                        field={@comment_form[:body]}
-                        id="video-comment-input"
-                        type="textarea"
-                        placeholder="Add to the discussion…"
-                        required
-                        phx-hook="ExpandingTextarea"
-                        phx-focus={JS.show(to: "#video-comment-actions")}
-                        rows="2"
-                        class="textarea textarea-bordered w-full resize-none bg-base-200/60"
-                      />
-                      <div id="video-comment-actions" class="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-sm rounded-full"
-                          phx-click={
-                            JS.dispatch("reset", to: "#video-comment-form")
-                            |> JS.set_attribute({"rows", "2"}, to: "#video-comment-input")
-                          }
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
-                          Comment
-                        </button>
+                      <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-warning/10 text-warning">
+                        <.um_icon name="lock_closed" class="size-4" />
+                      </span>
+                      <div class="min-w-0 pt-0.5">
+                        <p class="font-semibold text-base-content">This discussion is locked</p>
+                        <p class="mt-1 max-w-2xl text-base-content/55">
+                          New comments are closed, but the existing conversation remains available to read.
+                        </p>
                       </div>
-                    </.form>
-                  </div>
-                <% else %>
-                  <div class="mt-5 flex items-center gap-3 rounded-xl border border-base-300/70 bg-base-200/50 p-4">
-                    <span class="grid size-9 place-items-center rounded-full bg-base-300 font-bold">
-                      ?
-                    </span>
-                    <p class="text-sm text-base-content/60">
-                      <.link navigate={~p"/signin"} class="font-bold text-primary hover:underline">
-                        Sign in
-                      </.link>
-                      to join the discussion.
-                    </p>
-                  </div>
+                    </div>
+                  <% @current_user -> %>
+                    <div class="mt-5 flex gap-3 border-b border-base-300/60 pb-6">
+                      <span class="grid size-10 flex-none place-items-center rounded-full bg-primary text-sm font-black text-primary-content">
+                        {user_initial(@current_user)}
+                      </span>
+                      <.form
+                        for={@comment_form}
+                        id="video-comment-form"
+                        phx-submit="create_comment"
+                        class="min-w-0 flex-1 space-y-3"
+                      >
+                        <.input
+                          field={@comment_form[:body]}
+                          id="video-comment-input"
+                          type="textarea"
+                          placeholder="Add to the discussion…"
+                          required
+                          phx-hook="ExpandingTextarea"
+                          phx-focus={JS.show(to: "#video-comment-actions")}
+                          rows="2"
+                          class="textarea textarea-bordered w-full resize-none bg-base-200/60"
+                        />
+                        <div id="video-comment-actions" class="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm rounded-full"
+                            phx-click={
+                              JS.dispatch("reset", to: "#video-comment-form")
+                              |> JS.set_attribute({"rows", "2"}, to: "#video-comment-input")
+                            }
+                          >
+                            Cancel
+                          </button>
+                          <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
+                            Comment
+                          </button>
+                        </div>
+                      </.form>
+                    </div>
+                  <% true -> %>
+                    <div
+                      id="video-sign-in-to-comment"
+                      class="mt-5 flex items-center gap-3 rounded-xl border border-base-300/70 bg-base-200/50 p-4"
+                    >
+                      <span class="grid size-9 place-items-center rounded-full bg-base-300 font-bold">
+                        ?
+                      </span>
+                      <p class="text-sm text-base-content/60">
+                        <.link navigate={~p"/signin"} class="font-bold text-primary hover:underline">
+                          Sign in
+                        </.link>
+                        to join the discussion.
+                      </p>
+                    </div>
                 <% end %>
 
                 <div class="mt-6">
