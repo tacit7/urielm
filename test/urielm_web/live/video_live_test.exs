@@ -267,12 +267,7 @@ defmodule UrielmWeb.VideoLiveTest do
       assert render(child) =~ "CommentTree"
     end
 
-    @tag :skip
-    test "authenticated user can post comment", %{} do
-      # TODO: This test is skipped because VideoLive is now a child of ShellLive.
-      # Events go to ShellLive parent, not VideoLive child.
-      # Need to either test through ShellLive or test comment posting at integration level.
-
+    test "posting a comment refreshes the discussion and tab count", %{} do
       user = user_fixture()
       board = board_fixture()
       thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
@@ -285,12 +280,18 @@ defmodule UrielmWeb.VideoLiveTest do
 
       conn = log_in_user(build_conn(), user)
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
 
-      view
-      |> form("form[phx-submit='create_comment']", %{body: "Test comment"})
+      child
+      |> element("#video-tab-comments")
+      |> render_click()
+
+      child
+      |> form("#video-comment-form", %{body: "Test comment"})
       |> render_submit()
 
-      assert render(view) =~ "Test comment"
+      assert [%{body: "Test comment"}] = Urielm.Forum.list_comments(thread.id)
+      assert has_element?(child, "#video-tab-comments", "1")
     end
   end
 end

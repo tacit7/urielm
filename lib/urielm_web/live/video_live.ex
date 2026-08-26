@@ -390,6 +390,7 @@ defmodule UrielmWeb.VideoLive do
         socket
         |> assign(:thread, nil)
         |> assign(:comment_tree, [])
+        |> assign(:nav_items, build_nav_items(socket.assigns.video, nil))
 
       thread ->
         comment_tree = LiveHelpers.build_comment_tree(thread.comments, user)
@@ -397,6 +398,7 @@ defmodule UrielmWeb.VideoLive do
         socket
         |> assign(:thread, thread)
         |> assign(:comment_tree, comment_tree)
+        |> assign(:nav_items, build_nav_items(socket.assigns.video, thread))
     end
   end
 
