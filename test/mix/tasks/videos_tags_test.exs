@@ -1,6 +1,9 @@
 defmodule Mix.Tasks.Videos.TagsTest do
   use Urielm.DataCase
 
+  import ExUnit.CaptureIO
+  import Urielm.Fixtures
+
   alias Mix.Tasks.Videos.Tags
   alias Urielm.Content
 
@@ -15,32 +18,55 @@ defmodule Mix.Tasks.Videos.TagsTest do
     end)
   end
 
-  test "replaces tags for a video by slug" do
-    video = Urielm.Fixtures.video_fixture(%{slug: "existing-video"})
-    {:ok, old_tag} = Content.find_or_create_tag("Old")
-    {:ok, _video_tag} = Content.tag_video(video.id, old_tag.id)
+  test "replaces and normalizes all video tags" do
+    video = video_fixture()
+    assert {:ok, _video} = Content.set_video_tags(video, ["Old"])
 
-    tags = Tags.run(["existing-video", "AI, Tutorial"])
+    updated = Tags.run([video.slug, "--tags", "Agents, Career, agents"])
 
-    assert Enum.map(tags, & &1.slug) == ["ai", "tutorial"]
-    assert Enum.map(Content.list_video_tags(video.id), & &1.slug) == ["ai", "tutorial"]
+    assert Enum.map(updated.tag_records, & &1.slug) == ["agents", "career"]
+    assert_received {:mix_shell, :info, [message]}
+    assert message =~ "Updated video tags:"
+    assert message =~ "Tags: Agents, Career"
   end
 
-  test "replaces tags for a video by URL with --tags" do
-    video = Urielm.Fixtures.video_fixture(%{youtube_url: "https://youtu.be/abcDEF12345"})
+  test "an empty tags value clears all tags" do
+    video = video_fixture()
+    assert {:ok, _video} = Content.set_video_tags(video, ["Agents"])
 
-    tags = Tags.run(["https://youtu.be/abcDEF12345", "--tags", "Beginner"])
+    updated = Tags.run([video.slug, "--tags", ""])
 
-    assert Enum.map(tags, & &1.slug) == ["beginner"]
-    assert Enum.map(Content.list_video_tags(video.id), & &1.slug) == ["beginner"]
+    assert updated.tag_records == []
+    assert_received {:mix_shell, :info, [message]}
+    assert message =~ "Tags: No tags"
   end
 
-  test "empty tags clear existing tags" do
-    video = Urielm.Fixtures.video_fixture(%{slug: "tagged-video"})
-    {:ok, old_tag} = Content.find_or_create_tag("Old")
-    {:ok, _video_tag} = Content.tag_video(video.id, old_tag.id)
+  test "missing video raises a clear error" do
+    assert_raise Mix.Error, "Video not found: missing", fn ->
+      Tags.run(["missing", "--tags", "Agents"])
+    end
 
-    assert [] = Tags.run(["tagged-video", " , "])
-    assert Content.list_video_tags(video.id) == []
+    assert_received {:mix_shell, :error, ["Video not found: missing"]}
+  end
+
+  test "missing slug or tags option prints usage" do
+    assert_raise Mix.Error, fn -> capture_io(:stderr, fn -> Tags.run([]) end) end
+    assert_received {:mix_shell, :error, [message]}
+    assert message =~ "Usage: mix videos.tags VIDEO_SLUG"
+
+    Mix.Task.reenable("videos.tags")
+    assert_raise Mix.Error, fn -> Tags.run(["some-video"]) end
+    assert_received {:mix_shell, :error, [message]}
+    assert message =~ "Usage: mix videos.tags VIDEO_SLUG"
+  end
+
+  test "invalid normalized tag leaves existing tags unchanged" do
+    video = video_fixture()
+    assert {:ok, _video} = Content.set_video_tags(video, ["Agents"])
+
+    assert_raise Mix.Error, fn -> Tags.run([video.slug, "--tags", "!!!"]) end
+
+    assert Enum.map(Content.list_video_tags(video.id), & &1.slug) == ["agents"]
+    assert_received {:mix_shell, :error, ["Could not update video tags: :blank_tag"]}
   end
 end

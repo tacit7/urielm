@@ -124,7 +124,7 @@ defmodule Mix.Tasks.Videos.AddTest do
       assert Enum.map(Content.list_video_tags(video.id), & &1.id) == [existing.id]
     end
 
-    test "--tags on an existing video replaces the previous tag set" do
+    test "--tags does not mutate an existing video" do
       first = Add.run([@url, "--tags", "AI"])
       flush_shell_messages()
 
@@ -132,16 +132,21 @@ defmodule Mix.Tasks.Videos.AddTest do
 
       assert second.id == first.id
       assert Repo.aggregate(Video, :count) == 1
-      assert Enum.map(Content.list_video_tags(second.id), & &1.slug) == ["beginner"]
+      assert Enum.map(Content.list_video_tags(second.id), & &1.slug) == ["ai"]
+      assert Repo.get_by(Tag, slug: "beginner") == nil
     end
 
-    test "empty --tags value clears tags when updating an existing video" do
-      Add.run([@url, "--tags", "AI"])
-      flush_shell_messages()
-
+    test "empty --tags value is a no-op" do
       video = Add.run([@url, "--tags", " , "])
 
       assert Content.list_video_tags(video.id) == []
+    end
+
+    test "invalid tags roll back the video insert" do
+      assert_raise Mix.Error, fn -> Add.run([@url, "--tags", "!!!"]) end
+
+      assert Repo.aggregate(Video, :count) == 0
+      assert_received {:mix_shell, :error, ["Could not insert video tags:\n:blank_tag"]}
     end
 
     test "duplicate generated slug appends a suffix from the YouTube video id" do

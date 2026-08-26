@@ -39,12 +39,6 @@ defmodule Mix.Tasks.Videos.Add do
 
     case Repo.get_by(Video, youtube_url: url) do
       %Video{} = video ->
-        video =
-          case Repo.transaction(fn -> attach_tags!(video, opts) end) do
-            {:ok, video} -> video
-            {:error, {:tag, reason}} -> fail!("Could not tag video:\n#{format_tag_error(reason)}")
-          end
-
         Mix.shell().info("""
         Already exists:
         Title: #{video.title}
@@ -78,12 +72,7 @@ defmodule Mix.Tasks.Videos.Add do
       published_at: published_at(opts)
     }
 
-    case Repo.transaction(fn ->
-           case Content.create_video(attrs) do
-             {:ok, video} -> attach_tags!(video, opts)
-             {:error, changeset} -> Repo.rollback({:video, changeset})
-           end
-         end) do
+    case Content.create_video(attrs, tag_names: parse_tags(Keyword.get(opts, :tags))) do
       {:ok, video} ->
         Mix.shell().info("""
         Inserted video:
@@ -94,14 +83,11 @@ defmodule Mix.Tasks.Videos.Add do
 
         video
 
-      {:error, {:video, changeset}} ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         fail!("Could not insert video:\n#{format_errors(changeset)}")
 
-      {:error, {:tag, reason}} ->
-        fail!("Could not tag video:\n#{format_tag_error(reason)}")
-
-      {:error, changeset} ->
-        fail!("Could not insert video:\n#{format_errors(changeset)}")
+      {:error, reason} ->
+        fail!("Could not insert video tags:\n#{inspect(reason)}")
     end
   end
 
@@ -111,19 +97,6 @@ defmodule Mix.Tasks.Videos.Add do
     fail!(
       "Usage: mix videos.add YOUTUBE_URL [--draft] [--visibility public|signed_in|subscriber] [--title TITLE] [--slug SLUG] [--tags TAGS]"
     )
-  end
-
-  defp attach_tags!(video, opts) do
-    if Keyword.has_key?(opts, :tags) do
-      tag_names = parse_tags(Keyword.get(opts, :tags))
-
-      case Content.replace_video_tags(video.id, tag_names) do
-        {:ok, _tags} -> video
-        {:error, {:tag, reason}} -> Repo.rollback({:tag, reason})
-      end
-    else
-      video
-    end
   end
 
   defp parse_tags(nil), do: []
@@ -291,9 +264,6 @@ defmodule Mix.Tasks.Videos.Add do
       "#{field}: #{Enum.join(messages, ", ")}"
     end)
   end
-
-  defp format_tag_error(%Ecto.Changeset{} = changeset), do: format_errors(changeset)
-  defp format_tag_error(reason), do: inspect(reason)
 
   defp fail!(message) do
     Mix.shell().error(message)

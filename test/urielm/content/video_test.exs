@@ -27,6 +27,17 @@ defmodule Urielm.Content.VideoTest do
       assert video.visibility == "public"
     end
 
+    test "create_video/2 atomically creates a video with normalized tags" do
+      assert {:ok, %Video{} = video} =
+               Content.create_video(@valid_attrs, tag_names: ["AI Workflows", "ai workflows"])
+
+      assert Enum.map(video.tag_records, & &1.slug) == ["ai-workflows"]
+
+      invalid_attrs = %{@valid_attrs | slug: "invalid-tags"}
+      assert {:error, :blank_tag} = Content.create_video(invalid_attrs, tag_names: ["!!!"])
+      assert Repo.get_by(Video, slug: "invalid-tags") == nil
+    end
+
     test "create_video/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Content.create_video(@invalid_attrs)
     end
@@ -94,6 +105,49 @@ defmodule Urielm.Content.VideoTest do
       assert Enum.any?(unfiltered, &(&1.id == other.id))
     end
 
+    test "list_published_videos/1 combines query, format, and tag filters and preloads tags" do
+      {:ok, ai} = Content.find_or_create_tag("AI Workflows")
+
+      matching =
+        video_fixture(%{
+          title: "Reliable automations",
+          format: "standard",
+          published_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        })
+
+      wrong_format =
+        video_fixture(%{
+          title: "Reliable short",
+          format: "short",
+          published_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        })
+
+      {:ok, _} = Content.tag_video(matching.id, ai.id)
+      {:ok, _} = Content.tag_video(wrong_format.id, ai.id)
+
+      [result] =
+        Content.list_published_videos(query: "automation", format: "standard", tag_ids: [ai.id])
+
+      assert result.id == matching.id
+      assert Ecto.assoc_loaded?(result.tag_records)
+      assert Enum.map(result.tag_records, & &1.slug) == ["ai-workflows"]
+    end
+
+    test "list_published_videos/1 searches associated tag names" do
+      video =
+        video_fixture(%{
+          title: "A practical walkthrough",
+          published_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        })
+
+      {:ok, tag} = Content.find_or_create_tag("Agent Systems")
+      {:ok, _} = Content.tag_video(video.id, tag.id)
+
+      assert Enum.map(Content.list_published_videos(query: "agent systems"), & &1.id) == [
+               video.id
+             ]
+    end
+
     test "video_published?/1 returns true for published videos" do
       attrs = Map.put(@valid_attrs, :published_at, DateTime.utc_now())
       {:ok, video} = Content.create_video(attrs)
@@ -138,20 +192,6 @@ defmodule Urielm.Content.VideoTest do
       assert Content.untag_video(video.id, tag.id) == {:error, :not_found}
     end
 
-    test "replace_video_tags/2 replaces the full video tag set" do
-      video = video_fixture()
-      {:ok, _tag} = Content.find_or_create_tag("AI")
-      {:ok, existing} = Content.find_or_create_tag("Existing")
-      {:ok, _video_tag} = Content.tag_video(video.id, existing.id)
-
-      assert {:ok, tags} = Content.replace_video_tags(video.id, ["AI", "Tutorial", "AI"])
-      assert Enum.map(tags, & &1.slug) == ["ai", "tutorial"]
-      assert Enum.map(Content.list_video_tags(video.id), & &1.slug) == ["ai", "tutorial"]
-
-      assert {:ok, []} = Content.replace_video_tags(video.id, [])
-      assert Content.list_video_tags(video.id) == []
-    end
-
     test "video tag changeset validates required fields and constraints" do
       changeset = VideoTag.changeset(%VideoTag{}, %{})
       assert "can't be blank" in errors_on(changeset).video_id
@@ -175,6 +215,54 @@ defmodule Urielm.Content.VideoTest do
 
       assert {:error, changeset} = Content.tag_video(video.id, tag.id)
       assert "has already been taken" in errors_on(changeset).video_id
+    end
+
+    test "set_video_tags/2 replaces tags, deduplicates normalized names, and can clear them" do
+      video = video_fixture()
+      {:ok, old_tag} = Content.find_or_create_tag("Old")
+      {:ok, _} = Content.tag_video(video.id, old_tag.id)
+
+      assert {:ok, tagged_video} =
+               Content.set_video_tags(video, ["AI Workflows", "ai workflows", "Agents"])
+
+      assert Ecto.assoc_loaded?(tagged_video.tag_records)
+      assert Enum.map(tagged_video.tag_records, & &1.slug) == ["agents", "ai-workflows"]
+
+      assert {:ok, cleared_video} = Content.set_video_tags(video, [])
+      assert cleared_video.tag_records == []
+    end
+
+    test "list_content_tags/0 returns only tags used by published videos" do
+      published = video_fixture(%{published_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+      unpublished = video_fixture(%{published_at: nil})
+      {:ok, visible} = Content.find_or_create_tag("Visible")
+      {:ok, draft_only} = Content.find_or_create_tag("Draft only")
+      {:ok, unused} = Content.find_or_create_tag("Unused")
+      {:ok, _} = Content.tag_video(published.id, visible.id)
+      {:ok, _} = Content.tag_video(unpublished.id, draft_only.id)
+
+      assert Enum.map(Content.list_content_tags(), & &1.id) == [visible.id]
+      refute unused.id in Enum.map(Content.list_content_tags(), & &1.id)
+    end
+
+    test "tag records expose the reverse videos association" do
+      video = video_fixture()
+      {:ok, tag} = Content.find_or_create_tag("AI")
+      {:ok, _} = Content.tag_video(video.id, tag.id)
+
+      tag = Repo.preload(tag, :videos)
+      assert Enum.map(tag.videos, & &1.id) == [video.id]
+    end
+
+    test "video lookup functions return loaded tags" do
+      video = video_fixture()
+      {:ok, tag} = Content.find_or_create_tag("AI")
+      {:ok, _} = Content.tag_video(video.id, tag.id)
+
+      assert [%Tag{id: tag_id}] = Content.get_video(video.id).tag_records
+      assert tag_id == tag.id
+      assert Ecto.assoc_loaded?(Content.get_video_by_slug!(video.slug).tag_records)
+      assert Ecto.assoc_loaded?(Content.get_video_by_short_id(video.short_id).tag_records)
     end
   end
 

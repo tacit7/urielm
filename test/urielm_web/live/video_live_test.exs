@@ -72,14 +72,24 @@ defmodule UrielmWeb.VideoLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
 
-      assert has_element?(view, "#video-detail-tags")
-      assert has_element?(view, "#video-detail-tag-ai[href='/videos?tags=ai']", "AI")
+      assert has_element?(view, "#video-detail-tags[aria-label='Video tags']")
+      assert has_element?(view, "#video-detail-tag-ai[href='/videos?tag=ai']", "AI")
     end
 
     test "video with no tags does not render tag container", %{conn: conn, public_video: video} do
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
 
       refute has_element?(view, "#video-detail-tags")
+    end
+
+    test "short video tags link to the video browser filter", %{conn: conn} do
+      video = video_fixture(%{format: "short", published_at: DateTime.utc_now()})
+      {:ok, tag} = Urielm.Content.find_or_create_tag("Agents")
+      {:ok, _video_tag} = Urielm.Content.tag_video(video.id, tag.id)
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, "#short-video-tag-agents[href='/videos?tag=agents']", "Agents")
     end
 
     test "authenticated viewer gets the completion control", %{public_video: video} do

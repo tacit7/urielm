@@ -569,7 +569,7 @@ defmodule UrielmWeb.VideoLive do
                   <.link
                     :for={tag <- @video.tag_records}
                     id={"short-video-tag-#{tag.slug}"}
-                    navigate={~p"/videos?tags=#{tag.slug}"}
+                    navigate={~p"/videos?tag=#{tag.slug}"}
                     class="badge badge-ghost badge-sm"
                   >
                     {tag.name}
@@ -743,12 +743,14 @@ defmodule UrielmWeb.VideoLive do
             <div
               :if={@video.tag_records != []}
               id="video-detail-tags"
-              class="mt-5 flex flex-wrap gap-2"
+              aria-label="Video tags"
+              class="mt-5 flex flex-wrap items-center gap-2"
             >
+              <span class="mr-1 text-xs font-bold uppercase text-base-content/45">Tags</span>
               <.link
                 :for={tag <- @video.tag_records}
                 id={"video-detail-tag-#{tag.slug}"}
-                navigate={~p"/videos?tags=#{tag.slug}"}
+                navigate={~p"/videos?tag=#{tag.slug}"}
                 class="badge badge-outline border-primary/25 bg-primary/5 px-3 py-2 text-xs font-bold text-primary transition-colors hover:bg-primary/10"
               >
                 {tag.name}

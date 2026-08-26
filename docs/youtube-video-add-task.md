@@ -17,10 +17,24 @@ mix videos.add URL --visibility signed_in
 mix videos.add URL --visibility subscriber
 mix videos.add URL --title "Custom Title"
 mix videos.add URL --slug "custom-slug"
+mix videos.add URL --tags "Agents, Career"
 ```
 
 Videos are public and published by default. `--draft` stores `published_at: nil`.
-Re-running the same URL is idempotent and prints the existing video path.
+`--tags` accepts comma-separated tag names and creates the video and its tags in one
+transaction. Re-running the same URL is idempotent: it prints the existing video path
+without changing its tags or other metadata.
+
+## Replace tags
+
+Use the dedicated task to replace a video's complete tag set:
+
+```bash
+mix videos.tags video-slug --tags "Agents, Career"
+mix videos.tags video-slug --tags ""
+```
+
+The second form clears all tags. Both replacement and clearing are atomic.
 
 ## Production
 

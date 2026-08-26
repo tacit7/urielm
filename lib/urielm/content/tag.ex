@@ -7,6 +7,7 @@ defmodule Urielm.Content.Tag do
     field(:slug, :string)
 
     many_to_many(:prompts, Urielm.Content.Prompt, join_through: "prompt_tags")
+    many_to_many(:videos, Urielm.Content.Video, join_through: "video_tags")
 
     timestamps(type: :utc_datetime)
   end

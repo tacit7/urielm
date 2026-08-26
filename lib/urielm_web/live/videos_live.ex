@@ -15,28 +15,16 @@ defmodule UrielmWeb.VideosLive do
 
     query = normalize_query(child_params["q"])
     format = normalize_format(child_params["format"])
-    tag_slugs = normalize_tags(child_params["tags"])
-    available_tags = Content.list_video_filter_tags()
+    tag_slugs = normalize_tags(child_params["tag"])
     selected_tags = Content.list_tags_by_slugs(tag_slugs)
     tag_ids = Enum.map(selected_tags, & &1.id)
-
-    all_videos =
-      Content.list_published_videos()
-      |> Content.preload_video_tags()
-
-    filterable_videos =
-      if tag_slugs == [] do
-        all_videos
-      else
-        Content.list_published_videos(tag_ids: tag_ids)
-        |> Content.preload_video_tags()
-      end
+    all_videos = Content.list_published_videos()
 
     matching_videos =
       if unresolved_tags?(tag_slugs, selected_tags) do
         []
       else
-        filter_videos(filterable_videos, query, format, tag_ids)
+        Content.list_published_videos(query: query, format: format, tag_ids: tag_ids)
       end
 
     standard_videos = Enum.filter(matching_videos, &(&1.format == "standard"))
@@ -58,10 +46,11 @@ defmodule UrielmWeb.VideosLive do
      |> assign(:page_title, "Videos")
      |> assign(:query, query)
      |> assign(:current_format, format)
-     |> assign(:available_tags, available_tags)
-     |> assign(:selected_tags, selected_tags)
      |> assign(:tag_slugs, tag_slugs)
+     |> assign(:draft_tag_slugs, tag_slugs)
      |> assign(:tags_param, tags_param)
+     |> assign(:available_tags, Content.list_content_tags())
+     |> assign(:tag_picker_open?, false)
      |> assign(:search_form, search_form)
      |> assign(:featured_video, featured_video)
      |> assign(:library_empty?, all_videos == [])
@@ -70,6 +59,45 @@ defmodule UrielmWeb.VideosLive do
      |> assign(:shorts_empty?, short_videos == [])
      |> stream(:standard_videos, standard_videos)
      |> stream(:short_videos, short_videos)}
+  end
+
+  @impl true
+  def handle_event("open_tag_picker", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:draft_tag_slugs, socket.assigns.tag_slugs)
+     |> assign(:tag_picker_open?, true)}
+  end
+
+  def handle_event("close_tag_picker", _params, socket) do
+    {:noreply, assign(socket, :tag_picker_open?, false)}
+  end
+
+  def handle_event("toggle_tag_filter", %{"slug" => slug}, socket) do
+    draft_tag_slugs =
+      if slug in socket.assigns.draft_tag_slugs do
+        Enum.reject(socket.assigns.draft_tag_slugs, &(&1 == slug))
+      else
+        socket.assigns.draft_tag_slugs ++ [slug]
+      end
+
+    {:noreply, assign(socket, :draft_tag_slugs, draft_tag_slugs)}
+  end
+
+  def handle_event("clear_tag_filters", _params, socket) do
+    {:noreply, assign(socket, :draft_tag_slugs, [])}
+  end
+
+  def handle_event("apply_tag_filters", _params, socket) do
+    {:noreply,
+     push_navigate(socket,
+       to:
+         filter_href(
+           socket.assigns.query,
+           socket.assigns.current_format,
+           socket.assigns.draft_tag_slugs
+         )
+     )}
   end
 
   @impl true
@@ -101,78 +129,153 @@ defmodule UrielmWeb.VideosLive do
                 class="input input-bordered w-full bg-base-100 pl-10"
               />
               <input type="hidden" name="format" value={@current_format} />
-              <input :if={@tags_param != ""} type="hidden" name="tags" value={@tags_param} />
+              <input :if={@tags_param != ""} type="hidden" name="tag" value={@tags_param} />
             </div>
           </.form>
 
-          <nav
-            id="video-format-filters"
-            aria-label="Filter videos by format"
-            class="flex gap-2 overflow-x-auto pb-0.5"
+          <div
+            id="video-filter-controls"
+            class="relative flex items-center gap-2 overflow-x-auto pb-0.5"
           >
-            <a
-              :for={item <- format_filters()}
-              id={"video-filter-#{item.key}"}
-              href={filter_href(@query, item.key, @tag_slugs)}
-              data-format={item.key}
-              aria-current={if(@current_format == item.key, do: "page", else: nil)}
+            <nav
+              id="video-format-filters"
+              aria-label="Filter videos by format"
+              class="flex gap-2"
+            >
+              <a
+                :for={item <- format_filters()}
+                id={"video-filter-#{item.key}"}
+                href={filter_href(@query, item.key, @tag_slugs)}
+                data-format={item.key}
+                aria-current={if(@current_format == item.key, do: "page", else: nil)}
+                class={[
+                  "btn btn-sm flex-none rounded-full px-4 transition duration-200",
+                  if(@current_format == item.key,
+                    do: "btn-primary",
+                    else:
+                      "btn-ghost border border-base-300/70 bg-base-100 text-base-content/65 hover:border-primary/35 hover:text-base-content"
+                  )
+                ]}
+              >
+                {item.label}
+              </a>
+            </nav>
+
+            <button
+              :if={@available_tags != []}
+              id="video-tag-filter-button"
+              type="button"
+              phx-click="open_tag_picker"
+              aria-haspopup="dialog"
+              aria-expanded={to_string(@tag_picker_open?)}
               class={[
-                "btn btn-sm flex-none rounded-full px-4 transition duration-200",
-                if(@current_format == item.key,
-                  do: "btn-primary",
-                  else:
-                    "btn-ghost border border-base-300/70 bg-base-100 text-base-content/65 hover:border-primary/35 hover:text-base-content"
+                "btn btn-sm flex-none rounded-full border px-3 transition duration-200",
+                if(@tag_slugs == [],
+                  do: "border-base-300/70 bg-base-100 text-base-content/65 hover:border-primary/35",
+                  else: "border-primary/35 bg-primary/10 text-primary"
                 )
               ]}
             >
-              {item.label}
-            </a>
-          </nav>
+              <.icon name="hero-tag" class="size-4" />
+              <span>Tags</span>
+              <span
+                :if={@tag_slugs != []}
+                id="video-tag-filter-count"
+                class="grid size-5 place-items-center rounded-full bg-primary text-[0.65rem] font-black text-primary-content"
+              >
+                {length(@tag_slugs)}
+              </span>
+            </button>
+          </div>
         </div>
 
-        <section
-          :if={@available_tags != []}
+        <div
+          :if={@tag_picker_open?}
           id="video-tag-picker"
-          aria-label="Filter videos by tag"
-          class="mt-4 flex flex-col gap-3 rounded-2xl border border-base-300/60 bg-base-200/25 p-3 sm:flex-row sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="video-tag-picker-title"
+          class="fixed inset-0 z-50 flex items-end md:items-start md:justify-end md:px-6 md:pt-40 lg:px-8"
         >
-          <div
-            :if={@selected_tags != []}
-            id="selected-video-tags"
-            class="flex flex-wrap items-center gap-2 sm:border-r sm:border-base-300/60 sm:pr-3"
+          <button
+            id="video-tag-picker-backdrop"
+            type="button"
+            phx-click="close_tag_picker"
+            aria-label="Close tag filters"
+            class="absolute inset-0 bg-neutral/45 backdrop-blur-[2px]"
           >
-            <.link
-              :for={tag <- @selected_tags}
-              id={"selected-video-tag-#{tag.slug}"}
-              navigate={
-                tag_filter_href(@query, @current_format, remove_tag_slug(@tag_slugs, tag.slug))
-              }
-              class="badge badge-primary h-auto gap-1 px-3 py-2 text-xs font-bold transition duration-200 hover:brightness-110"
-            >
-              {tag.name}
-              <.um_icon name="hero-x-mark" class="size-3" />
-            </.link>
-          </div>
+          </button>
 
-          <div class="flex flex-wrap gap-2">
-            <.link
-              :for={tag <- @available_tags}
-              id={"video-tag-filter-#{tag.slug}"}
-              navigate={tag_filter_href(@query, @current_format, add_tag_slug(@tag_slugs, tag.slug))}
-              aria-current={if(tag.slug in @tag_slugs, do: "page", else: nil)}
-              class={[
-                "badge h-auto border-base-300/80 px-3 py-2 text-xs font-bold transition duration-200",
-                if(tag.slug in @tag_slugs,
-                  do: "badge-primary",
-                  else:
-                    "badge-outline bg-base-100/70 text-base-content/60 hover:border-primary/40 hover:text-primary"
-                )
-              ]}
-            >
-              {tag.name}
-            </.link>
-          </div>
-        </section>
+          <section class="relative z-10 w-full rounded-t-lg border border-base-300 bg-base-100 shadow-2xl md:w-80 md:rounded-lg">
+            <header class="flex items-center justify-between border-b border-base-300 px-5 py-4">
+              <div>
+                <h2 id="video-tag-picker-title" class="text-sm font-black text-base-content">
+                  Filter by tags
+                </h2>
+                <p class="mt-0.5 text-xs text-base-content/50">
+                  {length(@draft_tag_slugs)} selected
+                </p>
+              </div>
+              <button
+                id="video-tag-picker-close"
+                type="button"
+                phx-click="close_tag_picker"
+                aria-label="Close tag filters"
+                class="btn btn-ghost btn-sm btn-square"
+              >
+                <.icon name="hero-x-mark" class="size-5" />
+              </button>
+            </header>
+
+            <div id="video-tag-options" class="max-h-[45vh] space-y-1 overflow-y-auto p-3 md:max-h-72">
+              <button
+                :for={tag <- @available_tags}
+                id={"video-tag-option-#{tag.slug}"}
+                type="button"
+                phx-click="toggle_tag_filter"
+                phx-value-slug={tag.slug}
+                aria-pressed={to_string(tag.slug in @draft_tag_slugs)}
+                class={[
+                  "flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-semibold transition-colors",
+                  if(tag.slug in @draft_tag_slugs,
+                    do: "bg-primary/10 text-primary",
+                    else: "text-base-content/70 hover:bg-base-200 hover:text-base-content"
+                  )
+                ]}
+              >
+                <span class={[
+                  "grid size-5 place-items-center rounded border",
+                  if(tag.slug in @draft_tag_slugs,
+                    do: "border-primary bg-primary text-primary-content",
+                    else: "border-base-300 bg-base-100"
+                  )
+                ]}>
+                  <.icon :if={tag.slug in @draft_tag_slugs} name="hero-check" class="size-3.5" />
+                </span>
+                <span class="truncate">{tag.name}</span>
+              </button>
+            </div>
+
+            <footer class="flex items-center justify-between gap-3 border-t border-base-300 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <button
+                id="clear-video-tag-filters"
+                type="button"
+                phx-click="clear_tag_filters"
+                class="btn btn-ghost btn-sm"
+              >
+                Clear
+              </button>
+              <button
+                id="apply-video-tag-filters"
+                type="button"
+                phx-click="apply_tag_filters"
+                class="btn btn-primary btn-sm min-w-24"
+              >
+                Apply
+              </button>
+            </footer>
+          </section>
+        </div>
 
         <section
           :if={@library_empty?}
@@ -273,7 +376,6 @@ defmodule UrielmWeb.VideosLive do
       assigns
       |> assign(:thumbnail, thumbnail_url(assigns.video))
       |> assign(:summary, video_summary(assigns.video))
-      |> assign(:video_tags, video_tags(assigns.video))
 
     ~H"""
     <article
@@ -314,19 +416,22 @@ defmodule UrielmWeb.VideosLive do
           >
             {@summary}
           </p>
+          <div
+            :if={@video.tag_records != []}
+            id={"featured-video-tags-#{@video.id}"}
+            class="mt-5 flex flex-wrap gap-1.5"
+          >
+            <span
+              :for={tag <- Enum.take(@video.tag_records, 4)}
+              class="badge badge-sm border-primary/20 bg-primary/5 text-[0.68rem] font-bold text-primary"
+            >
+              {tag.name}
+            </span>
+          </div>
           <div class="mt-6 flex flex-wrap items-center gap-2 text-xs text-base-content/45">
             <span>{author_name(@video)}</span>
             <span class="size-1 rounded-full bg-base-content/20" aria-hidden="true"></span>
             <span>{format_date(@video.published_at)}</span>
-          </div>
-          <div :if={@video_tags != []} class="mt-4 flex flex-wrap gap-2">
-            <span
-              :for={tag <- @video_tags}
-              id={"featured-video-#{@video.id}-tag-#{tag.slug}"}
-              class="badge badge-outline border-primary/25 bg-primary/5 px-2.5 py-1 text-[0.68rem] font-bold text-primary"
-            >
-              {tag.name}
-            </span>
           </div>
           <span class="mt-7 inline-flex items-center gap-2 self-start text-sm font-bold text-primary">
             Watch video
@@ -345,10 +450,7 @@ defmodule UrielmWeb.VideosLive do
   attr :video, :map, required: true
 
   defp video_card(assigns) do
-    assigns =
-      assigns
-      |> assign(:thumbnail, thumbnail_url(assigns.video))
-      |> assign(:video_tags, video_tags(assigns.video))
+    assigns = assign(assigns, :thumbnail, thumbnail_url(assigns.video))
 
     ~H"""
     <article
@@ -378,11 +480,14 @@ defmodule UrielmWeb.VideosLive do
           <h3 class="mt-3 line-clamp-2 text-lg font-black leading-snug tracking-tight text-base-content transition-colors group-hover:text-primary">
             {@video.title}
           </h3>
-          <div :if={@video_tags != []} class="mt-3 flex flex-wrap gap-1.5">
+          <div
+            :if={@video.tag_records != []}
+            id={"video-card-tags-#{@video.id}"}
+            class="mt-3 flex flex-wrap gap-1.5"
+          >
             <span
-              :for={tag <- @video_tags}
-              id={"video-card-#{@video.id}-tag-#{tag.slug}"}
-              class="badge badge-outline border-primary/20 bg-primary/5 px-2 py-1 text-[0.62rem] font-bold text-primary/90"
+              :for={tag <- Enum.take(@video.tag_records, 3)}
+              class="badge badge-sm border-primary/20 bg-primary/5 text-[0.65rem] font-bold text-primary"
             >
               {tag.name}
             </span>
@@ -402,10 +507,7 @@ defmodule UrielmWeb.VideosLive do
   attr :video, :map, required: true
 
   defp short_card(assigns) do
-    assigns =
-      assigns
-      |> assign(:thumbnail, thumbnail_url(assigns.video))
-      |> assign(:video_tags, video_tags(assigns.video))
+    assigns = assign(assigns, :thumbnail, thumbnail_url(assigns.video))
 
     ~H"""
     <article
@@ -430,18 +532,21 @@ defmodule UrielmWeb.VideosLive do
             <.access_badge video={@video} compact />
           </div>
           <div>
-            <h3 class="line-clamp-3 text-sm font-black leading-snug text-white">
-              {@video.title}
-            </h3>
-            <div :if={@video_tags != []} class="mt-2 flex flex-wrap gap-1">
+            <div
+              :if={@video.tag_records != []}
+              id={"short-card-tags-#{@video.id}"}
+              class="mb-2 flex flex-wrap gap-1"
+            >
               <span
-                :for={tag <- @video_tags}
-                id={"short-card-#{@video.id}-tag-#{tag.slug}"}
-                class="badge border-white/15 bg-white/10 px-1.5 py-0.5 text-[0.55rem] font-bold text-white/80"
+                :for={tag <- Enum.take(@video.tag_records, 2)}
+                class="badge h-auto border-white/20 bg-[#0d1423]/70 px-1.5 py-1 text-[0.55rem] font-bold text-white"
               >
                 {tag.name}
               </span>
             </div>
+            <h3 class="line-clamp-3 text-sm font-black leading-snug text-white">
+              {@video.title}
+            </h3>
             <p class="mt-2 text-[0.65rem] text-white/55">{format_date(@video.published_at)}</p>
           </div>
         </div>
@@ -485,53 +590,13 @@ defmodule UrielmWeb.VideosLive do
       []
       |> maybe_put_param(:q, query, query != "")
       |> maybe_put_param(:format, format, format != "all")
-      |> maybe_put_param(:tags, tags_param(tag_slugs), tag_slugs != [])
+      |> maybe_put_param(:tag, tags_param(tag_slugs), tag_slugs != [])
 
     ~p"/videos?#{params}"
   end
 
-  defp tag_filter_href(query, format, tag_slugs) do
-    filter_href(query, format, tag_slugs)
-  end
-
-  defp add_tag_slug(tag_slugs, slug) do
-    tag_slugs
-    |> Kernel.++([slug])
-    |> Enum.uniq()
-  end
-
-  defp remove_tag_slug(tag_slugs, slug), do: Enum.reject(tag_slugs, &(&1 == slug))
-
   defp maybe_put_param(params, key, value, true), do: params ++ [{key, value}]
   defp maybe_put_param(params, _key, _value, false), do: params
-
-  defp filter_videos(videos, query, format, tag_ids) do
-    videos
-    |> Enum.filter(&matches_query?(&1, query))
-    |> Enum.filter(&matches_format?(&1, format))
-    |> Enum.filter(&matches_tags?(&1, tag_ids))
-  end
-
-  defp matches_query?(_video, ""), do: true
-
-  defp matches_query?(video, query) do
-    normalized_query = String.downcase(query)
-
-    [video.title, video.author_name]
-    |> Enum.reject(&is_nil/1)
-    |> Enum.any?(&String.contains?(String.downcase(&1), normalized_query))
-  end
-
-  defp matches_format?(_video, "all"), do: true
-  defp matches_format?(video, format), do: video.format == format
-
-  defp matches_tags?(_video, []), do: true
-
-  defp matches_tags?(video, tag_ids) do
-    video
-    |> Map.get(:tag_records, [])
-    |> Enum.any?(&(&1.id in tag_ids))
-  end
 
   defp normalize_query(query) when is_binary(query) do
     query
@@ -563,10 +628,6 @@ defmodule UrielmWeb.VideosLive do
     |> Enum.sort()
     |> Enum.join(",")
   end
-
-  defp video_tags(%{tag_records: %Ecto.Association.NotLoaded{}}), do: []
-  defp video_tags(%{tag_records: tags}) when is_list(tags), do: tags
-  defp video_tags(_video), do: []
 
   defp access_label("signed_in"), do: "Sign in"
   defp access_label("subscriber"), do: "Subscriber"
