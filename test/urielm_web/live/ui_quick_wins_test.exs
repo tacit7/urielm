@@ -12,12 +12,45 @@ defmodule UrielmWeb.UiQuickWinsTest do
     statics: UrielmWeb.static_paths()
 
   describe "homepage hero" do
-    test "presents one primary learning action and a featured learning surface" do
+    test "presents one primary learning action and a practical prompt artifact" do
       {:ok, view, _html} = live(build_conn(), ~p"/")
 
       assert has_element?(view, "#home-hero")
       assert has_element?(view, "#hero-primary-cta[href='/courses']")
-      assert has_element?(view, "#featured-learning-card")
+      assert has_element?(view, "#prompt-improvement-example")
+      assert has_element?(view, "#prompt-variant-before[aria-selected='true']")
+      assert has_element?(view, "#prompt-before-pane")
+      refute has_element?(view, "#featured-learning-card")
+    end
+
+    test "switches the prompt artifact to the improved example" do
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+      home_view = find_live_child(view, "page-home")
+
+      home_view
+      |> element("#prompt-variant-improved")
+      |> render_click()
+
+      assert has_element?(home_view, "#prompt-variant-improved[aria-selected='true']")
+      assert has_element?(home_view, "#prompt-improved-pane", "developers new to AI tools")
+
+      assert has_element?(
+               home_view,
+               "#prompt-improvement-example",
+               "Illustrative learning example"
+             )
+
+      refute has_element?(home_view, "#prompt-before-pane")
+    end
+
+    test "offers outcome-led routes immediately after the hero" do
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#learning-outcomes")
+      assert has_element?(view, "#outcome-learn[href='/courses']")
+      assert has_element?(view, "#outcome-prompt[href='/prompts']")
+      assert has_element?(view, "#outcome-workflow[href='/blog']")
+      assert has_element?(view, "#outcome-video[href='/videos']")
     end
   end
 
@@ -35,15 +68,10 @@ defmodule UrielmWeb.UiQuickWinsTest do
       assert has_element?(view, "#app-purpose", "community")
     end
 
-    test "explains optional Google sign-in and links the public legal pages" do
+    test "keeps the Google profile disclosure out of the homepage browsing flow" do
       {:ok, view, _html} = live(build_conn(), ~p"/")
 
-      assert has_element?(view, "#google-signin-purpose", "Optional Google sign-in")
-      assert has_element?(view, "#google-signin-purpose", "name")
-      assert has_element?(view, "#google-signin-purpose", "email")
-      assert has_element?(view, "#google-signin-purpose", "profile image")
-      assert has_element?(view, "#google-signin-purpose a[href='/privacy']", "Privacy Policy")
-      assert has_element?(view, "#google-signin-purpose a[href='/terms']", "Terms of Use")
+      refute has_element?(view, "#google-signin-purpose")
     end
   end
 

@@ -7,40 +7,43 @@ defmodule UrielmWeb.HomeLive do
   @impl true
   def mount(_params, _session, socket) do
     socket =
-      if connected?(socket) do
-        assign(socket,
-          page_title: "Home",
-          courses: Learning.list_courses() |> Enum.take(3),
-          posts: Content.list_published_posts(limit: 4),
-          prompts: Content.list_prompts(limit: 6),
-          shorts: Content.list_published_shorts(limit: 5),
-          stats: %{
-            videos: Content.count_published_videos(),
-            prompts: Content.count_published_prompts(),
-            courses: Learning.count_courses()
-          }
-        )
-      else
-        assign(socket,
-          page_title: "Home",
-          courses: [],
-          posts: [],
-          prompts: [],
-          shorts: [],
-          stats: %{videos: 0, prompts: 0, courses: 0}
-        )
-      end
+      socket
+      |> assign(:prompt_variant, :before)
+      |> then(fn socket ->
+        if connected?(socket) do
+          assign(socket,
+            page_title: "Home",
+            courses: Learning.list_courses() |> Enum.take(3),
+            posts: Content.list_published_posts(limit: 4),
+            prompts: Content.list_prompts(limit: 6),
+            shorts: Content.list_published_shorts(limit: 5)
+          )
+        else
+          assign(socket,
+            page_title: "Home",
+            courses: [],
+            posts: [],
+            prompts: [],
+            shorts: []
+          )
+        end
+      end)
 
     {:ok, socket}
   end
 
   @impl true
+  def handle_event("show_prompt_variant", %{"variant" => variant}, socket)
+      when variant in ["before", "improved"] do
+    {:noreply, assign(socket, :prompt_variant, String.to_existing_atom(variant))}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
-    <div class="bg-base-100 min-h-screen">
-      <.hero stats={@stats} courses={@courses} />
+    <div class="min-h-screen bg-base-100">
+      <.hero prompt_variant={@prompt_variant} />
       <.app_purpose />
-      <.google_signin_purpose />
       <.shorts shorts={@shorts} />
       <.courses courses={@courses} />
       <.blog_posts posts={@posts} />
@@ -51,122 +54,151 @@ defmodule UrielmWeb.HomeLive do
   end
 
   defp hero(assigns) do
-    assigns = assign(assigns, :featured_course, List.first(assigns.courses))
+    assigns = assign(assigns, :improved_prompt, improved_prompt())
 
     ~H"""
-    <section id="home-hero" class="relative flex min-h-[70vh] items-center overflow-hidden">
-      <div class="absolute inset-0 opacity-[0.03]" aria-hidden="true">
-        <div
-          class="absolute inset-0"
-          style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 60px 60px;"
-        >
-        </div>
-      </div>
+    <section id="home-hero" class="relative overflow-hidden bg-base-100">
+      <div class="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 sm:py-20 lg:min-h-[38rem] lg:grid-cols-[0.96fr_1.04fr] lg:gap-16 lg:py-24">
+        <div class="max-w-2xl">
+          <h1 class="max-w-[12ch] text-4xl font-black leading-[1.02] tracking-[-0.038em] text-balance text-base-content sm:text-5xl">
+            Build useful things with AI.
+          </h1>
 
-      <div
-        class="absolute left-[8%] top-20 h-64 w-64 rounded-full bg-primary/10 blur-[110px]"
-        aria-hidden="true"
-      >
-      </div>
-      <div
-        class="absolute bottom-10 right-[6%] h-80 w-80 rounded-full bg-secondary/10 blur-[130px]"
-        aria-hidden="true"
-      >
-      </div>
+          <p class="mt-6 max-w-[58ch] text-lg leading-8 text-base-content/65">
+            Learn through practical tutorials, reusable prompts, and guided projects—then apply what
+            works to something of your own.
+          </p>
 
-      <div class="relative z-10 mx-auto w-full max-w-7xl px-6 py-16 sm:py-20">
-        <div class="grid items-center gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20">
-          <div class="max-w-2xl">
-            <p class="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-              Practical AI development
-            </p>
-            <h1 class="text-5xl font-black leading-[0.95] tracking-[-0.045em] text-base-content md:text-6xl lg:text-7xl">
-              Learn to build
-              <span class="block bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                with AI.
-              </span>
-            </h1>
-
-            <p class="mt-7 max-w-xl text-lg leading-relaxed text-base-content/60 md:text-xl">
-              Urielm is a public learning platform with practical tutorials, structured courses,
-              production-ready prompts, and community discussions for developers building with AI.
-            </p>
-
-            <div class="mt-8 flex flex-wrap items-center gap-3">
-              <.link
-                id="hero-primary-cta"
-                navigate={~p"/courses"}
-                class="group btn btn-primary btn-lg rounded-full px-7 shadow-lg shadow-primary/15 transition duration-200 hover:-translate-y-0.5"
-              >
-                Start Learning
-                <.um_icon
-                  name="hero-arrow-right"
-                  class="size-5 transition-transform group-hover:translate-x-0.5"
-                />
-              </.link>
-              <.link
-                navigate={~p"/prompts"}
-                class="btn btn-ghost btn-lg rounded-full px-6 text-base-content/70 hover:text-base-content"
-              >
-                Browse prompts
-              </.link>
-            </div>
-
-            <div class="mt-10 flex gap-8 border-t border-base-300/70 pt-6">
-              <div>
-                <div class="text-2xl font-bold tabular-nums text-base-content">{@stats.videos}</div>
-                <div class="text-xs font-medium uppercase tracking-wide text-base-content/45">
-                  Videos
-                </div>
-              </div>
-              <div>
-                <div class="text-2xl font-bold tabular-nums text-base-content">{@stats.prompts}</div>
-                <div class="text-xs font-medium uppercase tracking-wide text-base-content/45">
-                  Prompts
-                </div>
-              </div>
-              <div>
-                <div class="text-2xl font-bold tabular-nums text-base-content">{@stats.courses}</div>
-                <div class="text-xs font-medium uppercase tracking-wide text-base-content/45">
-                  Courses
-                </div>
-              </div>
-            </div>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <.link
+              id="hero-primary-cta"
+              navigate={~p"/courses"}
+              class="group btn btn-primary min-h-12 rounded-xl px-6 font-bold shadow-lg shadow-base-300/25 transition duration-200 hover:-translate-y-0.5"
+            >
+              Start learning
+              <.um_icon
+                name="hero-arrow-right"
+                class="size-5 transition-transform group-hover:translate-x-0.5"
+              />
+            </.link>
+            <.link
+              id="hero-prompts-cta"
+              navigate={~p"/prompts"}
+              class="btn btn-ghost min-h-12 rounded-xl px-6 font-semibold text-base-content/75 hover:bg-base-200 hover:text-base-content"
+            >
+              Browse prompts
+            </.link>
           </div>
 
-          <.link
-            id="featured-learning-card"
-            navigate={
-              if(@featured_course, do: ~p"/courses/#{@featured_course.slug}", else: ~p"/courses")
-            }
-            class="group hidden overflow-hidden rounded-2xl border border-base-300/70 bg-base-200/70 p-3 shadow-xl shadow-base-300/10 transition duration-300 hover:-translate-y-1 hover:border-primary/40 lg:block"
-          >
-            <div class="relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/25 via-secondary/15 to-base-300">
-              <div class="bg-card-glow absolute inset-0"></div>
-              <div class="relative flex size-20 items-center justify-center rounded-2xl border border-white/10 bg-base-100/70 shadow-2xl backdrop-blur">
-                <.um_icon name="bolt" class="size-9 text-primary" />
-              </div>
-            </div>
-            <div class="p-5">
-              <p class="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                Featured course
-              </p>
-              <h2 class="text-2xl font-bold tracking-tight text-base-content group-hover:text-primary">
-                {if(@featured_course, do: @featured_course.title, else: "Build your first AI project")}
-              </h2>
-              <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-base-content/55">
-                {if(@featured_course && @featured_course.description,
-                  do: @featured_course.description,
-                  else:
-                    "Follow a practical learning path from first concept to a production-ready result."
-                )}
-              </p>
-              <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-base-content/70 group-hover:text-primary">
-                Explore the course <.um_icon name="hero-arrow-right" class="size-4" />
-              </span>
-            </div>
-          </.link>
+          <p class="mt-5 flex items-start gap-2 text-sm leading-6 text-base-content/50">
+            <.um_icon name="hero-globe-alt" class="mt-0.5 size-4 shrink-0 text-accent" />
+            Public resources are available without an account.
+          </p>
         </div>
+
+        <article
+          id="prompt-improvement-example"
+          class="card overflow-hidden bg-base-200 shadow-xl shadow-base-300/20"
+          aria-label="Example prompt improvement"
+        >
+          <header class="flex flex-col gap-3 border-b border-base-300/80 bg-base-300/25 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-2 text-sm font-bold text-base-content">
+              <.um_icon name="hero-chat-bubble-left-right" class="size-5 text-primary" />
+              Make a prompt more effective
+            </div>
+
+            <div
+              class="tabs tabs-box bg-base-100/65 p-1"
+              role="tablist"
+              aria-label="Prompt comparison"
+            >
+              <button
+                id="prompt-variant-before"
+                type="button"
+                role="tab"
+                aria-selected={to_string(@prompt_variant == :before)}
+                phx-click="show_prompt_variant"
+                phx-value-variant="before"
+                class={[
+                  "tab h-8 rounded-lg px-3 text-xs font-bold",
+                  @prompt_variant == :before && "tab-active bg-base-300/70 text-base-content"
+                ]}
+              >
+                Before
+              </button>
+              <button
+                id="prompt-variant-improved"
+                type="button"
+                role="tab"
+                aria-selected={to_string(@prompt_variant == :improved)}
+                phx-click="show_prompt_variant"
+                phx-value-variant="improved"
+                class={[
+                  "tab h-8 rounded-lg px-3 text-xs font-bold",
+                  @prompt_variant == :improved && "tab-active bg-base-300/70 text-base-content"
+                ]}
+              >
+                Improved
+              </button>
+            </div>
+          </header>
+
+          <div :if={@prompt_variant == :before} id="prompt-before-pane" class="min-h-72 p-5 sm:p-7">
+            <p class="font-mono text-xs font-bold uppercase tracking-[0.12em] text-base-content/45">
+              Original prompt
+            </p>
+            <p class="mt-4 font-mono text-sm leading-7 text-base-content sm:text-base">
+              Write a blog post about effective AI prompts.
+            </p>
+
+            <ul class="mt-8 space-y-3 border-t border-base-300/80 pt-6 text-sm text-base-content/60">
+              <li class="flex items-center gap-3">
+                <.um_icon name="hero-check" class="size-4 shrink-0 text-success" />
+                Add a clear audience and goal
+              </li>
+              <li class="flex items-center gap-3">
+                <.um_icon name="hero-check" class="size-4 shrink-0 text-success" />
+                Specify the structure and constraints
+              </li>
+              <li class="flex items-center gap-3">
+                <.um_icon name="hero-check" class="size-4 shrink-0 text-success" />
+                Describe what a useful answer contains
+              </li>
+            </ul>
+          </div>
+
+          <div
+            :if={@prompt_variant == :improved}
+            id="prompt-improved-pane"
+            class="min-h-72 p-5 sm:p-7"
+          >
+            <p class="font-mono text-xs font-bold uppercase tracking-[0.12em] text-base-content/45">
+              Improved prompt
+            </p>
+            <p class="mt-4 line-clamp-7 whitespace-pre-line font-mono text-sm leading-7 text-base-content sm:text-base">
+              {@improved_prompt}
+            </p>
+
+            <p class="mt-8 flex items-start gap-3 border-t border-base-300/80 pt-6 text-sm leading-6 text-base-content/60">
+              <.um_icon name="hero-check" class="mt-1 size-4 shrink-0 text-success" />
+              Audience, outcome, structure, and limits are explicit.
+            </p>
+          </div>
+
+          <footer class="flex flex-col gap-3 border-t border-base-300/80 px-5 py-4 text-xs text-base-content/45 sm:flex-row sm:items-center sm:justify-between">
+            <span>Illustrative learning example</span>
+            <button
+              id="hero-prompt-copy"
+              type="button"
+              phx-hook="CopyToClipboard"
+              data-text={@improved_prompt}
+              class="btn btn-ghost btn-sm justify-start gap-2 rounded-lg text-primary hover:bg-primary/10 sm:justify-center"
+              aria-label="Copy improved prompt"
+            >
+              Copy example
+            </button>
+          </footer>
+        </article>
       </div>
     </section>
     """
@@ -174,98 +206,88 @@ defmodule UrielmWeb.HomeLive do
 
   defp app_purpose(assigns) do
     ~H"""
-    <section id="app-purpose" class="border-y border-base-300/70 bg-base-200/35">
-      <div class="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-        <div class="mx-auto max-w-3xl text-center">
-          <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">What Urielm does</p>
-          <h2 class="mt-3 text-3xl font-black tracking-[-0.035em] text-base-content sm:text-4xl">
-            A public learning platform for practical AI development
+    <section id="app-purpose" class="bg-base-100 px-6 pb-20 sm:pb-24">
+      <div
+        id="learning-outcomes"
+        class="mx-auto grid max-w-7xl gap-10 border-t border-base-300/80 pt-14 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16 lg:pt-18"
+      >
+        <div>
+          <h2 class="max-w-[14ch] text-3xl font-black leading-tight tracking-[-0.03em] text-balance text-base-content sm:text-4xl">
+            What do you want to make progress on?
           </h2>
-          <p class="mt-4 text-base leading-7 text-base-content/60 sm:text-lg">
-            Explore learning resources without an account, then optionally sign in to save your work
-            and participate in the community.
+          <p class="mt-5 max-w-md leading-7 text-base-content/60">
+            Urielm is a public learning platform. Choose an outcome and start with the most useful
+            tutorials, prompts, workflows, videos, or community resources for it.
           </p>
         </div>
 
-        <div class="mt-10 grid gap-4 md:grid-cols-3">
-          <article class="card border border-base-300/70 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35">
-            <div class="card-body gap-3 p-6">
-              <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <.um_icon name="book-open" class="size-6" />
-              </div>
-              <h3 class="text-lg font-bold text-base-content">Learn with tutorials and courses</h3>
-              <p class="text-sm leading-6 text-base-content/60">
-                Follow practical tutorials, videos, and structured courses about current AI tools and
-                development workflows.
-              </p>
-            </div>
-          </article>
-
-          <article class="card border border-base-300/70 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35">
-            <div class="card-body gap-3 p-6">
-              <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <.um_icon name="command-line" class="size-6" />
-              </div>
-              <h3 class="text-lg font-bold text-base-content">Use reusable prompts</h3>
-              <p class="text-sm leading-6 text-base-content/60">
-                Browse production-oriented prompts and examples that you can adapt to real projects.
-              </p>
-            </div>
-          </article>
-
-          <article class="card border border-base-300/70 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35">
-            <div class="card-body gap-3 p-6">
-              <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <.um_icon name="users" class="size-6" />
-              </div>
-              <h3 class="text-lg font-bold text-base-content">Join developer discussions</h3>
-              <p class="text-sm leading-6 text-base-content/60">
-                Create an account to save resources and participate in community conversations about
-                AI tools and techniques.
-              </p>
-            </div>
-          </article>
-        </div>
+        <nav class="border-t border-base-300/80" aria-label="Learning outcomes">
+          <.outcome_link
+            id="outcome-learn"
+            href={~p"/courses"}
+            icon="hero-book-open"
+            title="Learn a concept"
+            description="Follow a focused tutorial or structured course."
+          />
+          <.outcome_link
+            id="outcome-prompt"
+            href={~p"/prompts"}
+            icon="hero-command-line"
+            title="Improve a prompt"
+            description="Start with a reusable prompt and adapt it to your project."
+          />
+          <.outcome_link
+            id="outcome-workflow"
+            href={~p"/blog"}
+            icon="hero-arrows-right-left"
+            title="Build a workflow"
+            description="Connect practical steps into a repeatable process."
+          />
+          <.outcome_link
+            id="outcome-video"
+            href={~p"/videos"}
+            icon="hero-play"
+            title="Watch a quick demo"
+            description="See one useful technique in a few focused minutes."
+          />
+        </nav>
       </div>
     </section>
     """
   end
 
-  defp google_signin_purpose(assigns) do
+  attr :id, :string, required: true
+  attr :href, :string, required: true
+  attr :icon, :string, required: true
+  attr :title, :string, required: true
+  attr :description, :string, required: true
+
+  defp outcome_link(assigns) do
     ~H"""
-    <section id="google-signin-purpose" class="bg-base-100">
-      <div class="mx-auto max-w-5xl px-6 py-14 sm:py-18">
-        <div class="card border border-primary/25 bg-primary/6 shadow-sm">
-          <div class="card-body grid gap-7 p-6 sm:p-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                Optional Google sign-in
-              </p>
-              <h2 class="mt-3 text-2xl font-black tracking-[-0.03em] text-base-content sm:text-3xl">
-                Why Urielm requests Google profile data
-              </h2>
-            </div>
-            <div class="space-y-4 text-sm leading-7 text-base-content/65 sm:text-base">
-              <p>
-                You can browse Urielm's public learning resources without signing in. If you choose
-                Google sign-in, Google provides your name, email address, profile image, and Google
-                account identifier so Urielm can create and authenticate your account, link your
-                identity, and display the profile information you authorize.
-              </p>
-              <p>
-                Urielm does not use Google profile data for advertising or sell it. Review the full
-                details in our
-                <.link navigate={~p"/privacy"} class="link link-primary font-semibold">
-                  Privacy Policy
-                </.link>
-                and <.link navigate={~p"/terms"} class="link link-primary font-semibold">Terms of Use</.link>.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <.link
+      id={@id}
+      navigate={@href}
+      class="group grid min-h-24 grid-cols-[2.75rem_minmax(0,1fr)_1.25rem] items-center gap-4 border-b border-base-300/80 py-4 transition duration-200 hover:translate-x-1 hover:text-primary"
+    >
+      <span class="grid size-11 place-items-center rounded-xl bg-base-200 text-primary transition-colors group-hover:bg-primary/12">
+        <.um_icon name={@icon} class="size-5" />
+      </span>
+      <span>
+        <strong class="block font-bold tracking-[-0.015em] text-base-content group-hover:text-primary">
+          {@title}
+        </strong>
+        <span class="mt-1 block text-sm leading-6 text-base-content/55">{@description}</span>
+      </span>
+      <.um_icon
+        name="hero-arrow-right"
+        class="size-5 text-base-content/30 transition duration-200 group-hover:translate-x-1 group-hover:text-primary"
+      />
+    </.link>
     """
+  end
+
+  defp improved_prompt do
+    "Write a concise guide for developers new to AI tools. Explain five principles for effective prompts, show one before-and-after example, and finish with a reusable checklist. Use plain language and keep the guide under 900 words."
   end
 
   defp shorts(assigns) do

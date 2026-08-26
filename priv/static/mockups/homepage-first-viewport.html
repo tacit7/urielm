@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Homepage first viewport — mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --canvas: #1a1b26;
+        --surface: #24283b;
+        --surface-strong: #2b3047;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+        --faint: #737da8;
+        --blue: #7aa2f7;
+        --blue-strong: #89b4fa;
+        --blue-ink: #16161e;
+        --teal: #73daca;
+        --success: #9ece6a;
+        --shadow: rgba(9, 10, 16, 0.34);
+        --radius: 16px;
+      }
+
+      html[data-theme="day"] {
+        color-scheme: light;
+        --canvas: #e6e7ed;
+        --surface: #f1f2f6;
+        --surface-strong: #dcdde3;
+        --border: #b8bfd5;
+        --text: #2e3c64;
+        --muted: #53648f;
+        --faint: #69779b;
+        --blue: #2e7de9;
+        --blue-strong: #1f6fd7;
+        --blue-ink: #f7f8fc;
+        --teal: #007c79;
+        --success: #587539;
+        --shadow: rgba(46, 60, 100, 0.15);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        background: #0f1117;
+      }
+      body {
+        margin: 0;
+        background: #0f1117;
+        color: var(--text);
+        font:
+          16px/1.65 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      a {
+        color: inherit;
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      a {
+        text-decoration-thickness: 1px;
+        text-underline-offset: 4px;
+      }
+      :focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 3px;
+      }
+      ::selection {
+        background: color-mix(in srgb, var(--blue) 34%, transparent);
+        color: var(--text);
+      }
+
+      .review-bar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        border-bottom: 1px solid #2e3348;
+        background: rgba(15, 17, 23, 0.94);
+        backdrop-filter: blur(14px);
+      }
+      .review-bar button {
+        min-height: 38px;
+        padding: 7px 13px;
+        border: 1px solid #3b4261;
+        border-radius: 999px;
+        background: #1a1d2a;
+        color: #9aa5ce;
+        font-size: 13px;
+        font-weight: 750;
+      }
+      .review-bar button.active {
+        border-color: #7aa2f7;
+        background: #27395f;
+        color: #d8e5ff;
+      }
+
+      .stage {
+        padding: 28px 18px 64px;
+      }
+      .frame {
+        display: none;
+        width: min(1320px, 100%);
+        margin: 0 auto;
+        overflow: hidden;
+        border: 1px solid #343a55;
+        border-radius: 16px;
+        background: var(--canvas);
+        box-shadow: 0 28px 72px color-mix(in srgb, #16161e 72%, transparent);
+      }
+      .frame.active {
+        display: block;
+      }
+      .frame.mobile {
+        width: min(414px, 100%);
+        border-radius: 20px;
+      }
+
+      .site-nav {
+        display: flex;
+        min-height: 68px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 0 34px;
+        border-bottom: 1px solid
+          color-mix(in srgb, var(--border) 72%, transparent);
+        background: color-mix(in srgb, var(--canvas) 92%, var(--surface));
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 850;
+        letter-spacing: -0.03em;
+      }
+      .brand img {
+        width: 31px;
+        height: 31px;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .nav-links a {
+        padding: 8px 12px;
+        border-radius: 12px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 650;
+        text-decoration: none;
+      }
+      .nav-links a:hover {
+        background: var(--surface);
+        color: var(--text);
+      }
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .icon-button,
+      .mobile-menu {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        background: transparent;
+      }
+      .icon-button:hover,
+      .mobile-menu:hover {
+        border-color: var(--border);
+        background: var(--surface);
+      }
+      .sign-in {
+        padding: 9px 14px;
+        border-radius: 12px;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 750;
+        text-decoration: none;
+      }
+      .mobile-menu {
+        display: none;
+      }
+
+      .hero {
+        position: relative;
+        display: grid;
+        min-height: 610px;
+        grid-template-columns: minmax(0, 0.96fr) minmax(470px, 1.04fr);
+        align-items: center;
+        gap: clamp(44px, 7vw, 92px);
+        padding: clamp(64px, 8vw, 104px) clamp(34px, 6vw, 82px);
+      }
+      .hero::before {
+        position: absolute;
+        top: 8%;
+        left: 2%;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--blue) 10%, transparent);
+        filter: blur(92px);
+        content: "";
+        pointer-events: none;
+      }
+      .hero-copy {
+        position: relative;
+        z-index: 1;
+        max-width: 620px;
+      }
+      h1 {
+        max-width: 12ch;
+        margin: 0;
+        color: var(--text);
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 820;
+        letter-spacing: -0.038em;
+        line-height: 0.98;
+        text-wrap: balance;
+      }
+      .lead {
+        max-width: 58ch;
+        margin: 26px 0 0;
+        color: var(--muted);
+        font-size: 1.125rem;
+        line-height: 1.65;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 34px;
+      }
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 10px 19px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        font-weight: 780;
+        text-decoration: none;
+        transition:
+          transform 180ms ease-out,
+          background 180ms ease-out,
+          border-color 180ms ease-out;
+      }
+      .button:hover {
+        transform: translateY(-2px);
+      }
+      .button.primary {
+        background: var(--blue);
+        color: var(--blue-ink);
+        box-shadow: 0 12px 28px var(--shadow);
+      }
+      .button.primary:hover {
+        background: var(--blue-strong);
+      }
+      .button.secondary {
+        border-color: var(--border);
+        background: color-mix(in srgb, var(--surface) 68%, transparent);
+        color: var(--text);
+      }
+      .button svg {
+        width: 18px;
+        height: 18px;
+      }
+      .public-note {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 24px;
+        color: var(--faint);
+        font-size: 0.75rem;
+      }
+      .public-note svg {
+        width: 17px;
+        height: 17px;
+        color: var(--teal);
+      }
+
+      .artifact {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: 0 24px 60px var(--shadow);
+      }
+      .artifact::after {
+        position: absolute;
+        inset: 0;
+        border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+        border-radius: inherit;
+        content: "";
+        pointer-events: none;
+      }
+      .artifact-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 15px 17px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(
+          in srgb,
+          var(--surface-strong) 72%,
+          var(--surface)
+        );
+      }
+      .artifact-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+      .artifact-title svg {
+        width: 18px;
+        height: 18px;
+        color: var(--blue);
+      }
+      .prompt-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 3px;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--canvas) 72%, transparent);
+      }
+      .prompt-tabs button {
+        padding: 6px 10px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+      .prompt-tabs button.active {
+        background: var(--surface-strong);
+        color: var(--text);
+        box-shadow: 0 2px 7px var(--shadow);
+      }
+      .prompt-pane {
+        display: none;
+        min-height: 310px;
+        padding: 30px;
+      }
+      .prompt-pane.active {
+        display: block;
+        animation: reveal 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .prompt-label {
+        margin-bottom: 12px;
+        color: var(--faint);
+        font:
+          700 11px/1.3 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .prompt-copy {
+        margin: 0;
+        color: var(--text);
+        font:
+          500 15px/1.75 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+      .prompt-copy .variable {
+        color: var(--blue-strong);
+      }
+      .prompt-copy .instruction {
+        color: var(--teal);
+      }
+      .improvement-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+      }
+      .improvement {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+      .improvement svg {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        color: var(--success);
+      }
+      .artifact-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 17px;
+        border-top: 1px solid var(--border);
+        color: var(--faint);
+        font-size: 12px;
+      }
+      .copy-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border: 0;
+        background: transparent;
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .copy-action svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .outcomes {
+        padding: 0 clamp(34px, 6vw, 82px) clamp(72px, 8vw, 104px);
+      }
+      .outcomes-inner {
+        display: grid;
+        grid-template-columns: minmax(230px, 0.72fr) minmax(0, 1.28fr);
+        gap: clamp(34px, 6vw, 80px);
+        padding-top: clamp(48px, 6vw, 72px);
+        border-top: 1px solid var(--border);
+      }
+      h2 {
+        max-width: 13ch;
+        margin: 0;
+        font-size: 1.75rem;
+        line-height: 1.18;
+        letter-spacing: -0.03em;
+        text-wrap: balance;
+      }
+      .outcome-intro p {
+        max-width: 38ch;
+        margin: 18px 0 0;
+        color: var(--muted);
+      }
+      .path-list {
+        border-top: 1px solid var(--border);
+      }
+      .path {
+        display: grid;
+        grid-template-columns: 46px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 17px;
+        min-height: 84px;
+        padding: 16px 4px;
+        border-bottom: 1px solid var(--border);
+        text-decoration: none;
+        transition:
+          transform 180ms ease-out,
+          color 180ms ease-out;
+      }
+      .path:hover {
+        transform: translateX(6px);
+        color: var(--blue);
+      }
+      .path-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--surface);
+        color: var(--blue);
+      }
+      .path-icon svg,
+      .path-arrow {
+        width: 20px;
+        height: 20px;
+      }
+      .path strong {
+        display: block;
+        font-size: 16px;
+        letter-spacing: -0.015em;
+      }
+      .path span {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+      .path-arrow {
+        color: var(--faint);
+        transition: transform 180ms ease-out;
+      }
+      .path:hover .path-arrow {
+        transform: translateX(4px);
+        color: var(--blue);
+      }
+
+      .annotation {
+        width: min(1120px, calc(100% - 36px));
+        margin: 22px auto 0;
+        padding: 17px 19px;
+        border: 1px dashed #3b4261;
+        border-radius: 16px;
+        background: #171a25;
+        color: #8f9ab8;
+        font-size: 0.75rem;
+      }
+      .annotation strong {
+        color: #c0caf5;
+      }
+
+      .mobile .site-nav {
+        min-height: 62px;
+        padding: 0 17px;
+      }
+      .mobile .nav-links,
+      .mobile .nav-actions {
+        display: none;
+      }
+      .mobile .mobile-menu {
+        display: grid;
+      }
+      .mobile .hero {
+        display: block;
+        min-height: 0;
+        padding: 48px 20px 42px;
+      }
+      .mobile .hero::before {
+        top: -40px;
+        left: -100px;
+      }
+      .mobile h1 {
+        max-width: 10ch;
+        font-size: 3rem;
+        line-height: 1.01;
+      }
+      .mobile .lead {
+        margin-top: 20px;
+        font-size: 1.125rem;
+      }
+      .mobile .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        margin-top: 28px;
+      }
+      .mobile .button {
+        width: 100%;
+      }
+      .mobile .public-note {
+        align-items: flex-start;
+        line-height: 1.45;
+      }
+      .mobile .artifact {
+        margin-top: 38px;
+      }
+      .mobile .artifact-bar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .mobile .prompt-tabs {
+        width: 100%;
+      }
+      .mobile .prompt-tabs button {
+        flex: 1;
+      }
+      .mobile .prompt-pane {
+        min-height: 338px;
+        padding: 23px 20px;
+      }
+      .mobile .prompt-copy {
+        font-size: 0.75rem;
+      }
+      .mobile .artifact-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .mobile .outcomes {
+        padding: 0 20px 90px;
+      }
+      .mobile .outcomes-inner {
+        display: block;
+        padding-top: 44px;
+      }
+      .mobile h2 {
+        max-width: 12ch;
+        font-size: 1.75rem;
+      }
+      .mobile .outcome-intro p {
+        margin-bottom: 30px;
+      }
+      .mobile .path {
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        min-height: 92px;
+      }
+
+      @keyframes reveal {
+        from {
+          opacity: 0.62;
+          transform: translateY(5px);
+          filter: blur(2px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      @media (max-width: 920px) {
+        .desktop .hero {
+          grid-template-columns: 1fr;
+        }
+        .desktop .artifact {
+          max-width: 640px;
+        }
+        .desktop .outcomes-inner {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="review-bar" aria-label="Mockup views">
+      <button class="active" data-view="desktop-night" data-theme="night">
+        Desktop · Night
+      </button>
+      <button data-view="desktop-day" data-theme="day">Desktop · Day</button>
+      <button data-view="mobile-night" data-theme="night">
+        Mobile · Night
+      </button>
+    </nav>
+
+    <main class="stage">
+      <section
+        id="desktop-night"
+        class="frame desktop active"
+        aria-label="Desktop Tokyo Night mockup"
+      >
+        <header class="site-nav">
+          <a class="brand" href="#"
+            ><img src="../images/logo.svg" alt="" /> <span>urielm</span></a
+          >
+          <nav class="nav-links" aria-label="Primary navigation">
+            <a href="#">Videos</a><a href="#">Courses</a><a href="#">Blog</a
+            ><a href="#">Prompts</a><a href="#">Community</a>
+          </nav>
+          <div class="nav-actions">
+            <button class="icon-button" aria-label="Search">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.4-3.4" />
+              </svg>
+            </button>
+            <a class="sign-in" href="#">Sign in</a>
+          </div>
+        </header>
+        <div class="hero-and-outcomes"></div>
+      </section>
+
+      <section
+        id="desktop-day"
+        class="frame desktop"
+        aria-label="Desktop Tokyo Day mockup"
+      >
+        <header class="site-nav">
+          <a class="brand" href="#"
+            ><img src="../images/logo.svg" alt="" /> <span>urielm</span></a
+          >
+          <nav class="nav-links" aria-label="Primary navigation">
+            <a href="#">Videos</a><a href="#">Courses</a><a href="#">Blog</a
+            ><a href="#">Prompts</a><a href="#">Community</a>
+          </nav>
+          <div class="nav-actions">
+            <button class="icon-button" aria-label="Search">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.4-3.4" />
+              </svg>
+            </button>
+            <a class="sign-in" href="#">Sign in</a>
+          </div>
+        </header>
+        <div class="hero-and-outcomes"></div>
+      </section>
+
+      <section
+        id="mobile-night"
+        class="frame mobile"
+        aria-label="Mobile Tokyo Night mockup"
+      >
+        <header class="site-nav">
+          <a class="brand" href="#"
+            ><img src="../images/logo.svg" alt="" /> <span>urielm</span></a
+          >
+          <button class="mobile-menu" aria-label="Open menu">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </button>
+        </header>
+        <div class="hero-and-outcomes"></div>
+      </section>
+
+      <aside class="annotation">
+        <strong>Implementation notes:</strong> reuse the existing Phoenix routes
+        and navigation. Use the approved illustrative prompt so the
+        before-and-after comparison remains coherent. Keep the artifact visible
+        on mobile, avoid disconnected zero counts, and move Google profile
+        disclosure into the sign-in context. The remainder of the homepage stays
+        intact for this first implementation pass.
+      </aside>
+    </main>
+
+    <template id="homepage-content">
+      <section class="hero">
+        <div class="hero-copy">
+          <h1>Build useful things with AI.</h1>
+          <p class="lead">
+            Learn through practical tutorials, reusable prompts, and guided
+            projects—then apply what works to something of your own.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#">
+              Start learning
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+            <a class="button secondary" href="#">Browse prompts</a>
+          </div>
+          <p class="public-note">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path d="M12 3v18M3 12h18" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            Public resources are available without an account.
+          </p>
+        </div>
+
+        <article class="artifact" aria-label="Example prompt improvement">
+          <header class="artifact-bar">
+            <div class="artifact-title">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path
+                  d="M7 8h10M7 12h7M9 18l-4 3v-4a7 7 0 0 1-2-5V8a5 5 0 0 1 5-5h8a5 5 0 0 1 5 5v4a5 5 0 0 1-5 5H9Z"
+                />
+              </svg>
+              Make a prompt more effective
+            </div>
+            <div
+              class="prompt-tabs"
+              role="tablist"
+              aria-label="Prompt comparison"
+            >
+              <button
+                class="active"
+                role="tab"
+                aria-selected="true"
+                data-prompt="before"
+              >
+                Before
+              </button>
+              <button role="tab" aria-selected="false" data-prompt="better">
+                Improved
+              </button>
+            </div>
+          </header>
+          <div class="prompt-pane active" data-pane="before">
+            <div class="prompt-label">Original prompt</div>
+            <p class="prompt-copy">
+              Write a blog post about effective AI prompts.
+            </p>
+            <div class="improvement-list">
+              <div class="improvement">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                Add a clear audience and goal
+              </div>
+              <div class="improvement">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                Specify the structure and constraints
+              </div>
+              <div class="improvement">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                Describe what a useful answer contains
+              </div>
+            </div>
+          </div>
+          <div class="prompt-pane" data-pane="better">
+            <div class="prompt-label">Improved prompt</div>
+            <p class="prompt-copy">
+              Write a concise guide for
+              <span class="variable">developers new to AI tools</span>. Explain
+              <span class="instruction"
+                >five principles for effective prompts</span
+              >, show one before-and-after example, and finish with a reusable
+              checklist. Use plain language and keep the guide under 900 words.
+            </p>
+            <div class="improvement-list">
+              <div class="improvement">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+                Audience, outcome, structure, and limits are explicit
+              </div>
+            </div>
+          </div>
+          <footer class="artifact-footer">
+            <span>Illustrative learning example</span>
+            <button class="copy-action">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <rect x="8" y="8" width="11" height="11" rx="2" />
+                <path
+                  d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"
+                />
+              </svg>
+              Copy example
+            </button>
+          </footer>
+        </article>
+      </section>
+
+      <section class="outcomes">
+        <div class="outcomes-inner">
+          <div class="outcome-intro">
+            <h2>What do you want to make progress on?</h2>
+            <p>
+              Choose an outcome. Urielm will take you to the most useful format
+              for it.
+            </p>
+          </div>
+          <nav class="path-list" aria-label="Learning outcomes">
+            <a class="path" href="#">
+              <span class="path-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V5H6.5A2.5 2.5 0 0 0 4 7.5v12Z"
+                  />
+                  <path d="M8 8h8M8 12h6" /></svg
+              ></span>
+              <span
+                ><strong>Learn a concept</strong
+                ><span
+                  >Follow a focused tutorial or structured course.</span
+                ></span
+              >
+              <svg
+                class="path-arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+            <a class="path" href="#">
+              <span class="path-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path d="M4 5h16v14H4zM8 9h8M8 13h5" /></svg
+              ></span>
+              <span
+                ><strong>Improve a prompt</strong
+                ><span>Start with a reusable prompt and adapt it.</span></span
+              >
+              <svg
+                class="path-arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+            <a class="path" href="#">
+              <span class="path-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 6h6v5H5zM13 13h6v5h-6zM11 8.5h3a2 2 0 0 1 2 2V13"
+                  /></svg
+              ></span>
+              <span
+                ><strong>Build a workflow</strong
+                ><span
+                  >Connect practical steps into a repeatable process.</span
+                ></span
+              >
+              <svg
+                class="path-arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+            <a class="path" href="#">
+              <span class="path-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="3" />
+                  <path d="m10 9 5 3-5 3V9Z" /></svg
+              ></span>
+              <span
+                ><strong>Watch a quick demo</strong
+                ><span>See one useful technique in a few minutes.</span></span
+              >
+              <svg
+                class="path-arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </nav>
+        </div>
+      </section>
+    </template>
+
+    <script>
+      const template = document.getElementById("homepage-content");
+      document.querySelectorAll(".hero-and-outcomes").forEach((target) => {
+        target.replaceWith(template.content.cloneNode(true));
+      });
+
+      document.querySelectorAll(".review-bar [data-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll(".review-bar button")
+            .forEach((item) => item.classList.remove("active"));
+          document
+            .querySelectorAll(".frame")
+            .forEach((frame) => frame.classList.remove("active"));
+          button.classList.add("active");
+          document.documentElement.dataset.theme = button.dataset.theme;
+          document.getElementById(button.dataset.view).classList.add("active");
+        });
+      });
+
+      document.querySelectorAll(".artifact").forEach((artifact) => {
+        artifact.querySelectorAll("[data-prompt]").forEach((button) => {
+          button.addEventListener("click", () => {
+            artifact.querySelectorAll("[data-prompt]").forEach((item) => {
+              item.classList.toggle("active", item === button);
+              item.setAttribute(
+                "aria-selected",
+                item === button ? "true" : "false",
+              );
+            });
+            artifact.querySelectorAll("[data-pane]").forEach((pane) => {
+              pane.classList.toggle(
+                "active",
+                pane.dataset.pane === button.dataset.prompt,
+              );
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

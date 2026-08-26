@@ -93,6 +93,27 @@ defmodule UrielmWeb.SigninLive do
               Continue with Google
             </a>
 
+            <details
+              id="google-oauth-disclosure"
+              class="mt-3 rounded-xl bg-base-100/40 px-4 py-3 text-xs leading-5 text-base-content/55"
+            >
+              <summary class="cursor-pointer font-semibold text-base-content/70 marker:text-primary">
+                How Google profile data is used
+              </summary>
+              <p class="mt-3">
+                Google provides your name, email address, profile image, and account identifier so
+                Urielm can create and authenticate your account. Urielm does not sell this data or use
+                it for advertising.
+              </p>
+              <p class="mt-2">
+                Review our
+                <.link navigate={~p"/privacy"} class="link link-primary font-semibold">
+                  Privacy Policy
+                </.link>
+                and <.link navigate={~p"/terms"} class="link link-primary font-semibold">Terms of Use</.link>.
+              </p>
+            </details>
+
             <div class="my-6 flex items-center gap-3 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-base-content/35">
               <span class="h-px flex-1 bg-base-300/70"></span>
               or use email <span class="h-px flex-1 bg-base-300/70"></span>
