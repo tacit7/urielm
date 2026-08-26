@@ -294,57 +294,118 @@ defmodule UrielmWeb.HomeLive do
     ~H"""
     <section id="home-shorts" class="ui-section bg-base-200/50">
       <div class="ui-section-shell">
-        <!-- Section Header -->
-        <div class="ui-section-header">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.77 10.32l-1.2-.5L18 9.06a3 3 0 00-3.91-4.57L12 5.97 9.91 4.49A3 3 0 006 9.06l1.43.76-1.2.5a3 3 0 001.62 5.68h.17l-.9 1.12a3 3 0 004.88 3.49l2-2.5 2 2.5a3 3 0 004.88-3.49l-.9-1.12h.17a3 3 0 001.62-5.68z" />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-2xl font-bold text-base-content">Shorts</h2>
-              <p class="text-base-content/50 text-sm">Quick AI tips under 60 seconds</p>
-            </div>
+        <div class="mb-6 flex items-start justify-between gap-4 sm:mb-8 sm:items-end">
+          <div>
+            <h2 class="max-w-xl text-3xl font-bold leading-tight tracking-[-0.035em] text-base-content">
+              Learn something useful in a minute.
+            </h2>
+            <p class="mt-2 max-w-xl text-sm leading-6 text-base-content/55 sm:text-base">
+              Short, practical demonstrations you can put to work right away.
+            </p>
           </div>
-          <.link navigate={~p"/videos"} class="btn btn-ghost btn-sm gap-2">
-            View All
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+          <.link
+            navigate={~p"/videos"}
+            class="btn btn-ghost min-h-11 flex-none gap-2 px-2 text-primary"
+          >
+            View all <.um_icon name="hero-arrow-right" class="size-4" />
           </.link>
         </div>
-        
-    <!-- Shorts Horizontal Scroll -->
+
         <%= if Enum.empty?(@shorts) do %>
           <p class="text-base-content/50 text-sm">No shorts yet.</p>
         <% end %>
-        <div class="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory scrollbar-hide">
-          <%= for {short, index} <- Enum.with_index(@shorts) do %>
-            <.link
-              navigate={~p"/videos/#{short.slug}"}
-              class="ui-card ui-card-interactive ui-card-compact group w-44 flex-shrink-0 cursor-pointer snap-start p-2"
-            >
-              <div class={"relative aspect-[9/16] overflow-hidden rounded-xl #{short_gradient(index)}"}>
-                <!-- Play Button Overlay -->
-                <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              <div class="px-1 pb-1 pt-3">
-                <h3 class="text-sm font-medium text-base-content line-clamp-2 group-hover:text-primary transition-colors">
-                  {short.title}
-                </h3>
-              </div>
-            </.link>
+        <div
+          id="home-shorts-rail"
+          class="ui-media-rail -mx-6 grid snap-x snap-mandatory grid-flow-col auto-cols-[10.5rem] gap-4 overflow-x-auto px-6 pb-4 sm:auto-cols-[11rem] lg:mx-0 lg:auto-cols-[minmax(11rem,1fr)] lg:px-0"
+          aria-label="Featured short videos"
+        >
+          <%= for short <- @shorts do %>
+            <.home_short_card short={short} />
           <% end %>
         </div>
       </div>
     </section>
+    """
+  end
+
+  attr :short, :map, required: true
+
+  defp home_short_card(assigns) do
+    assigns =
+      assigns
+      |> assign(:thumbnail, short_thumbnail_url(assigns.short))
+      |> assign(:author, short_author_name(assigns.short))
+      |> assign(:published_label, short_published_label(assigns.short.published_at))
+
+    ~H"""
+    <.link
+      id={"home-short-card-#{@short.id}"}
+      navigate={~p"/videos/#{@short.slug}"}
+      aria-label={"Watch #{@short.title}"}
+      class="card ui-card ui-card-interactive ui-card-compact group relative aspect-[9/16] snap-start overflow-hidden bg-base-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+    >
+      <div class="absolute inset-0 bg-base-300" aria-hidden="true">
+        <div
+          :if={!@thumbnail}
+          id={"home-short-fallback-#{@short.id}"}
+          class="absolute -inset-x-8 top-1/4 h-20 -rotate-12 bg-primary/12"
+        >
+        </div>
+        <div
+          :if={!@thumbnail}
+          class="absolute -inset-x-8 top-1/2 h-14 -rotate-12 bg-primary/7"
+        >
+        </div>
+        <img
+          :if={@thumbnail}
+          src={@thumbnail}
+          alt=""
+          loading="lazy"
+          class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04] motion-reduce:transition-none"
+        />
+      </div>
+
+      <div class="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-neutral/95 via-neutral/10 to-neutral/40 p-3.5">
+        <div class="flex items-start justify-between gap-2">
+          <span class="badge badge-sm border-white/20 bg-neutral/75 font-bold uppercase tracking-[0.12em] text-white">
+            Short
+          </span>
+          <span
+            id={"home-short-play-#{@short.id}"}
+            class="btn btn-circle btn-sm min-h-11 min-w-11 border-0 bg-primary text-primary-content shadow-lg shadow-neutral/30 transition-transform duration-200 group-hover:scale-105 motion-reduce:transition-none"
+            aria-hidden="true"
+          >
+            <.um_icon name="hero-play-solid" class="ml-0.5 size-4" />
+          </span>
+        </div>
+
+        <div>
+          <div
+            :if={@short.tag_records != []}
+            id={"home-short-card-tags-#{@short.id}"}
+            class="mb-2 flex flex-wrap gap-1"
+          >
+            <span
+              :for={tag <- Enum.take(@short.tag_records, 2)}
+              class="badge badge-sm h-auto border-white/20 bg-neutral/75 px-1.5 py-1 text-xs font-bold text-white"
+            >
+              {tag.name}
+            </span>
+          </div>
+
+          <h3 class="line-clamp-3 text-sm font-bold leading-snug tracking-[-0.02em] text-white">
+            {@short.title}
+          </h3>
+          <p
+            id={"home-short-card-meta-#{@short.id}"}
+            class="mt-2 flex items-center justify-between gap-2 text-xs text-white/65"
+          >
+            <span class="truncate">{@author}</span>
+            <span class="flex-none">{@published_label}</span>
+          </p>
+        </div>
+      </div>
+    </.link>
     """
   end
 
@@ -750,15 +811,20 @@ defmodule UrielmWeb.HomeLive do
   defp course_color_classes(_),
     do: %{icon_bg: "bg-base-300", icon_text: "text-base-content", badge: "badge-neutral"}
 
-  @short_gradients [
-    "bg-gradient-to-br from-rose-500 to-orange-500",
-    "bg-gradient-to-br from-violet-500 to-purple-500",
-    "bg-gradient-to-br from-cyan-500 to-blue-500",
-    "bg-gradient-to-br from-emerald-500 to-teal-500",
-    "bg-gradient-to-br from-amber-500 to-yellow-500"
-  ]
-
-  defp short_gradient(index) do
-    Enum.at(@short_gradients, rem(index, length(@short_gradients)))
+  defp short_thumbnail_url(%{youtube_url: url}) when is_binary(url) and url != "" do
+    case Urielm.EmbedParser.extract_youtube_id(url) do
+      nil -> nil
+      id -> "https://img.youtube.com/vi/#{id}/hqdefault.jpg"
+    end
   end
+
+  defp short_thumbnail_url(_short), do: nil
+
+  defp short_author_name(%{author_name: author}) when is_binary(author) and author != "",
+    do: author
+
+  defp short_author_name(_short), do: "Uriel Maldonado"
+
+  defp short_published_label(nil), do: ""
+  defp short_published_label(date), do: Calendar.strftime(date, "%b %d, %Y")
 end

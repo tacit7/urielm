@@ -350,6 +350,25 @@
     border-radius: 1rem;
   }
 
+  .ui-media-rail {
+    scrollbar-color: color-mix(in oklch, var(--color-primary) 48%, var(--color-base-300))
+      transparent;
+    scrollbar-width: thin;
+  }
+
+  .ui-media-rail::-webkit-scrollbar {
+    height: 0.45rem;
+  }
+
+  .ui-media-rail::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .ui-media-rail::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--color-primary) 48%, var(--color-base-300));
+  }
+
   .ui-state {
     display: grid;
     min-height: 18rem;

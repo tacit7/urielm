@@ -3,6 +3,7 @@ defmodule UrielmWeb.UiQuickWinsTest do
 
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
+  import Urielm.Fixtures
 
   @endpoint UrielmWeb.Endpoint
 
@@ -92,6 +93,57 @@ defmodule UrielmWeb.UiQuickWinsTest do
       assert css =~ ".ui-card-interactive {"
       assert css =~ ".ui-card-compact {"
       assert css =~ "prefers-reduced-motion: reduce"
+    end
+  end
+
+  describe "homepage Shorts" do
+    test "renders persistent media affordances and real video metadata" do
+      short =
+        video_fixture(%{
+          title: "Turn a rough idea into a useful prompt",
+          slug: "useful-prompt-short",
+          format: "short",
+          author_name: "Uriel Maldonado",
+          published_at: ~U[2026-08-24 12:00:00Z]
+        })
+
+      assert {:ok, short} = Urielm.Content.set_video_tags(short, ["Prompts", "Writing"])
+
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#home-shorts-rail.ui-media-rail")
+
+      assert has_element?(
+               view,
+               "#home-short-card-#{short.id}[href='/videos/useful-prompt-short']"
+             )
+
+      assert has_element?(
+               view,
+               "#home-short-card-#{short.id} img[src='https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg']"
+             )
+
+      assert has_element?(view, "#home-short-play-#{short.id}")
+      assert has_element?(view, "#home-short-card-tags-#{short.id}", "Prompts")
+      assert has_element?(view, "#home-short-card-meta-#{short.id}", "Uriel Maldonado")
+      assert has_element?(view, "#home-short-card-meta-#{short.id}", "Aug 24")
+    end
+
+    test "uses the tonal fallback for a Short without a YouTube thumbnail" do
+      short =
+        video_fixture(%{
+          title: "A TikTok workflow tip",
+          slug: "tiktok-workflow-tip",
+          format: "short",
+          youtube_url: nil,
+          tiktok_url: "https://www.tiktok.com/@urielm/video/1234567890",
+          published_at: ~U[2026-08-23 12:00:00Z]
+        })
+
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#home-short-fallback-#{short.id}")
+      refute has_element?(view, "#home-short-card-#{short.id} img")
     end
   end
 
