@@ -5,6 +5,7 @@ defmodule UrielmWeb.VideoLive do
   alias Urielm.Content
   alias Urielm.Forum
   alias Urielm.Engagement
+  alias UrielmWeb.CommentHandlers
   alias UrielmWeb.LiveHelpers
 
   @impl true
@@ -212,6 +213,29 @@ defmodule UrielmWeb.VideoLive do
   @impl true
   def handle_event(
         "vote",
+        %{"target_type" => "comment", "target_id" => id, "value" => value},
+        socket
+      ) do
+    LiveHelpers.with_auth(socket, "vote", fn socket, user ->
+      case CommentHandlers.vote(socket.assigns.thread, id, value, user, :toggle) do
+        {:ok, _} ->
+          {:noreply, refresh_video_comments(socket, user)}
+
+        {:error, :not_found} ->
+          {:noreply, put_flash(socket, :error, "Comment not found")}
+
+        {:error, :invalid_vote} ->
+          {:noreply, put_flash(socket, :error, "Invalid vote value")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to vote")}
+      end
+    end)
+  end
+
+  @impl true
+  def handle_event(
+        "vote",
         %{"target_type" => target_type, "target_id" => id, "value" => value},
         socket
       ) do
@@ -263,18 +287,17 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, put_flash(socket, :error, "Comments not enabled for this video")}
 
       true ->
-        thread_id = thread.id
         parent_id = Map.get(params, "parent_id")
 
-        attrs = %{"body" => body}
-        attrs = if parent_id, do: Map.put(attrs, "parent_id", parent_id), else: attrs
-
-        case Forum.create_comment(thread_id, user.id, attrs) do
+        case CommentHandlers.create(thread, body, parent_id, user) do
           {:ok, _comment} ->
             {:noreply,
              socket
              |> refresh_video_comments(user)
              |> put_flash(:info, "Comment posted")}
+
+          {:error, :thread_locked} ->
+            {:noreply, put_flash(socket, :error, "This thread is locked")}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to post comment")}
@@ -291,28 +314,21 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
-        case Forum.get_comment(comment_id) do
-          nil ->
+        case CommentHandlers.edit(socket.assigns.thread, comment_id, body, user) do
+          {:error, :not_found} ->
             {:noreply, put_flash(socket, :error, "Comment not found")}
 
-          comment ->
-            if current_video_comment?(comment, socket.assigns.thread) do
-              case Forum.edit_comment(comment, body, user) do
-                {:ok, _} ->
-                  {:noreply,
-                   socket
-                   |> refresh_video_comments(user)
-                   |> put_flash(:info, "Comment updated")}
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> refresh_video_comments(user)
+             |> put_flash(:info, "Comment updated")}
 
-                {:error, :unauthorized} ->
-                  {:noreply, put_flash(socket, :error, "Not authorized")}
+          {:error, :unauthorized} ->
+            {:noreply, put_flash(socket, :error, "Not authorized")}
 
-                {:error, _} ->
-                  {:noreply, put_flash(socket, :error, "Failed to update comment")}
-              end
-            else
-              {:noreply, put_flash(socket, :error, "Comment not found")}
-            end
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to update comment")}
         end
     end
   end
@@ -326,34 +342,24 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, put_flash(socket, :error, "Not authorized")}
 
       user ->
-        case Forum.get_comment(comment_id) do
-          nil ->
+        case CommentHandlers.delete(socket.assigns.thread, comment_id, user) do
+          {:error, :not_found} ->
             {:noreply, put_flash(socket, :error, "Comment not found")}
 
-          comment ->
-            if current_video_comment?(comment, socket.assigns.thread) do
-              case Forum.remove_comment(comment, user) do
-                {:ok, _} ->
-                  {:noreply,
-                   socket
-                   |> refresh_video_comments(user)
-                   |> put_flash(:info, "Comment deleted")}
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> refresh_video_comments(user)
+             |> put_flash(:info, "Comment deleted")}
 
-                {:error, :unauthorized} ->
-                  {:noreply, put_flash(socket, :error, "Not authorized")}
+          {:error, :unauthorized} ->
+            {:noreply, put_flash(socket, :error, "Not authorized")}
 
-                {:error, _} ->
-                  {:noreply, put_flash(socket, :error, "Failed to delete comment")}
-              end
-            else
-              {:noreply, put_flash(socket, :error, "Comment not found")}
-            end
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to delete comment")}
         end
     end
   end
-
-  defp current_video_comment?(comment, %{id: thread_id}), do: comment.thread_id == thread_id
-  defp current_video_comment?(_comment, _thread), do: false
 
   @impl true
   def handle_event("open_report_comment", %{"comment_id" => comment_id}, socket) do

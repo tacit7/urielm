@@ -294,6 +294,67 @@ defmodule UrielmWeb.VideoLiveTest do
       assert has_element?(child, "#video-tab-comments", "1")
     end
 
+    test "voting on a comment refreshes the rendered comment tree", %{} do
+      user = user_fixture()
+      board = board_fixture()
+      thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      comment = comment_fixture(thread, user)
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: thread.id
+        })
+
+      conn = log_in_user(build_conn(), user)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      child
+      |> element("#video-tab-comments")
+      |> render_click()
+
+      render_hook(child, "vote", %{
+        "target_type" => "comment",
+        "target_id" => to_string(comment.id),
+        "value" => "1"
+      })
+
+      assert Urielm.Forum.get_user_vote(user.id, "comment", comment.id).value == 1
+
+      assert has_element?(
+               child,
+               ~s([data-name="CommentTree"][data-props*='"score":1'][data-props*='"user_vote":1'])
+             )
+    end
+
+    test "cannot vote on a comment from another video discussion", %{} do
+      user = user_fixture()
+      board = board_fixture()
+      current_thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      other_thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      other_comment = comment_fixture(other_thread, user)
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: current_thread.id
+        })
+
+      conn = log_in_user(build_conn(), user)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      render_hook(child, "vote", %{
+        "target_type" => "comment",
+        "target_id" => to_string(other_comment.id),
+        "value" => "1"
+      })
+
+      refute Urielm.Forum.get_user_vote(user.id, "comment", other_comment.id)
+      assert Urielm.Forum.get_comment(other_comment.id).score == 0
+    end
+
     test "cannot edit a comment from another video discussion", %{} do
       user = user_fixture()
       board = board_fixture()

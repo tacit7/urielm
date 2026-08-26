@@ -510,6 +510,29 @@ defmodule UrielmWeb.ForumLiveTest do
       assert vote.value == 1
     end
 
+    test "cannot vote on a comment from another thread", %{
+      board: board,
+      thread: current_thread,
+      user: user
+    } do
+      other_thread = thread_fixture(%{board_id: board.id, author_id: user.id})
+      other_comment = comment_fixture(other_thread, user)
+
+      {:ok, live, _html} =
+        live(build_conn_with_user(user), ~p"/forum/t/#{current_thread.id}")
+
+      html =
+        render_click(live, "vote", %{
+          "target_type" => "comment",
+          "target_id" => to_string(other_comment.id),
+          "value" => "1"
+        })
+
+      assert html =~ "Comment not found"
+      refute Forum.get_user_vote(user.id, "comment", other_comment.id)
+      assert Forum.get_comment!(other_comment.id).score == 0
+    end
+
     test "author can delete thread", %{thread: thread, user: user} do
       {:ok, live, _html} = live(build_conn_with_user(user), ~p"/forum/t/#{thread.id}")
 
@@ -555,6 +578,44 @@ defmodule UrielmWeb.ForumLiveTest do
       # Verify comment was marked as removed
       updated_comment = Forum.get_comment!(comment.id)
       assert updated_comment.is_removed
+    end
+
+    test "cannot edit a comment from another thread", %{
+      board: board,
+      thread: current_thread,
+      user: user
+    } do
+      other_thread = thread_fixture(%{board_id: board.id, author_id: user.id})
+      other_comment = comment_fixture(other_thread, user, %{body: "Keep this body"})
+
+      {:ok, live, _html} =
+        live(build_conn_with_user(user), ~p"/forum/t/#{current_thread.id}")
+
+      html =
+        render_click(live, "edit_comment", %{
+          "id" => to_string(other_comment.id),
+          "body" => "Changed elsewhere"
+        })
+
+      assert html =~ "Comment not found"
+      assert Forum.get_comment!(other_comment.id).body == "Keep this body"
+    end
+
+    test "cannot delete a comment from another thread", %{
+      board: board,
+      thread: current_thread,
+      user: user
+    } do
+      other_thread = thread_fixture(%{board_id: board.id, author_id: user.id})
+      other_comment = comment_fixture(other_thread, user)
+
+      {:ok, live, _html} =
+        live(build_conn_with_user(user), ~p"/forum/t/#{current_thread.id}")
+
+      html = render_click(live, "delete_comment", %{"id" => to_string(other_comment.id)})
+
+      assert html =~ "Comment not found"
+      refute Forum.get_comment!(other_comment.id).is_removed
     end
 
     test "non-author cannot delete comment", %{thread: thread, comment: comment} do

@@ -32,19 +32,23 @@ defmodule Urielm.Engagement do
     Repo.transaction(fn ->
       existing = get_vote(user_id, target_type, target_id)
 
-      case {existing, value} do
-        # No existing vote: create new
-        {nil, v} ->
-          create_vote(user_id, target_type, target_id, v)
+      {result, score_delta} =
+        case {existing, value} do
+          # No existing vote: create new
+          {nil, v} ->
+            {create_vote(user_id, target_type, target_id, v), v}
 
-        # Same value: remove vote
-        {%Vote{value: ^value}, _} ->
-          delete_vote(existing)
+          # Same value: remove vote
+          {%Vote{value: ^value}, _} ->
+            {delete_vote(existing), -value}
 
-        # Different value: switch
-        {%Vote{} = vote, v} ->
-          update_vote(vote, v)
-      end
+          # Different value: switch
+          {%Vote{value: old_value} = vote, v} ->
+            {update_vote(vote, v), v - old_value}
+        end
+
+      apply_score_delta(target_type, target_id, score_delta)
+      result
     end)
   end
 

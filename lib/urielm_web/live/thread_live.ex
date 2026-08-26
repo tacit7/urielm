@@ -3,6 +3,7 @@ defmodule UrielmWeb.ThreadLive do
   use LiveSvelte.Components
 
   alias Urielm.Forum
+  alias UrielmWeb.CommentHandlers
   alias UrielmWeb.LiveHelpers
 
   @impl true
@@ -83,14 +84,9 @@ defmodule UrielmWeb.ThreadLive do
          |> redirect(to: ~p"/signup/set-handle")}
 
       true ->
-        thread_id = thread_data.id
         parent_id = Map.get(params, "parent_id")
 
-        attrs =
-          %{"body" => body}
-          |> maybe_put_parent_id(parent_id)
-
-        case Forum.create_comment(thread_id, user.id, attrs) do
+        case CommentHandlers.create(thread_data, body, parent_id, user) do
           {:ok, _comment} ->
             {:noreply,
              socket
@@ -105,6 +101,29 @@ defmodule UrielmWeb.ThreadLive do
             {:noreply, put_flash(socket, :error, "Failed to post comment")}
         end
     end
+  end
+
+  @impl true
+  def handle_event(
+        "vote",
+        %{"target_type" => "comment", "target_id" => target_id, "value" => value},
+        socket
+      ) do
+    LiveHelpers.with_auth(socket, "vote", fn socket, user ->
+      case CommentHandlers.vote(socket.assigns.thread, target_id, value, user, :cast) do
+        {:ok, _} ->
+          {:noreply, refresh_thread(socket, user)}
+
+        {:error, :not_found} ->
+          {:noreply, put_flash(socket, :error, "Comment not found")}
+
+        {:error, :invalid_vote} ->
+          {:noreply, put_flash(socket, :error, "Invalid vote value")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to vote")}
+      end
+    end)
   end
 
   @impl true
@@ -285,24 +304,21 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def handle_event("edit_comment", %{"id" => comment_id, "body" => body}, socket) do
     LiveHelpers.with_auth(socket, "edit comments", fn socket, user ->
-      case Forum.get_comment(comment_id) do
-        nil ->
+      case CommentHandlers.edit(socket.assigns.thread, comment_id, body, user) do
+        {:error, :not_found} ->
           {:noreply, put_flash(socket, :error, "Comment not found")}
 
-        comment ->
-          case Forum.edit_comment(comment, body, user) do
-            {:ok, _} ->
-              {:noreply,
-               socket
-               |> refresh_thread(user)
-               |> put_flash(:info, "Comment updated")}
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Comment updated")}
 
-            {:error, :unauthorized} ->
-              {:noreply, put_flash(socket, :error, "Not authorized")}
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Not authorized")}
 
-            {:error, _} ->
-              {:noreply, put_flash(socket, :error, "Failed to update comment")}
-          end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to update comment")}
       end
     end)
   end
@@ -310,24 +326,21 @@ defmodule UrielmWeb.ThreadLive do
   @impl true
   def handle_event("delete_comment", %{"id" => comment_id}, socket) do
     LiveHelpers.with_auth(socket, "delete comments", fn socket, user ->
-      case Forum.get_comment(comment_id) do
-        nil ->
+      case CommentHandlers.delete(socket.assigns.thread, comment_id, user) do
+        {:error, :not_found} ->
           {:noreply, put_flash(socket, :error, "Comment not found")}
 
-        comment ->
-          case Forum.remove_comment(comment, user) do
-            {:ok, _} ->
-              {:noreply,
-               socket
-               |> refresh_thread(user)
-               |> put_flash(:info, "Comment deleted")}
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> refresh_thread(user)
+           |> put_flash(:info, "Comment deleted")}
 
-            {:error, :unauthorized} ->
-              {:noreply, put_flash(socket, :error, "Not authorized")}
+        {:error, :unauthorized} ->
+          {:noreply, put_flash(socket, :error, "Not authorized")}
 
-            {:error, _} ->
-              {:noreply, put_flash(socket, :error, "Failed to delete comment")}
-          end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete comment")}
       end
     end)
   end
@@ -931,9 +944,6 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   # full thread serialization handled by LiveHelpers.serialize_thread_full/2
-
-  defp maybe_put_parent_id(attrs, parent_id) when parent_id in [nil, ""], do: attrs
-  defp maybe_put_parent_id(attrs, parent_id), do: Map.put(attrs, "parent_id", parent_id)
 
   defp refresh_thread(socket, current_user) do
     thread_id = socket.assigns.thread.id
