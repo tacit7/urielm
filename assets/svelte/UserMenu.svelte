@@ -110,7 +110,7 @@
   {#if isMenuOpen}
     <ul
       id="account-menu"
-      class="menu dropdown-content absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 gap-1 rounded-2xl bg-base-100 p-2 shadow-xl"
+      class="menu dropdown-content absolute right-0 top-[calc(100%+0.75rem)] z-50 w-72 gap-1 rounded-2xl bg-base-200 p-2 shadow-xl"
     >
       <li class="pointer-events-none px-3 pb-2 pt-2">
         <span class="block p-0 text-sm font-bold text-base-content">

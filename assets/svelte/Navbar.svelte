@@ -199,7 +199,7 @@
         {#if isMenuOpen}
           <div
             id="mobile-nav"
-            class="dropdown-content absolute right-0 top-[calc(100%+0.75rem)] w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-base-100 p-2 shadow-xl"
+            class="dropdown-content absolute right-0 top-[calc(100%+0.75rem)] w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-base-200 p-2 shadow-xl"
           >
             <p class="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-[0.14em] text-base-content/45">
               More from UrielM

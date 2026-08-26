@@ -25,3 +25,10 @@ test("account menu uses the shared icon system and controlled state", () => {
   assert.match(userMenu, /aria-controls="account-menu"/)
   assert.match(userMenu, /id="account-menu"/)
 })
+
+test("navigation dropdowns use a distinct elevated surface", () => {
+  assert.match(navbar, /id="mobile-nav"[\s\S]*?bg-base-200/)
+  assert.match(userMenu, /id="account-menu"[\s\S]*?bg-base-200/)
+  assert.doesNotMatch(navbar, /id="mobile-nav"[\s\S]*?bg-base-100/)
+  assert.doesNotMatch(userMenu, /id="account-menu"[\s\S]*?bg-base-100/)
+})
