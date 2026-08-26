@@ -66,6 +66,7 @@ defmodule UrielmWeb.Router do
     # Main app pages - routed through persistent ShellLive
     live_session :default do
       live "/", ShellLive, :home
+      live "/privacy", PrivacyLive
       live "/blog", ShellLive, :blog_index
       live "/blog/:slug", ShellLive, :blog_show
       live "/prompts", ShellLive, :prompts

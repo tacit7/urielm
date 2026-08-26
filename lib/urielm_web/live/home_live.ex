@@ -587,6 +587,15 @@ defmodule UrielmWeb.HomeLive do
           <p class="text-sm text-base-content/50">
             © 2026 Uriel Maldonado. All rights reserved.
           </p>
+          <nav aria-label="Legal" class="flex items-center gap-5 text-sm">
+            <.link
+              id="home-footer-privacy-link"
+              navigate={~p"/privacy"}
+              class="text-base-content/60 transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            >
+              Privacy Policy
+            </.link>
+          </nav>
         </div>
       </div>
     </footer>

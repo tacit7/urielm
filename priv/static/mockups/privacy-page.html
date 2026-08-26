@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy policy - page mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1a1b26;
+        --surface: #202231;
+        --surface-2: #24283b;
+        --border: #3b4261;
+        --primary: #7aa2f7;
+        --accent: #73daca;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.7 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      a { color: inherit; }
+      .tabs {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(16px);
+      }
+      .tabs button {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 13px;
+        background: var(--surface);
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .tabs button.active { background: var(--primary); color: #111827; border-color: var(--primary); }
+      .frame { min-height: 100vh; }
+      .navbar {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
+      }
+      .brand { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; }
+      .nav-links { display: flex; gap: 22px; color: var(--muted); font-size: 14px; }
+      .hero {
+        padding: 72px 24px 42px;
+        text-align: center;
+        background: radial-gradient(circle at top, rgba(122, 162, 247, 0.13), transparent 55%);
+      }
+      .eyebrow { color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+      h1 { margin: 10px 0 8px; font-size: clamp(38px, 6vw, 64px); line-height: 1; letter-spacing: -0.05em; }
+      .updated { color: var(--muted); }
+      .layout {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 250px minmax(0, 760px);
+        justify-content: center;
+        gap: 42px;
+        padding: 42px 0 80px;
+      }
+      .toc {
+        position: sticky;
+        top: 86px;
+        align-self: start;
+        max-height: calc(100vh - 110px);
+        overflow: auto;
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+      .toc strong { display: block; margin-bottom: 10px; font-size: 13px; }
+      .toc a { display: block; padding: 5px 0; color: var(--muted); font-size: 12px; text-decoration: none; }
+      .toc a:hover { color: var(--primary); }
+      .policy { display: grid; gap: 18px; }
+      .summary, section {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: clamp(22px, 4vw, 38px);
+        background: var(--surface);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.12);
+      }
+      .summary { background: linear-gradient(140deg, rgba(122, 162, 247, 0.10), rgba(115, 218, 202, 0.04)), var(--surface); }
+      .summary h2, section h2 { margin: 0 0 14px; font-size: 23px; line-height: 1.25; letter-spacing: -0.025em; }
+      section h3 { margin-top: 26px; font-size: 17px; }
+      section p, section li, .summary p { color: var(--muted); }
+      .oauth {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .oauth div { padding: 16px; border-radius: 14px; background: var(--surface-2); }
+      .oauth b { display: block; margin-bottom: 4px; color: var(--text); }
+      .annotation {
+        width: min(760px, calc(100% - 40px));
+        margin: 0 auto 50px;
+        padding: 18px 20px;
+        border: 1px dashed var(--accent);
+        border-radius: 16px;
+        color: var(--muted);
+        background: rgba(115, 218, 202, 0.05);
+      }
+      .annotation strong { color: var(--accent); }
+      .mobile .frame { width: 390px; min-height: 844px; margin: 24px auto; border: 1px solid var(--border); border-radius: 26px; overflow: hidden; }
+      .mobile .navbar { padding: 0 18px; }
+      .mobile .nav-links { display: none; }
+      .mobile .hero { padding: 48px 20px 30px; }
+      .mobile .layout { width: auto; display: block; padding: 22px 16px 60px; }
+      .mobile .toc { position: static; margin-bottom: 16px; max-height: none; }
+      .mobile .policy { gap: 14px; }
+      .mobile .summary, .mobile section { padding: 22px 20px; border-radius: 16px; }
+      .mobile .oauth { grid-template-columns: 1fr; }
+      .mobile .annotation { width: auto; margin: 0 16px 30px; }
+      @media (max-width: 760px) {
+        .layout { display: block; width: auto; padding: 26px 18px 60px; }
+        .toc { position: static; margin-bottom: 18px; max-height: none; }
+        .oauth { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs" aria-label="Mockup views">
+      <button class="active" data-view="desktop">Desktop</button>
+      <button data-view="mobile">Mobile</button>
+    </div>
+
+    <div id="preview">
+      <div class="frame">
+        <header class="navbar">
+          <div class="brand">urielm.dev</div>
+          <nav class="nav-links"><span>Learn</span><span>Community</span><span>Sign in</span></nav>
+        </header>
+
+        <div class="hero">
+          <div class="eyebrow">SMPL LABS LLC</div>
+          <h1>Privacy Policy</h1>
+          <div class="updated">Last updated August 25, 2026</div>
+        </div>
+
+        <main class="layout">
+          <nav class="toc" aria-label="Privacy policy sections">
+            <strong>On this page</strong>
+            <a href="#summary">Summary</a>
+            <a href="#information">Information we collect</a>
+            <a href="#processing">How we use information</a>
+            <a href="#social">Google and social login</a>
+            <a href="#retention">Data retention</a>
+            <a href="#rights">Your privacy rights</a>
+            <a href="#contact">Contact us</a>
+          </nav>
+
+          <article class="policy">
+            <div class="summary" id="summary">
+              <div class="eyebrow">At a glance</div>
+              <h2>How we handle your information</h2>
+              <p>SMPL LABS LLC processes personal information to operate urielm.dev, authenticate accounts, protect the service, and comply with applicable law.</p>
+            </div>
+
+            <section id="information">
+              <h2>1. What information do we collect?</h2>
+              <p>We collect information you provide when creating an account, participating in the service, or contacting us. This can include your name, email address, username, and profile information.</p>
+            </section>
+
+            <section id="social">
+              <div class="eyebrow">Google OAuth disclosure</div>
+              <h2>How we handle Google sign-in</h2>
+              <p>If you sign in with Google, we request only the <strong>email</strong> and <strong>profile</strong> scopes needed to create and authenticate your account.</p>
+              <div class="oauth">
+                <div><b>Data received</b><span>Name, email, profile image, and Google account identifier.</span></div>
+                <div><b>How it is used</b><span>Account creation, sign-in, identity linking, and profile display.</span></div>
+                <div><b>Sharing</b><span>We do not sell Google user data or use it for advertising.</span></div>
+              </div>
+            </section>
+
+            <section id="rights">
+              <h2>10. What are your privacy rights?</h2>
+              <p>Depending on where you live, you may request access, correction, deletion, restriction, or a copy of your personal information.</p>
+            </section>
+
+            <section id="contact">
+              <h2>14. How can you contact us?</h2>
+              <p>Email <a href="mailto:uriel@smpllabs.io">uriel@smpllabs.io</a> or write to SMPL LABS LLC in Austin, Texas.</p>
+            </section>
+          </article>
+        </main>
+
+        <div class="annotation">
+          <strong>Implementation notes:</strong> Public route with no authentication requirement; complete PDF text rendered as semantic HTML; sticky contents on desktop; compact contents on mobile; visible Google OAuth disclosure; privacy link added to the homepage footer. No decorative left border.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const preview = document.querySelector("#preview")
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-view]").forEach((item) => item.classList.remove("active"))
+          button.classList.add("active")
+          preview.className = button.dataset.view === "mobile" ? "mobile" : ""
+        })
+      })
+    </script>
+  </body>
+</html>
