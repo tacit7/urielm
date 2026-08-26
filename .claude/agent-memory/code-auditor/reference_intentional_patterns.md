@@ -19,8 +19,8 @@ Documented with inline comment. Not a bug.
 ## `Vote.target_id` is `:string` not `:binary_id`
 The DB column is `text` (migration 20260307154029). Integer IDs (prompts, videos) are stored as strings. Correct. Do not change to `:binary_id`.
 
-## Admin `try/rescue` in `moderation_queue_live.ex`
-Lines 281, 292: `try do Forum.get_thread!(report.target_id) rescue` — intentional for admin context where target may be hard-deleted. Acceptable here; normal handlers use nil-returning variants.
+## Admin `try/rescue` in `moderation_queue_live.ex` — FIXED (round 5)
+Replaced with nil-safe `Forum.get_thread/1` + `Forum.get_comment/1` + nil flash in round 5 (commit 9e6e199). No longer an intentional pattern — do flag if try/rescue reappears here.
 
 ## `serialize_thread_full/2` bulk path
 `live_helpers.ex` uses `load_bulk_thread_state` + `serialize_thread_card_bulk` for thread lists. The non-bulk `serialize_thread_card/2` still exists for single-thread serialization. Both are correct — don't consolidate.

@@ -2,6 +2,11 @@
 
 Comprehensive list of Discourse features for comparison and implementation tracking.
 
+**Legend**
+- ✅ Implemented
+- ⚠️ Partial / backend-only / needs UI or coverage verification
+- ❌ Not implemented
+
 ## Core Forum Features
 
 ### Content Management
@@ -9,25 +14,25 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Subcategories** - Nested organization (boards in our impl)
 - ✅ **Topics/Threads** - Discussion posts
 - ✅ **Posts/Comments** - Replies with nesting
-- ✅ **Tags** - Cross-category organization
+- ⚠️ **Tags** - Backend/thread tagging exists; browse/management UI and tag UI tests need coverage
 - ❌ **Tag groups** - Grouped tag management
 - ✅ **Search** - Full-text search
-- ❌ **Advanced search** - Filters by user, date, category
+- ⚠️ **Advanced search** - Full-text and some filters exist; Discourse-level user/date/category filters are incomplete
 - ❌ **Saved searches** - Persistent search queries
 
 ### Content Creation
-- ✅ **Rich text editor** - Tiptap WYSIWYG
+- ⚠️ **Rich text editor** - Tiptap pieces exist; forum composer integration and coverage need verification
 - ✅ **Markdown support** - Full markdown syntax
 - ❌ **BBCode support** - Alternative markup
-- ✅ **Composer** - Bottom-anchored, resizable
-- ✅ **Grippie** - Drag to resize composer
-- ❌ **Draft system** - Server-side drafts (we have localStorage)
+- ⚠️ **Composer** - Composer/editor flow exists, but Discourse-style bottom anchoring/resizing is partial
+- ⚠️ **Grippie** - Resize behavior appears partial and lacks UI coverage
+- ⚠️ **Draft system** - LocalStorage drafts only; no server-side draft system
 - ❌ **Draft sequences** - Multiple drafts per user
-- ✅ **Preview** - See rendered output
-- ❌ **Side-by-side** - Editor + preview split view
-- ✅ **Uploads** - Generic upload library with R2 (backend complete, UI pending)
+- ⚠️ **Preview** - Preview/renderer pieces exist; composer preview flow lacks end-to-end coverage
+- ⚠️ **Side-by-side** - Preview-side styling exists, but split editor/preview UI is not fully verified
+- ⚠️ **Uploads** - Generic upload library with R2 is backend complete; composer UI remains pending
 - ❌ **Drag-drop** - Drag files into composer
-- ✅ **Keyboard shortcuts** - Cmd+Enter, formatting shortcuts
+- ⚠️ **Keyboard shortcuts** - Some shortcuts exist; composer shortcut coverage is incomplete
 
 ### Formatting & Embeds
 - ✅ **Bold, italic, strike** - Text formatting
@@ -35,11 +40,11 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Lists** - Bullet, numbered
 - ✅ **Quotes** - Blockquotes
 - ✅ **Code** - Inline and blocks
-- ❌ **Tables** - Markdown tables
+- ⚠️ **Tables** - Markdown/table styling support appears present; integration coverage needs verification
 - ✅ **Links** - Hyperlinks
-- ✅ **YouTube embeds** - Auto-embed videos
-- ✅ **Image embeds** - Inline images
-- ✅ **Twitter embeds** - Tweet cards
+- ⚠️ **YouTube embeds** - Embed helper and tests exist; integration coverage is incomplete
+- ⚠️ **Image embeds** - Embed helper and tests exist; integration coverage is incomplete
+- ⚠️ **Twitter embeds** - Embed helper and tests exist; integration coverage is incomplete
 - ❌ **Instagram embeds** - Instagram posts
 - ❌ **GitHub gists** - Code snippet embeds
 - ❌ **PDF viewer** - Inline PDF rendering
@@ -50,7 +55,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 
 ### User Interactions
 - ✅ **Voting** - Upvote/downvote (we do upvote only)
-- ✅ **Likes** - Heart reactions
+- ⚠️ **Likes** - Like/vote-style engagement exists; distinct Discourse-style heart reactions are not fully represented
 - ❌ **Multiple reactions** - Different emoji reactions
 - ✅ **Bookmarks** - Save posts and comments
 - ❌ **Bookmark notes** - Add private notes to bookmarks
@@ -58,7 +63,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Following users** - Subscribe to user activity
 - ❌ **Muting users** - Hide specific users
 - ❌ **Ignoring users** - Complete user block
-- ✅ **Mentions** - @username notifications
+- ⚠️ **Mentions** - Mention parsing/notification backend exists; UI wiring and end-to-end coverage are incomplete
 - ❌ **Quoting** - Quote previous posts
 - ❌ **Multi-quote** - Quote multiple posts at once
 - ❌ **Whispers** - Mod-only visible posts
@@ -68,9 +73,9 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Global pins** - Pin across all categories
 - ❌ **Banner** - Site-wide announcement
 - ✅ **Locking** - Close topic to replies
-- ✅ **Archiving** - Read-only topics
+- ❌ **Archiving** - Separate read-only archived topic state was not found in audit
 - ✅ **Solved status** - Mark topic as solved
-- ✅ **Auto-close timer** - Close after X days
+- ⚠️ **Auto-close timer** - Backend/worker support exists; UI and live tests are incomplete
 - ❌ **Auto-delete timer** - Delete after X days
 - ❌ **Slow mode** - Rate limit replies per topic
 - ❌ **Unlisted** - Hidden from topic lists
@@ -95,15 +100,15 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Moderator role** - Between user and admin
 - ❌ **Category moderators** - Per-category mods
 - ✅ **Flag/report system** - User reports
-- ❌ **Flag queue** - Dedicated moderation queue
+- ✅ **Flag queue** - Dedicated admin moderation queue exists
 - ❌ **Auto-flagging** - Rules-based automatic flags
 - ✅ **Hide/remove posts** - Soft delete
 - ❌ **Delete posts** - Hard delete
 - ✅ **Edit history** - Post revisions
 - ❌ **Edit reasons** - Required edit explanations
 - ❌ **Post approval** - Pre-moderate new users
-- ❌ **User suspension** - Temporary bans
-- ❌ **User silencing** - Restrict posting
+- ✅ **User suspension** - Temporary bans supported through admin/user management
+- ✅ **User silencing** - Restrict posting supported through admin/user management
 - ❌ **IP banning** - Block IP addresses
 - ❌ **Email banning** - Block email domains
 - ❌ **Watched words** - Auto-flag/block specific terms
@@ -111,17 +116,17 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Staff notes** - Private mod notes on users
 
 ### Notifications
-- ✅ **In-app notifications** - Real-time alerts
+- ⚠️ **In-app notifications** - Notification list and unread state exist; generation flows are partial
 - ❌ **Email notifications** - Digest emails
 - ❌ **Push notifications** - Browser push
-- ✅ **Thread watching** - Subscribe to topics
-- ❌ **Category watching** - Subscribe to categories (have watch/mute but no auto-subscribe)
-- ✅ **Mention notifications** - @username alerts (backend ready, UI not wired)
+- ⚠️ **Thread watching** - Subscribe/unsubscribe support exists; auto-generated subscriber notification coverage is missing
+- ⚠️ **Category watching** - Backend watch/mute levels exist; UI/route/tests are missing
+- ⚠️ **Mention notifications** - Backend ready; UI wiring and end-to-end coverage are incomplete
 - ❌ **Reply notifications** - Notified when replied to
 - ❌ **Quote notifications** - Notified when quoted
 - ❌ **Like notifications** - Notified when liked
 - ✅ **Notification preferences** - Per-topic settings
-- ❌ **Muted topics** - Silence specific topics
+- ⚠️ **Muted topics** - Per-topic mute level exists; UI/tests are incomplete
 - ❌ **Notification schedules** - Quiet hours
 
 ### Discovery & Navigation
@@ -129,13 +134,13 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **New topics** - Recently created
 - ✅ **Top topics** - Sorted by score
 - ✅ **Unread** - Unread for current user
-- ❌ **Categories page** - Category overview
+- ✅ **Categories page** - Category overview exists
 - ❌ **Tags page** - Browse by tags
 - ❌ **Top contributors** - User leaderboard
 - ❌ **Similar topics** - Related content suggestions
 - ❌ **Suggested topics** - Personalized recommendations
 - ✅ **Read tracking** - Mark topics as read
-- ✅ **Last read position** - Resume where you left off
+- ⚠️ **Last read position** - Read tracking exists; resume-position behavior/tests are missing
 - ❌ **Topic excerpts** - Previews in lists
 - ✅ **View count** - Track topic views
 
@@ -161,7 +166,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Referrals** - Track who invited who
 
 ### Content Discovery
-- ❌ **Topic lists** - Multiple views (latest, top, categories)
+- ✅ **Topic lists** - Latest/new/top/unread/category views are available in forum navigation
 - ❌ **Digest emails** - Weekly/monthly summaries
 - ❌ **RSS feeds** - Per-category/tag feeds
 - ❌ **Webhooks** - External integrations
@@ -177,9 +182,9 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Version control** - Wiki history
 - ❌ **Events** - Calendar events in topics
 - ❌ **Voting** - Democratic decisions
-- ❌ **Solved plugin** - Accepted answers
+- ⚠️ **Solved plugin** - Solved status exists as built-in behavior, not as a full Discourse plugin equivalent
 - ❌ **Question/Answer mode** - StackOverflow style
-- ❌ **Chat** - Real-time chat (we have separate chat)
+- ⚠️ **Chat** - Separate real-time chat exists; not integrated as Discourse-style topic chat
 - ❌ **Private messages** - 1-on-1 DMs
 - ❌ **Message threading** - Threaded PMs
 - ❌ **Group PMs** - Multi-user messages
@@ -187,20 +192,20 @@ Comprehensive list of Discourse features for comparison and implementation track
 ### Performance & Scale
 - ❌ **CDN support** - Asset delivery
 - ❌ **Image optimization** - Auto-resize images
-- ❌ **Lazy loading** - Load content on scroll
-- ❌ **Infinite scroll** - Continuous pagination
+- ⚠️ **Lazy loading** - Some embed/image lazy loading exists; broad content lazy loading is incomplete
+- ⚠️ **Infinite scroll** - Hook/notification marker support exists; forum-wide infinite scroll is incomplete
 - ✅ **Pagination** - Page-based navigation (Flop)
 - ❌ **Caching** - Redis caching
 - ❌ **Read replicas** - Database scaling
-- ❌ **Background jobs** - Sidekiq/Oban (we have GenServer)
+- ⚠️ **Background jobs** - ThreadCloser GenServer exists; no full durable job queue such as Oban
 
 ### Admin & Configuration
-- ❌ **Admin dashboard** - Metrics and controls
-- ❌ **Site settings** - 500+ configuration options
+- ⚠️ **Admin dashboard** - Admin moderation/user/trust-level pages exist; no unified metrics dashboard
+- ⚠️ **Site settings** - Settings and trust-level configuration exist; not a Discourse-scale settings system
 - ❌ **Customization** - CSS/JavaScript injection
 - ❌ **Theme creator** - Visual theme builder
 - ❌ **Plugin system** - Extend with plugins
-- ❌ **API** - RESTful API for integrations
+- ⚠️ **API** - Limited JSON/auth endpoints exist; no comprehensive REST API for forum integrations
 - ❌ **Backup/restore** - Automated backups
 - ❌ **Import tools** - Migrate from other platforms
 - ❌ **Export tools** - Data portability
@@ -217,9 +222,9 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Offline mode** - Read offline
 
 ### Accessibility
-- ✅ **Keyboard navigation** - Full keyboard support
-- ✅ **Screen readers** - ARIA labels
-- ✅ **Focus indicators** - Visible focus rings
+- ⚠️ **Keyboard navigation** - Basic support exists; full keyboard audit/coverage is missing
+- ⚠️ **Screen readers** - ARIA labels exist in places; full screen-reader audit/coverage is missing
+- ⚠️ **Focus indicators** - Focus styling exists in places; full focus-state audit/coverage is missing
 - ❌ **High contrast mode** - Accessibility theme
 - ❌ **Font size controls** - User font preferences
 - ❌ **Reduce motion** - Animation toggles
@@ -237,28 +242,55 @@ Comprehensive list of Discourse features for comparison and implementation track
 
 ## Implementation Status Summary
 
-**Total Discourse Features**: ~150+
-**Implemented**: ~41 (27%)
-**Core Features Implemented**: ~90%
-**Advanced Features**: ~10%
+**Tracked Feature Rows**: 195
+**Implemented**: 47 (24%)
+**Partial / Needs Verification**: 34 (17%)
+**Missing**: 114 (58%)
+**Core Features Implemented or Partial**: ~80%
+**Advanced Features Implemented or Partial**: ~10%
 
 **Recent Addition**: Generic file upload library (Cloudflare R2, polymorphic, UUID v7)
+
+## Audit Notes
+
+**Audit source**: EITS team `discourse-feature-audit` on August 17, 2026.
+
+The audit found several rows that were stale in either direction:
+
+- Some rows marked ✅ are only partial, backend-only, or insufficiently covered by tests.
+- Some rows marked ❌ are implemented or partially implemented now, especially moderation queue, suspension/silencing, categories page, topic lists, embeds, and admin pages.
+- `mix compile --warnings-as-errors` was reported blocked by pre-existing HEEx/template warnings during the audit, outside the scope of this document update.
+
+### Test Coverage Gaps
+
+- Tag UI and tag browsing/management tests
+- `SearchLive` and advanced-search filter tests
+- Composer, preview, side-by-side, draft, upload, and shortcut UI tests
+- Auto-close timer UI/live tests
+- End-to-end mention notification and subscriber notification generation tests
+- Category-watch UI/route/tests
+- Resume-position tests for last read position
+- Embed integration tests beyond helper coverage
+- Mobile and accessibility regression coverage
+- OAuth callback tests with meaningful provider/callback behavior
+- Trust-level settings LiveView tests
+- Public-profile suspend/silence interaction tests
 
 ## Feature Priority for Remaining Work
 
 ### High Priority (User-facing, high value)
-1. **Polls** - Very popular feature
-2. **Email notifications** - Critical for retention
-3. **Activity feed** - User engagement
-4. **User badges** - Gamification
-5. **Advanced search** - Usability
+1. **Fix compile warnings-as-errors** - Required for reliable verification
+2. **Advanced search completion** - User/date/category filters and SearchLive coverage
+3. **Email notifications** - Critical for retention
+4. **Composer completion** - Preview, drafts, uploads, shortcuts, and UI coverage
+5. **Mention/subscriber notification E2E** - Close notification correctness gaps
 
 ### Medium Priority (Nice to have)
-6. Wiki posts
-7. Topic templates
-8. Similar topics
-9. User directory
-10. Groups/teams
+6. Polls
+7. Category watch/mute UI
+8. Tag browsing and management UI
+9. Activity feed
+10. User badges
 
 ### Low Priority (Advanced/Enterprise)
 11. SSO/SAML
@@ -268,6 +300,6 @@ Comprehensive list of Discourse features for comparison and implementation track
 15. Advanced moderation (IP bans, etc.)
 
 ---
-**Last Updated**: December 20, 2025
+**Last Updated**: August 17, 2026
 **Purpose**: Feature comparison and roadmap planning
 **Status**: Living document

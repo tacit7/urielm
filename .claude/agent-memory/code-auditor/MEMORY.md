@@ -11,8 +11,13 @@
 ## Workflow Patterns
 - [feedback_codex_review.md](feedback_codex_review.md) — All fix branches require Codex LGTM before merge; Codex caught 3 regressions in round 1
 
-## Top Remaining Issues (as of round 3)
-- `thread_live.ex` — 9x `get_thread!/get_comment!` in handle_event (H1, deferred 2 rounds)
-- `board_live.ex` mount — cyclomatic complexity 27 (M3)
-- `user_profile_live.ex` — 1094L god LiveView, complexity 17 (M1/M3)
-- Nesting depth 4-5: `video_live`, `prompts_live`, `prompt_live`, `forum.ex:create_comment`, `room_channel`, `mention_parser`
+- [audit_2026_07_07_round4.md](audit_2026_07_07_round4.md) — Round 4 (2026-07-07): thread_live 9x get_thread!/get_comment! fixed; nesting depth reduced in prompts_live, room_channel, mention_parser
+- [audit_2026_07_07_round5.md](audit_2026_07_07_round5.md) — Round 5 (2026-07-07): XSS markdown fix, UrielmWeb.Markdown module, admin try/rescue replaced, admin connected? guards. Score ~8/10.
+- [audit_2026_07_07_antipattern_round2.md](audit_2026_07_07_antipattern_round2.md) — Anti-pattern audit round 2 (2026-07-07, note 6255 on project 11): 0/13 round-1 anti-pattern findings fixed; video_live get_thread! and moderation_queue_live get_report! still crash despite looking fixed by round-5 commit 9e6e199 (which touched a different lookup in the same files). 18 new findings.
+
+## Top Remaining Issues (as of round 5)
+- `lib/urielm/forum.ex` — 1574L god context (12 concerns); solo pass needed
+- `lib/urielm_web/live/user_profile_live.ex` — 1094L god LiveView, complexity 17
+- `lib/urielm_web/live/board_live.ex` — mount complexity 27
+- `lib/urielm/content.ex` — 828L mixed context
+- XSS: `UrielmWeb.Markdown.sanitize_and_wrap` uses fragile regex; correct fix is HtmlSanitizeEx
