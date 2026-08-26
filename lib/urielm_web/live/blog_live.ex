@@ -233,21 +233,20 @@ defmodule UrielmWeb.BlogLive do
           </header>
 
           <%= if @posts == [] do %>
-            <div
+            <.empty_state
               id="blog-empty-state"
-              class="ui-card mt-12 border-dashed px-6 py-14 text-center text-base-content/55 sm:mt-14 sm:py-18"
+              title="The first note is taking shape"
+              description="New essays about building thoughtful software and useful AI workflows will appear here."
+              icon="hero-pencil-square"
+              tone="secondary"
+              class="mt-12 sm:mt-14"
             >
-              <span class="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary/10 text-secondary">
-                <.um_icon name="hero-pencil-square" class="size-6" />
-              </span>
-              <h2 class="mt-4 text-lg font-bold text-base-content">The first note is taking shape</h2>
-              <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed">
-                New essays about building thoughtful software and useful AI workflows will appear here.
-              </p>
-              <.link navigate={~p"/"} class="btn btn-outline btn-sm mt-6 rounded-full">
-                Explore the site
-              </.link>
-            </div>
+              <:action>
+                <.link navigate={~p"/"} class="btn btn-outline btn-sm rounded-full">
+                  Explore the site
+                </.link>
+              </:action>
+            </.empty_state>
           <% else %>
             <article
               id={"blog-featured-post-#{@featured_post.id}"}

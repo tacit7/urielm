@@ -31,14 +31,21 @@ defmodule UrielmWeb.ForumLive do
         active_view="categories"
         count_label={"#{Enum.sum(Enum.map(@categories, fn c -> length(c.boards) end))} boards"}
       />
-      
-    <!-- Empty state -->
-      <div :if={@categories == []} class="flex flex-col items-center justify-center py-32">
-        <p class="font-mono font-black text-8xl text-base-content/10 select-none mb-4">00</p>
-        <p class="font-mono text-xs tracking-[0.3em] uppercase text-base-content/30">
-          No categories yet
-        </p>
-      </div>
+
+      <.empty_state
+        :if={@categories == []}
+        id="forum-categories-empty-state"
+        title="No categories yet"
+        description="Community spaces will appear here as soon as they are available."
+        icon="hero-chat-bubble-left-right"
+        compact
+      >
+        <:action>
+          <.link navigate={~p"/forum"} class="btn btn-ghost btn-sm rounded-full text-primary">
+            View latest discussions <.um_icon name="hero-arrow-right" class="size-4" />
+          </.link>
+        </:action>
+      </.empty_state>
       
     <!-- Categories -->
       <div :if={@categories != []} id="forum-categories" class="space-y-8">

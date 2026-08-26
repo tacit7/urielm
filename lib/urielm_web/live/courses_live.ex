@@ -39,19 +39,13 @@ defmodule UrielmWeb.CoursesLive do
           </div>
         </header>
 
-        <div
+        <.empty_state
           :if={@courses == []}
           id="courses-empty-state"
-          class="ui-card flex min-h-72 flex-col items-center justify-center border-dashed px-6 text-center"
-        >
-          <div class="mb-5 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <.um_icon name="hero-academic-cap" class="size-6" />
-          </div>
-          <h2 class="text-xl font-black text-base-content">New courses are on the way</h2>
-          <p class="mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
-            Check back soon for guided lessons, practical examples, and complete learning paths.
-          </p>
-        </div>
+          title="New courses are on the way"
+          description="Check back soon for guided lessons, practical examples, and complete learning paths."
+          icon="hero-academic-cap"
+        />
 
         <div :if={@courses != []} id="courses-collection">
           <.featured_course course={hd(@courses)} index={1} />

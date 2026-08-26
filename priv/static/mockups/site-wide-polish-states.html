@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Site-wide polish states — mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #10131f;
+        --surface: #171b2b;
+        --surface-2: #1d2336;
+        --border: #2b3550;
+        --blue: #6ea8fe;
+        --blue-soft: #173467;
+        --text: #d9e2f2;
+        --muted: #8996ae;
+        --danger: #ff757f;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      button, a { font: inherit; }
+      button:focus-visible, a:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 3px;
+      }
+      .switcher {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg) 90%, transparent);
+        backdrop-filter: blur(14px);
+      }
+      .switcher button, .button {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface-2);
+        color: var(--text);
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+      .switcher button.active, .button.primary {
+        border-color: color-mix(in srgb, var(--blue) 55%, var(--border));
+        background: var(--blue-soft);
+        color: #dceaff;
+      }
+      .frame { display: none; min-height: calc(100vh - 58px); }
+      .frame.active { display: grid; grid-template-columns: 230px minmax(0, 1fr); }
+      .sidebar {
+        padding: 24px 16px;
+        border-right: 1px solid var(--border);
+        background: #121624;
+      }
+      .brand { padding: 0 10px 22px; font-size: 20px; font-weight: 900; letter-spacing: -.04em; }
+      .nav { display: grid; gap: 6px; }
+      .nav span { padding: 10px 12px; border-radius: 12px; color: var(--muted); }
+      .nav .active { background: var(--surface-2); color: var(--text); }
+      main { min-width: 0; padding: 38px 5vw 80px; }
+      .eyebrow { color: var(--blue); font: 800 11px/1.2 ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; }
+      h1 { margin: 8px 0 4px; font-size: clamp(29px, 4vw, 46px); line-height: 1.05; letter-spacing: -.045em; }
+      .lead { margin: 0; color: var(--muted); }
+      .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 30px; }
+      .card {
+        min-height: 340px;
+        padding: 26px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, .18);
+      }
+      .label { margin-bottom: 30px; color: var(--muted); font: 800 10px/1 ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; }
+      .state { height: 240px; display: grid; place-items: center; text-align: center; }
+      .state-inner { max-width: 260px; }
+      .icon {
+        display: grid;
+        width: 52px;
+        height: 52px;
+        margin: 0 auto 18px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--blue) 35%, var(--border));
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--blue-soft) 55%, transparent);
+        color: var(--blue);
+        font-size: 22px;
+      }
+      h2 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.02em; }
+      .state p { margin: 0 0 20px; color: var(--muted); }
+      .skeleton { width: 100%; }
+      .shimmer {
+        position: relative;
+        overflow: hidden;
+        border-radius: 10px;
+        background: var(--surface-2);
+      }
+      .shimmer::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(110,168,254,.12), transparent);
+        animation: shimmer 1.5s infinite;
+      }
+      @keyframes shimmer { to { transform: translateX(100%); } }
+      @media (prefers-reduced-motion: reduce) { .shimmer::after { animation: none; } }
+      .thumb { height: 126px; }
+      .line { height: 12px; margin-top: 14px; }
+      .line.short { width: 62%; }
+      .error .icon { border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); background: rgba(255,117,127,.08); color: var(--danger); }
+      .annotation {
+        margin-top: 22px;
+        padding: 16px 18px;
+        border: 1px dashed var(--border);
+        border-radius: 14px;
+        background: rgba(23, 27, 43, .65);
+        color: var(--muted);
+      }
+      .annotation strong { color: var(--text); }
+      .mobile-shell {
+        width: min(390px, calc(100vw - 24px));
+        margin: 24px auto;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        background: var(--bg);
+        box-shadow: 0 30px 70px rgba(0,0,0,.35);
+      }
+      .mobile-head { display: flex; justify-content: space-between; padding: 18px; border-bottom: 1px solid var(--border); font-weight: 900; }
+      .mobile-main { padding: 24px 16px 90px; }
+      .mobile-main .card { min-height: 310px; padding: 20px; }
+      .mobile-dock { display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid var(--border); background: #121624; color: var(--muted); }
+      @media (max-width: 900px) {
+        .frame.active { grid-template-columns: 1fr; }
+        .sidebar { display: none; }
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="switcher" aria-label="Mockup views">
+      <button class="active" data-view="desktop">Desktop states</button>
+      <button data-view="mobile">Mobile state</button>
+    </nav>
+
+    <section class="frame active" id="desktop">
+      <aside class="sidebar">
+        <div class="brand">urielm</div>
+        <div class="nav"><span>Home</span><span class="active">Saved</span><span>Videos</span><span>Courses</span><span>Blog</span></div>
+      </aside>
+      <main>
+        <div class="eyebrow">Shared UI system</div>
+        <h1>Clear feedback at every step.</h1>
+        <p class="lead">One visual language for loading, empty, and recoverable error states.</p>
+
+        <div class="grid">
+          <article class="card">
+            <div class="label">Loading</div>
+            <div class="state" aria-busy="true">
+              <div class="skeleton" aria-hidden="true">
+                <div class="shimmer thumb"></div>
+                <div class="shimmer line"></div>
+                <div class="shimmer line short"></div>
+                <div class="shimmer line"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="label">Empty</div>
+            <div class="state">
+              <div class="state-inner">
+                <div class="icon">☆</div>
+                <h2>No saved items yet</h2>
+                <p>Save useful posts, prompts, and videos to find them here.</p>
+                <button class="button primary">Explore content</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card error">
+            <div class="label">Recoverable error</div>
+            <div class="state">
+              <div class="state-inner">
+                <div class="icon">!</div>
+                <h2>We couldn’t load this</h2>
+                <p>Your work is safe. Check your connection and try again.</p>
+                <button class="button primary">Try again</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="annotation"><strong>Implementation:</strong> reusable HEEx state components, consistent IDs and ARIA semantics, a global focus ring, reduced-motion-safe shimmer, and action slots for context-specific recovery. No decorative left borders.</div>
+      </main>
+    </section>
+
+    <section class="frame" id="mobile">
+      <div></div>
+      <div class="mobile-shell">
+        <header class="mobile-head"><span>urielm</span><span>☰</span></header>
+        <main class="mobile-main">
+          <div class="eyebrow">Saved</div>
+          <h1>Your library</h1>
+          <p class="lead">Everything you want to revisit.</p>
+          <article class="card" style="margin-top: 24px">
+            <div class="state">
+              <div class="state-inner">
+                <div class="icon">☆</div>
+                <h2>No saved items yet</h2>
+                <p>Save something useful and it will appear here.</p>
+                <button class="button primary">Explore content</button>
+              </div>
+            </div>
+          </article>
+          <div class="annotation"><strong>Mobile:</strong> compact spacing, 44px action targets, and the existing global dock remains the only bottom navigation.</div>
+        </main>
+        <footer class="mobile-dock"><span>Home</span><span>Search</span><span>Saved</span><span>Profile</span></footer>
+      </div>
+    </section>
+
+    <script>
+      const buttons = document.querySelectorAll("[data-view]");
+      buttons.forEach((button) => button.addEventListener("click", () => {
+        buttons.forEach((item) => item.classList.remove("active"));
+        document.querySelectorAll(".frame").forEach((frame) => frame.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById(button.dataset.view).classList.add("active");
+      }));
+    </script>
+  </body>
+</html>

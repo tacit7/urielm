@@ -119,15 +119,26 @@ defmodule UrielmWeb.SavedThreadsLive do
           </div>
 
           <div id="threads" phx-update="stream" class="space-y-4">
-            <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
-              You haven't saved any threads yet. Save interesting discussions for later!
-            </div>
+            <.empty_state
+              id="saved-threads-empty-state"
+              title="No saved discussions yet"
+              description="Save useful conversations and they will be waiting here when you return."
+              icon="hero-bookmark"
+              compact
+              class="hidden only:grid"
+            >
+              <:action>
+                <.link navigate={~p"/forum"} class="btn btn-primary btn-sm rounded-full">
+                  Explore discussions <.um_icon name="hero-arrow-right" class="size-4" />
+                </.link>
+              </:action>
+            </.empty_state>
             <div :for={{id, thread} <- @streams.threads} id={id}>
               <.svelte
                 name="ThreadCard"
                 props={thread}
                 socket={@socket}
-              ssr={false}
+                ssr={false}
               />
             </div>
           </div>

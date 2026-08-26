@@ -36,6 +36,12 @@ defmodule UrielmWeb.BlogLiveTest do
     assert has_element?(view, "#blog-featured-post-#{post.id}")
   end
 
+  test "blog index uses the shared empty state when no posts are published" do
+    {:ok, view, _html} = live(build_conn(), ~p"/blog")
+
+    assert has_element?(view, "#blog-empty-state[data-ui-state='empty']")
+  end
+
   test "blog index features the newest post and places older posts in the archive" do
     older_post =
       published_post!(%{

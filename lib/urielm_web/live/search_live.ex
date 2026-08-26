@@ -145,20 +145,29 @@ defmodule UrielmWeb.SearchLive do
         </div>
 
         <%= if String.length(String.trim(@query)) == 0 do %>
-          <div class="text-center py-12 text-base-content/50">
-            <p>Enter a search query to find threads</p>
-          </div>
+          <.empty_state
+            id="search-start-state"
+            title="Search the community"
+            description="Enter a topic, phrase, or tag to find relevant discussions."
+            icon="hero-magnifying-glass"
+            compact
+          />
         <% else %>
           <div id="results" phx-update="stream" class="space-y-4">
-            <div id="empty-state" class="hidden only:block text-center py-12 text-base-content/50">
-              No threads found matching your search.
-            </div>
+            <.empty_state
+              id="search-empty-state"
+              title="No matching discussions"
+              description="Try a broader phrase, check the spelling, or search for another tag."
+              icon="hero-magnifying-glass"
+              compact
+              class="hidden only:grid"
+            />
             <div :for={{id, result} <- @streams.results} id={id}>
               <.svelte
                 name="ThreadCard"
                 props={result}
                 socket={@socket}
-              ssr={false}
+                ssr={false}
               />
             </div>
           </div>

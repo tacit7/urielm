@@ -24,8 +24,9 @@ defmodule UrielmWeb.SearchLiveTest do
 
   describe "mount" do
     test "loads empty state without query", %{conn: conn} do
-      {:ok, _live, html} = live(conn, "/forum/search")
-      assert html =~ "Search"
+      {:ok, view, _html} = live(conn, "/forum/search")
+
+      assert has_element?(view, "#search-start-state[data-ui-state='empty']")
     end
 
     test "loads results with ?q= param", %{conn: conn, thread: thread} do
@@ -34,8 +35,10 @@ defmodule UrielmWeb.SearchLiveTest do
     end
 
     test "shows no results for unmatched query", %{conn: conn} do
-      {:ok, _live, html} = live(conn, "/forum/search?q=zzznomatch999xyz")
+      {:ok, view, html} = live(conn, "/forum/search?q=zzznomatch999xyz")
+
       refute html =~ "sourdough"
+      assert has_element?(view, "#search-empty-state[data-ui-state='empty']")
     end
   end
 

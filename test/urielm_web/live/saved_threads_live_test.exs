@@ -35,8 +35,9 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
     end
 
     test "shows empty state when no saved threads", %{conn: conn, user: user} do
-      {:ok, _live, html} = live(log_in_user(conn, user), "/saved")
-      assert html =~ "haven" or html =~ "empty" or html =~ "Saved Threads"
+      {:ok, view, _html} = live(log_in_user(conn, user), "/saved")
+
+      assert has_element?(view, "#saved-threads-empty-state[data-ui-state='empty']")
     end
 
     test "does not show other users' saved threads", %{conn: conn, user: user, thread: thread} do

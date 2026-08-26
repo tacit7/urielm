@@ -304,6 +304,148 @@ defmodule UrielmWeb.CoreComponents do
   end
 
   @doc """
+  Renders a consistent empty state with optional contextual action.
+
+  ## Examples
+
+      <.empty_state
+        id="saved-empty"
+        title="No saved items yet"
+        description="Save useful content to find it here."
+        icon="hero-bookmark"
+      />
+  """
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  attr :description, :string, default: nil
+  attr :icon, :string, default: "hero-inbox"
+  attr :tone, :string, values: ~w(primary secondary), default: "primary"
+  attr :compact, :boolean, default: false
+  attr :class, :string, default: nil
+  attr :rest, :global
+
+  slot :action, doc: "an optional contextual action"
+
+  def empty_state(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-ui-state="empty"
+      aria-labelledby={"#{@id}-title"}
+      aria-describedby={@description && "#{@id}-description"}
+      class={[
+        "ui-state",
+        @compact && "ui-state-compact",
+        @class
+      ]}
+      {@rest}
+    >
+      <div class={[
+        "ui-state-icon",
+        if(@tone == "secondary",
+          do: "bg-secondary/10 text-secondary",
+          else: "bg-primary/10 text-primary"
+        )
+      ]}>
+        <.icon name={@icon} class="size-6" />
+      </div>
+      <h2 id={"#{@id}-title"} class="ui-state-title">{@title}</h2>
+      <p :if={@description} id={"#{@id}-description"} class="ui-state-description">
+        {@description}
+      </p>
+      <div :if={@action != []} class="ui-state-action">
+        {render_slot(@action)}
+      </div>
+    </section>
+    """
+  end
+
+  @doc """
+  Renders an announced, recoverable error state.
+  """
+  attr :id, :string, required: true
+  attr :title, :string, required: true
+  attr :description, :string, default: nil
+  attr :icon, :string, default: "hero-exclamation-triangle"
+  attr :compact, :boolean, default: false
+  attr :class, :string, default: nil
+  attr :rest, :global
+
+  slot :action, doc: "an optional recovery action"
+
+  def error_state(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-ui-state="error"
+      role="alert"
+      aria-live="polite"
+      aria-labelledby={"#{@id}-title"}
+      aria-describedby={@description && "#{@id}-description"}
+      class={[
+        "ui-state",
+        @compact && "ui-state-compact",
+        @class
+      ]}
+      {@rest}
+    >
+      <div class="ui-state-icon bg-error/10 text-error">
+        <.icon name={@icon} class="size-6" />
+      </div>
+      <h2 id={"#{@id}-title"} class="ui-state-title">{@title}</h2>
+      <p :if={@description} id={"#{@id}-description"} class="ui-state-description">
+        {@description}
+      </p>
+      <div :if={@action != []} class="ui-state-action">
+        {render_slot(@action)}
+      </div>
+    </section>
+    """
+  end
+
+  @doc """
+  Renders a reduced-motion-safe loading placeholder.
+  """
+  attr :id, :string, required: true
+  attr :label, :string, default: "Loading content"
+  attr :rows, :integer, values: [1, 2, 3, 4, 5, 6], default: 3
+  attr :thumbnail, :boolean, default: true
+  attr :compact, :boolean, default: false
+  attr :class, :string, default: nil
+  attr :rest, :global
+
+  def loading_state(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-ui-state="loading"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      class={[
+        "ui-state ui-state-loading",
+        @compact && "ui-state-compact",
+        @class
+      ]}
+      {@rest}
+    >
+      <span class="sr-only">{@label}</span>
+      <div class="ui-state-skeleton" aria-hidden="true">
+        <div :if={@thumbnail} class="ui-skeleton ui-skeleton-thumbnail"></div>
+        <div
+          :for={index <- 1..@rows}
+          class={[
+            "ui-skeleton ui-skeleton-line",
+            index == @rows && "ui-skeleton-line-short"
+          ]}
+        >
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  @doc """
   Renders a table with generic styling.
 
   ## Examples

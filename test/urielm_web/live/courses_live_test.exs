@@ -24,6 +24,12 @@ defmodule UrielmWeb.CoursesLiveTest do
     assert has_element?(view, "#featured-course-#{course.id}")
   end
 
+  test "courses index uses the shared empty state" do
+    {:ok, view, _html} = live(build_conn(), ~p"/courses")
+
+    assert has_element?(view, "#courses-empty-state[data-ui-state='empty']")
+  end
+
   test "course detail exposes its hero, description, and lesson collection" do
     {course, lesson} = course_with_lesson!()
 
