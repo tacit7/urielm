@@ -50,7 +50,7 @@ defmodule UrielmWeb.Layouts do
         />
       </div>
 
-      <main class="pt-16 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <main class="pt-[4.25rem] pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
         {if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block)}
       </main>
 
@@ -76,7 +76,8 @@ defmodule UrielmWeb.Layouts do
     <nav
       id="mobile-bottom-nav"
       aria-label="Mobile navigation"
-      class="dock dock-sm z-40 border-base-300/70 bg-base-100/90 shadow-[0_-10px_30px_color-mix(in_oklab,var(--color-base-300)_18%,transparent)] backdrop-blur-xl transition-transform duration-200 lg:hidden"
+      data-navigation="mobile-dock"
+      class="dock dock-sm z-40 border-t border-base-300/70 bg-base-100/95 transition-transform duration-200 motion-reduce:transition-none lg:hidden"
     >
       <.mobile_nav_link
         id="mobile-nav-home"
@@ -115,7 +116,7 @@ defmodule UrielmWeb.Layouts do
           href={@profile_path}
           icon="user_circle"
           label="Profile"
-          active={@current_page == "profile"}
+          active={@current_page in ["profile", "settings"]}
         />
       <% else %>
         <.mobile_nav_link
@@ -145,10 +146,11 @@ defmodule UrielmWeb.Layouts do
       href={@href}
       data-phx-link="redirect"
       data-phx-link-state="push"
+      data-navigation-item
       aria-current={if(@active, do: "page", else: nil)}
       class={[
-        "group min-w-0 rounded-xl text-base-content/55 transition duration-150 hover:bg-info/5 hover:text-base-content focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-info",
-        @active && "dock-active bg-info/10 text-info"
+        "group min-h-12 min-w-0 rounded-xl text-base-content/55 transition duration-150 hover:bg-primary/5 hover:text-base-content focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary motion-reduce:transition-none",
+        @active && "dock-active bg-primary/10 text-primary"
       ]}
     >
       <span class="relative">

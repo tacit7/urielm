@@ -2,7 +2,7 @@
   import ThemeToggle from './ThemeToggle.svelte'
   import UMIcon from './UMIcon.svelte'
   import UserMenu from './UserMenu.svelte'
-  import { pageForPath } from '../js/navigation.js'
+  import { mobileMoreItems, pageForPath, primaryNavItems } from '../js/navigation.js'
 
   let { currentPage = '', currentUser = null, unreadNotificationCount = 0 } = $props()
 
@@ -18,14 +18,7 @@
   let isMenuOpen = $state(false)
   let hideNavbar = $state(false)
   let mobileMenuRef
-
-  const navItems = [
-    { page: 'videos', label: 'Videos', href: '/videos' },
-    { page: 'courses', label: 'Courses', href: '/courses' },
-    { page: 'blog', label: 'Blog', href: '/blog' },
-    { page: 'prompts', label: 'Prompts', href: '/prompts' },
-    { page: 'community', label: 'Community', href: '/forum' }
-  ]
+  let mobileTriggerRef
 
   function syncPage() {
     browserPage = pageForPath(window.location.pathname)
@@ -45,12 +38,17 @@
     isMenuOpen = false
   }
 
+  function closeMenuAndRestoreFocus() {
+    closeMenu()
+    requestAnimationFrame(() => mobileTriggerRef?.focus())
+  }
+
   function handleClickOutside(event) {
     if (isMenuOpen && mobileMenuRef && !mobileMenuRef.contains(event.target)) closeMenu()
   }
 
   function handleKeydown(event) {
-    if (event.key === 'Escape') closeMenu()
+    if (event.key === 'Escape' && isMenuOpen) closeMenuAndRestoreFocus()
   }
 
   function syncUnreadCount(event) {
@@ -59,7 +57,7 @@
 
   function desktopLinkClass(page) {
     return activePage === page
-      ? 'bg-primary/10 text-primary'
+      ? 'bg-primary/10 text-primary after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-primary'
       : 'text-base-content/65 hover:bg-base-200/70 hover:text-base-content'
   }
 
@@ -98,13 +96,13 @@
 
 <header
   id="global-navbar"
-  class={`fixed inset-x-0 top-0 z-50 border-b transition duration-300 ${
+  class={`fixed inset-x-0 top-0 z-50 border-b transition duration-200 motion-reduce:transition-none ${
     isScrolled
       ? 'border-base-300/70 bg-base-100/85 shadow-sm shadow-base-300/10 backdrop-blur-xl'
       : 'border-transparent bg-base-100/55 backdrop-blur-md'
   } ${hideNavbar ? '-translate-y-full' : ''}`}
 >
-  <nav class="navbar mx-auto min-h-16 max-w-7xl gap-2 px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
+  <nav class="navbar mx-auto min-h-[4.25rem] max-w-7xl gap-2 px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
     <div class="navbar-start w-auto shrink-0">
       <a
         id="nav-brand"
@@ -119,15 +117,15 @@
     </div>
 
     <div class="hidden flex-1 items-center pl-5 lg:flex">
-      <div id="desktop-nav-links" class="flex items-center gap-1 rounded-2xl border border-base-300/45 bg-base-200/35 p-1">
-        {#each navItems as item}
+      <div id="desktop-nav-links" class="flex items-center gap-0.5">
+        {#each primaryNavItems as item}
           <a
             href={item.href}
             data-phx-link="redirect"
             data-phx-link-state="push"
             data-nav-page={item.page}
             aria-current={activePage === item.page ? 'page' : undefined}
-            class={`rounded-xl px-3.5 py-2 text-sm font-semibold transition duration-200 ${desktopLinkClass(item.page)}`}
+            class={`relative flex min-h-11 items-center rounded-xl px-3.5 text-sm font-semibold transition duration-200 motion-reduce:transition-none ${desktopLinkClass(item.page)}`}
           >
             {item.label}
           </a>
@@ -139,7 +137,7 @@
       <a
         id="nav-search"
         href="/forum/search"
-        class="btn btn-ghost btn-circle btn-sm hidden text-base-content/60 transition hover:bg-secondary/10 hover:text-secondary sm:inline-flex"
+        class="btn btn-ghost btn-circle size-11 text-base-content/60 transition hover:bg-primary/10 hover:text-primary"
         aria-label="Search community"
         title="Search community"
       >
@@ -150,7 +148,7 @@
         <a
           id="nav-notifications"
           href="/notifications"
-          class="btn btn-ghost btn-circle btn-sm relative hidden text-base-content/60 transition hover:bg-info/10 hover:text-info lg:inline-flex"
+          class="btn btn-ghost btn-circle relative hidden size-11 text-base-content/60 transition hover:bg-info/10 hover:text-info lg:inline-flex"
           aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
           title="Notifications"
         >
@@ -169,7 +167,9 @@
       <ThemeToggle />
 
       {#if currentUser}
-        <UserMenu {currentUser} />
+        <div class="hidden lg:block">
+          <UserMenu {currentUser} />
+        </div>
       {:else}
         <div class="hidden items-center gap-1.5 lg:flex">
           <a href="/signin" class="btn btn-ghost btn-sm rounded-full px-4 text-base-content/70">Sign in</a>
@@ -180,11 +180,12 @@
       <div class="relative lg:hidden" bind:this={mobileMenuRef}>
         <button
           id="mobile-menu-toggle"
+          bind:this={mobileTriggerRef}
           onclick={toggleMenu}
           aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-nav"
-          class={`btn btn-ghost btn-circle btn-sm transition ${isMenuOpen ? 'bg-primary/10 text-primary' : 'text-base-content/70'}`}
+          class={`btn btn-ghost btn-circle size-11 transition ${isMenuOpen ? 'bg-primary/10 text-primary' : 'text-base-content/70'}`}
         >
           <UMIcon name={isMenuOpen ? 'close' : 'bars_3'} className="size-5" />
         </button>
@@ -192,51 +193,49 @@
         {#if isMenuOpen}
           <div
             id="mobile-nav"
-            class="absolute right-0 top-[calc(100%+0.85rem)] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-base-300/70 bg-base-100/95 p-2 shadow-2xl shadow-base-300/30 backdrop-blur-xl"
+            class="dropdown-content absolute right-0 top-[calc(100%+0.75rem)] w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-base-100 p-2 shadow-xl"
           >
-            <div class="grid gap-1">
-              {#each navItems as item}
+            <p class="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-[0.14em] text-base-content/45">
+              More from UrielM
+            </p>
+            <ul class="menu gap-1 p-0">
+              {#each mobileMoreItems as item}
+                <li>
                 <a
                   href={item.href}
                   data-phx-link="redirect"
                   data-phx-link-state="push"
                   data-nav-page={item.page}
                   aria-current={activePage === item.page ? 'page' : undefined}
-                  class={`group flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold transition ${mobileLinkClass(item.page)}`}
+                  class={`group flex min-h-12 items-center justify-between rounded-xl px-3 text-sm font-bold transition ${mobileLinkClass(item.page)}`}
                   onclick={closeMenu}
                 >
                   {item.label}
                   <UMIcon name="hero-arrow-right" className="size-4 opacity-45 transition group-hover:translate-x-0.5 group-hover:opacity-80" />
                 </a>
+                </li>
               {/each}
-            </div>
-
-            <div class="my-2 h-px bg-base-300/60"></div>
-
-            <a
-              href="/forum/search"
-              class="flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold text-base-content/65 transition hover:bg-secondary/10 hover:text-secondary"
-              onclick={closeMenu}
-            >
-              <UMIcon name="search" className="size-4" />
-              Search community
-            </a>
 
             {#if currentUser}
-              <a
-                href={`/u/${currentUser.username}`}
-                data-phx-link="redirect"
-                data-phx-link-state="push"
-                class="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold text-base-content/65 transition hover:bg-base-200 hover:text-base-content"
-                onclick={closeMenu}
-              >
-                <UMIcon name="hero-user-circle" className="size-4" />
-                View profile
-              </a>
-            {:else}
+              <li class="mt-1 border-t border-base-300/60 pt-1">
+                <a
+                  href="/settings"
+                  data-phx-link="redirect"
+                  data-phx-link-state="push"
+                  class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-base-content/70 transition hover:bg-base-200 hover:text-base-content"
+                  onclick={closeMenu}
+                >
+                  <UMIcon name="hero-cog-6-tooth" className="size-4" />
+                  Settings
+                </a>
+              </li>
+            {/if}
+            </ul>
+
+            {#if !currentUser}
               <div class="grid grid-cols-2 gap-2 p-2 pt-3">
-                <a href="/signin" class="btn btn-ghost btn-sm rounded-full">Sign in</a>
-                <a href="/signup" class="btn btn-primary btn-sm rounded-full">Sign up</a>
+                <a href="/signin" class="btn btn-ghost min-h-11 rounded-full" onclick={closeMenu}>Sign in</a>
+                <a href="/signup" class="btn btn-primary min-h-11 rounded-full" onclick={closeMenu}>Sign up</a>
               </div>
             {/if}
           </div>

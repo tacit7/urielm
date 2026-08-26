@@ -54,7 +54,12 @@ defmodule UrielmWeb.NotificationsLiveTest do
                ~s([data-name="Navbar"][data-props*='"unreadNotificationCount":1'])
              )
 
-      assert has_element?(view, "#mobile-bottom-nav[aria-label='Mobile navigation']")
+      assert has_element?(
+               view,
+               "#mobile-bottom-nav[aria-label='Mobile navigation'][data-navigation='mobile-dock']"
+             )
+
+      assert has_element?(view, "#mobile-bottom-nav [data-navigation-item]")
       assert has_element?(view, "#mobile-nav-home[aria-current='page']")
       assert has_element?(view, "#mobile-nav-videos[href='/videos']")
       assert has_element?(view, "#mobile-nav-forum[href='/forum']")

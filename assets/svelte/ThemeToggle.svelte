@@ -34,7 +34,7 @@
 <button
   id="tokyo-theme-toggle"
   onclick={toggleTheme}
-  class="btn btn-ghost btn-circle btn-sm text-base-content/65 transition duration-200 hover:rotate-6 hover:bg-primary/10 hover:text-primary"
+  class="btn btn-ghost btn-circle size-11 text-base-content/65 transition duration-200 hover:bg-primary/10 hover:text-primary motion-reduce:transition-none"
   aria-label={currentTheme === DARK_THEME ? 'Switch to Tokyo Day' : 'Switch to Tokyo Night'}
   title={currentTheme === DARK_THEME ? 'Switch to Tokyo Day' : 'Switch to Tokyo Night'}
 >

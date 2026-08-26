@@ -55,7 +55,7 @@ defmodule UrielmWeb.Components.ForumLayout do
 
         <UrielmWeb.Layouts.mobile_bottom_nav
           current_user={@current_user}
-          current_page={if(@current_path == "/forum/search", do: "search", else: "community")}
+          current_page="community"
           unread_notification_count={@unread_notification_count}
         />
       </div>
