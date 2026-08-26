@@ -5,6 +5,19 @@ This is a web application written using the Phoenix web framework.
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues
 - Use the already included and available `:req` (`Req`) library for HTTP requests, **avoid** `:httpoison`, `:tesla`, and `:httpc`. Req is included by default and is the preferred HTTP client for Phoenix apps
 
+### Production deployment guidelines
+
+- Production is `https://urielm.dev` on `deploy@167.172.194.233`; connect with `ssh -i ~/.ssh/tacit7 deploy@167.172.194.233`
+- The production checkout is `/home/deploy/urielm`, the service is `urielm`, and the canonical remote is `https://github.com/tacit7/urielm`
+- Read the full production runbook in `CLAUDE.md` before deploying
+- **Never** assume the SSH shell environment matches the systemd service environment
+- **Never** hardcode or print production secrets, `DATABASE_URL`, or `SECRET_KEY_BASE`; `config/runtime.exs` must obtain them from the environment
+- systemd `Environment=` and `EnvironmentFile=` directives belong inside `[Service]`, never `[Install]`
+- The current `deploy.sh` does not run database migrations. When a deployment includes migrations, run all pending migrations with the systemd service environment before the final restart
+- Before pulling, inspect a dirty production checkout and preserve intentional server-only configuration. Never use destructive Git cleanup on production without resolving the exact files first
+- After deployment, verify migration status, `systemctl status urielm`, recent `journalctl -u urielm` output, and an HTTP 200 response from `https://urielm.dev/`
+- `Postgrex.Error 42703 (undefined_column)` indicates pending/schema-drift migrations; `FATAL 28P01 (invalid_password)` indicates a credential or environment-source mismatch
+
 ### Phoenix v1.8 guidelines
 
 - **Always** begin your LiveView templates with `<Layouts.app flash={@flash} ...>` which wraps all inner content

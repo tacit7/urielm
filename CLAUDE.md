@@ -56,6 +56,74 @@ mix ecto.gen.migration name # Generate new migration file
 mix ecto.reset              # Drop + create + migrate
 ```
 
+## Production Deployment
+
+Production is hosted on DigitalOcean and tracks the GitHub `main` branch.
+
+- Repository: `https://github.com/tacit7/urielm`
+- Host: `167.172.194.233`
+- SSH: `ssh -i ~/.ssh/tacit7 deploy@167.172.194.233`
+- Application directory: `/home/deploy/urielm`
+- systemd service: `urielm`
+- Public URL: `https://urielm.dev`
+
+The root `deploy.sh` pulls code, installs dependencies, builds/digests assets, and restarts the service. It does **not** run Ecto migrations. Any deployment containing migrations must run all pending migrations before the final restart.
+
+### Production environment
+
+- `config/runtime.exs` must read production credentials with `System.get_env/1` or `System.fetch_env!/1`. Never hardcode database URLs, passwords, API credentials, or `SECRET_KEY_BASE`.
+- The service environment is managed by systemd and may differ from the environment shown by an interactive SSH shell.
+- In `/etc/systemd/system/urielm.service`, every `Environment=` or `EnvironmentFile=` directive must be inside `[Service]`, never `[Install]`.
+- Never print, log, commit, or paste the output of `systemctl show urielm -p Environment`; it contains production secrets.
+- Interactive `sudo` is currently required to restart the service.
+
+Run a Mix task with the same environment as the systemd service without displaying secrets:
+
+```bash
+python3 - <<'PY'
+import os
+import shlex
+import subprocess
+
+raw = subprocess.check_output(
+    ["systemctl", "show", "urielm", "-p", "Environment", "--value"],
+    text=True,
+)
+env = os.environ.copy()
+
+for item in shlex.split(raw):
+    key, separator, value = item.partition("=")
+    if separator:
+        env[key] = value
+
+env["MIX_ENV"] = "prod"
+subprocess.run(
+    ["mix", "ecto.migrate"],
+    cwd="/home/deploy/urielm",
+    env=env,
+    check=True,
+)
+PY
+```
+
+### Deployment checklist
+
+1. Confirm local `main` and GitHub `main` contain the intended commit.
+2. SSH to production and verify `/home/deploy/urielm` has no unexpected local changes before pulling. Preserve intentional production-only configuration; do not reset a dirty checkout blindly.
+3. Pull with `git pull --ff-only origin main`.
+4. Install dependencies and build/digest assets using the commands in `deploy.sh`.
+5. Run all pending migrations with the systemd environment as shown above.
+6. Restart with `sudo systemctl restart urielm`.
+7. Verify:
+
+   ```bash
+   systemctl status urielm --no-pager
+   sudo journalctl -u urielm --since "5 minutes ago" --no-pager
+   curl -fsS -o /dev/null -w '%{http_code}\n' https://urielm.dev/
+   ```
+
+8. Treat `Postgrex.Error 42703 (undefined_column)` as a schema-drift signal: check `MIX_ENV=prod mix ecto.migrations` against the service environment and apply pending migrations. Treat `FATAL 28P01 (invalid_password)` as a credential/source mismatch; confirm which environment the running service actually uses without printing its value.
+
 ## Architecture
 
 ### Dual Build System
