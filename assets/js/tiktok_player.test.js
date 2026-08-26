@@ -1,7 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { buildTikTokPlayerUrl, extractTikTokVideoId } from "./tiktok_player.js"
+import {
+  buildTikTokPlayerUrl,
+  extractTikTokVideoId,
+  getTikTokPlayerLayout
+} from "./tiktok_player.js"
 
 test("extractTikTokVideoId accepts canonical TikTok video URLs", () => {
   assert.equal(
@@ -42,4 +46,13 @@ test("buildTikTokPlayerUrl loops fullscreen Shorts", () => {
   )
 
   assert.equal(playerUrl.searchParams.get("loop"), "1")
+})
+
+test("fullscreen layout owns a stable viewport height", () => {
+  const layout = getTikTokPlayerLayout(true)
+
+  assert.match(layout.containerClass, /100dvh/)
+  assert.doesNotMatch(layout.containerClass, /\babsolute\b/)
+  assert.doesNotMatch(layout.containerClass, /mt-\[4\.25rem\]/)
+  assert.match(layout.iframeClass, /\bh-full\b/)
 })

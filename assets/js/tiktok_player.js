@@ -43,3 +43,21 @@ export function buildTikTokPlayerUrl(tiktokUrl, { fullscreen = false } = {}) {
 
   return playerUrl.toString()
 }
+
+export function getTikTokPlayerLayout(fullscreen) {
+  const baseContainer =
+    "relative flex w-full items-center justify-center overflow-hidden bg-black"
+  const baseIframe = "block h-full border-0 bg-black"
+
+  if (fullscreen) {
+    return {
+      containerClass: `${baseContainer} h-[calc(100dvh-8.25rem)] md:h-[calc(100dvh-4.25rem)]`,
+      iframeClass: `${baseIframe} w-full`
+    }
+  }
+
+  return {
+    containerClass: `${baseContainer} h-full min-h-full`,
+    iframeClass: `${baseIframe} w-full max-w-[440px]`
+  }
+}

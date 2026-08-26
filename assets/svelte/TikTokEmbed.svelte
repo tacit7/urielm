@@ -4,12 +4,13 @@
    * Standard embeds retain context while fullscreen Shorts loop in place.
    */
   import { onMount } from 'svelte'
-  import { buildTikTokPlayerUrl } from '../js/tiktok_player.js'
+  import { buildTikTokPlayerUrl, getTikTokPlayerLayout } from '../js/tiktok_player.js'
 
   let { tiktokUrl = '', fullscreen = false } = $props()
 
   let playerError = $state(null)
   let playerUrl = $derived(buildTikTokPlayerUrl(tiktokUrl, { fullscreen }))
+  let playerLayout = $derived(getTikTokPlayerLayout(fullscreen))
 
   function handlePlayerMessage(event) {
     if (event.origin !== 'https://www.tiktok.com') return
@@ -27,26 +28,15 @@
 </script>
 
 {#if playerUrl && !playerError}
-  <div
-    class={[
-      'relative flex w-full items-center justify-center overflow-hidden bg-black',
-      fullscreen
-        ? 'absolute inset-x-0 top-[4.25rem] bottom-16 md:bottom-0'
-        : 'h-full min-h-full'
-    ]}
-  >
+  <div class={playerLayout.containerClass}>
     <iframe
       src={playerUrl}
       title="TikTok video player"
-      class={[
-        'block h-full border-0 bg-black',
-        fullscreen ? 'w-full' : 'w-full max-w-[440px]'
-      ]}
+      class={playerLayout.iframeClass}
       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
       allowfullscreen
       onerror={() => (playerError = 'TikTok could not load this video.')}
     ></iframe>
-
   </div>
 {:else}
   <div class="flex h-full min-h-72 w-full items-center justify-center bg-black px-5 py-10 text-white">
