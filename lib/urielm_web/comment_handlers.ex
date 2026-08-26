@@ -30,6 +30,12 @@ defmodule UrielmWeb.CommentHandlers do
     end
   end
 
+  def report(thread, comment_id, attrs, user) do
+    with {:ok, comment} <- fetch_for_thread(thread, comment_id) do
+      Forum.create_report(user.id, "comment", comment.id, attrs)
+    end
+  end
+
   def vote(thread, comment_id, value, user, strategy) when strategy in [:cast, :toggle] do
     with {:ok, _comment} <- fetch_for_thread(thread, comment_id),
          {:ok, value} <- parse_vote(value) do

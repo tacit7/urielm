@@ -553,10 +553,15 @@ defmodule UrielmWeb.ThreadLive do
         socket
       ) do
     LiveHelpers.with_auth(socket, "report", fn socket, user ->
-      case Forum.create_report(user.id, "comment", comment_id, %{
-             reason: reason,
-             description: description
-           }) do
+      case CommentHandlers.report(
+             socket.assigns.thread,
+             comment_id,
+             %{
+               reason: reason,
+               description: description
+             },
+             user
+           ) do
         {:ok, _} ->
           {:noreply,
            socket
@@ -566,6 +571,9 @@ defmodule UrielmWeb.ThreadLive do
 
         {:error, :unique_constraint} ->
           {:noreply, put_flash(socket, :error, "You've already reported this")}
+
+        {:error, :not_found} ->
+          {:noreply, put_flash(socket, :error, "Comment not found")}
 
         {:error, changeset} ->
           # Extract validation errors

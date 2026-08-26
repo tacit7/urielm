@@ -401,5 +401,66 @@ defmodule UrielmWeb.VideoLiveTest do
 
       refute Urielm.Forum.get_comment(other_comment.id).is_removed
     end
+
+    test "can report a comment from the current video discussion", %{} do
+      reporter = user_fixture()
+      author = user_fixture()
+      board = board_fixture()
+      thread = thread_fixture(%{board_id: board.id, author_id: author.id, kind: "video"})
+      comment = comment_fixture(thread, author)
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: thread.id
+        })
+
+      conn = log_in_user(build_conn(), reporter)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      render_hook(child, "report_comment", %{
+        "comment_id" => to_string(comment.id),
+        "reason" => "spam",
+        "description" => "This comment should be reviewed for spam"
+      })
+
+      assert Urielm.Repo.get_by(Urielm.Forum.Report,
+               user_id: reporter.id,
+               target_type: "comment",
+               target_id: comment.id
+             )
+    end
+
+    test "cannot report a comment from another video discussion", %{} do
+      reporter = user_fixture()
+      author = user_fixture()
+      board = board_fixture()
+      current_thread = thread_fixture(%{board_id: board.id, author_id: author.id, kind: "video"})
+      other_thread = thread_fixture(%{board_id: board.id, author_id: author.id, kind: "video"})
+      other_comment = comment_fixture(other_thread, author)
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: current_thread.id
+        })
+
+      conn = log_in_user(build_conn(), reporter)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      render_hook(child, "report_comment", %{
+        "comment_id" => to_string(other_comment.id),
+        "reason" => "spam",
+        "description" => "This comment belongs to a different video"
+      })
+
+      refute Urielm.Repo.get_by(Urielm.Forum.Report,
+               user_id: reporter.id,
+               target_type: "comment",
+               target_id: other_comment.id
+             )
+    end
   end
 end

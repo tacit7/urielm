@@ -228,6 +228,34 @@ defmodule UrielmWeb.ThreadLiveTest do
       assert report.status == "pending"
     end
 
+    test "cannot report a comment from another thread", %{conn: conn} do
+      reporter = Fixtures.user_fixture()
+      author = Fixtures.user_fixture()
+      category = Fixtures.category_fixture()
+      board = Fixtures.board_fixture(%{category_id: category.id})
+      current_thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+      other_thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+      other_comment = Fixtures.comment_fixture(other_thread, author)
+
+      conn = log_in_user(conn, reporter)
+      {:ok, view, _html} = live(conn, "/forum/t/#{current_thread.id}")
+
+      html =
+        render_hook(view, "report_comment", %{
+          "comment_id" => to_string(other_comment.id),
+          "reason" => "spam",
+          "description" => "This comment belongs to a different thread"
+        })
+
+      refute Repo.get_by(Urielm.Forum.Report,
+               user_id: reporter.id,
+               target_type: "comment",
+               target_id: other_comment.id
+             )
+
+      assert html =~ "Comment not found"
+    end
+
     test "comment report modal submit button is disabled when no comment selected", %{
       conn: conn
     } do

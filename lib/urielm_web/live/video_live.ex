@@ -382,10 +382,15 @@ defmodule UrielmWeb.VideoLive do
         {:noreply, put_flash(socket, :error, "Sign in to report")}
 
       user ->
-        case Forum.create_report(user.id, "comment", comment_id, %{
-               reason: reason,
-               description: description
-             }) do
+        case CommentHandlers.report(
+               socket.assigns.thread,
+               comment_id,
+               %{
+                 reason: reason,
+                 description: description
+               },
+               user
+             ) do
           {:ok, _report} ->
             {:noreply,
              socket
@@ -394,6 +399,9 @@ defmodule UrielmWeb.VideoLive do
 
           {:error, :unique_constraint} ->
             {:noreply, put_flash(socket, :error, "You've already reported this")}
+
+          {:error, :not_found} ->
+            {:noreply, put_flash(socket, :error, "Comment not found")}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to submit report")}
