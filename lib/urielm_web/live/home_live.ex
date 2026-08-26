@@ -316,7 +316,7 @@ defmodule UrielmWeb.HomeLive do
         <% end %>
         <div
           id="home-shorts-rail"
-          class="ui-media-rail -mx-6 grid snap-x snap-mandatory grid-flow-col auto-cols-[10.5rem] gap-4 overflow-x-auto px-6 pb-4 sm:auto-cols-[11rem] lg:mx-0 lg:auto-cols-[minmax(11rem,1fr)] lg:px-0"
+          class="ui-media-rail -mx-6 grid snap-x snap-mandatory grid-flow-col auto-cols-[10.5rem] gap-4 overflow-x-auto px-6 pb-4 sm:auto-cols-[11rem] lg:mx-0 lg:auto-cols-[13rem] lg:px-0"
           aria-label="Featured short videos"
         >
           <%= for short <- @shorts do %>

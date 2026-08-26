@@ -97,6 +97,21 @@ defmodule UrielmWeb.UiQuickWinsTest do
   end
 
   describe "homepage Shorts" do
+    test "keeps sparse desktop Shorts rails compact" do
+      video_fixture(%{
+        title: "A Short with enough copy to exercise the portrait layout",
+        format: "short",
+        published_at: ~U[2026-08-24 12:00:00Z]
+      })
+
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(
+               view,
+               "#home-shorts-rail[class*='lg:auto-cols-[13rem]']"
+             )
+    end
+
     test "renders persistent media affordances and real video metadata" do
       short =
         video_fixture(%{
