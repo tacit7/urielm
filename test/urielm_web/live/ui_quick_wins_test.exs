@@ -21,6 +21,32 @@ defmodule UrielmWeb.UiQuickWinsTest do
     end
   end
 
+  describe "public OAuth verification homepage" do
+    test "is accessible without a user session and clearly describes the app" do
+      conn = get(build_conn(), ~p"/")
+      assert conn.status == 200
+
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#app-purpose")
+      assert has_element?(view, "#app-purpose", "public learning platform")
+      assert has_element?(view, "#app-purpose", "tutorials")
+      assert has_element?(view, "#app-purpose", "prompts")
+      assert has_element?(view, "#app-purpose", "community")
+    end
+
+    test "explains optional Google sign-in and links the public legal pages" do
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#google-signin-purpose", "Optional Google sign-in")
+      assert has_element?(view, "#google-signin-purpose", "name")
+      assert has_element?(view, "#google-signin-purpose", "email")
+      assert has_element?(view, "#google-signin-purpose", "profile image")
+      assert has_element?(view, "#google-signin-purpose a[href='/privacy']", "Privacy Policy")
+      assert has_element?(view, "#google-signin-purpose a[href='/terms']", "Terms of Use")
+    end
+  end
+
   describe "shared content system" do
     test "uses consistent section hierarchy across homepage content" do
       {:ok, view, _html} = live(build_conn(), ~p"/")

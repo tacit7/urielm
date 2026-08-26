@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OAuth verification homepage mockup</title>
+    <style>
+      :root { --bg:#16161e; --surface:#1f2335; --surface2:#24283b; --border:#3b4261; --blue:#3d6fbe; --blue2:#7aa2f7; --text:#c0caf5; --muted:#9aa5ce; }
+      * { box-sizing: border-box; }
+      body { margin:0; background:#0f1117; color:var(--text); font:15px/1.6 Inter,system-ui,sans-serif; }
+      .tabs { position:sticky; top:0; z-index:3; display:flex; justify-content:center; gap:8px; padding:12px; background:#0f1117e8; }
+      button { border:1px solid var(--border); border-radius:999px; padding:7px 14px; background:var(--surface); color:var(--text); cursor:pointer; }
+      button.active { background:var(--blue); border-color:var(--blue); color:white; }
+      .frame { margin:0 auto 24px; overflow:hidden; border:1px solid var(--border); border-radius:20px; background:var(--bg); box-shadow:0 24px 70px #0008; }
+      .desktop { width:min(1160px,calc(100vw - 32px)); }
+      .mobile { display:none; width:390px; max-width:calc(100vw - 24px); }
+      nav { display:flex; justify-content:space-between; align-items:center; min-height:64px; padding:0 28px; background:var(--surface); border-bottom:1px solid var(--border); }
+      .brand { font-size:20px; font-weight:900; letter-spacing:-.04em; }
+      .links { display:flex; gap:18px; color:var(--muted); font-size:13px; }
+      .hero { display:grid; grid-template-columns:1.1fr .9fr; align-items:center; gap:40px; min-height:440px; padding:64px; background:radial-gradient(circle at 20% 10%,#3d6fbe2b,transparent 45%); }
+      .eyebrow { color:var(--blue2); font-size:12px; font-weight:900; letter-spacing:.18em; text-transform:uppercase; }
+      h1 { margin:12px 0 20px; font-size:58px; line-height:.98; letter-spacing:-.055em; }
+      .lead { max-width:620px; color:var(--muted); font-size:18px; }
+      .cta { display:inline-block; margin-top:18px; border-radius:999px; padding:12px 20px; background:var(--blue); color:white; font-weight:800; }
+      .preview { min-height:260px; border:1px solid var(--border); border-radius:18px; background:linear-gradient(145deg,#3d6fbe30,var(--surface)); }
+      .section { padding:56px 54px; border-top:1px solid var(--border); }
+      h2 { margin:8px 0 12px; font-size:32px; line-height:1.15; letter-spacing:-.035em; }
+      .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:26px; }
+      .card { border:1px solid var(--border); border-radius:16px; padding:22px; background:var(--surface); }
+      .card strong { display:block; margin-bottom:6px; }
+      .card p,.signin p { margin:0; color:var(--muted); }
+      .signin { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:center; margin:0 54px 56px; border:1px solid #3d6fbe70; border-radius:18px; padding:28px; background:#3d6fbe12; }
+      .legal { margin-top:14px; color:var(--blue2); }
+      .annotation { width:min(900px,calc(100vw - 32px)); margin:18px auto 40px; border:1px dashed var(--blue2); border-radius:14px; padding:18px; background:var(--surface); color:var(--muted); }
+      .mobile nav { padding:0 18px; } .mobile .links { display:none; }
+      .mobile .hero { display:block; min-height:0; padding:42px 20px; }
+      .mobile h1 { font-size:43px; } .mobile .preview { display:none; }
+      .mobile .section { padding:36px 20px; } .mobile .cards { grid-template-columns:1fr; }
+      .mobile .signin { display:block; margin:0 20px 36px; padding:22px; }
+    </style>
+  </head>
+  <body>
+    <div class="tabs"><button class="active" data-view="desktop">Desktop</button><button data-view="mobile">Mobile</button></div>
+    <main>
+      <section id="desktop" class="frame desktop">
+        <nav><span class="brand">urielm</span><div class="links"><span>Courses</span><span>Prompts</span><span>Blog</span><span>Community</span><span>Sign in</span></div></nav>
+        <div class="hero"><div><div class="eyebrow">Practical AI development</div><h1>Learn to build with AI.</h1><p class="lead">Urielm is a public learning platform for developers to explore AI tutorials, structured courses, reusable prompts, and community discussions.</p><span class="cta">Explore public resources</span></div><div class="preview"></div></div>
+        <section class="section"><div class="eyebrow">What you can do</div><h2>Practical resources for building with AI</h2><div class="cards"><article class="card"><strong>Learn</strong><p>Follow tutorials and structured courses.</p></article><article class="card"><strong>Use prompts</strong><p>Browse reusable, production-oriented prompts.</p></article><article class="card"><strong>Join the community</strong><p>Discuss tools and workflows after creating an account.</p></article></div></section>
+        <section class="signin"><div><div class="eyebrow">Optional Google sign-in</div><h2>Why Urielm requests Google profile data</h2></div><div><p>Google sign-in provides your name, email address, profile image, and Google account identifier so Urielm can create and authenticate your account. Public learning content remains available without signing in.</p><div class="legal">Privacy Policy · Terms of Use</div></div></section>
+      </section>
+      <section id="mobile" class="frame mobile">
+        <nav><span class="brand">urielm</span><span>☰</span></nav>
+        <div class="hero"><div class="eyebrow">Practical AI development</div><h1>Learn to build with AI.</h1><p class="lead">A public learning platform for AI tutorials, courses, prompts, and developer discussions.</p><span class="cta">Explore resources</span></div>
+        <section class="section"><div class="eyebrow">What you can do</div><h2>Build practical AI skills</h2><div class="cards"><article class="card"><strong>Learn</strong><p>Public tutorials and courses.</p></article><article class="card"><strong>Use prompts</strong><p>Reusable prompt examples.</p></article><article class="card"><strong>Discuss</strong><p>Account-enabled community features.</p></article></div></section>
+        <section class="signin"><div class="eyebrow">Optional Google sign-in</div><h2>Why profile data is requested</h2><p>Name, email, image, and account identifier are used to create and authenticate your Urielm account. Browsing does not require sign-in.</p><div class="legal">Privacy Policy · Terms of Use</div></section>
+      </section>
+    </main>
+    <aside class="annotation"><strong>Verification behavior:</strong> the exact root URL returns HTTP 200 to a logged-out visitor; the first screen identifies Urielm and its audience; a dedicated section explains features; the Google sign-in disclosure states the requested data and purpose; privacy and terms links are visible on the same public page.</aside>
+    <script>
+      document.querySelectorAll("button[data-view]").forEach((button) => button.addEventListener("click", () => {
+        document.querySelectorAll("button").forEach((item) => item.classList.remove("active")); button.classList.add("active");
+        document.querySelectorAll(".frame").forEach((frame) => frame.style.display="none"); document.getElementById(button.dataset.view).style.display="block";
+      }));
+    </script>
+  </body>
+</html>

@@ -39,6 +39,8 @@ defmodule UrielmWeb.HomeLive do
     ~H"""
     <div class="bg-base-100 min-h-screen">
       <.hero stats={@stats} courses={@courses} />
+      <.app_purpose />
+      <.google_signin_purpose />
       <.shorts shorts={@shorts} />
       <.courses courses={@courses} />
       <.blog_posts posts={@posts} />
@@ -86,7 +88,8 @@ defmodule UrielmWeb.HomeLive do
             </h1>
 
             <p class="mt-7 max-w-xl text-lg leading-relaxed text-base-content/60 md:text-xl">
-              Practical tutorials, structured courses, and production-ready prompts for developers building with the latest AI tools.
+              Urielm is a public learning platform with practical tutorials, structured courses,
+              production-ready prompts, and community discussions for developers building with AI.
             </p>
 
             <div class="mt-8 flex flex-wrap items-center gap-3">
@@ -163,6 +166,102 @@ defmodule UrielmWeb.HomeLive do
               </span>
             </div>
           </.link>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  defp app_purpose(assigns) do
+    ~H"""
+    <section id="app-purpose" class="border-y border-base-300/70 bg-base-200/35">
+      <div class="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <div class="mx-auto max-w-3xl text-center">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">What Urielm does</p>
+          <h2 class="mt-3 text-3xl font-black tracking-[-0.035em] text-base-content sm:text-4xl">
+            A public learning platform for practical AI development
+          </h2>
+          <p class="mt-4 text-base leading-7 text-base-content/60 sm:text-lg">
+            Explore learning resources without an account, then optionally sign in to save your work
+            and participate in the community.
+          </p>
+        </div>
+
+        <div class="mt-10 grid gap-4 md:grid-cols-3">
+          <article class="card border border-base-300/70 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35">
+            <div class="card-body gap-3 p-6">
+              <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <.um_icon name="book-open" class="size-6" />
+              </div>
+              <h3 class="text-lg font-bold text-base-content">Learn with tutorials and courses</h3>
+              <p class="text-sm leading-6 text-base-content/60">
+                Follow practical tutorials, videos, and structured courses about current AI tools and
+                development workflows.
+              </p>
+            </div>
+          </article>
+
+          <article class="card border border-base-300/70 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35">
+            <div class="card-body gap-3 p-6">
+              <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <.um_icon name="command-line" class="size-6" />
+              </div>
+              <h3 class="text-lg font-bold text-base-content">Use reusable prompts</h3>
+              <p class="text-sm leading-6 text-base-content/60">
+                Browse production-oriented prompts and examples that you can adapt to real projects.
+              </p>
+            </div>
+          </article>
+
+          <article class="card border border-base-300/70 bg-base-100 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/35">
+            <div class="card-body gap-3 p-6">
+              <div class="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <.um_icon name="users" class="size-6" />
+              </div>
+              <h3 class="text-lg font-bold text-base-content">Join developer discussions</h3>
+              <p class="text-sm leading-6 text-base-content/60">
+                Create an account to save resources and participate in community conversations about
+                AI tools and techniques.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  defp google_signin_purpose(assigns) do
+    ~H"""
+    <section id="google-signin-purpose" class="bg-base-100">
+      <div class="mx-auto max-w-5xl px-6 py-14 sm:py-18">
+        <div class="card border border-primary/25 bg-primary/6 shadow-sm">
+          <div class="card-body grid gap-7 p-6 sm:p-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                Optional Google sign-in
+              </p>
+              <h2 class="mt-3 text-2xl font-black tracking-[-0.03em] text-base-content sm:text-3xl">
+                Why Urielm requests Google profile data
+              </h2>
+            </div>
+            <div class="space-y-4 text-sm leading-7 text-base-content/65 sm:text-base">
+              <p>
+                You can browse Urielm's public learning resources without signing in. If you choose
+                Google sign-in, Google provides your name, email address, profile image, and Google
+                account identifier so Urielm can create and authenticate your account, link your
+                identity, and display the profile information you authorize.
+              </p>
+              <p>
+                Urielm does not use Google profile data for advertising or sell it. Review the full
+                details in our
+                <.link navigate={~p"/privacy"} class="link link-primary font-semibold">
+                  Privacy Policy
+                </.link>
+                and <.link navigate={~p"/terms"} class="link link-primary font-semibold">Terms of Use</.link>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>

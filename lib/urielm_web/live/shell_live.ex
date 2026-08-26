@@ -21,7 +21,19 @@ defmodule UrielmWeb.ShellLive do
     |> assign(:live_action, live_action)
     |> assign(:current_page, page_name_for_action(live_action))
     |> assign(:child_params, params)
+    |> assign_page_metadata(live_action)
   end
+
+  defp assign_page_metadata(socket, :home) do
+    assign(socket,
+      page_title: "Practical AI Learning",
+      meta_description:
+        "Urielm is a public learning platform with practical AI tutorials, structured courses, reusable prompts, and developer community discussions.",
+      canonical_url: "https://urielm.dev/"
+    )
+  end
+
+  defp assign_page_metadata(socket, _live_action), do: socket
 
   defp page_name_for_action(:home), do: "home"
   defp page_name_for_action(:blog_index), do: "blog"
