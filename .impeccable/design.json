@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-26T09:35:41Z",
+  "title": "Design System: Urielm",
+  "extensions": {
+    "colorMeta": {
+      "midnight-canvas": {
+        "role": "neutral",
+        "displayName": "Midnight Canvas",
+        "canonical": "#1a1b26",
+        "tonalRamp": ["#11121a", "#1a1b26", "#24283b", "#3b4261", "#565f89", "#8993b8", "#c0caf5", "#edf0ff"]
+      },
+      "workshop-surface": {
+        "role": "neutral",
+        "displayName": "Workshop Surface",
+        "canonical": "#24283b",
+        "tonalRamp": ["#12131c", "#1a1b26", "#24283b", "#3b4261", "#596180", "#8993b8", "#c0caf5", "#f0f2ff"]
+      },
+      "midnight-border": {
+        "role": "neutral",
+        "displayName": "Midnight Border",
+        "canonical": "#3b4261",
+        "tonalRamp": ["#141722", "#202538", "#303651", "#3b4261", "#596180", "#8089aa", "#b9c1dd", "#f0f2ff"]
+      },
+      "night-text": {
+        "role": "neutral",
+        "displayName": "Night Text",
+        "canonical": "#c0caf5",
+        "tonalRamp": ["#171a29", "#282d46", "#41496f", "#606b9b", "#838fbd", "#a4afd9", "#c0caf5", "#f1f4ff"]
+      },
+      "signal-blue": {
+        "role": "primary",
+        "displayName": "Signal Blue",
+        "canonical": "#7aa2f7",
+        "tonalRamp": ["#101b33", "#17305f", "#244b91", "#3569c5", "#5487e2", "#7aa2f7", "#b2c9ff", "#edf3ff"]
+      },
+      "deep-blue": {
+        "role": "secondary",
+        "displayName": "Deep Blue",
+        "canonical": "#6b82bd",
+        "tonalRamp": ["#141b31", "#202d51", "#304374", "#465b96", "#6b82bd", "#91a3d0", "#bec9e6", "#f0f3ff"]
+      },
+      "cool-teal": {
+        "role": "tertiary",
+        "displayName": "Cool Teal",
+        "canonical": "#73daca",
+        "tonalRamp": ["#102a28", "#17443f", "#23645d", "#32877d", "#4daf9f", "#73daca", "#b2eee4", "#ecfffb"]
+      },
+      "midnight-neutral": {
+        "role": "neutral",
+        "displayName": "Midnight Neutral",
+        "canonical": "#414868",
+        "tonalRamp": ["#151722", "#222638", "#343a55", "#414868", "#606987", "#8992ad", "#bec5d9", "#f2f4fa"]
+      },
+      "success-green": {
+        "role": "success",
+        "displayName": "Success Green",
+        "canonical": "#9ece6a",
+        "tonalRamp": ["#18270f", "#29421a", "#3e6129", "#57833b", "#78a94f", "#9ece6a", "#c9e7a7", "#f2fde8"]
+      },
+      "warning-amber": {
+        "role": "warning",
+        "displayName": "Warning Amber",
+        "canonical": "#e0af68",
+        "tonalRamp": ["#30200d", "#503515", "#754d21", "#9d692f", "#c58a48", "#e0af68", "#f1d39f", "#fff7e9"]
+      },
+      "error-rose": {
+        "role": "error",
+        "displayName": "Error Rose",
+        "canonical": "#f7768e",
+        "tonalRamp": ["#351019", "#5a1a29", "#84273d", "#b23c55", "#db5870", "#f7768e", "#fbb1bf", "#fff0f3"]
+      },
+      "day-canvas": {
+        "role": "neutral",
+        "displayName": "Day Canvas",
+        "canonical": "#e6e7ed",
+        "tonalRamp": ["#202536", "#39415b", "#59647f", "#7d879e", "#a4abba", "#c4c8d3", "#e6e7ed", "#f7f8fc"]
+      },
+      "day-surface": {
+        "role": "neutral",
+        "displayName": "Day Surface",
+        "canonical": "#dcdde3",
+        "tonalRamp": ["#20232f", "#393e50", "#596075", "#7d8497", "#a2a8b6", "#c1c5cf", "#dcdde3", "#f7f8fc"]
+      },
+      "day-border": {
+        "role": "neutral",
+        "displayName": "Day Border",
+        "canonical": "#c4c8da",
+        "tonalRamp": ["#1e2231", "#353b53", "#535b77", "#747d9c", "#9aa2bb", "#c4c8da", "#dde0ed", "#f7f8fc"]
+      },
+      "day-text": {
+        "role": "neutral",
+        "displayName": "Day Text",
+        "canonical": "#2e3c64",
+        "tonalRamp": ["#11182b", "#202b4a", "#2e3c64", "#475886", "#6879a5", "#929fc2", "#c3cbea", "#f2f4ff"]
+      },
+      "daylight-blue": {
+        "role": "primary",
+        "displayName": "Daylight Blue",
+        "canonical": "#2e7de9",
+        "tonalRamp": ["#0b203f", "#103968", "#17549a", "#2070cc", "#2e7de9", "#6da6f2", "#aed0fa", "#edf6ff"]
+      },
+      "day-deep-blue": {
+        "role": "secondary",
+        "displayName": "Day Deep Blue",
+        "canonical": "#304b80",
+        "tonalRamp": ["#10182c", "#1c2b4d", "#304b80", "#4967a1", "#6b86bd", "#94a8d2", "#c4cee7", "#f1f4ff"]
+      },
+      "day-teal": {
+        "role": "tertiary",
+        "displayName": "Day Teal",
+        "canonical": "#007c79",
+        "tonalRamp": ["#062422", "#073e3b", "#005b58", "#007c79", "#2a9e99", "#68beb8", "#afe2de", "#ecfffd"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Section-leading statements with compact tracking and decisive weight."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cards, interface states, and compact page headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Clear interface and instructional copy with generous line height."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Sparse uppercase eyebrows and grouping labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-rest",
+        "value": "0 12px 32px color-mix(in oklch, var(--color-base-content) 8%, transparent)",
+        "purpose": "Quiet ambient depth for substantial content cards."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 18px 42px color-mix(in oklch, var(--color-base-content) 13%, transparent)",
+        "purpose": "Interactive card feedback paired with a small upward lift."
+      },
+      {
+        "name": "floating-menu",
+        "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+        "purpose": "Dropdowns and temporary surfaces above the app shell."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-standard",
+        "value": "200ms ease",
+        "purpose": "Hover, border, surface, and card state transitions."
+      },
+      {
+        "name": "state-fast",
+        "value": "150ms ease",
+        "purpose": "Compact navigation and immediate control feedback."
+      },
+      {
+        "name": "entrance-emphasized",
+        "value": "800ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Occasional landing-page entrance motion only."
+      }
+    ],
+    "breakpoints": [
+      {"name": "sm", "value": "640px"},
+      {"name": "md", "value": "768px"},
+      {"name": "lg", "value": "1024px"},
+      {"name": "xl", "value": "1280px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The clearest action on a surface; use once per decision area when possible.",
+      "html": "<button class=\"ds-btn-primary\">Continue</button>",
+      "css": ".ds-btn-primary { min-height: 2.75rem; padding: 0.625rem 1.25rem; border: 0; border-radius: 9999px; background: var(--color-primary, #7aa2f7); color: var(--color-primary-content, #16161e); font: 700 0.875rem/1 ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease; } .ds-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px color-mix(in oklch, var(--color-primary, #7aa2f7) 20%, transparent); } .ds-btn-primary:active { transform: translateY(0); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-primary, #7aa2f7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Icon Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "A compact secondary action for navigation and utility controls.",
+      "html": "<button class=\"ds-btn-ghost\" aria-label=\"Search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></button>",
+      "css": ".ds-btn-ghost { display: inline-grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 0; border-radius: 0.75rem; background: transparent; color: color-mix(in oklch, var(--color-base-content, #c0caf5) 65%, transparent); cursor: pointer; transition: background-color 200ms ease, color 200ms ease; } .ds-btn-ghost svg { width: 1rem; height: 1rem; } .ds-btn-ghost:hover { background: color-mix(in oklch, var(--color-primary, #7aa2f7) 10%, transparent); color: var(--color-primary, #7aa2f7); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--color-primary, #7aa2f7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A comfortably sized field with quiet tonal fill and explicit focus treatment.",
+      "html": "<label class=\"ds-field\"><span>Email</span><input class=\"ds-input\" type=\"email\" placeholder=\"you@example.com\"></label>",
+      "css": ".ds-field { display: grid; gap: 0.375rem; color: var(--color-base-content, #c0caf5); font: 600 0.75rem/1.4 ui-sans-serif, system-ui, sans-serif; } .ds-input { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.875rem; border: 1px solid var(--color-base-300, #3b4261); border-radius: 0.75rem; background: color-mix(in oklch, var(--color-base-100, #1a1b26) 70%, transparent); color: var(--color-base-content, #c0caf5); font: 400 1rem/1.5 ui-sans-serif, system-ui, sans-serif; } .ds-input::placeholder { color: color-mix(in oklch, var(--color-base-content, #c0caf5) 42%, transparent); } .ds-input:focus-visible { outline: 2px solid var(--color-primary, #7aa2f7); outline-offset: 3px; border-color: var(--color-primary, #7aa2f7); }"
+    },
+    {
+      "name": "Interactive Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A substantial content surface with restrained ambient depth and hover feedback.",
+      "html": "<article class=\"ds-card\"><p class=\"ds-card-label\">Practical guide</p><h3>Build with a clear next step</h3><p>Focused material for moving from an idea to a working result.</p></article>",
+      "css": ".ds-card { padding: 1.5rem; border: 1px solid color-mix(in oklch, var(--color-base-300, #3b4261) 76%, transparent); border-radius: 1.25rem; background: color-mix(in oklch, var(--color-base-200, #24283b) 82%, transparent); color: var(--color-base-content, #c0caf5); box-shadow: 0 12px 32px color-mix(in oklch, var(--color-base-content, #c0caf5) 8%, transparent); font-family: ui-sans-serif, system-ui, sans-serif; transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease; } .ds-card:hover { transform: translateY(-3px); border-color: color-mix(in oklch, var(--color-primary, #7aa2f7) 44%, var(--color-base-300, #3b4261)); box-shadow: 0 18px 42px color-mix(in oklch, var(--color-base-content, #c0caf5) 13%, transparent); } .ds-card h3 { margin: 0.5rem 0 0; font-size: 1.125rem; letter-spacing: -0.02em; } .ds-card p { margin: 0.625rem 0 0; color: color-mix(in oklch, var(--color-base-content, #c0caf5) 62%, transparent); line-height: 1.6; } .ds-card .ds-card-label { margin: 0; color: var(--color-primary, #7aa2f7); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; } .ds-card:focus-within { outline: 2px solid var(--color-primary, #7aa2f7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Primary Navigation Item",
+      "kind": "nav",
+      "description": "A compact destination link with a quiet blue active state.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\" aria-current=\"page\">Videos</a>",
+      "css": ".ds-nav-item { position: relative; display: inline-flex; min-height: 2.75rem; align-items: center; padding: 0 0.875rem; border-radius: 0.75rem; color: color-mix(in oklch, var(--color-base-content, #c0caf5) 65%, transparent); font: 600 0.875rem/1 ui-sans-serif, system-ui, sans-serif; text-decoration: none; transition: color 200ms ease, background-color 200ms ease; } .ds-nav-item:hover { background: color-mix(in oklch, var(--color-base-200, #24283b) 70%, transparent); color: var(--color-base-content, #c0caf5); } .ds-nav-item-active { background: color-mix(in oklch, var(--color-primary, #7aa2f7) 10%, transparent); color: var(--color-primary, #7aa2f7); } .ds-nav-item-active::after { position: absolute; right: 0.75rem; bottom: 0.25rem; left: 0.75rem; height: 2px; border-radius: 9999px; background: currentColor; content: \"\"; } .ds-nav-item:focus-visible { outline: 2px solid var(--color-primary, #7aa2f7); outline-offset: 3px; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "description": "A compact semantic marker for meaningful status, not decoration.",
+      "html": "<span class=\"ds-badge-success\">Solved</span>",
+      "css": ".ds-badge-success { display: inline-flex; min-height: 1.25rem; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px; background: color-mix(in oklch, var(--color-success, #9ece6a) 18%, transparent); color: var(--color-success, #9ece6a); font: 700 0.6875rem/1 ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.01em; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "description": "A quiet, centered state with one clear contextual action.",
+      "html": "<section class=\"ds-empty\"><div class=\"ds-empty-icon\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M5 5h14v14H5zM8 9h8M8 13h5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></svg></div><h3>No saved items yet</h3><p>Save useful content to find it here.</p><button>Browse resources</button></section>",
+      "css": ".ds-empty { display: grid; min-height: 18rem; place-items: center; align-content: center; padding: 3rem 1.5rem; border: 1px dashed color-mix(in oklch, var(--color-base-300, #3b4261) 82%, transparent); border-radius: 1rem; background: color-mix(in oklch, var(--color-base-200, #24283b) 58%, transparent); color: var(--color-base-content, #c0caf5); text-align: center; font-family: ui-sans-serif, system-ui, sans-serif; } .ds-empty-icon { display: grid; width: 3rem; height: 3rem; place-items: center; border: 1px solid color-mix(in oklch, var(--color-primary, #7aa2f7) 24%, transparent); border-radius: 0.875rem; background: color-mix(in oklch, var(--color-primary, #7aa2f7) 10%, transparent); color: var(--color-primary, #7aa2f7); } .ds-empty-icon svg { width: 1.5rem; height: 1.5rem; } .ds-empty h3 { margin: 1.25rem 0 0; font-size: 1.125rem; letter-spacing: -0.02em; } .ds-empty p { max-width: 30rem; margin: 0.625rem 0 0; color: color-mix(in oklch, var(--color-base-content, #c0caf5) 58%, transparent); font-size: 0.875rem; line-height: 1.5; } .ds-empty button { min-height: 2.75rem; margin-top: 1.25rem; padding: 0.625rem 1.25rem; border: 0; border-radius: 9999px; background: var(--color-primary, #7aa2f7); color: var(--color-primary-content, #16161e); font-weight: 700; cursor: pointer; } .ds-empty button:focus-visible { outline: 2px solid var(--color-primary, #7aa2f7); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Midnight Workshop",
+    "overview": "Urielm should feel like a focused workspace that happens to be open late: calm enough for sustained learning, technical without becoming sterile, and confident without visual bravado. Cool layered surfaces organize the interface while clear typography and restrained blue signals keep attention on the next useful action.\n\nThe system is practical rather than theatrical. Familiar daisyUI controls provide predictable behavior, while deliberate spacing, rounded geometry, clear focus treatment, and small responsive transitions add craft. Avoid neon cyberpunk styling, excessive violet, decorative noise, and effects that compete with instructional content.",
+    "keyCharacteristics": [
+      "Cool Tokyo Night and Tokyo Day surfaces with strong text contrast.",
+      "Signal blue as the dominant interactive color and teal as a supporting accent.",
+      "Rounded, comfortably sized controls with compact developer-oriented information density.",
+      "Tonal layering first, soft elevation only where interaction or floating context warrants it.",
+      "Direct hierarchy, semantic structure, and visible keyboard focus throughout."
+    ],
+    "rules": [
+      {"name": "The Blue Leads Rule", "body": "Blue leads; teal supports. Violet never dominates.", "section": "colors"},
+      {"name": "The Semantic Color Rule", "body": "Reserve green, amber, and rose for success, warning, and error meaning instead of decoration.", "section": "colors"},
+      {"name": "The Useful Type Rule", "body": "Use hierarchy to clarify reading order; do not introduce ornamental fonts or uppercase labels where plain language reads faster.", "section": "typography"},
+      {"name": "The Layer First Rule", "body": "Establish hierarchy with surface tone and borders before adding shadow; shadow must communicate interaction or floating context.", "section": "elevation"}
+    ],
+    "dos": [
+      "Do use Signal Blue for the highest-priority interaction and visible keyboard focus.",
+      "Do use Canvas, Surface, and Border tones to establish hierarchy before introducing shadow.",
+      "Do keep controls comfortably sized and preserve responsive navigation ownership.",
+      "Do use subtle 150–200ms state transitions and disable nonessential movement for reduced-motion users.",
+      "Do keep instructional copy readable, direct, and visually dominant over decoration."
+    ],
+    "donts": [
+      "Don't let violet or neon cyberpunk effects dominate the Tokyo palette.",
+      "Don't use teal as a competing primary action color; it is a supporting accent.",
+      "Don't add thick one-sided accent borders to cards or prose callouts.",
+      "Don't stack shadows, gradients, badges, and decorative labels on the same surface.",
+      "Don't hide essential actions behind hover-only behavior on touch layouts.",
+      "Don't invent testimonials, performance claims, or other visual proof absent from the product record."
+    ]
+  }
+}
