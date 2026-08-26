@@ -40,7 +40,7 @@ defmodule UrielmWeb.VideoLive do
        |> assign(:og_type, "video.other")
        |> assign(:og_image, nil)}
     else
-      video = Content.get_video_by_slug(slug)
+      video = Content.get_video_by_slug(slug, preload_tags: true)
 
       if is_nil(video) do
         {:ok,
@@ -564,8 +564,16 @@ defmodule UrielmWeb.VideoLive do
                 <% end %>
                 
     <!-- Tags/metadata -->
-                <div class="flex items-center gap-2 text-xs opacity-80">
+                <div class="flex flex-wrap items-center gap-2 text-xs opacity-80">
                   <span class="badge badge-ghost badge-sm">Short</span>
+                  <.link
+                    :for={tag <- @video.tag_records}
+                    id={"short-video-tag-#{tag.slug}"}
+                    navigate={~p"/videos?tags=#{tag.slug}"}
+                    class="badge badge-ghost badge-sm"
+                  >
+                    {tag.name}
+                  </.link>
                   <%= if @video.visibility != "public" do %>
                     <span class="badge badge-ghost badge-sm">{@video.visibility}</span>
                   <% end %>
@@ -730,6 +738,21 @@ defmodule UrielmWeb.VideoLive do
                   Published {format_video_date(video_date(@video))}
                 </p>
               </div>
+            </div>
+
+            <div
+              :if={@video.tag_records != []}
+              id="video-detail-tags"
+              class="mt-5 flex flex-wrap gap-2"
+            >
+              <.link
+                :for={tag <- @video.tag_records}
+                id={"video-detail-tag-#{tag.slug}"}
+                navigate={~p"/videos?tags=#{tag.slug}"}
+                class="badge badge-outline border-primary/25 bg-primary/5 px-3 py-2 text-xs font-bold text-primary transition-colors hover:bg-primary/10"
+              >
+                {tag.name}
+              </.link>
             </div>
           </div>
 

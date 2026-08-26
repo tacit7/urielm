@@ -617,6 +617,8 @@ defmodule Urielm.Content do
 
   alias Urielm.Content.Video
   alias Urielm.Content.VideoCompletion
+  alias Urielm.Content.VideoTag
+  alias Urielm.Content.Tag
 
   @doc """
   Returns the count of published videos.
@@ -651,19 +653,20 @@ defmodule Urielm.Content do
     end
   end
 
-  def get_video_by_slug!(slug) do
-    Repo.get_by!(Video, slug: slug)
-    |> Repo.preload(:thread)
+  def get_video_by_slug!(slug, opts \\ []) do
+    Video
+    |> Repo.get_by!(slug: slug)
+    |> preload_video(opts)
   end
 
   @doc """
   Non-raising version of get_video_by_slug!. Returns nil if not found.
   """
-  def get_video_by_slug(slug) do
+  def get_video_by_slug(slug, opts \\ []) do
     Repo.get_by(Video, slug: slug)
     |> case do
       nil -> nil
-      video -> Repo.preload(video, :thread)
+      video -> preload_video(video, opts)
     end
   end
 
@@ -679,6 +682,7 @@ defmodule Urielm.Content do
   def list_published_videos(opts \\ []) do
     limit = Keyword.get(opts, :limit)
     offset = Keyword.get(opts, :offset, 0)
+    tag_ids = Keyword.get(opts, :tag_ids, [])
 
     query =
       from(v in Video,
@@ -687,10 +691,155 @@ defmodule Urielm.Content do
         offset: ^offset
       )
 
+    query =
+      case tag_ids do
+        nil ->
+          query
+
+        [] ->
+          query
+
+        tag_ids ->
+          from(v in query,
+            join: vt in assoc(v, :video_tags),
+            where: vt.tag_id in ^tag_ids,
+            distinct: true
+          )
+      end
+
     query = if limit, do: from(q in query, limit: ^limit), else: query
 
     Repo.all(query)
   end
+
+  def list_tags_by_slugs(slugs) when is_list(slugs) do
+    slugs = slugs |> Enum.map(&to_string/1) |> Enum.uniq()
+
+    from(t in Tag,
+      where: t.slug in ^slugs,
+      order_by: [asc: t.name]
+    )
+    |> Repo.all()
+  end
+
+  def list_video_filter_tags do
+    from(t in Tag,
+      join: vt in VideoTag,
+      on: vt.tag_id == t.id,
+      join: v in Video,
+      on: vt.video_id == v.id,
+      where: not is_nil(v.published_at),
+      distinct: true,
+      order_by: [asc: t.name]
+    )
+    |> Repo.all()
+  end
+
+  def slugify_tag_name(name) when is_binary(name) do
+    name
+    |> String.downcase()
+    |> String.replace(~r/[\s\/_-]+/, "-")
+    |> String.replace(~r/[^a-z0-9-]+/, "")
+    |> String.trim("-")
+  end
+
+  def slugify_tag_name(_name), do: ""
+
+  def find_or_create_tag(name) when is_binary(name) do
+    name = String.trim(name)
+    slug = slugify_tag_name(name)
+
+    cond do
+      name == "" ->
+        {:error, :blank}
+
+      slug == "" ->
+        {:error, :blank}
+
+      tag = Repo.get_by(Tag, slug: slug) ->
+        {:ok, tag}
+
+      true ->
+        %Tag{}
+        |> Tag.changeset(%{name: name, slug: slug})
+        |> Repo.insert()
+        |> case do
+          {:ok, tag} ->
+            {:ok, tag}
+
+          {:error, changeset} ->
+            case Repo.get_by(Tag, slug: slug) do
+              nil -> {:error, changeset}
+              tag -> {:ok, tag}
+            end
+        end
+    end
+  end
+
+  def find_or_create_tag(_name), do: {:error, :blank}
+
+  def tag_video(video_id, tag_id) do
+    %VideoTag{}
+    |> VideoTag.changeset(%{video_id: video_id, tag_id: tag_id})
+    |> Repo.insert()
+  end
+
+  def untag_video(video_id, tag_id) do
+    case Repo.get_by(VideoTag, video_id: video_id, tag_id: tag_id) do
+      nil -> {:error, :not_found}
+      video_tag -> Repo.delete(video_tag)
+    end
+  end
+
+  def replace_video_tags(video_id, tag_names) when is_list(tag_names) do
+    Repo.transaction(fn ->
+      tags =
+        tag_names
+        |> Enum.map(&find_or_create_tag/1)
+        |> Enum.reduce([], fn
+          {:ok, tag}, tags -> [tag | tags]
+          {:error, reason}, _tags -> Repo.rollback({:tag, reason})
+        end)
+        |> Enum.reverse()
+        |> Enum.uniq_by(& &1.id)
+
+      tag_ids = Enum.map(tags, & &1.id)
+
+      from(vt in VideoTag, where: vt.video_id == ^video_id and vt.tag_id not in ^tag_ids)
+      |> Repo.delete_all()
+
+      existing_tag_ids =
+        video_id
+        |> list_video_tags()
+        |> Enum.map(& &1.id)
+        |> MapSet.new()
+
+      Enum.each(tags, fn tag ->
+        unless MapSet.member?(existing_tag_ids, tag.id) do
+          case tag_video(video_id, tag.id) do
+            {:ok, _video_tag} -> :ok
+            {:error, changeset} -> Repo.rollback({:tag, changeset})
+          end
+        end
+      end)
+
+      list_video_tags(video_id)
+    end)
+  end
+
+  def list_video_tags(video_id) do
+    from(vt in VideoTag,
+      where: vt.video_id == ^video_id,
+      join: t in Tag,
+      on: vt.tag_id == t.id,
+      select: t,
+      order_by: [asc: t.name]
+    )
+    |> Repo.all()
+  end
+
+  def preload_video_tags(videos) when is_list(videos), do: Repo.preload(videos, :tag_records)
+  def preload_video_tags(%Video{} = video), do: Repo.preload(video, :tag_records)
 
   @doc """
   Returns the list of published short videos.
@@ -716,6 +865,17 @@ defmodule Urielm.Content do
 
     Repo.all(query)
   end
+
+  defp preload_video(video, opts) do
+    preloads =
+      [:thread]
+      |> maybe_preload_tags(Keyword.get(opts, :preload_tags, false))
+
+    Repo.preload(video, preloads)
+  end
+
+  defp maybe_preload_tags(preloads, true), do: [:tag_records | preloads]
+  defp maybe_preload_tags(preloads, _preload_tags?), do: preloads
 
   @doc """
   Checks if a video is published.

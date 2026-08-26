@@ -71,6 +71,64 @@ defmodule UrielmWeb.VideosLiveTest do
     refute has_element?(view, "#video-card-#{standard.id}")
   end
 
+  test "filters the library by tag slugs" do
+    tagged = published_video(%{title: "Tagged workflow"})
+    other = published_video(%{title: "Other workflow", published_at: seconds_ago(60)})
+    {:ok, tag} = Urielm.Content.find_or_create_tag("AI")
+    {:ok, _video_tag} = Urielm.Content.tag_video(tagged.id, tag.id)
+
+    {:ok, view, _html} = live(build_conn(), ~p"/videos?tags=ai")
+
+    assert has_element?(view, "#featured-video-#{tagged.id}")
+    refute has_element?(view, "#video-card-#{other.id}")
+    refute has_element?(view, "#featured-video-#{other.id}")
+  end
+
+  test "renders tag picker, selected tags, and card tag badges" do
+    tagged = published_video(%{title: "Tagged workflow"})
+    standard = published_video(%{title: "Standard tag card", published_at: seconds_ago(60)})
+
+    short =
+      published_video(%{title: "Short tag card", format: "short", published_at: seconds_ago(120)})
+
+    {:ok, ai_tag} = Urielm.Content.find_or_create_tag("AI")
+    {:ok, tutorial_tag} = Urielm.Content.find_or_create_tag("Tutorial")
+    {:ok, _video_tag} = Urielm.Content.tag_video(tagged.id, ai_tag.id)
+    {:ok, _video_tag} = Urielm.Content.tag_video(standard.id, tutorial_tag.id)
+    {:ok, _video_tag} = Urielm.Content.tag_video(short.id, tutorial_tag.id)
+
+    {:ok, view, _html} = live(build_conn(), ~p"/videos?tags=ai")
+
+    assert has_element?(view, "#video-tag-picker")
+    assert has_element?(view, "#video-tag-filter-tutorial[href='/videos?tags=ai%2Ctutorial']")
+    assert has_element?(view, "#selected-video-tag-ai[href='/videos']")
+    assert has_element?(view, "#featured-video-#{tagged.id}-tag-ai", "AI")
+
+    {:ok, unfiltered_view, _html} = live(build_conn(), ~p"/videos")
+
+    assert has_element?(unfiltered_view, "#video-card-#{standard.id}-tag-tutorial", "Tutorial")
+    assert has_element?(unfiltered_view, "#short-card-#{short.id}-tag-tutorial", "Tutorial")
+  end
+
+  test "unknown tag slug returns no results without error" do
+    published_video(%{title: "Existing video"})
+
+    {:ok, view, _html} = live(build_conn(), ~p"/videos?tags=missing")
+
+    assert has_element?(view, "#videos-no-results")
+  end
+
+  test "format filter links retain sorted tag params" do
+    published_video(%{title: "Existing video"})
+
+    {:ok, view, _html} = live(build_conn(), ~p"/videos?q=phoenix&tags=zeta,alpha")
+
+    assert has_element?(
+             view,
+             "#video-filter-short[href='/videos?q=phoenix&format=short&tags=alpha%2Czeta']"
+           )
+  end
+
   test "labels gated published videos without hiding them" do
     signed_in = published_video(%{visibility: "signed_in"})
 

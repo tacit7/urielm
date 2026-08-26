@@ -4,6 +4,8 @@ defmodule Mix.Tasks.Videos.AddTest do
   import ExUnit.CaptureIO
 
   alias Mix.Tasks.Videos.Add
+  alias Urielm.Content
+  alias Urielm.Content.Tag
   alias Urielm.Content.Video
   alias Urielm.Repo
 
@@ -101,6 +103,45 @@ defmodule Mix.Tasks.Videos.AddTest do
       assert_received {:mix_shell, :info, [message]}
       assert message =~ "Already exists:"
       assert message =~ "/videos/#{first.slug}"
+    end
+
+    test "--tags creates and attaches tags" do
+      video = Add.run([@url, "--tags", "AI, Tutorial, , Beginner"])
+
+      assert Enum.map(Content.list_video_tags(video.id), & &1.slug) == [
+               "ai",
+               "beginner",
+               "tutorial"
+             ]
+    end
+
+    test "--tags reuses existing tag by normalized slug" do
+      {:ok, existing} = Content.find_or_create_tag("AI")
+
+      video = Add.run([@url, "--tags", "ai,A.I."])
+
+      assert Repo.aggregate(Tag, :count) == 1
+      assert Enum.map(Content.list_video_tags(video.id), & &1.id) == [existing.id]
+    end
+
+    test "--tags on an existing video replaces the previous tag set" do
+      first = Add.run([@url, "--tags", "AI"])
+      flush_shell_messages()
+
+      second = Add.run([@url, "--tags", "Beginner"])
+
+      assert second.id == first.id
+      assert Repo.aggregate(Video, :count) == 1
+      assert Enum.map(Content.list_video_tags(second.id), & &1.slug) == ["beginner"]
+    end
+
+    test "empty --tags value clears tags when updating an existing video" do
+      Add.run([@url, "--tags", "AI"])
+      flush_shell_messages()
+
+      video = Add.run([@url, "--tags", " , "])
+
+      assert Content.list_video_tags(video.id) == []
     end
 
     test "duplicate generated slug appends a suffix from the YouTube video id" do

@@ -22,6 +22,8 @@ defmodule Urielm.Content.Video do
 
     belongs_to(:thread, Urielm.Forum.Thread, type: :binary_id)
     has_many(:video_completions, Urielm.Content.VideoCompletion)
+    has_many(:video_tags, Urielm.Content.VideoTag)
+    many_to_many(:tag_records, Urielm.Content.Tag, join_through: "video_tags")
 
     timestamps(type: :utc_datetime)
   end

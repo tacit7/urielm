@@ -66,6 +66,22 @@ defmodule UrielmWeb.VideoLiveTest do
       refute has_element?(view, "#standard-video-page .dock")
     end
 
+    test "standard video renders linked tags", %{conn: conn, public_video: video} do
+      {:ok, tag} = Urielm.Content.find_or_create_tag("AI")
+      {:ok, _video_tag} = Urielm.Content.tag_video(video.id, tag.id)
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, "#video-detail-tags")
+      assert has_element?(view, "#video-detail-tag-ai[href='/videos?tags=ai']", "AI")
+    end
+
+    test "video with no tags does not render tag container", %{conn: conn, public_video: video} do
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      refute has_element?(view, "#video-detail-tags")
+    end
+
     test "authenticated viewer gets the completion control", %{public_video: video} do
       user = user_fixture()
       conn = log_in_user(build_conn(), user)

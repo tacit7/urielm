@@ -4,7 +4,9 @@ defmodule Urielm.Content.VideoTest do
   import Ecto.Query
 
   alias Urielm.Content
+  alias Urielm.Content.Tag
   alias Urielm.Content.Video
+  alias Urielm.Content.VideoTag
   alias Urielm.Repo
 
   describe "videos" do
@@ -78,6 +80,20 @@ defmodule Urielm.Content.VideoTest do
       assert hd(videos).id == published.id
     end
 
+    test "list_published_videos/1 filters by tag ids and treats empty tag ids as unfiltered" do
+      {:ok, tag} = Content.find_or_create_tag("AI")
+      tagged = video_fixture(%{published_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+      other = video_fixture(%{published_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+      {:ok, _video_tag} = Content.tag_video(tagged.id, tag.id)
+
+      filtered = Content.list_published_videos(tag_ids: [tag.id])
+      unfiltered = Content.list_published_videos(tag_ids: [])
+
+      assert Enum.map(filtered, & &1.id) == [tagged.id]
+      assert Enum.any?(unfiltered, &(&1.id == tagged.id))
+      assert Enum.any?(unfiltered, &(&1.id == other.id))
+    end
+
     test "video_published?/1 returns true for published videos" do
       attrs = Map.put(@valid_attrs, :published_at, DateTime.utc_now())
       {:ok, video} = Content.create_video(attrs)
@@ -88,6 +104,77 @@ defmodule Urielm.Content.VideoTest do
       attrs = Map.put(@valid_attrs, :published_at, nil)
       {:ok, video} = Content.create_video(attrs)
       assert Content.video_published?(video) == false
+    end
+  end
+
+  describe "video tags" do
+    test "find_or_create_tag/1 normalizes and reuses tag slugs" do
+      assert {:ok, %Tag{} = tag} = Content.find_or_create_tag("AI")
+      assert tag.slug == "ai"
+      assert {:ok, same_tag} = Content.find_or_create_tag("A.I.")
+
+      assert same_tag.id == tag.id
+      assert Repo.aggregate(Tag, :count) == 1
+    end
+
+    test "tag_video/2 attaches tags and list_video_tags/1 returns ordered names" do
+      video = video_fixture()
+      {:ok, zed} = Content.find_or_create_tag("Zed")
+      {:ok, alpha} = Content.find_or_create_tag("Alpha")
+
+      assert {:ok, %VideoTag{}} = Content.tag_video(video.id, zed.id)
+      assert {:ok, %VideoTag{}} = Content.tag_video(video.id, alpha.id)
+
+      assert Enum.map(Content.list_video_tags(video.id), & &1.name) == ["Alpha", "Zed"]
+    end
+
+    test "untag_video/2 removes a tag or returns not_found" do
+      video = video_fixture()
+      {:ok, tag} = Content.find_or_create_tag("AI")
+      {:ok, _video_tag} = Content.tag_video(video.id, tag.id)
+
+      assert {:ok, %VideoTag{}} = Content.untag_video(video.id, tag.id)
+      assert Content.list_video_tags(video.id) == []
+      assert Content.untag_video(video.id, tag.id) == {:error, :not_found}
+    end
+
+    test "replace_video_tags/2 replaces the full video tag set" do
+      video = video_fixture()
+      {:ok, _tag} = Content.find_or_create_tag("AI")
+      {:ok, existing} = Content.find_or_create_tag("Existing")
+      {:ok, _video_tag} = Content.tag_video(video.id, existing.id)
+
+      assert {:ok, tags} = Content.replace_video_tags(video.id, ["AI", "Tutorial", "AI"])
+      assert Enum.map(tags, & &1.slug) == ["ai", "tutorial"]
+      assert Enum.map(Content.list_video_tags(video.id), & &1.slug) == ["ai", "tutorial"]
+
+      assert {:ok, []} = Content.replace_video_tags(video.id, [])
+      assert Content.list_video_tags(video.id) == []
+    end
+
+    test "video tag changeset validates required fields and constraints" do
+      changeset = VideoTag.changeset(%VideoTag{}, %{})
+      assert "can't be blank" in errors_on(changeset).video_id
+      assert "can't be blank" in errors_on(changeset).tag_id
+
+      assert {:error, fk_changeset} =
+               %VideoTag{}
+               |> VideoTag.changeset(%{
+                 video_id: Ecto.UUID.generate(),
+                 tag_id: -1
+               })
+               |> Repo.insert()
+
+      assert "does not exist" in errors_on(fk_changeset).video_id
+    end
+
+    test "tag_video/2 surfaces duplicate video tag as a changeset error" do
+      video = video_fixture()
+      {:ok, tag} = Content.find_or_create_tag("AI")
+      assert {:ok, _video_tag} = Content.tag_video(video.id, tag.id)
+
+      assert {:error, changeset} = Content.tag_video(video.id, tag.id)
+      assert "has already been taken" in errors_on(changeset).video_id
     end
   end
 
