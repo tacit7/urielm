@@ -890,7 +890,7 @@ defmodule UrielmWeb.ThreadLive do
                     Sign in to reply to this discussion.
                   </p>
                 </div>
-                <.link navigate={~p"/auth/signin"} class="btn btn-sm btn-secondary">
+                <.link navigate={~p"/signin"} class="btn btn-sm btn-secondary">
                   Sign in to reply
                 </.link>
               </div>

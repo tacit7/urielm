@@ -38,7 +38,7 @@ defmodule UrielmWeb.ThreadLiveTest do
       {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
 
       refute has_element?(view, "#comment-form")
-      assert has_element?(view, "#thread-sign-in-to-reply a[href='/auth/signin']")
+      assert has_element?(view, "#thread-sign-in-to-reply a[href='/signin']")
     end
 
     test "locked topics replace the composer with a status panel", %{
