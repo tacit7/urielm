@@ -130,28 +130,20 @@ defmodule UrielmWeb.SigninLive do
               </div>
 
               <%= if @error do %>
-                <div
-                  id="signin-error"
-                  role="alert"
-                  class="alert border border-error/20 bg-error/10 text-sm text-error"
-                >
-                  <.um_icon name="hero-exclamation-circle" class="size-5 shrink-0" />
-                  <span>{@error}</span>
-                </div>
+                <.form_feedback id="signin-error" kind={:error} title="Sign in failed">
+                  {@error}
+                </.form_feedback>
               <% end %>
 
-              <button
+              <.button
                 id="signin-submit"
                 type="submit"
+                loading_label="Signing in…"
                 disabled={@loading}
                 class="btn btn-primary h-12 w-full rounded-full font-bold shadow-md shadow-primary/15 transition hover:-translate-y-0.5 disabled:translate-y-0"
               >
-                <%= if @loading do %>
-                  <span class="loading loading-spinner loading-sm"></span> Signing in…
-                <% else %>
-                  Sign in
-                <% end %>
-              </button>
+                Sign in
+              </.button>
             </.form>
 
             <p class="mt-6 text-center text-sm text-base-content/55">

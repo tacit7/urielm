@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Form feedback polish — mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1a1b26;
+        --surface: #24283b;
+        --surface-2: #202437;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #8b95bd;
+        --blue: #7aa2f7;
+        --blue-dark: #173467;
+        --success: #9ece6a;
+        --error: #f7768e;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 Inter, ui-sans-serif, system-ui, sans-serif; }
+      button, input { font: inherit; }
+      button:focus-visible, input:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+      .switcher { position: sticky; top: 0; z-index: 10; display: flex; justify-content: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); background: #161722; }
+      .switcher button { min-height: 42px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
+      .switcher button.active { border-color: var(--blue); background: var(--blue-dark); color: #e2edff; }
+      .frame { display: none; min-height: calc(100vh - 67px); grid-template-columns: 220px minmax(0, 1fr); }
+      .frame.active { display: grid; }
+      .sidebar { padding: 24px 16px; border-right: 1px solid var(--border); background: #161722; }
+      .brand { padding: 0 10px 22px; font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
+      .nav { display: grid; gap: 6px; }
+      .nav span { padding: 10px 12px; border-radius: 12px; color: var(--muted); }
+      .nav .active { background: var(--surface); color: var(--text); }
+      main { min-width: 0; padding: 46px 5vw 80px; }
+      .layout { display: grid; grid-template-columns: minmax(0, 640px) minmax(220px, 320px); gap: clamp(32px, 6vw, 88px); align-items: start; }
+      h1 { margin: 0; font-size: clamp(32px, 5vw, 52px); line-height: 1.04; letter-spacing: -.035em; }
+      .lead { max-width: 620px; margin: 12px 0 34px; color: var(--muted); font-size: 16px; }
+      .form { padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-2); }
+      .field + .field { margin-top: 20px; }
+      label { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 7px; font-weight: 700; }
+      label small { color: var(--muted); font-weight: 500; }
+      input { width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid var(--border); border-radius: 12px; background: #1b1e2d; color: var(--text); caret-color: var(--blue); }
+      input::placeholder { color: #7883a9; }
+      input:focus { border-color: var(--blue); outline: 2px solid rgba(122,162,247,.22); outline-offset: 1px; }
+      .help, .error-text { display: flex; gap: 7px; margin: 7px 0 0; font-size: 12px; }
+      .help { color: var(--muted); }
+      .error-text { color: var(--error); }
+      .invalid input { border-color: var(--error); }
+      .feedback { display: none; margin-top: 20px; padding: 13px 14px; border: 1px solid rgba(247,118,142,.35); border-radius: 12px; background: rgba(247,118,142,.08); color: #ffb1be; }
+      .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
+      .button { min-height: 44px; padding: 0 18px; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text); font-weight: 800; cursor: pointer; }
+      .button.primary { border-color: var(--blue); background: var(--blue); color: #16161e; }
+      .button[disabled] { cursor: wait; opacity: .68; }
+      .spinner { display: inline-block; width: 15px; height: 15px; margin-right: 7px; vertical-align: -2px; border: 2px solid rgba(22,22,30,.35); border-top-color: #16161e; border-radius: 50%; animation: spin .75s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-color: currentColor; border-right-color: transparent; } }
+      .success { display: none; min-height: 300px; place-items: center; text-align: center; }
+      .success svg { width: 48px; height: 48px; color: var(--success); }
+      .success h2 { margin: 16px 0 5px; font-size: 20px; }
+      .success p { margin: 0; color: var(--muted); }
+      .notes { padding-top: 8px; color: var(--muted); }
+      .notes h2 { margin: 0 0 14px; color: var(--text); font-size: 16px; }
+      .notes ul { margin: 0; padding-left: 18px; }
+      .notes li + li { margin-top: 10px; }
+      .annotation { margin-top: 28px; padding: 15px 17px; border: 1px dashed var(--border); border-radius: 14px; color: var(--muted); }
+      .annotation strong { color: var(--text); }
+      .validation .invalid .error-text, .validation .feedback { display: flex; }
+      .submitting .button.primary { opacity: .7; }
+      .completed .form-fields, .completed .actions { display: none; }
+      .completed .success { display: grid; }
+      .mobile-shell { width: min(390px, calc(100vw - 24px)); margin: 24px auto; overflow: hidden; border: 1px solid var(--border); border-radius: 28px; background: var(--bg); }
+      .mobile-header { display: flex; justify-content: space-between; padding: 18px; border-bottom: 1px solid var(--border); font-weight: 900; }
+      .mobile-body { padding: 28px 16px 42px; }
+      .mobile-body h1 { font-size: 32px; }
+      .mobile-body .form { margin-top: 24px; padding: 20px; }
+      .mobile-body .actions { display: grid; grid-template-columns: 1fr; }
+      .mobile-body .button { width: 100%; }
+      @media (max-width: 900px) { .frame.active { grid-template-columns: 1fr; } .sidebar { display: none; } .layout { grid-template-columns: 1fr; } .notes { display: none; } }
+    </style>
+  </head>
+  <body>
+    <nav class="switcher" aria-label="Mockup states">
+      <button class="active" data-view="default">Default</button>
+      <button data-view="validation">Validation</button>
+      <button data-view="submitting">Submitting</button>
+      <button data-view="completed">Success</button>
+      <button data-view="mobile">Mobile</button>
+    </nav>
+
+    <section class="frame active" id="default"><aside class="sidebar"><div class="brand">urielm</div><div class="nav"><span>Home</span><span class="active">Settings</span><span>Saved</span><span>Courses</span></div></aside><main><div class="layout"><div><h1>Profile details</h1><p class="lead">Keep your public information accurate and recognizable.</p><div class="form"><div class="form-fields"><div class="field"><label>Display name <small>Public</small></label><input value="Uriel Maldonado" /></div><div class="field"><label>Website <small>Optional</small></label><input placeholder="https://example.com" /><p class="help">Include the full URL, beginning with https://</p></div></div><div class="success"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5" /></svg><h2>Profile saved</h2><p>Your changes are now live.</p></div></div><div class="actions"><button class="button">Cancel</button><button class="button primary">Save changes</button></div></div></div><aside class="notes"><h2>Interaction behavior</h2><ul><li>Labels remain visible above fields.</li><li>Hints are concise and connected to inputs.</li><li>Primary actions name the result.</li></ul></aside></div><div class="annotation"><strong>Default:</strong> steady 48px fields, 44px actions, visible keyboard focus, themed caret and placeholder contrast.</div></main></section>
+
+    <section class="frame validation" id="validation"><aside class="sidebar"><div class="brand">urielm</div><div class="nav"><span>Home</span><span class="active">Settings</span><span>Saved</span><span>Courses</span></div></aside><main><div class="layout"><div><h1>Profile details</h1><p class="lead">Correct the highlighted field, then save again.</p><div class="form"><div class="form-fields"><div class="field"><label>Display name <small>Public</small></label><input value="Uriel Maldonado" /></div><div class="field invalid"><label>Website <small>Optional</small></label><input value="urielm.dev" aria-invalid="true" /><p class="error-text">Enter a complete URL, such as https://urielm.dev</p></div><div class="feedback">We couldn’t save yet. Review the highlighted field.</div></div><div class="actions"><button class="button">Cancel</button><button class="button primary">Save changes</button></div></div></div><aside class="notes"><h2>Validation behavior</h2><ul><li>Field-level errors explain the recovery.</li><li>Focus moves to the first invalid field.</li><li>A compact summary announces the problem.</li></ul></aside></div></main></section>
+
+    <section class="frame submitting" id="submitting"><aside class="sidebar"><div class="brand">urielm</div><div class="nav"><span>Home</span><span class="active">Settings</span><span>Saved</span><span>Courses</span></div></aside><main><div class="layout"><div><h1>Profile details</h1><p class="lead">Keep your public information accurate and recognizable.</p><div class="form" aria-busy="true"><div class="form-fields"><div class="field"><label>Display name <small>Public</small></label><input value="Uriel Maldonado" disabled /></div><div class="field"><label>Website <small>Optional</small></label><input value="https://urielm.dev" disabled /></div></div><div class="actions"><button class="button" disabled>Cancel</button><button class="button primary" disabled><span class="spinner"></span>Saving changes…</button></div></div></div><aside class="notes"><h2>Submitting behavior</h2><ul><li>The submit action disables immediately.</li><li>The label changes to the active verb.</li><li>Repeated submissions are blocked.</li></ul></aside></div></main></section>
+
+    <section class="frame completed" id="completed"><aside class="sidebar"><div class="brand">urielm</div><div class="nav"><span>Home</span><span class="active">Settings</span><span>Saved</span><span>Courses</span></div></aside><main><div class="layout"><div><h1>Profile details</h1><p class="lead">Keep your public information accurate and recognizable.</p><div class="form"><div class="form-fields"></div><div class="success" role="status"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5" /></svg><h2>Profile saved</h2><p>Your changes are now live.</p></div></div><div class="actions"></div></div></div><aside class="notes"><h2>Success behavior</h2><ul><li>Success is announced without stealing focus.</li><li>The confirmation names what changed.</li><li>The form returns after a brief confirmation.</li></ul></aside></div></main></section>
+
+    <section class="frame submitting" id="mobile"><div></div><div class="mobile-shell"><header class="mobile-header"><span>urielm</span><span>Settings</span></header><main class="mobile-body"><h1>Profile details</h1><p class="lead">Keep your public information accurate.</p><div class="form" aria-busy="true"><div class="form-fields"><div class="field"><label>Display name</label><input value="Uriel Maldonado" disabled /></div><div class="field"><label>Website <small>Optional</small></label><input value="https://urielm.dev" disabled /></div></div><div class="actions"><button class="button primary" disabled><span class="spinner"></span>Saving changes…</button><button class="button" disabled>Cancel</button></div></div><div class="annotation"><strong>Mobile:</strong> full-width actions, primary action first visually, and no layout shift when the loading label appears.</div></main></div></section>
+
+    <script>
+      const buttons = document.querySelectorAll("[data-view]");
+      buttons.forEach((button) => button.addEventListener("click", () => {
+        buttons.forEach((item) => item.classList.remove("active"));
+        document.querySelectorAll(".frame").forEach((frame) => frame.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById(button.dataset.view).classList.add("active");
+      }));
+    </script>
+  </body>
+</html>

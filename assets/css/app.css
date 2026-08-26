@@ -445,6 +445,55 @@
     width: 62%;
   }
 
+  .ui-submit-button {
+    min-height: 2.75rem;
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  }
+
+  .ui-submit-button:disabled {
+    cursor: not-allowed;
+  }
+
+  .phx-submit-loading .ui-submit-button,
+  .ui-submit-button.phx-submit-loading {
+    cursor: wait;
+  }
+
+  .phx-submit-loading .ui-submit-button::before,
+  .ui-submit-button.phx-submit-loading::before {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 9999px;
+    content: "";
+    animation: ui-submit-spin 700ms linear infinite;
+  }
+
+  .ui-form-feedback {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid color-mix(in oklch, var(--color-info) 28%, transparent);
+    border-radius: 0.875rem;
+    background: color-mix(in oklch, var(--color-info) 9%, transparent);
+    color: var(--color-info);
+  }
+
+  .ui-form-feedback-success {
+    border-color: color-mix(in oklch, var(--color-success) 30%, transparent);
+    background: color-mix(in oklch, var(--color-success) 9%, transparent);
+    color: var(--color-success);
+  }
+
+  .ui-form-feedback-error {
+    border-color: color-mix(in oklch, var(--color-error) 30%, transparent);
+    background: color-mix(in oklch, var(--color-error) 9%, transparent);
+    color: var(--color-error);
+  }
+
   @media (max-width: 639px) {
     .ui-section-header {
       align-items: flex-start;
@@ -470,12 +519,27 @@
     .ui-skeleton::after {
       animation: none;
     }
+
+    .ui-submit-button {
+      transition: none;
+    }
+
+    .phx-submit-loading .ui-submit-button::before,
+    .ui-submit-button.phx-submit-loading::before {
+      animation: none;
+    }
   }
 }
 
 @keyframes ui-skeleton-shimmer {
   to {
     transform: translateX(100%);
+  }
+}
+
+@keyframes ui-submit-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

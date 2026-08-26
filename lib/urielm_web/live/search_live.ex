@@ -13,6 +13,7 @@ defmodule UrielmWeb.SearchLive do
      socket
      |> assign(:page_title, "Search Forum")
      |> assign(:query, "")
+     |> assign(:search_form, to_form(%{"query" => ""}))
      |> assign(:page, 1)
      |> assign(:meta, nil)
      |> assign(:has_more, false)
@@ -46,12 +47,14 @@ defmodule UrielmWeb.SearchLive do
 
         socket
         |> assign(:query, query)
+        |> assign(:search_form, to_form(%{"query" => query}))
         |> assign(:page, page)
         |> assign(:meta, meta)
         |> stream(:results, serialize_threads(results, socket.assigns.current_user), reset: true)
       else
         socket
         |> assign(:query, query)
+        |> assign(:search_form, to_form(%{"query" => query}))
         |> assign(:page, page)
         |> assign(:meta, nil)
         |> stream(:results, [], reset: true)
@@ -132,16 +135,31 @@ defmodule UrielmWeb.SearchLive do
         <div class="mb-8">
           <h1 class="text-4xl font-bold text-base-content mb-4">Search Forum</h1>
 
-          <form phx-submit="search" class="flex gap-2">
-            <input
-              type="text"
-              name="query"
-              value={@query}
-              placeholder="Search threads by title, content, or tags..."
-              class="input input-bordered flex-1"
-            />
-            <button type="submit" class="btn btn-primary">Search</button>
-          </form>
+          <.form
+            for={@search_form}
+            id="forum-search-form"
+            phx-submit="search"
+            class="flex flex-col gap-2 sm:flex-row"
+          >
+            <div class="min-w-0 flex-1">
+              <.input
+                field={@search_form[:query]}
+                id="forum-search-query"
+                type="search"
+                label="Search discussions"
+                placeholder="Search threads by title, content, or tags..."
+                class="input input-bordered min-h-11 w-full rounded-xl"
+              />
+            </div>
+            <.button
+              id="forum-search-submit"
+              type="submit"
+              loading_label="Searching…"
+              class="btn btn-primary min-h-11 rounded-xl sm:self-end"
+            >
+              <.icon name="hero-magnifying-glass" class="size-5" /> Search
+            </.button>
+          </.form>
         </div>
 
         <%= if String.length(String.trim(@query)) == 0 do %>

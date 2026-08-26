@@ -18,7 +18,14 @@ defmodule UrielmWeb.SettingsLiveTest do
 
       # Verify page loaded with expected content
       assert html =~ "Settings"
-      assert has_element?(view, "form")
+      assert has_element?(view, "#profile-settings-form")
+      assert has_element?(view, "#profile-settings-submit[phx-disable-with='Saving profile…']")
+      assert has_element?(view, "#password-settings-form")
+
+      assert has_element?(
+               view,
+               "#password-settings-submit[phx-disable-with='Changing password…']"
+             )
     end
 
     test "settings page displays user email information", %{conn: conn} do

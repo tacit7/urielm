@@ -15,7 +15,7 @@ defmodule UrielmWeb.AuthLiveTest do
       assert has_element?(view, "#signin-form")
       assert has_element?(view, "#signin-email")
       assert has_element?(view, "#signin-password")
-      assert has_element?(view, "#signin-submit")
+      assert has_element?(view, "#signin-submit[phx-disable-with='Signing in…']")
     end
 
     test "shows error and loading states", %{conn: conn} do
@@ -28,7 +28,7 @@ defmodule UrielmWeb.AuthLiveTest do
       |> form("#signin-form", %{"email" => "person@example.com", "password" => "secret123"})
       |> render_submit()
 
-      assert has_element?(view, "#signin-submit[disabled]", "Signing in")
+      assert has_element?(view, "#signin-submit[disabled]", "Sign in")
     end
   end
 
@@ -44,7 +44,7 @@ defmodule UrielmWeb.AuthLiveTest do
       assert has_element?(view, "#signup-display-name")
       assert has_element?(view, "#signup-email")
       assert has_element?(view, "#signup-password")
-      assert has_element?(view, "#signup-submit")
+      assert has_element?(view, "#signup-submit[phx-disable-with='Creating account…']")
     end
 
     test "shows error and loading states", %{conn: conn} do
@@ -62,7 +62,7 @@ defmodule UrielmWeb.AuthLiveTest do
       })
       |> render_submit()
 
-      assert has_element?(view, "#signup-submit[disabled]", "Creating account")
+      assert has_element?(view, "#signup-submit[disabled]", "Create account")
     end
   end
 end

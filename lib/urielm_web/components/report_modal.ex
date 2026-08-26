@@ -4,6 +4,9 @@ defmodule UrielmWeb.Components.ReportModal do
   Handles both content reports (threads/videos) and comment reports.
   """
   use Phoenix.Component
+  alias Phoenix.LiveView.JS
+
+  import UrielmWeb.CoreComponents, only: [button: 1, input: 1]
   import UrielmWeb.Components.UMIcon, only: [um_icon: 1]
 
   attr :id, :string, required: true
@@ -22,19 +25,25 @@ defmodule UrielmWeb.Components.ReportModal do
   attr :rest, :global
 
   def report_modal(assigns) do
+    assigns = assign(assigns, :form, to_form(%{}))
+
     ~H"""
     <dialog id={@id} class="modal" {@rest}>
       <div class={"modal-box #{@bg_class}"}>
-        <form method="dialog">
-          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" aria-label="Close">
-            <.um_icon name="close" class="w-4 h-4" />
-          </button>
-        </form>
+        <button
+          type="button"
+          class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+          aria-label="Close"
+          phx-click={JS.remove_attribute("open", to: "##{@id}")}
+        >
+          <.um_icon name="close" class="w-4 h-4" />
+        </button>
         <h3 class="font-bold text-lg mb-4">{@title}</h3>
         <%= if @subtitle do %>
           <p class="pb-4 text-sm text-base-content/60">{@subtitle}</p>
         <% end %>
-        <form
+        <.form
+          for={@form}
           id={@form_id}
           phx-submit={@form_event}
           class="space-y-4"
@@ -43,45 +52,52 @@ defmodule UrielmWeb.Components.ReportModal do
           <%= if @comment_id do %>
             <input type="hidden" name="comment_id" value={@comment_id} />
           <% end %>
-          <div>
-            <label class="label">
-              <span class="label-text">Reason</span>
-            </label>
-            <select name="reason" class="select select-bordered w-full" required>
-              <option value="">Select a reason</option>
-              <option value="spam">Spam</option>
-              <option value="abuse">Abuse</option>
-              <option value="offensive">Offensive</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label class="label">
-              <span class="label-text">{@description_label}</span>
-            </label>
-            <textarea
-              name="description"
-              placeholder={@description_placeholder}
-              class="textarea textarea-bordered w-full min-h-24"
-              required
-              minlength="10"
-              maxlength="5000"
-            ></textarea>
-            <p class="text-xs text-base-content/60 mt-1">
-              Minimum 10 characters • Maximum 5000 characters
-            </p>
-          </div>
+          <.input
+            field={@form[:reason]}
+            id={"#{@id}-reason"}
+            type="select"
+            label="Reason"
+            prompt="Select a reason"
+            options={[Spam: "spam", Abuse: "abuse", Offensive: "offensive", Other: "other"]}
+            required
+          />
+          <.input
+            field={@form[:description]}
+            id={"#{@id}-description"}
+            type="textarea"
+            label={@description_label}
+            placeholder={@description_placeholder}
+            help="Minimum 10 characters · Maximum 5,000 characters."
+            required
+            minlength="10"
+            maxlength="5000"
+          />
           <div class="modal-action">
-            <form method="dialog">
-              <button class={@cancel_class}>Cancel</button>
-            </form>
-            <button type="submit" class={@submit_class} disabled={@submit_disabled}>
-              Submit Report
+            <button
+              type="button"
+              class={@cancel_class}
+              phx-click={JS.remove_attribute("open", to: "##{@id}")}
+            >
+              Cancel
             </button>
+            <.button
+              type="submit"
+              loading_label="Submitting report…"
+              class={@submit_class}
+              disabled={@submit_disabled}
+            >
+              Submit Report
+            </.button>
           </div>
-        </form>
+        </.form>
       </div>
-      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+      <button
+        type="button"
+        class="modal-backdrop"
+        aria-label="Close report dialog"
+        phx-click={JS.remove_attribute("open", to: "##{@id}")}
+      >
+      </button>
     </dialog>
     """
   end

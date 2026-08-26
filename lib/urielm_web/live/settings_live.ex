@@ -133,7 +133,12 @@ defmodule UrielmWeb.SettingsLive do
                 </div>
               </div>
 
-              <.form for={@profile_form} phx-submit="update_profile" class="space-y-4">
+              <.form
+                for={@profile_form}
+                id="profile-settings-form"
+                phx-submit="update_profile"
+                class="space-y-4"
+              >
                 <.input
                   field={@profile_form[:name]}
                   type="text"
@@ -141,19 +146,13 @@ defmodule UrielmWeb.SettingsLive do
                   placeholder="Enter your full name"
                 />
 
-                <div class="form-control">
-                  <.input
-                    field={@profile_form[:username]}
-                    type="text"
-                    label="Username"
-                    placeholder="Enter your username"
-                  />
-                  <label class="label">
-                    <span class="label-text-alt">
-                      3-20 characters, letters, numbers, and underscores only
-                    </span>
-                  </label>
-                </div>
+                <.input
+                  field={@profile_form[:username]}
+                  type="text"
+                  label="Username"
+                  help="3–20 characters: letters, numbers, and underscores only."
+                  placeholder="Enter your username"
+                />
 
                 <.input
                   field={@profile_form[:email]}
@@ -162,17 +161,13 @@ defmodule UrielmWeb.SettingsLive do
                   placeholder="Enter your email"
                 />
 
-                <div class="form-control">
-                  <.input
-                    field={@profile_form[:bio]}
-                    type="textarea"
-                    label="Bio"
-                    placeholder="Tell us about yourself..."
-                  />
-                  <label class="label">
-                    <span class="label-text-alt">Max 1000 characters</span>
-                  </label>
-                </div>
+                <.input
+                  field={@profile_form[:bio]}
+                  type="textarea"
+                  label="Bio"
+                  help="Maximum 1,000 characters."
+                  placeholder="Tell us about yourself..."
+                />
 
                 <.input
                   field={@profile_form[:location]}
@@ -189,9 +184,14 @@ defmodule UrielmWeb.SettingsLive do
                 />
 
                 <div class="card-actions">
-                  <button type="submit" class="btn btn-primary">
+                  <.button
+                    id="profile-settings-submit"
+                    type="submit"
+                    loading_label="Saving profile…"
+                    class="btn btn-primary"
+                  >
                     Save Profile
-                  </button>
+                  </.button>
                 </div>
               </.form>
             </div>
@@ -207,7 +207,12 @@ defmodule UrielmWeb.SettingsLive do
 
               <div class="divider"></div>
 
-              <.form for={@password_form} phx-submit="change_password" class="space-y-4">
+              <.form
+                for={@password_form}
+                id="password-settings-form"
+                phx-submit="change_password"
+                class="space-y-4"
+              >
                 <.input
                   field={@password_form[:current_password]}
                   type="password"
@@ -220,6 +225,7 @@ defmodule UrielmWeb.SettingsLive do
                   field={@password_form[:new_password]}
                   type="password"
                   label="New Password"
+                  help="Use at least 8 characters."
                   placeholder="Enter new password"
                   minlength="8"
                   required
@@ -235,9 +241,14 @@ defmodule UrielmWeb.SettingsLive do
                 />
 
                 <div class="card-actions">
-                  <button type="submit" class="btn btn-primary">
+                  <.button
+                    id="password-settings-submit"
+                    type="submit"
+                    loading_label="Changing password…"
+                    class="btn btn-primary"
+                  >
                     Change Password
-                  </button>
+                  </.button>
                 </div>
               </.form>
             </div>

@@ -90,27 +90,36 @@ defmodule UrielmWeb.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :string
+  attr :class, :any, default: nil
   attr :variant, :string, values: ~w(primary)
+  attr :loading_label, :string, default: nil
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
 
-    assigns =
-      assign_new(assigns, :class, fn ->
+    button_class =
+      if assigns.class do
+        ["btn", assigns.class]
+      else
         ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+      end
+
+    assigns = assign(assigns, :button_class, button_class)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={@class} {@rest}>
+      <.link class={@button_class} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={@class} {@rest}>
+      <button
+        class={[@button_class, @loading_label && "ui-submit-button"]}
+        phx-disable-with={@loading_label}
+        {@rest}
+      >
         {render_slot(@inner_block)}
       </button>
       """
@@ -157,6 +166,7 @@ defmodule UrielmWeb.CoreComponents do
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
 
   attr :errors, :list, default: []
+  attr :help, :string, default: nil
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
@@ -197,11 +207,13 @@ defmodule UrielmWeb.CoreComponents do
             value="true"
             checked={@checked}
             class={@class || "checkbox checkbox-sm"}
+            aria-invalid={@errors != []}
+            aria-describedby={field_description_id(@id, @errors, @help)}
             {@rest}
           />{@label}
         </span>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_messages id={@id} errors={@errors} help={@help} />
     </div>
     """
   end
@@ -214,15 +226,21 @@ defmodule UrielmWeb.CoreComponents do
         <select
           id={@id}
           name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+          class={[
+            @class ||
+              "select select-bordered min-h-11 w-full rounded-xl border-base-300 bg-base-100/70",
+            @errors != [] && (@error_class || "select-error")
+          ]}
           multiple={@multiple}
+          aria-invalid={@errors != []}
+          aria-describedby={field_description_id(@id, @errors, @help)}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_messages id={@id} errors={@errors} help={@help} />
     </div>
     """
   end
@@ -236,13 +254,16 @@ defmodule UrielmWeb.CoreComponents do
           id={@id}
           name={@name}
           class={[
-            @class || "w-full textarea",
+            @class ||
+              "textarea textarea-bordered min-h-28 w-full rounded-xl border-base-300 bg-base-100/70",
             @errors != [] && (@error_class || "textarea-error")
           ]}
+          aria-invalid={@errors != []}
+          aria-describedby={field_description_id(@id, @errors, @help)}
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_messages id={@id} errors={@errors} help={@help} />
     </div>
     """
   end
@@ -259,24 +280,102 @@ defmodule UrielmWeb.CoreComponents do
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[
-            @class || "w-full input",
+            @class ||
+              "input input-bordered min-h-11 w-full rounded-xl border-base-300 bg-base-100/70",
             @errors != [] && (@error_class || "input-error")
           ]}
+          aria-invalid={@errors != []}
+          aria-describedby={field_description_id(@id, @errors, @help)}
           {@rest}
         />
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.field_messages id={@id} errors={@errors} help={@help} />
     </div>
     """
   end
 
-  # Helper used by inputs to generate form errors
-  defp error(assigns) do
+  attr :id, :any, required: true
+  attr :errors, :list, required: true
+  attr :help, :string, default: nil
+
+  defp field_messages(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
-      {render_slot(@inner_block)}
+    <div
+      :if={@errors != []}
+      id={field_message_id(@id, "error")}
+      role="alert"
+      class="mt-1.5 space-y-1"
+    >
+      <p :for={msg <- @errors} class="flex items-center gap-2 text-sm text-error">
+        <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
+        {msg}
+      </p>
+    </div>
+    <p
+      :if={show_field_help?(@errors, @help)}
+      id={field_message_id(@id, "help")}
+      class="mt-1.5 text-xs leading-5 text-base-content/55"
+    >
+      {@help}
     </p>
+    """
+  end
+
+  defp field_description_id(nil, _errors, _help), do: nil
+  defp field_description_id(id, [_ | _], _help), do: "#{id}-error"
+  defp field_description_id(id, [], help) when is_binary(help), do: "#{id}-help"
+  defp field_description_id(_id, [], _help), do: nil
+
+  defp field_message_id(nil, _suffix), do: nil
+  defp field_message_id(id, suffix), do: "#{id}-#{suffix}"
+
+  defp show_field_help?([], help) when is_binary(help), do: true
+  defp show_field_help?(_errors, _help), do: false
+
+  @doc """
+  Renders compact feedback for a form-level outcome or recovery message.
+  """
+  attr :id, :string, required: true
+  attr :kind, :atom, values: [:success, :error, :info], default: :info
+  attr :title, :string, default: nil
+  attr :class, :any, default: nil
+  attr :rest, :global
+  slot :inner_block, required: true
+
+  def form_feedback(assigns) do
+    assigns =
+      assigns
+      |> assign(:role, if(assigns.kind == :error, do: "alert", else: "status"))
+      |> assign(
+        :icon,
+        case assigns.kind do
+          :success -> "hero-check-circle"
+          :error -> "hero-exclamation-circle"
+          :info -> "hero-information-circle"
+        end
+      )
+
+    ~H"""
+    <div
+      id={@id}
+      role={@role}
+      aria-live="polite"
+      aria-labelledby={@title && "#{@id}-title"}
+      class={[
+        "ui-form-feedback",
+        @kind == :success && "ui-form-feedback-success",
+        @kind == :error && "ui-form-feedback-error",
+        @kind == :info && "ui-form-feedback-info",
+        @class
+      ]}
+      {@rest}
+    >
+      <.icon name={@icon} class="size-5 shrink-0" />
+      <div class="min-w-0">
+        <p :if={@title} id={"#{@id}-title"} class="font-semibold text-base-content">{@title}</p>
+        <div class="text-sm leading-5 text-base-content/65">{render_slot(@inner_block)}</div>
+      </div>
+    </div>
     """
   end
 

@@ -226,14 +226,14 @@ defmodule UrielmWeb.NewThreadLive do
                   >
                     Cancel
                   </.link>
-                  <button
+                  <.button
                     id="new-thread-submit"
                     type="submit"
-                    phx-disable-with="Publishing…"
+                    loading_label="Publishing…"
                     class="btn btn-primary rounded-xl px-5 shadow-sm transition-transform hover:-translate-y-0.5"
                   >
                     Publish discussion
-                  </button>
+                  </.button>
                 </div>
               </div>
             </.form>

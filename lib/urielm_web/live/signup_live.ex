@@ -121,12 +121,10 @@ defmodule UrielmWeb.SignupLive do
                     minlength="3"
                     maxlength="20"
                     pattern="[a-z0-9_-]+"
+                    help="3–20 lowercase letters, numbers, dashes, or underscores."
                     placeholder="lowercase-username"
                     class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                   />
-                  <p class="-mt-1 text-xs leading-relaxed text-base-content/40">
-                    3–20 lowercase letters, numbers, dashes, or underscores.
-                  </p>
                 </div>
                 <.input
                   field={@form[:displayName]}
@@ -158,38 +156,28 @@ defmodule UrielmWeb.SignupLive do
                     required
                     autocomplete="new-password"
                     minlength="8"
+                    help="Use at least 8 characters."
                     placeholder="At least 8 characters"
                     class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                   />
-                  <p class="-mt-1 text-xs leading-relaxed text-base-content/40">
-                    Use at least 8 characters.
-                  </p>
                 </div>
               </div>
 
               <%= if @error do %>
-                <div
-                  id="signup-error"
-                  role="alert"
-                  class="alert border border-error/20 bg-error/10 text-sm text-error"
-                >
-                  <.um_icon name="hero-exclamation-circle" class="size-5 shrink-0" />
-                  <span>{@error}</span>
-                </div>
+                <.form_feedback id="signup-error" kind={:error} title="Account not created">
+                  {@error}
+                </.form_feedback>
               <% end %>
 
-              <button
+              <.button
                 id="signup-submit"
                 type="submit"
+                loading_label="Creating account…"
                 disabled={@loading}
                 class="btn btn-primary h-12 w-full rounded-full font-bold shadow-md shadow-primary/15 transition hover:-translate-y-0.5 disabled:translate-y-0"
               >
-                <%= if @loading do %>
-                  <span class="loading loading-spinner loading-sm"></span> Creating account…
-                <% else %>
-                  Create account
-                <% end %>
-              </button>
+                Create account
+              </.button>
             </.form>
 
             <p class="mt-6 text-center text-sm text-base-content/55">
