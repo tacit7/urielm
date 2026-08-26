@@ -1047,7 +1047,7 @@ defmodule Urielm.ForumTest do
       {:ok, report} =
         Forum.create_report(user.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam content"
+          description: "This content appears to be spam."
         })
 
       assert report.user_id == user.id
@@ -1065,7 +1065,7 @@ defmodule Urielm.ForumTest do
       {:ok, report} =
         Forum.create_report(user.id, "comment", comment.id, %{
           reason: "abuse",
-          description: "Abusive language"
+          description: "This content includes clearly abusive language."
         })
 
       assert report.target_type == "comment"
@@ -1080,13 +1080,13 @@ defmodule Urielm.ForumTest do
       {:ok, report1} =
         Forum.create_report(user.id, "thread", thread1.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       {:ok, _report2} =
         Forum.create_report(user.id, "thread", thread2.id, %{
           reason: "abuse",
-          description: "Abusive language"
+          description: "This content includes clearly abusive language."
         })
 
       reports = Forum.list_reports()
@@ -1104,13 +1104,13 @@ defmodule Urielm.ForumTest do
       {:ok, report1} =
         Forum.create_report(user.id, "thread", thread1.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       {:ok, _report2} =
         Forum.create_report(user.id, "thread", thread2.id, %{
           reason: "abuse",
-          description: "Abusive language"
+          description: "This content includes clearly abusive language."
         })
 
       # Review one report
@@ -1130,7 +1130,7 @@ defmodule Urielm.ForumTest do
       {:ok, report} =
         Forum.create_report(user.id, "thread", thread.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       retrieved = Forum.get_report!(report.id)
@@ -1147,7 +1147,7 @@ defmodule Urielm.ForumTest do
       {:ok, report} =
         Forum.create_report(user.id, "thread", thread.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       {:ok, updated} = Forum.review_report(report, admin.id, "resolved", "Removed spam")
@@ -1169,7 +1169,7 @@ defmodule Urielm.ForumTest do
       {:ok, report1} =
         Forum.create_report(user.id, "thread", thread1.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       assert Forum.count_pending_reports() == 1
@@ -1177,7 +1177,7 @@ defmodule Urielm.ForumTest do
       {:ok, _} =
         Forum.create_report(user.id, "thread", thread2.id, %{
           reason: "abuse",
-          description: "Abusive language"
+          description: "This content includes clearly abusive language."
         })
 
       assert Forum.count_pending_reports() == 2
@@ -1196,19 +1196,19 @@ defmodule Urielm.ForumTest do
       {:ok, _} =
         Forum.create_report(user1.id, "thread", thread1.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       {:ok, _} =
         Forum.create_report(user2.id, "thread", thread1.id, %{
           reason: "abuse",
-          description: "Abusive language"
+          description: "This content includes clearly abusive language."
         })
 
       {:ok, _} =
         Forum.create_report(user3.id, "thread", thread2.id, %{
           reason: "offensive",
-          description: "Offensive content"
+          description: "This content includes clearly offensive language."
         })
 
       reports = Forum.list_reports_by_target("thread", thread1.id)
@@ -1224,13 +1224,13 @@ defmodule Urielm.ForumTest do
       {:ok, _} =
         Forum.create_report(user.id, "thread", thread.id, %{
           reason: "spam",
-          description: "Spam content"
+          description: "This content appears to be spam."
         })
 
       {:error, changeset} =
         Forum.create_report(user.id, "thread", thread.id, %{
           reason: "abuse",
-          description: "Abusive language"
+          description: "This content includes clearly abusive language."
         })
 
       assert changeset.errors |> Enum.any?(fn {field, _} -> field == :user_id end)

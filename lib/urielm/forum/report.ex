@@ -34,14 +34,26 @@ defmodule Urielm.Forum.Report do
       :resolved_at,
       :resolution_notes
     ])
+    |> update_change(:description, &String.trim/1)
     |> validate_required([:user_id, :target_type, :target_id, :reason, :description])
     |> validate_inclusion(:target_type, ["thread", "comment"])
     |> validate_inclusion(:reason, ["spam", "abuse", "offensive", "other"])
     |> validate_inclusion(:status, ["pending", "reviewed", "resolved", "dismissed"])
-    |> validate_length(:description, min: 10, max: 5000)
+    |> validate_length(:description, min: 20, max: 5000)
+    |> validate_description_word_count()
     |> validate_length(:resolution_notes, max: 5000)
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:reviewed_by_id)
     |> unique_constraint([:user_id, :target_type, :target_id])
+  end
+
+  defp validate_description_word_count(changeset) do
+    validate_change(changeset, :description, fn :description, description ->
+      if description |> String.split(~r/\s+/, trim: true) |> length() >= 5 do
+        []
+      else
+        [description: "should be at least 5 words"]
+      end
+    end)
   end
 end

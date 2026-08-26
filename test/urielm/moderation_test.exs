@@ -15,7 +15,7 @@ defmodule Urielm.ModerationTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       assert report.reason == "spam"
@@ -23,7 +23,7 @@ defmodule Urielm.ModerationTest do
       assert report.target_type == "thread"
     end
 
-    test "report requires description of at least 10 characters" do
+    test "report requires description of at least 20 characters" do
       reporter = Fixtures.user_fixture()
       accused = Fixtures.user_fixture()
       category = Fixtures.category_fixture()
@@ -33,11 +33,31 @@ defmodule Urielm.ModerationTest do
       {:error, changeset} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "Too short"
+          description: "a b c d e"
         })
 
       assert changeset.errors[:description]
-      assert {"should be at least %{count} character(s)", _} = changeset.errors[:description]
+
+      assert {"should be at least %{count} character(s)", options} =
+               changeset.errors[:description]
+
+      assert options[:count] == 20
+    end
+
+    test "report requires a description of at least five words" do
+      reporter = Fixtures.user_fixture()
+      accused = Fixtures.user_fixture()
+      category = Fixtures.category_fixture()
+      board = Fixtures.board_fixture(%{category_id: category.id})
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: accused.id})
+
+      {:error, changeset} =
+        Forum.create_report(reporter.id, "thread", thread.id, %{
+          reason: "spam",
+          description: "Clearly abusive content"
+        })
+
+      assert {"should be at least 5 words", _} = changeset.errors[:description]
     end
 
     test "user cannot report the same content twice" do
@@ -50,13 +70,13 @@ defmodule Urielm.ModerationTest do
       {:ok, _report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       {:error, changeset} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "More spam content"
+          description: "This content still appears to be spam."
         })
 
       assert changeset.errors[:user_id]
@@ -73,7 +93,7 @@ defmodule Urielm.ModerationTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "comment", comment.id, %{
           reason: "abuse",
-          description: "Abusive content"
+          description: "This content includes clearly abusive language."
         })
 
       assert report.reason == "abuse"
@@ -90,12 +110,12 @@ defmodule Urielm.ModerationTest do
 
       Forum.create_report(reporter.id, "thread", thread1.id, %{
         reason: "spam",
-        description: "Spam content"
+        description: "This content appears to be spam."
       })
 
       Forum.create_report(reporter.id, "thread", thread2.id, %{
         reason: "abuse",
-        description: "Abusive content"
+        description: "This content includes clearly abusive language."
       })
 
       reports = Forum.list_reports(status: "pending")
@@ -115,7 +135,7 @@ defmodule Urielm.ModerationTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       assert report.status == "pending"
@@ -139,7 +159,7 @@ defmodule Urielm.ModerationTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       {:ok, resolved} = Forum.review_report(report, admin.id, "resolved", nil)
@@ -158,7 +178,7 @@ defmodule Urielm.ModerationTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       {:ok, dismissed} = Forum.review_report(report, admin.id, "dismissed", nil)
@@ -176,12 +196,12 @@ defmodule Urielm.ModerationTest do
 
       Forum.create_report(reporter.id, "thread", thread1.id, %{
         reason: "spam",
-        description: "Spam content"
+        description: "This content appears to be spam."
       })
 
       Forum.create_report(reporter.id, "thread", thread2.id, %{
         reason: "abuse",
-        description: "Abusive content"
+        description: "This content includes clearly abusive language."
       })
 
       count = Forum.count_pending_reports()

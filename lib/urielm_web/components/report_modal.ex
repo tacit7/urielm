@@ -67,9 +67,9 @@ defmodule UrielmWeb.Components.ReportModal do
             type="textarea"
             label={@description_label}
             placeholder={@description_placeholder}
-            help="Minimum 10 characters · Maximum 5,000 characters."
+            help="Minimum 5 words and 20 characters · Maximum 5,000 characters."
             required
-            minlength="10"
+            minlength="20"
             maxlength="5000"
           />
           <div class="modal-action">

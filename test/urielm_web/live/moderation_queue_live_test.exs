@@ -19,7 +19,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
       {:ok, _report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       conn = log_in_user(conn, admin)
@@ -42,7 +42,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "spam",
-          description: "This is spam"
+          description: "This content appears to be spam."
         })
 
       conn = log_in_user(conn, admin)
@@ -78,7 +78,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "abuse",
-          description: "Abusive content"
+          description: "This content includes clearly abusive language."
         })
 
       conn = log_in_user(conn, admin)
@@ -114,7 +114,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
       {:ok, report} =
         Forum.create_report(reporter.id, "thread", thread.id, %{
           reason: "offensive",
-          description: "Offensive content"
+          description: "This content includes clearly offensive language."
         })
 
       conn = log_in_user(conn, admin)

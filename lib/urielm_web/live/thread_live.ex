@@ -928,7 +928,7 @@ defmodule UrielmWeb.ThreadLive do
         subtitle="Help us keep the community safe"
         form_event="report_thread"
         form_testid="report-form"
-        description_placeholder="Explain why this content violates guidelines (minimum 10 characters)..."
+        description_placeholder="Explain why this content violates guidelines (at least 5 words)..."
         cancel_class="btn"
         bg_class="bg-base-300"
         data-testid="report-modal"

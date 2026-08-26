@@ -79,7 +79,7 @@ defmodule UrielmWeb.ThreadLiveTest do
       view
       |> form("[data-testid='report-form']", %{
         "reason" => "spam",
-        "description" => "This thread is spam"
+        "description" => "This thread appears to contain spam."
       })
       |> render_submit()
 
@@ -87,7 +87,7 @@ defmodule UrielmWeb.ThreadLiveTest do
       report = Repo.get_by(Urielm.Forum.Report, target_type: "thread", target_id: thread.id)
       assert report != nil
       assert report.reason == "spam"
-      assert report.description == "This thread is spam"
+      assert report.description == "This thread appears to contain spam."
       assert report.user_id == reporter.id
       assert report.status == "pending"
     end
