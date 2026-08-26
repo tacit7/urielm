@@ -71,6 +71,9 @@ defmodule UrielmWeb.NotificationsLiveTest do
     test "signed-out users receive public mobile navigation", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
+      assert has_element?(view, "a[href='#main-content']", "Skip to main content")
+      assert has_element?(view, "main#main-content[tabindex='-1']")
+
       assert has_element?(
                view,
                ~s([data-name="Navbar"][data-props*='"currentUser":null'])

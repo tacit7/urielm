@@ -10,6 +10,12 @@ test("mobile navigation exposes controlled menu semantics", () => {
   assert.match(navbar, /aria-controls="mobile-nav"/)
   assert.match(navbar, /mobileMoreItems/)
   assert.match(navbar, /class="menu/)
+  assert.match(navbar, /class="dropdown dropdown-end relative lg:hidden"/)
+})
+
+test("desktop navigation uses the daisyUI horizontal menu structure", () => {
+  assert.match(navbar, /<ul id="desktop-nav-links" class="menu menu-horizontal/)
+  assert.match(navbar, /\{#each primaryNavItems as item\}\s*<li>/)
 })
 
 test("account menu uses the shared icon system and controlled state", () => {

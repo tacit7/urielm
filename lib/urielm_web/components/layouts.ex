@@ -41,6 +41,13 @@ defmodule UrielmWeb.Layouts do
   def app(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+      <a
+        href="#main-content"
+        class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-3 focus:font-bold focus:text-primary-content focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+      >
+        Skip to main content
+      </a>
+
       <div id="navbar-container" phx-update="ignore">
         <.Navbar
           socket={@socket}
@@ -50,7 +57,11 @@ defmodule UrielmWeb.Layouts do
         />
       </div>
 
-      <main class="pt-[4.25rem] pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <main
+        id="main-content"
+        tabindex="-1"
+        class="pt-[4.25rem] pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0"
+      >
         {if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block)}
       </main>
 

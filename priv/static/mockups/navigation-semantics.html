@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navigation semantics — approved refinement</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #16161e;
+        --surface: #1a1b26;
+        --surface-2: #24283b;
+        --border: #3b4261;
+        --blue: #7aa2f7;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+      .skip { position: fixed; left: 16px; top: -60px; z-index: 10; border-radius: 10px; background: var(--blue); color: #10121b; padding: 10px 14px; font-weight: 800; }
+      .skip:focus { top: 12px; }
+      .navbar { min-height: 68px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 28px; }
+      .brand { color: var(--text); font-size: 20px; font-weight: 900; letter-spacing: -0.04em; }
+      .menu { display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
+      .menu a { display: flex; min-height: 44px; align-items: center; border-radius: 12px; color: var(--muted); padding: 0 14px; text-decoration: none; font-weight: 700; }
+      .menu a[aria-current="page"] { background: color-mix(in srgb, var(--blue) 12%, transparent); color: var(--blue); }
+      .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+      .action { display: grid; min-width: 44px; height: 44px; place-items: center; border-radius: 999px; background: var(--surface-2); color: var(--text); padding: 0 12px; font-size: 12px; font-weight: 800; }
+      main { max-width: 980px; margin: 0 auto; padding: 72px 28px; }
+      h1 { max-width: 18ch; margin: 0 0 16px; font-size: clamp(32px, 5vw, 54px); line-height: 1.05; letter-spacing: -0.04em; }
+      p { max-width: 68ch; color: var(--muted); }
+      .annotation { margin-top: 40px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); padding: 20px; }
+      .annotation strong { color: var(--blue); }
+
+      @media (max-width: 860px) {
+        .desktop-menu { display: none; }
+        .mobile-more { display: grid; }
+      }
+
+      @media (min-width: 861px) {
+        .mobile-more { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main-content">Skip to main content</a>
+    <header>
+      <nav class="navbar" aria-label="Primary navigation">
+        <a class="brand" href="#">UrielM.dev</a>
+        <ul class="menu desktop-menu">
+          <li><a aria-current="page" href="#">Videos</a></li>
+          <li><a href="#">Courses</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Prompts</a></li>
+          <li><a href="#">Community</a></li>
+        </ul>
+        <div class="actions">
+          <span class="action">Search</span>
+          <span class="action mobile-more">More</span>
+        </div>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <h1>Same navigation, stronger structure.</h1>
+      <p>The approved appearance remains unchanged. Keyboard users receive a focus-visible skip link, desktop destinations become a semantic daisyUI horizontal menu, and the mobile More surface uses the complete daisyUI dropdown wrapper.</p>
+      <div class="annotation">
+        <strong>Implementation note:</strong> this mockup documents semantics, not a visual redesign. Production keeps the Tokyo Night tokens, spacing, labels, active states, and controlled Svelte focus behavior.
+      </div>
+    </main>
+  </body>
+</html>

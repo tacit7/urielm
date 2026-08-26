@@ -117,20 +117,22 @@
     </div>
 
     <div class="hidden flex-1 items-center pl-5 lg:flex">
-      <div id="desktop-nav-links" class="flex items-center gap-0.5">
+      <ul id="desktop-nav-links" class="menu menu-horizontal flex-nowrap gap-0.5 p-0">
         {#each primaryNavItems as item}
-          <a
-            href={item.href}
-            data-phx-link="redirect"
-            data-phx-link-state="push"
-            data-nav-page={item.page}
-            aria-current={activePage === item.page ? 'page' : undefined}
-            class={`relative flex min-h-11 items-center rounded-xl px-3.5 text-sm font-semibold transition duration-200 motion-reduce:transition-none ${desktopLinkClass(item.page)}`}
-          >
-            {item.label}
-          </a>
+          <li>
+            <a
+              href={item.href}
+              data-phx-link="redirect"
+              data-phx-link-state="push"
+              data-nav-page={item.page}
+              aria-current={activePage === item.page ? 'page' : undefined}
+              class={`relative flex min-h-11 items-center rounded-xl px-3.5 text-sm font-semibold transition duration-200 motion-reduce:transition-none ${desktopLinkClass(item.page)}`}
+            >
+              {item.label}
+            </a>
+          </li>
         {/each}
-      </div>
+      </ul>
     </div>
 
     <div class="navbar-end ml-auto w-auto gap-1 sm:gap-1.5">
@@ -177,7 +179,11 @@
         </div>
       {/if}
 
-      <div class="relative lg:hidden" bind:this={mobileMenuRef}>
+      <div
+        class="dropdown dropdown-end relative lg:hidden"
+        class:dropdown-open={isMenuOpen}
+        bind:this={mobileMenuRef}
+      >
         <button
           id="mobile-menu-toggle"
           bind:this={mobileTriggerRef}
@@ -201,35 +207,35 @@
             <ul class="menu gap-1 p-0">
               {#each mobileMoreItems as item}
                 <li>
-                <a
-                  href={item.href}
-                  data-phx-link="redirect"
-                  data-phx-link-state="push"
-                  data-nav-page={item.page}
-                  aria-current={activePage === item.page ? 'page' : undefined}
-                  class={`group flex min-h-12 items-center justify-between rounded-xl px-3 text-sm font-bold transition ${mobileLinkClass(item.page)}`}
-                  onclick={closeMenu}
-                >
-                  {item.label}
-                  <UMIcon name="hero-arrow-right" className="size-4 opacity-45 transition group-hover:translate-x-0.5 group-hover:opacity-80" />
-                </a>
+                  <a
+                    href={item.href}
+                    data-phx-link="redirect"
+                    data-phx-link-state="push"
+                    data-nav-page={item.page}
+                    aria-current={activePage === item.page ? 'page' : undefined}
+                    class={`group flex min-h-12 items-center justify-between rounded-xl px-3 text-sm font-bold transition ${mobileLinkClass(item.page)}`}
+                    onclick={closeMenu}
+                  >
+                    {item.label}
+                    <UMIcon name="hero-arrow-right" className="size-4 opacity-45 transition group-hover:translate-x-0.5 group-hover:opacity-80" />
+                  </a>
                 </li>
               {/each}
 
-            {#if currentUser}
-              <li class="mt-1 border-t border-base-300/60 pt-1">
-                <a
-                  href="/settings"
-                  data-phx-link="redirect"
-                  data-phx-link-state="push"
-                  class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-base-content/70 transition hover:bg-base-200 hover:text-base-content"
-                  onclick={closeMenu}
-                >
-                  <UMIcon name="hero-cog-6-tooth" className="size-4" />
-                  Settings
-                </a>
-              </li>
-            {/if}
+              {#if currentUser}
+                <li class="mt-1 border-t border-base-300/60 pt-1">
+                  <a
+                    href="/settings"
+                    data-phx-link="redirect"
+                    data-phx-link-state="push"
+                    class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-base-content/70 transition hover:bg-base-200 hover:text-base-content"
+                    onclick={closeMenu}
+                  >
+                    <UMIcon name="hero-cog-6-tooth" className="size-4" />
+                    Settings
+                  </a>
+                </li>
+              {/if}
             </ul>
 
             {#if !currentUser}
