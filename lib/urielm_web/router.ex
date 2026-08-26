@@ -54,6 +54,7 @@ defmodule UrielmWeb.Router do
     # Short URLs for sharing
     get "/p/:id", ShortUrlController, :prompt
     get "/v/:id", ShortUrlController, :video
+    get "/video-thumbnails/:id", VideoThumbnailController, :show
 
     # Auth pages - outside shell, use their own layout
     live_session :auth do

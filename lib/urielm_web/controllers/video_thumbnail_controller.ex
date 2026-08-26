@@ -1,0 +1,57 @@
+defmodule UrielmWeb.VideoThumbnailController do
+  use UrielmWeb, :controller
+
+  alias Urielm.Content
+  alias Urielm.Content.Video
+
+  @cache_control "public, max-age=3600"
+
+  def show(conn, %{"id" => id}) do
+    with {:ok, video_id} <- Ecto.UUID.cast(id),
+         %Video{} = video <- Content.get_video(video_id),
+         true <- public_tiktok_video?(video),
+         {:ok, body, content_type} <- thumbnail_fetcher().(video.tiktok_url) do
+      conn
+      |> put_resp_content_type(content_type)
+      |> put_resp_header("cache-control", @cache_control)
+      |> send_resp(:ok, body)
+    else
+      _ -> send_resp(conn, :not_found, "Not found")
+    end
+  end
+
+  defp public_tiktok_video?(video) do
+    video.visibility == "public" and not is_nil(video.published_at) and
+      is_binary(video.tiktok_url) and video.tiktok_url != ""
+  end
+
+  defp thumbnail_fetcher do
+    Application.get_env(:urielm, :tiktok_thumbnail_fetcher, &fetch_tiktok_thumbnail/1)
+  end
+
+  defp fetch_tiktok_thumbnail(tiktok_url) do
+    with {:ok, thumbnail_url} <- fetch_thumbnail_url(tiktok_url),
+         {:ok, %{status: 200, body: body} = response} when is_binary(body) <-
+           Req.get(thumbnail_url, receive_timeout: 10_000),
+         [content_type | _] <- Req.Response.get_header(response, "content-type"),
+         true <- String.starts_with?(content_type, "image/") do
+      {:ok, body, content_type}
+    else
+      _ -> {:error, :thumbnail_unavailable}
+    end
+  end
+
+  defp fetch_thumbnail_url(tiktok_url) do
+    request_url =
+      "https://www.tiktok.com/oembed?url=#{URI.encode_www_form(tiktok_url)}"
+
+    case Req.get(request_url, receive_timeout: 10_000) do
+      {:ok, %{status: 200, body: %{"thumbnail_url" => url}}}
+      when is_binary(url) and url != "" ->
+        {:ok, url}
+
+      _ ->
+        {:error, :oembed_unavailable}
+    end
+  end
+end

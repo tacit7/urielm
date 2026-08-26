@@ -811,6 +811,10 @@ defmodule UrielmWeb.HomeLive do
   defp course_color_classes(_),
     do: %{icon_bg: "bg-base-300", icon_text: "text-base-content", badge: "badge-neutral"}
 
+  defp short_thumbnail_url(%{id: id, tiktok_url: url}) when is_binary(url) and url != "" do
+    ~p"/video-thumbnails/#{id}"
+  end
+
   defp short_thumbnail_url(%{youtube_url: url}) when is_binary(url) and url != "" do
     case Urielm.EmbedParser.extract_youtube_id(url) do
       nil -> nil

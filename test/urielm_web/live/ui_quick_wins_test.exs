@@ -144,7 +144,7 @@ defmodule UrielmWeb.UiQuickWinsTest do
       assert has_element?(view, "#home-short-card-meta-#{short.id}", "Aug 24")
     end
 
-    test "uses the tonal fallback for a Short without a YouTube thumbnail" do
+    test "uses the TikTok thumbnail endpoint for a TikTok Short" do
       short =
         video_fixture(%{
           title: "A TikTok workflow tip",
@@ -157,8 +157,12 @@ defmodule UrielmWeb.UiQuickWinsTest do
 
       {:ok, view, _html} = live(build_conn(), ~p"/")
 
-      assert has_element?(view, "#home-short-fallback-#{short.id}")
-      refute has_element?(view, "#home-short-card-#{short.id} img")
+      assert has_element?(
+               view,
+               "#home-short-card-#{short.id} img[src='/video-thumbnails/#{short.id}']"
+             )
+
+      refute has_element?(view, "#home-short-fallback-#{short.id}")
     end
   end
 
