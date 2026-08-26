@@ -176,6 +176,7 @@ defmodule UrielmWeb.LessonLive do
            socket
            |> put_flash(:info, "Comment added.")
            |> assign(:lesson, lesson)
+           |> assign(:nav_items, build_nav_items(lesson, socket.assigns.course))
            |> assign(:comment_changeset, Learning.change_lesson_comment(%LessonComment{}))
            |> assign(
              :comment_form,

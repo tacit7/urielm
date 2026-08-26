@@ -3,6 +3,7 @@ defmodule UrielmWeb.LessonLiveTest do
 
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
+  import Urielm.Fixtures, only: [user_fixture: 0]
 
   alias Urielm.Learning
 
@@ -69,6 +70,26 @@ defmodule UrielmWeb.LessonLiveTest do
 
     assert has_element?(lesson_view, "#lesson-tab-comments[aria-current='page']")
     assert has_element?(lesson_view, "#lesson-comments[class*='lg:block']")
+  end
+
+  test "posting a comment refreshes the lesson and tab count" do
+    user = user_fixture()
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+
+    conn = UrielmWeb.ConnCase.log_in_user(build_conn(), user)
+    {:ok, view, _html} = live(conn, ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+    lesson_view = find_live_child(view, "page-lesson")
+
+    lesson_view
+    |> element("#lesson-tab-comments")
+    |> render_click()
+
+    lesson_view
+    |> form("#lesson-comment-form", %{comment: %{body: "A useful observation"}})
+    |> render_submit()
+
+    assert [%{body: "A useful observation"}] = Learning.list_lesson_comments(lesson)
+    assert has_element?(lesson_view, "#lesson-tab-comments", "1")
   end
 
   defp course_with_lessons! do
