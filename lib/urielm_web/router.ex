@@ -75,6 +75,7 @@ defmodule UrielmWeb.Router do
       live "/courses", ShellLive, :courses
       live "/courses/:course_slug", ShellLive, :course
       live "/courses/:course_slug/lessons/:lesson_slug", ShellLive, :lesson
+      live "/videos", ShellLive, :videos
       live "/videos/:slug", ShellLive, :video
       live "/themes", ShellLive, :themes
       live "/u/:username", ShellLive, :user_profile

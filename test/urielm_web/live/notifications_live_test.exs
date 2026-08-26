@@ -56,8 +56,8 @@ defmodule UrielmWeb.NotificationsLiveTest do
 
       assert has_element?(view, "#mobile-bottom-nav[aria-label='Mobile navigation']")
       assert has_element?(view, "#mobile-nav-home[aria-current='page']")
+      assert has_element?(view, "#mobile-nav-videos[href='/videos']")
       assert has_element?(view, "#mobile-nav-forum[href='/forum']")
-      assert has_element?(view, "#mobile-nav-search[href='/forum/search']")
       assert has_element?(view, "#mobile-nav-notifications[href='/notifications']")
       assert has_element?(view, "#mobile-nav-notification-badge", "1")
       assert has_element?(view, "#mobile-nav-profile[href='/u/#{user.username}']")

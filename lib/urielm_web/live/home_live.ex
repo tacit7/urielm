@@ -285,7 +285,7 @@ defmodule UrielmWeb.HomeLive do
               <p class="text-base-content/50 text-sm">Quick AI tips under 60 seconds</p>
             </div>
           </div>
-          <.link navigate={~p"/courses"} class="btn btn-ghost btn-sm gap-2">
+          <.link navigate={~p"/videos"} class="btn btn-ghost btn-sm gap-2">
             View All
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -621,6 +621,14 @@ defmodule UrielmWeb.HomeLive do
           <div>
             <h4 class="font-semibold text-base-content mb-4">Learn</h4>
             <ul class="space-y-3">
+              <li>
+                <.link
+                  navigate={~p"/videos"}
+                  class="text-base-content/60 hover:text-primary transition-colors"
+                >
+                  Videos
+                </.link>
+              </li>
               <li>
                 <.link
                   navigate={~p"/courses"}

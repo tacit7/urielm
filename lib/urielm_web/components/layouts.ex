@@ -86,18 +86,18 @@ defmodule UrielmWeb.Layouts do
         active={@current_page == "home"}
       />
       <.mobile_nav_link
+        id="mobile-nav-videos"
+        href="/videos"
+        icon="play"
+        label="Videos"
+        active={@current_page == "videos"}
+      />
+      <.mobile_nav_link
         id="mobile-nav-forum"
         href="/forum"
         icon="topics"
         label="Forum"
         active={@current_page == "community"}
-      />
-      <.mobile_nav_link
-        id="mobile-nav-search"
-        href="/forum/search"
-        icon="search"
-        label="Search"
-        active={@current_page == "search"}
       />
 
       <%= if @current_user do %>

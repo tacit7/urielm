@@ -33,6 +33,15 @@ defmodule UrielmWeb.ShellLive do
     )
   end
 
+  defp assign_page_metadata(socket, :videos) do
+    assign(socket,
+      page_title: "Videos",
+      meta_description:
+        "Watch practical AI walkthroughs, developer tutorials, and quick videos from Urielm.",
+      canonical_url: "https://urielm.dev/videos"
+    )
+  end
+
   defp assign_page_metadata(socket, _live_action), do: socket
 
   defp page_name_for_action(:home), do: "home"
@@ -40,9 +49,10 @@ defmodule UrielmWeb.ShellLive do
   defp page_name_for_action(:blog_show), do: "blog"
   defp page_name_for_action(:prompts), do: "prompts"
   defp page_name_for_action(:prompt_show), do: "prompts"
-  defp page_name_for_action(:courses), do: "videos"
-  defp page_name_for_action(:course), do: "videos"
-  defp page_name_for_action(:lesson), do: "videos"
+  defp page_name_for_action(:videos), do: "videos"
+  defp page_name_for_action(:courses), do: "courses"
+  defp page_name_for_action(:course), do: "courses"
+  defp page_name_for_action(:lesson), do: "courses"
   defp page_name_for_action(:video), do: "videos"
   defp page_name_for_action(:themes), do: "home"
   defp page_name_for_action(:user_profile), do: "profile"
@@ -74,6 +84,7 @@ defmodule UrielmWeb.ShellLive do
   defp child_module(:blog_show), do: UrielmWeb.BlogLive
   defp child_module(:prompts), do: UrielmWeb.PromptsLive
   defp child_module(:prompt_show), do: UrielmWeb.PromptLive
+  defp child_module(:videos), do: UrielmWeb.VideosLive
   defp child_module(:courses), do: UrielmWeb.CoursesLive
   defp child_module(:course), do: UrielmWeb.CourseLive
   defp child_module(:lesson), do: UrielmWeb.LessonLive

@@ -20,7 +20,8 @@
   let mobileMenuRef
 
   const navItems = [
-    { page: 'videos', label: 'Courses', href: '/courses' },
+    { page: 'videos', label: 'Videos', href: '/videos' },
+    { page: 'courses', label: 'Courses', href: '/courses' },
     { page: 'blog', label: 'Blog', href: '/blog' },
     { page: 'prompts', label: 'Prompts', href: '/prompts' },
     { page: 'community', label: 'Community', href: '/forum' }
