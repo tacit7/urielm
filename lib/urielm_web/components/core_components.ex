@@ -403,6 +403,82 @@ defmodule UrielmWeb.CoreComponents do
   end
 
   @doc """
+  Renders the shared player surface used by course lessons and standalone videos.
+  """
+  attr :id, :string, required: true
+  attr :label, :string, required: true
+  attr :class, :any, default: nil
+  attr :rest, :global
+
+  slot :inner_block, required: true
+
+  def learning_media_player(assigns) do
+    ~H"""
+    <section
+      id={@id}
+      data-ui-component="learning-media-player"
+      aria-label={@label}
+      class={[
+        "overflow-hidden bg-[#10121f] shadow-2xl shadow-black/15 sm:rounded-2xl sm:border sm:border-base-content/10",
+        @class
+      ]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </section>
+    """
+  end
+
+  @doc """
+  Renders shared content tabs for learning videos and course lessons.
+  """
+  attr :id, :string, required: true
+  attr :label, :string, required: true
+  attr :items, :list, required: true
+  attr :active_key, :string, required: true
+  attr :event, :string, default: "tab_change"
+  attr :item_id_prefix, :string, required: true
+  attr :class, :string, default: nil
+
+  def learning_media_tabs(assigns) do
+    ~H"""
+    <nav
+      id={@id}
+      data-ui-component="learning-media-tabs"
+      aria-label={@label}
+      class={[
+        "flex gap-1 overflow-x-auto border-b border-base-content/10 p-2",
+        @class
+      ]}
+    >
+      <button
+        :for={item <- @items}
+        id={"#{@item_id_prefix}-#{item.key}"}
+        type="button"
+        phx-click={@event}
+        phx-value-key={item.key}
+        aria-current={if(@active_key == item.key, do: "page", else: nil)}
+        class={[
+          "btn btn-sm min-h-11 flex-none rounded-xl border-0 px-4 transition duration-200",
+          if(@active_key == item.key,
+            do: "bg-primary/10 text-primary shadow-none hover:bg-primary/15",
+            else: "btn-ghost text-base-content/55 hover:text-base-content"
+          )
+        ]}
+      >
+        {item.label}
+        <span
+          :if={Map.has_key?(item, :count)}
+          class="rounded-full bg-base-300/70 px-1.5 py-0.5 font-mono text-[0.62rem]"
+        >
+          {item.count}
+        </span>
+      </button>
+    </nav>
+    """
+  end
+
+  @doc """
   Renders a consistent empty state with optional contextual action.
 
   ## Examples

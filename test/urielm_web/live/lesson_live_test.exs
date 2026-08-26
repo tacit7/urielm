@@ -19,9 +19,14 @@ defmodule UrielmWeb.LessonLiveTest do
     {:ok, view, _html} = live(build_conn(), ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
 
     assert has_element?(view, "#lesson-viewer")
-    assert has_element?(view, "#lesson-player")
+    assert has_element?(view, "#lesson-player[data-ui-component='learning-media-player']")
     assert has_element?(view, "#lesson-header")
-    assert has_element?(view, "#lesson-section-nav")
+
+    assert has_element?(
+             view,
+             "#lesson-section-nav[data-ui-component='learning-media-tabs']"
+           )
+
     assert has_element?(view, "#lesson-content")
     assert has_element?(view, "#course-outline")
     assert has_element?(view, "#outline-lesson-#{lesson.id}[aria-current='page']")
@@ -50,6 +55,20 @@ defmodule UrielmWeb.LessonLiveTest do
 
     assert has_element?(lesson_view, "#lesson-notes:not(.hidden)")
     assert has_element?(lesson_view, "#lesson-mobile-notes.dock-active")
+  end
+
+  test "shared lesson tabs switch the desktop supporting section" do
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+
+    {:ok, view, _html} = live(build_conn(), ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+    lesson_view = find_live_child(view, "page-lesson")
+
+    lesson_view
+    |> element("#lesson-tab-comments")
+    |> render_click()
+
+    assert has_element?(lesson_view, "#lesson-tab-comments[aria-current='page']")
+    assert has_element?(lesson_view, "#lesson-comments[class*='lg:block']")
   end
 
   defp course_with_lessons! do

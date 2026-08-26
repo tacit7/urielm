@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video and course lesson parity</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --canvas: #1a1b26;
+        --surface: #24283b;
+        --surface-2: #292e42;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #8b95bb;
+        --blue: #7aa2f7;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--canvas); color: var(--text); font-family: ui-sans-serif, system-ui, sans-serif; }
+      button { font: inherit; }
+      .toolbar { display: flex; justify-content: center; gap: .5rem; padding: .75rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+      .toolbar button { min-height: 2.75rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface-2); color: var(--text); padding: 0 1rem; font-weight: 700; }
+      .toolbar button[aria-pressed="true"] { border-color: var(--blue); background: var(--blue); color: var(--canvas); }
+      .view { display: none; }
+      .view.active { display: block; }
+      .shell { width: min(80rem, 100%); margin: auto; padding: 2rem 1.5rem 5rem; }
+      .back { color: var(--muted); font-size: .875rem; font-weight: 700; }
+      .player { display: grid; min-height: 34rem; margin-top: 1rem; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, var(--blue) 20%, transparent); border-radius: 1.25rem; background: #090c16; }
+      .portrait { width: min(26rem, 100%); height: 34rem; border-inline: 1px solid var(--border); background: linear-gradient(145deg, #17213a, #0d1322); }
+      .header { display: flex; justify-content: space-between; gap: 2rem; padding: 2rem 0; border-bottom: 1px solid var(--border); }
+      h1 { max-width: 48rem; margin: 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.08; letter-spacing: -.035em; }
+      .meta { margin-top: .75rem; color: var(--muted); }
+      .actions { display: flex; align-items: flex-start; gap: .5rem; }
+      .action { min-height: 2.75rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); color: var(--text); padding: 0 1rem; font-weight: 700; }
+      .tabs { display: flex; gap: .25rem; overflow-x: auto; padding: .75rem 0; border-bottom: 1px solid var(--border); }
+      .tab { min-height: 2.75rem; border: 0; border-radius: .75rem; background: transparent; color: var(--muted); padding: 0 1rem; font-weight: 750; }
+      .tab.active { background: color-mix(in srgb, var(--blue) 12%, transparent); color: var(--blue); }
+      .layout { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1.5rem; padding-top: 1.5rem; }
+      .panel { border: 1px solid var(--border); border-radius: 1.25rem; background: var(--surface); padding: 1.5rem; }
+      .panel h2 { margin: 0 0 .75rem; font-size: 1.5rem; }
+      .panel p { max-width: 68ch; margin: 0; color: var(--muted); line-height: 1.7; }
+      .side { display: grid; gap: 1rem; align-content: start; }
+      .annotation { margin-top: 1.5rem; border: 1px dashed var(--border); border-radius: 1rem; padding: 1rem; color: var(--muted); line-height: 1.6; }
+      .annotation strong { color: var(--blue); }
+
+      @media (max-width: 800px) {
+        .shell { padding: 1rem 0 6rem; }
+        .back, .header, .tabs, .layout { margin-inline: 1rem; }
+        .player { min-height: 30rem; border-inline: 0; border-radius: 0; }
+        .portrait { height: 30rem; }
+        .header { display: grid; }
+        .actions { width: 100%; }
+        .action:first-child { flex: 1; }
+        .layout { grid-template-columns: 1fr; }
+        .side { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="toolbar" aria-label="Mockup views">
+      <button type="button" aria-pressed="true" data-view="overview">Overview</button>
+      <button type="button" aria-pressed="false" data-view="comments">Comments</button>
+    </nav>
+
+    <main id="overview" class="view active shell">
+      <span class="back">All videos</span>
+      <section class="player" aria-label="Portrait video player"><div class="portrait"></div></section>
+      <header class="header">
+        <div><h1>Software engineering in the AI era</h1><p class="meta">Mitsu Hadeishi · Short video</p></div>
+        <div class="actions"><button class="action">Mark complete</button><button class="action">Share</button></div>
+      </header>
+      <nav class="tabs" aria-label="Video details"><button class="tab active">Overview</button><button class="tab">Resources</button><button class="tab">Comments</button></nav>
+      <div class="layout">
+        <article class="panel"><h2>Overview</h2><p>The standalone video uses the same learning structure as a course lesson. Provider-specific playback stays inside the player while context and discussion remain part of UrielM.</p></article>
+        <aside class="side"><section class="panel"><h2>Creator</h2><p>Creator details and the original source link.</p></section><section class="panel"><h2>Up next</h2><p>The next accessible video.</p></section></aside>
+      </div>
+      <p class="annotation"><strong>Implementation:</strong> YouTube and TikTok share one detail shell. Only the inner player presentation changes for landscape versus portrait media.</p>
+    </main>
+
+    <main id="comments" class="view shell">
+      <span class="back">All videos</span>
+      <section class="player" aria-label="Portrait video player"><div class="portrait"></div></section>
+      <header class="header"><div><h1>Software engineering in the AI era</h1><p class="meta">Mitsu Hadeishi · Short video</p></div></header>
+      <nav class="tabs" aria-label="Video details"><button class="tab">Overview</button><button class="tab">Resources</button><button class="tab active">Comments</button></nav>
+      <div class="layout"><article class="panel"><h2>Comments</h2><p>If discussion is not enabled, this area explains that clearly instead of removing the tab. When enabled, the existing composer and comment tree appear here.</p></article></div>
+      <p class="annotation"><strong>Parity rule:</strong> Overview and Comments are stable destinations on every video page, matching course lessons even when their content is empty.</p>
+    </main>
+
+    <script>
+      document.querySelectorAll('[data-view]').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-view]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)))
+          document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === button.dataset.view))
+        })
+      })
+    </script>
+  </body>
+</html>

@@ -42,10 +42,10 @@ defmodule UrielmWeb.VideoLiveTest do
     end
 
     test "public video shows description section", %{conn: conn, public_video: video} do
-      {:ok, _view, html} = live(conn, ~p"/videos/#{video.slug}")
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
 
-      assert html =~ "Description"
-      assert html =~ "Test description"
+      assert has_element?(view, "#video-description-section")
+      assert render(view) =~ "Test description"
     end
 
     test "standard video uses the theater-first detail layout", %{
@@ -56,10 +56,15 @@ defmodule UrielmWeb.VideoLiveTest do
 
       assert has_element?(view, "#standard-video-page")
       assert has_element?(view, "#video-back-link[href='/videos']")
-      assert has_element?(view, "#video-player-shell")
+      assert has_element?(view, "#video-player-shell[data-ui-component='learning-media-player']")
       assert has_element?(view, "#video-detail-header")
       assert has_element?(view, "#video-share-button[data-text]")
-      assert has_element?(view, "#video-detail-tabs[aria-label='Video details']")
+
+      assert has_element?(
+               view,
+               "#video-detail-tabs[data-ui-component='learning-media-tabs'][aria-label='Video details']"
+             )
+
       assert has_element?(view, "#video-tab-description[aria-current='page']")
       assert has_element?(view, "#video-creator-card")
       assert has_element?(view, "#video-resources-card")
@@ -89,10 +94,10 @@ defmodule UrielmWeb.VideoLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
 
-      assert has_element?(view, "#short-video-tag-agents[href='/videos?tag=agents']", "Agents")
+      assert has_element?(view, "#video-detail-tag-agents[href='/videos?tag=agents']", "Agents")
     end
 
-    test "TikTok Shorts use the native player chrome without duplicate overlays", %{conn: conn} do
+    test "TikTok Shorts use the shared video detail experience", %{conn: conn} do
       video =
         video_fixture(%{
           format: "short",
@@ -103,18 +108,47 @@ defmodule UrielmWeb.VideoLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
 
+      assert has_element?(view, "#standard-video-page[data-video-format='short']")
       assert has_element?(view, ~s([data-name="TikTokEmbed"]))
+      assert has_element?(view, "#video-tab-description", "Overview")
+      assert has_element?(view, "#video-tab-comments", "Comments")
       refute has_element?(view, "#short-video-actions")
       refute has_element?(view, "#short-video-metadata")
     end
 
-    test "YouTube Shorts retain Urielm actions and metadata", %{conn: conn} do
+    test "YouTube Shorts use the shared video detail experience", %{conn: conn} do
       video = video_fixture(%{format: "short", published_at: DateTime.utc_now()})
 
       {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
 
-      assert has_element?(view, "#short-video-actions")
-      assert has_element?(view, "#short-video-metadata")
+      assert has_element?(view, "#standard-video-page[data-video-format='short']")
+      assert has_element?(view, ~s([data-name="YouTubePlayer"]))
+      assert has_element?(view, "#video-tab-description", "Overview")
+      assert has_element?(view, "#video-tab-comments", "Comments")
+      refute has_element?(view, "#short-video-actions")
+    end
+
+    test "video detail keeps overview and comments available when content is empty", %{conn: conn} do
+      video =
+        video_fixture(%{
+          description_md: nil,
+          thread_id: nil,
+          published_at: DateTime.utc_now()
+        })
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      assert has_element?(view, "#video-tab-description", "Overview")
+      assert has_element?(view, "#video-overview-empty")
+      assert has_element?(view, "#video-tab-comments", "Comments")
+
+      child
+      |> element("#video-tab-comments")
+      |> render_click()
+
+      assert has_element?(child, "#video-comments-section")
+      assert has_element?(child, "#video-comments-disabled")
     end
 
     test "authenticated viewer gets the completion control", %{public_video: video} do

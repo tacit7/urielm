@@ -134,25 +134,15 @@ defmodule UrielmWeb.VideoLive do
   end
 
   defp build_nav_items(video, thread) do
-    items = []
-
-    items =
-      if video.description_md && video.description_md != "",
-        do: items ++ [%{key: "description", label: "Overview"}],
-        else: items
+    items = [%{key: "description", label: "Overview"}]
 
     items =
       if video.resources_md && video.resources_md != "",
         do: items ++ [%{key: "resources", label: "Resources"}],
         else: items
 
-    # Add comments tab if thread exists
-    items =
-      if thread,
-        do: items ++ [%{key: "comments", label: "Comments", count: thread.comment_count}],
-        else: items
-
-    items
+    comment_count = if thread, do: thread.comment_count, else: 0
+    items ++ [%{key: "comments", label: "Comments", count: comment_count}]
   end
 
   defp next_accessible_video(video, user) do
@@ -419,254 +409,8 @@ defmodule UrielmWeb.VideoLive do
       </div>
       """
     else
-      if assigns.video.format == "short" do
-        render_short(assigns)
-      else
-        render_standard(assigns)
-      end
+      render_standard(assigns)
     end
-  end
-
-  defp render_short(assigns) do
-    ~H"""
-    <!-- DaisyUI Drawer wrapper for comments -->
-    <div class="drawer drawer-end">
-      <input id="comments-drawer" type="checkbox" class="drawer-toggle" />
-      
-    <!-- Main content -->
-      <div class="drawer-content">
-        <!-- Full-screen vertical snap feed -->
-        <div class="h-screen w-screen overflow-y-scroll snap-y snap-mandatory overscroll-contain bg-black text-white">
-          <!-- Feed item (single video for now) -->
-          <section class="relative h-screen w-screen snap-start">
-            <!-- Video container - full bleed -->
-            <div class="absolute inset-0">
-              <%= if @video.tiktok_url && @video.tiktok_url != "" do %>
-                <.svelte
-                  name="TikTokEmbed"
-                  props={%{tiktokUrl: @video.tiktok_url, fullscreen: true}}
-                  socket={@socket}
-                  class="h-full w-full object-cover"
-                  ssr={false}
-                />
-              <% else %>
-                <.svelte
-                  name="YouTubePlayer"
-                  props={
-                    %{videoId: extract_youtube_id(@video.youtube_url), controls: true, shorts: true}
-                  }
-                  socket={@socket}
-                  class="h-full w-full object-cover"
-                  ssr={false}
-                />
-              <% end %>
-              
-    <!-- Gradient overlay for legibility -->
-              <div
-                :if={is_nil(@video.tiktok_url) or @video.tiktok_url == ""}
-                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20"
-              >
-              </div>
-            </div>
-            
-    <!-- Right action rail -->
-            <aside
-              :if={is_nil(@video.tiktok_url) or @video.tiktok_url == ""}
-              id="short-video-actions"
-              class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3 text-white"
-            >
-              <!-- Vote Buttons (vertical layout for shorts) -->
-              <.svelte
-                name="VoteButtons"
-                props={
-                  %{
-                    target_type: "video",
-                    target_id: @video.id,
-                    upvotes: @upvotes,
-                    downvotes: @downvotes,
-                    user_vote: @user_vote,
-                    layout: "vertical",
-                    size: "lg"
-                  }
-                }
-                socket={@socket}
-                ssr={false}
-              />
-              
-    <!-- Comments drawer trigger -->
-              <%= if @thread do %>
-                <label
-                  for="comments-drawer"
-                  class="btn btn-ghost btn-circle text-white hover:text-primary cursor-pointer"
-                  aria-label="Comments"
-                >
-                  <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path
-                      stroke-width="2"
-                      d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
-                    />
-                  </svg>
-                </label>
-                <span class="text-xs opacity-80">{@thread.comment_count}</span>
-              <% end %>
-              
-    <!-- Share -->
-              <button
-                id="short-share-btn"
-                class="btn btn-ghost btn-circle text-white hover:text-primary"
-                aria-label="Share"
-                phx-hook="CopyToClipboard"
-                data-text={@canonical_url}
-              >
-                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-width="2" d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
-                  <path stroke-width="2" d="M16 6l-4-4-4 4" />
-                  <path stroke-width="2" d="M12 2v14" />
-                </svg>
-              </button>
-              <span class="text-xs opacity-80">Share</span>
-            </aside>
-            
-    <!-- Bottom metadata -->
-            <div
-              :if={is_nil(@video.tiktok_url) or @video.tiktok_url == ""}
-              id="short-video-metadata"
-              class="absolute left-0 right-16 bottom-0 z-10 p-4 pb-6"
-            >
-              <div class="max-w-[85%] space-y-2">
-                <!-- Author info -->
-                <%= if @video.author_name do %>
-                  <div class="flex items-center gap-2">
-                    <div class="avatar placeholder">
-                      <div class="w-10 rounded-full bg-primary text-primary-content">
-                        <span class="text-sm font-semibold">
-                          {String.upcase(String.slice(@video.author_name, 0, 1))}
-                        </span>
-                      </div>
-                    </div>
-                    <%= if @video.author_url do %>
-                      <a
-                        href={@video.author_url}
-                        target="_blank"
-                        rel="noopener"
-                        class="font-semibold hover:underline"
-                      >
-                        @{@video.author_name}
-                      </a>
-                    <% else %>
-                      <span class="font-semibold">@{@video.author_name}</span>
-                    <% end %>
-                  </div>
-                <% end %>
-                
-    <!-- Title/Caption -->
-                <p class="text-sm leading-snug line-clamp-3">{@video.title}</p>
-                
-    <!-- Description if exists -->
-                <%= if @video.description_md && @video.description_md != "" do %>
-                  <div class="text-sm opacity-80 line-clamp-2 prose prose-sm prose-invert max-w-none">
-                    <.svelte
-                      name="MarkdownRenderer"
-                      props={%{content: @video.description_md}}
-                      socket={@socket}
-                      ssr={false}
-                    />
-                  </div>
-                <% end %>
-                
-    <!-- Tags/metadata -->
-                <div class="flex flex-wrap items-center gap-2 text-xs opacity-80">
-                  <span class="badge badge-ghost badge-sm">Short</span>
-                  <.link
-                    :for={tag <- @video.tag_records}
-                    id={"short-video-tag-#{tag.slug}"}
-                    navigate={~p"/videos?tag=#{tag.slug}"}
-                    class="badge badge-ghost badge-sm"
-                  >
-                    {tag.name}
-                  </.link>
-                  <%= if @video.visibility != "public" do %>
-                    <span class="badge badge-ghost badge-sm">{@video.visibility}</span>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-      
-    <!-- Comments Drawer (slides in from right) -->
-      <div class="drawer-side z-50">
-        <label for="comments-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-
-        <div class="menu w-full max-w-md bg-base-100 text-base-content min-h-full p-0">
-          <!-- Header -->
-          <div class="flex items-center justify-between p-4 border-b border-base-300">
-            <h2 class="text-lg font-semibold">
-              Comments {if @thread, do: @thread.comment_count, else: 0}
-            </h2>
-            <label for="comments-drawer" class="btn btn-sm btn-ghost btn-circle">✕</label>
-          </div>
-          
-    <!-- Comments list -->
-          <div class="flex-1 overflow-y-auto p-4 max-h-[calc(100vh-140px)]">
-            <%= if @thread do %>
-              <.svelte
-                name="CommentTree"
-                props={
-                  %{
-                    comments: @comment_tree,
-                    current_user_id: (@current_user && @current_user.id) || nil,
-                    current_user_is_admin: (@current_user && @current_user.is_admin) || false,
-                    thread_author_id: @thread.author_id,
-                    solved_comment_id: nil,
-                    compact: true
-                  }
-                }
-                socket={@socket}
-                ssr={false}
-              />
-            <% else %>
-              <p class="text-sm text-base-content/60 text-center py-8">
-                Comments not enabled for this video.
-              </p>
-            <% end %>
-          </div>
-          
-    <!-- Add comment input -->
-          <div class="p-4 border-t border-base-300">
-            <%= if @current_user do %>
-              <form phx-submit="create_comment" class="flex gap-2">
-                <input
-                  type="text"
-                  name="body"
-                  placeholder="Add a comment..."
-                  required
-                  class="input input-bordered flex-1"
-                />
-                <button type="submit" class="btn btn-primary">Send</button>
-              </form>
-            <% else %>
-              <p class="text-sm text-base-content/60 text-center">
-                <.link navigate={~p"/signin"} class="link link-primary">Sign in</.link> to comment
-              </p>
-            <% end %>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Report Comment Modal -->
-    <.report_modal
-      id="report_comment_modal"
-      title="Report Comment"
-      form_event="report_comment"
-      comment_id={@reporting_comment_id}
-      submit_disabled={is_nil(@reporting_comment_id)}
-      description_label="Description"
-      description_placeholder="Explain why you're reporting this comment..."
-    />
-    """
   end
 
   defp render_standard(assigns) do
@@ -677,7 +421,11 @@ defmodule UrielmWeb.VideoLive do
       |> assign(:has_nav_items?, assigns.nav_items != [])
 
     ~H"""
-    <div id="standard-video-page" class="min-h-screen bg-base-100 text-base-content">
+    <div
+      id="standard-video-page"
+      data-video-format={@video.format}
+      class="min-h-screen bg-base-100 text-base-content"
+    >
       <main class="mx-auto w-full max-w-7xl px-0 pb-28 pt-5 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16">
         <.link
           id="video-back-link"
@@ -690,10 +438,16 @@ defmodule UrielmWeb.VideoLive do
           /> All videos
         </.link>
 
-        <section
+        <.learning_media_player
           id="video-player-shell"
-          aria-label="Video player"
-          class="relative aspect-video overflow-hidden bg-[#080d19] shadow-2xl shadow-black/25 sm:rounded-2xl sm:border sm:border-primary/15"
+          label="Video player"
+          class={[
+            "relative",
+            if(@video.format == "short",
+              do: "h-[min(62dvh,38rem)] min-h-[26rem]",
+              else: "aspect-video"
+            )
+          ]}
         >
           <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_65%_20%,color-mix(in_oklab,var(--color-primary)_22%,transparent),transparent_38%)]">
           </div>
@@ -708,13 +462,19 @@ defmodule UrielmWeb.VideoLive do
           <% else %>
             <.svelte
               name="YouTubePlayer"
-              props={%{videoId: extract_youtube_id(@video.youtube_url), controls: true}}
+              props={
+                %{
+                  videoId: extract_youtube_id(@video.youtube_url),
+                  controls: true,
+                  shorts: @video.format == "short"
+                }
+              }
               socket={@socket}
               class="relative z-10 h-full w-full"
               ssr={false}
             />
           <% end %>
-        </section>
+        </.learning_media_player>
 
         <section
           id="video-detail-header"
@@ -722,7 +482,8 @@ defmodule UrielmWeb.VideoLive do
         >
           <div>
             <p class="flex items-center gap-2 font-mono text-[0.68rem] font-black uppercase tracking-[0.16em] text-primary">
-              <span class="size-1.5 rounded-full bg-primary"></span> Standard video
+              <span class="size-1.5 rounded-full bg-primary"></span>
+              {if @video.format == "short", do: "Short video", else: "Standard video"}
             </p>
             <h1 class="mt-3 max-w-4xl text-3xl font-black leading-[1.08] tracking-[-0.04em] text-base-content sm:text-4xl lg:text-5xl">
               {@video.title}
@@ -832,43 +593,24 @@ defmodule UrielmWeb.VideoLive do
             id="video-content-panel"
             class="card ui-card overflow-hidden"
           >
-            <nav
+            <.learning_media_tabs
               id="video-detail-tabs"
-              aria-label="Video details"
-              class="flex gap-1 overflow-x-auto border-b border-base-300/70 p-2"
-            >
-              <button
-                :for={item <- @nav_items}
-                id={"video-tab-#{item.key}"}
-                type="button"
-                phx-click="tab_change"
-                phx-value-key={item.key}
-                aria-current={if(@active_section == item.key, do: "page", else: nil)}
-                class={[
-                  "btn btn-sm flex-none rounded-xl border-0 px-4 transition duration-200",
-                  if(@active_section == item.key,
-                    do: "bg-primary/10 text-primary shadow-none hover:bg-primary/15",
-                    else: "btn-ghost text-base-content/50 hover:text-base-content"
-                  )
-                ]}
-              >
-                {item.label}
-                <span
-                  :if={Map.has_key?(item, :count)}
-                  class="rounded-full bg-base-300/70 px-1.5 py-0.5 text-[0.62rem]"
-                >
-                  {item.count}
-                </span>
-              </button>
-            </nav>
+              label="Video details"
+              items={@nav_items}
+              active_key={@active_section}
+              item_id_prefix="video-tab"
+            />
 
             <section
               :if={@active_section == "description"}
               id="video-description-section"
               class="card-body p-5 sm:p-7"
             >
-              <h2 class="text-xl font-black tracking-tight text-base-content">Description</h2>
-              <div class="prose prose-sm mt-1 max-w-none text-base-content/75 sm:prose-base">
+              <h2 class="text-xl font-black tracking-tight text-base-content">Overview</h2>
+              <div
+                :if={@video.description_md && @video.description_md != ""}
+                class="prose prose-sm mt-1 max-w-none text-base-content/75 sm:prose-base"
+              >
                 <.svelte
                   name="MarkdownRenderer"
                   props={%{content: @video.description_md}}
@@ -876,6 +618,15 @@ defmodule UrielmWeb.VideoLive do
                   ssr={false}
                 />
               </div>
+              <.empty_state
+                :if={is_nil(@video.description_md) or @video.description_md == ""}
+                id="video-overview-empty"
+                title="Overview coming soon"
+                description="This video does not have an overview yet. You can still watch it and continue the discussion."
+                icon="hero-document-text"
+                compact
+                class="mt-4"
+              />
             </section>
 
             <section
@@ -895,7 +646,7 @@ defmodule UrielmWeb.VideoLive do
             </section>
 
             <section
-              :if={@active_section == "comments" && @thread}
+              :if={@active_section == "comments"}
               id="video-comments-section"
               class="card-body p-5 sm:p-7"
             >
@@ -904,79 +655,90 @@ defmodule UrielmWeb.VideoLive do
                   Discussion
                 </h2>
                 <span class="badge badge-ghost font-mono text-xs">
-                  {@thread.comment_count} comments
+                  {if @thread, do: @thread.comment_count, else: 0} comments
                 </span>
               </div>
 
-              <%= if @current_user do %>
-                <div class="mt-5 flex gap-3 border-b border-base-300/60 pb-6">
-                  <span class="grid size-10 flex-none place-items-center rounded-full bg-primary text-sm font-black text-primary-content">
-                    {user_initial(@current_user)}
-                  </span>
-                  <.form
-                    for={@comment_form}
-                    id="video-comment-form"
-                    phx-submit="create_comment"
-                    class="min-w-0 flex-1 space-y-3"
-                  >
-                    <.input
-                      field={@comment_form[:body]}
-                      id="video-comment-input"
-                      type="textarea"
-                      placeholder="Add to the discussion…"
-                      required
-                      phx-hook="ExpandingTextarea"
-                      phx-focus={JS.show(to: "#video-comment-actions")}
-                      rows="2"
-                      class="textarea textarea-bordered w-full resize-none bg-base-200/60"
-                    />
-                    <div id="video-comment-actions" class="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm rounded-full"
-                        phx-click={
-                          JS.dispatch("reset", to: "#video-comment-form")
-                          |> JS.set_attribute({"rows", "2"}, to: "#video-comment-input")
-                        }
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
-                        Comment
-                      </button>
-                    </div>
-                  </.form>
-                </div>
+              <%= if is_nil(@thread) do %>
+                <.empty_state
+                  id="video-comments-disabled"
+                  title="Discussion is not enabled"
+                  description="There is no discussion thread for this video yet."
+                  icon="hero-chat-bubble-left-right"
+                  compact
+                  class="mt-5"
+                />
               <% else %>
-                <div class="mt-5 flex items-center gap-3 rounded-xl border border-base-300/70 bg-base-200/50 p-4">
-                  <span class="grid size-9 place-items-center rounded-full bg-base-300 font-bold">
-                    ?
-                  </span>
-                  <p class="text-sm text-base-content/60">
-                    <.link navigate={~p"/signin"} class="font-bold text-primary hover:underline">
-                      Sign in
-                    </.link>
-                    to join the discussion.
-                  </p>
+                <%= if @current_user do %>
+                  <div class="mt-5 flex gap-3 border-b border-base-300/60 pb-6">
+                    <span class="grid size-10 flex-none place-items-center rounded-full bg-primary text-sm font-black text-primary-content">
+                      {user_initial(@current_user)}
+                    </span>
+                    <.form
+                      for={@comment_form}
+                      id="video-comment-form"
+                      phx-submit="create_comment"
+                      class="min-w-0 flex-1 space-y-3"
+                    >
+                      <.input
+                        field={@comment_form[:body]}
+                        id="video-comment-input"
+                        type="textarea"
+                        placeholder="Add to the discussion…"
+                        required
+                        phx-hook="ExpandingTextarea"
+                        phx-focus={JS.show(to: "#video-comment-actions")}
+                        rows="2"
+                        class="textarea textarea-bordered w-full resize-none bg-base-200/60"
+                      />
+                      <div id="video-comment-actions" class="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-sm rounded-full"
+                          phx-click={
+                            JS.dispatch("reset", to: "#video-comment-form")
+                            |> JS.set_attribute({"rows", "2"}, to: "#video-comment-input")
+                          }
+                        >
+                          Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
+                          Comment
+                        </button>
+                      </div>
+                    </.form>
+                  </div>
+                <% else %>
+                  <div class="mt-5 flex items-center gap-3 rounded-xl border border-base-300/70 bg-base-200/50 p-4">
+                    <span class="grid size-9 place-items-center rounded-full bg-base-300 font-bold">
+                      ?
+                    </span>
+                    <p class="text-sm text-base-content/60">
+                      <.link navigate={~p"/signin"} class="font-bold text-primary hover:underline">
+                        Sign in
+                      </.link>
+                      to join the discussion.
+                    </p>
+                  </div>
+                <% end %>
+
+                <div class="mt-6">
+                  <.svelte
+                    name="CommentTree"
+                    props={
+                      %{
+                        comments: @comment_tree,
+                        current_user_id: @viewer_id,
+                        current_user_is_admin: @viewer_admin?,
+                        thread_author_id: @thread.author_id,
+                        solved_comment_id: nil
+                      }
+                    }
+                    socket={@socket}
+                    ssr={false}
+                  />
                 </div>
               <% end %>
-
-              <div class="mt-6">
-                <.svelte
-                  name="CommentTree"
-                  props={
-                    %{
-                      comments: @comment_tree,
-                      current_user_id: @viewer_id,
-                      current_user_is_admin: @viewer_admin?,
-                      thread_author_id: @thread.author_id,
-                      solved_comment_id: nil
-                    }
-                  }
-                  socket={@socket}
-                  ssr={false}
-                />
-              </div>
             </section>
           </article>
 

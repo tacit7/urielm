@@ -222,10 +222,10 @@ defmodule UrielmWeb.LessonLive do
 
             <div class="grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1fr)_20rem] xl:gap-9">
               <main class="min-w-0">
-                <section
+                <.learning_media_player
                   id="lesson-player"
-                  class="-mx-5 aspect-video overflow-hidden bg-[#10121f] shadow-2xl shadow-black/15 sm:mx-0 sm:rounded-2xl sm:border sm:border-base-content/10"
-                  aria-label="Lesson video"
+                  label="Lesson video"
+                  class="-mx-5 aspect-video sm:mx-0"
                 >
                   <.svelte
                     name="YouTubePlayer"
@@ -234,7 +234,7 @@ defmodule UrielmWeb.LessonLive do
                     class="h-full w-full"
                     ssr={false}
                   />
-                </section>
+                </.learning_media_player>
 
                 <header
                   id="lesson-header"
@@ -273,24 +273,14 @@ defmodule UrielmWeb.LessonLive do
                   </div>
                 </header>
 
-                <div
+                <.learning_media_tabs
                   id="lesson-section-nav"
-                  class="hidden overflow-x-auto border-b border-base-content/10 pt-1 lg:block"
-                >
-                  <.svelte
-                    name="UnderlineNav"
-                    props={
-                      %{
-                        items: @nav_items,
-                        activeKey: @active_section,
-                        showCounts: true,
-                        size: "md"
-                      }
-                    }
-                    socket={@socket}
-                    ssr={false}
-                  />
-                </div>
+                  label="Lesson details"
+                  items={@nav_items}
+                  active_key={@active_section}
+                  item_id_prefix="lesson-tab"
+                  class="hidden pt-1 lg:flex"
+                />
 
                 <div id="lesson-content" class="pt-6 sm:pt-8">
                   <section
@@ -344,10 +334,13 @@ defmodule UrielmWeb.LessonLive do
                         ssr={false}
                       />
                     </div>
-                    <.lesson_empty
+                    <.empty_state
                       :if={!@lesson.notes_md}
+                      id="lesson-notes-empty"
+                      title="No lesson notes"
+                      description="No notes are available for this lesson."
                       icon="hero-document-text"
-                      message="No notes are available for this lesson."
+                      compact
                     />
                   </section>
 
@@ -370,10 +363,13 @@ defmodule UrielmWeb.LessonLive do
                         ssr={false}
                       />
                     </div>
-                    <.lesson_empty
+                    <.empty_state
                       :if={!@lesson.resources_md}
+                      id="lesson-resources-empty"
+                      title="No additional resources"
+                      description="No additional resources are available."
                       icon="hero-link"
-                      message="No additional resources are available."
+                      compact
                     />
                   </section>
 
@@ -396,10 +392,13 @@ defmodule UrielmWeb.LessonLive do
                         ssr={false}
                       />
                     </div>
-                    <.lesson_empty
+                    <.empty_state
                       :if={!@lesson.timestamps_md}
+                      id="lesson-timestamps-empty"
+                      title="No timestamps"
+                      description="No timestamps are available for this video."
                       icon="hero-clock"
-                      message="No timestamps are available for this video."
+                      compact
                     />
                   </section>
 
@@ -420,10 +419,13 @@ defmodule UrielmWeb.LessonLive do
                       </span>
                     </div>
 
-                    <.lesson_empty
+                    <.empty_state
                       :if={@lesson.comments == []}
+                      id="lesson-comments-empty"
+                      title="No comments yet"
+                      description="Start the conversation with a useful question or observation."
                       icon="hero-chat-bubble-left-right"
-                      message="No comments yet. Start the conversation."
+                      compact
                     />
 
                     <ul id="lesson-comment-list" class="grid gap-3">
@@ -708,20 +710,6 @@ defmodule UrielmWeb.LessonLive do
       <.um_icon name={@icon} class="size-5" />
       <span class="dock-label text-[0.68rem]">{@label}</span>
     </button>
-    """
-  end
-
-  attr :icon, :string, required: true
-  attr :message, :string, required: true
-
-  defp lesson_empty(assigns) do
-    ~H"""
-    <div class="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-base-content/15 px-5 text-center">
-      <div class="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <.um_icon name={@icon} class="size-5" />
-      </div>
-      <p class="text-sm text-base-content/55">{@message}</p>
-    </div>
     """
   end
 end
