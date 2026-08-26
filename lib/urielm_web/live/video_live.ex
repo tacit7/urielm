@@ -296,18 +296,22 @@ defmodule UrielmWeb.VideoLive do
             {:noreply, put_flash(socket, :error, "Comment not found")}
 
           comment ->
-            case Forum.edit_comment(comment, body, user) do
-              {:ok, _} ->
-                {:noreply,
-                 socket
-                 |> refresh_video_comments(user)
-                 |> put_flash(:info, "Comment updated")}
+            if current_video_comment?(comment, socket.assigns.thread) do
+              case Forum.edit_comment(comment, body, user) do
+                {:ok, _} ->
+                  {:noreply,
+                   socket
+                   |> refresh_video_comments(user)
+                   |> put_flash(:info, "Comment updated")}
 
-              {:error, :unauthorized} ->
-                {:noreply, put_flash(socket, :error, "Not authorized")}
+                {:error, :unauthorized} ->
+                  {:noreply, put_flash(socket, :error, "Not authorized")}
 
-              {:error, _} ->
-                {:noreply, put_flash(socket, :error, "Failed to update comment")}
+                {:error, _} ->
+                  {:noreply, put_flash(socket, :error, "Failed to update comment")}
+              end
+            else
+              {:noreply, put_flash(socket, :error, "Comment not found")}
             end
         end
     end
@@ -327,22 +331,29 @@ defmodule UrielmWeb.VideoLive do
             {:noreply, put_flash(socket, :error, "Comment not found")}
 
           comment ->
-            case Forum.remove_comment(comment, user) do
-              {:ok, _} ->
-                {:noreply,
-                 socket
-                 |> refresh_video_comments(user)
-                 |> put_flash(:info, "Comment deleted")}
+            if current_video_comment?(comment, socket.assigns.thread) do
+              case Forum.remove_comment(comment, user) do
+                {:ok, _} ->
+                  {:noreply,
+                   socket
+                   |> refresh_video_comments(user)
+                   |> put_flash(:info, "Comment deleted")}
 
-              {:error, :unauthorized} ->
-                {:noreply, put_flash(socket, :error, "Not authorized")}
+                {:error, :unauthorized} ->
+                  {:noreply, put_flash(socket, :error, "Not authorized")}
 
-              {:error, _} ->
-                {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+                {:error, _} ->
+                  {:noreply, put_flash(socket, :error, "Failed to delete comment")}
+              end
+            else
+              {:noreply, put_flash(socket, :error, "Comment not found")}
             end
         end
     end
   end
+
+  defp current_video_comment?(comment, %{id: thread_id}), do: comment.thread_id == thread_id
+  defp current_video_comment?(_comment, _thread), do: false
 
   @impl true
   def handle_event("open_report_comment", %{"comment_id" => comment_id}, socket) do

@@ -293,5 +293,52 @@ defmodule UrielmWeb.VideoLiveTest do
       assert [%{body: "Test comment"}] = Urielm.Forum.list_comments(thread.id)
       assert has_element?(child, "#video-tab-comments", "1")
     end
+
+    test "cannot edit a comment from another video discussion", %{} do
+      user = user_fixture()
+      board = board_fixture()
+      current_thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      other_thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      other_comment = comment_fixture(other_thread, user, %{body: "Keep this body"})
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: current_thread.id
+        })
+
+      conn = log_in_user(build_conn(), user)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      render_hook(child, "edit_comment", %{
+        "id" => to_string(other_comment.id),
+        "body" => "Changed elsewhere"
+      })
+
+      assert Urielm.Forum.get_comment(other_comment.id).body == "Keep this body"
+    end
+
+    test "cannot delete a comment from another video discussion", %{} do
+      user = user_fixture()
+      board = board_fixture()
+      current_thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      other_thread = thread_fixture(%{board_id: board.id, author_id: user.id, kind: "video"})
+      other_comment = comment_fixture(other_thread, user)
+
+      video =
+        video_fixture(%{
+          published_at: DateTime.utc_now(),
+          thread_id: current_thread.id
+        })
+
+      conn = log_in_user(build_conn(), user)
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
+
+      render_hook(child, "delete_comment", %{"id" => to_string(other_comment.id)})
+
+      refute Urielm.Forum.get_comment(other_comment.id).is_removed
+    end
   end
 end
