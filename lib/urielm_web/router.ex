@@ -67,6 +67,7 @@ defmodule UrielmWeb.Router do
     live_session :default do
       live "/", ShellLive, :home
       live "/privacy", PrivacyLive
+      live "/terms", TermsLive
       live "/blog", ShellLive, :blog_index
       live "/blog/:slug", ShellLive, :blog_show
       live "/prompts", ShellLive, :prompts

@@ -595,6 +595,13 @@ defmodule UrielmWeb.HomeLive do
             >
               Privacy Policy
             </.link>
+            <.link
+              id="home-footer-terms-link"
+              navigate={~p"/terms"}
+              class="text-base-content/60 transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            >
+              Terms of Use
+            </.link>
           </nav>
         </div>
       </div>

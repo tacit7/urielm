@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-theme="tokyonight">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terms page mockup</title>
+    <style>
+      :root {
+        --bg: #16161e;
+        --surface: #1f2335;
+        --surface-2: #24283b;
+        --border: #3b4261;
+        --accent: #3d6fbe;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #0f1117; color: var(--text); font: 15px/1.65 Inter, system-ui, sans-serif; }
+      button { font: inherit; }
+      .switcher { position: sticky; top: 0; z-index: 3; display: flex; justify-content: center; gap: 8px; padding: 12px; background: #0f1117e8; }
+      .switcher button { border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); padding: 7px 14px; cursor: pointer; }
+      .switcher button.active { background: var(--accent); border-color: var(--accent); color: white; }
+      .frame { margin: 0 auto 30px; overflow: hidden; border: 1px solid var(--border); border-radius: 20px; background: var(--bg); box-shadow: 0 25px 70px #0008; }
+      .desktop { width: min(1180px, calc(100vw - 36px)); }
+      .mobile { display: none; width: 390px; max-width: calc(100vw - 24px); }
+      .nav { display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding: 0 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+      .brand { font-weight: 900; letter-spacing: -.04em; }
+      .nav-links { display: flex; gap: 18px; color: var(--muted); font-size: 13px; }
+      .hero { padding: 54px 24px; text-align: center; border-bottom: 1px solid var(--border); background: radial-gradient(circle at top, #3d6fbe2a, transparent 60%); }
+      .eyebrow { color: #7aa2f7; font-size: 12px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+      h1 { margin: 8px 0 4px; font-size: clamp(38px, 6vw, 58px); line-height: 1; letter-spacing: -.05em; }
+      .muted { color: var(--muted); }
+      .layout { display: grid; grid-template-columns: 245px minmax(0, 720px); justify-content: center; gap: 30px; padding: 42px 28px; }
+      .card { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 24px; }
+      .toc { position: sticky; top: 86px; align-self: start; padding: 18px; }
+      .toc strong { display: block; margin-bottom: 10px; }
+      .toc a { display: block; padding: 4px 6px; border-radius: 7px; color: var(--muted); text-decoration: none; font-size: 12px; }
+      .toc a:hover { color: #7aa2f7; background: #3d6fbe18; }
+      .content { display: grid; gap: 16px; }
+      .intro { border-color: #3d6fbe66; background: #3d6fbe12; }
+      .section-head { display: flex; align-items: start; gap: 10px; }
+      .number { display: inline-grid; place-items: center; min-width: 26px; height: 22px; border: 1px solid #7aa2f7; border-radius: 999px; color: #7aa2f7; font-size: 11px; font-weight: 900; }
+      h2 { margin: 0; font-size: 21px; line-height: 1.25; }
+      ul { padding-left: 22px; }
+      .annotation { margin: 18px auto 38px; width: min(900px, calc(100vw - 36px)); border: 1px dashed #7aa2f7; border-radius: 14px; padding: 18px; color: var(--muted); background: #1f2335; }
+      .mobile .nav { padding: 0 18px; }
+      .mobile .nav-links { display: none; }
+      .mobile .hero { padding: 42px 18px; }
+      .mobile .layout { display: block; padding: 20px 16px 30px; }
+      .mobile .toc { position: static; margin-bottom: 16px; }
+      .mobile .content { gap: 12px; }
+      .mobile .card { padding: 19px; }
+      .mobile h1 { font-size: 40px; }
+    </style>
+  </head>
+  <body>
+    <div class="switcher" aria-label="Mockup viewport">
+      <button class="active" data-view="desktop">Desktop</button>
+      <button data-view="mobile">Mobile</button>
+    </div>
+    <main>
+      <section class="frame desktop" id="desktop">
+        <div class="nav"><span class="brand">urielm</span><div class="nav-links"><span>Home</span><span>Blog</span><span>Community</span><span>Sign in</span></div></div>
+        <div class="hero"><div class="eyebrow">SMPL LABS LLC</div><h1>Terms of Use</h1><div class="muted">Last updated August 25, 2026</div></div>
+        <div class="layout">
+          <nav class="card toc"><strong>On this page</strong><a href="#">1. Our services</a><a href="#">2. Intellectual property</a><a href="#">3. User representations</a><a href="#">4. Prohibited activities</a><a href="#">5. User contributions</a><a href="#">6. Contribution license</a><a href="#">7. Service management</a><a href="#">8. Termination</a><a href="#">9-19. More legal terms</a></nav>
+          <div class="content">
+            <article class="card intro"><div class="eyebrow">Agreement</div><h2>Agreement to our legal terms</h2><p>These terms are a binding agreement between you and SMPL LABS LLC governing your access to urielm.dev and related services.</p></article>
+            <article class="card"><div class="section-head"><span class="number">1</span><h2>Our services</h2></div><p class="muted">Access from any location is at your initiative and subject to applicable local law.</p></article>
+            <article class="card"><div class="section-head"><span class="number">2</span><h2>Intellectual property rights</h2></div><p class="muted">The service, source code, designs, text, graphics, and marks are protected. A limited personal-use license applies while you comply with these terms.</p></article>
+            <article class="card"><div class="section-head"><span class="number">4</span><h2>Prohibited activities</h2></div><ul class="muted"><li>Do not misuse, scrape, disrupt, or bypass the service.</li><li>Do not impersonate others or use the service unlawfully.</li><li>Do not upload malicious or infringing material.</li></ul></article>
+          </div>
+        </div>
+      </section>
+      <section class="frame mobile" id="mobile">
+        <div class="nav"><span class="brand">urielm</span><span>☰</span></div>
+        <div class="hero"><div class="eyebrow">SMPL LABS LLC</div><h1>Terms of Use</h1><div class="muted">Last updated August 25, 2026</div></div>
+        <div class="layout"><nav class="card toc"><strong>On this page</strong><span class="muted">19 linked sections</span></nav><div class="content"><article class="card intro"><div class="eyebrow">Agreement</div><h2>Agreement to our legal terms</h2><p class="muted">Readable terms without requiring a PDF viewer or sign-in.</p></article><article class="card"><div class="section-head"><span class="number">1</span><h2>Our services</h2></div><p class="muted">Cards stack with comfortable mobile reading space.</p></article></div></div>
+      </section>
+    </main>
+    <aside class="annotation"><strong>Implementation notes:</strong> public route at <code>/terms</code>; exact footer link beside Privacy Policy; 19 stable section anchors; Tokyo Night/Day daisyUI cards; no decorative left border; company, URL, date, and contact placeholders resolved from the existing privacy policy.</aside>
+    <script>
+      document.querySelectorAll("button[data-view]").forEach((button) => button.addEventListener("click", () => {
+        document.querySelectorAll("button").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        document.querySelectorAll(".frame").forEach((frame) => frame.style.display = "none");
+        document.getElementById(button.dataset.view).style.display = "block";
+      }));
+    </script>
+  </body>
+</html>
