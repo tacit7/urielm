@@ -462,12 +462,19 @@ defmodule UrielmWeb.VideoLive do
               <% end %>
               
     <!-- Gradient overlay for legibility -->
-              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20">
+              <div
+                :if={is_nil(@video.tiktok_url) or @video.tiktok_url == ""}
+                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20"
+              >
               </div>
             </div>
             
     <!-- Right action rail -->
-            <aside class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3 text-white">
+            <aside
+              :if={is_nil(@video.tiktok_url) or @video.tiktok_url == ""}
+              id="short-video-actions"
+              class="absolute right-3 bottom-24 z-10 flex flex-col items-center gap-3 text-white"
+            >
               <!-- Vote Buttons (vertical layout for shorts) -->
               <.svelte
                 name="VoteButtons"
@@ -521,7 +528,11 @@ defmodule UrielmWeb.VideoLive do
             </aside>
             
     <!-- Bottom metadata -->
-            <div class="absolute left-0 right-16 bottom-0 z-10 p-4 pb-6">
+            <div
+              :if={is_nil(@video.tiktok_url) or @video.tiktok_url == ""}
+              id="short-video-metadata"
+              class="absolute left-0 right-16 bottom-0 z-10 p-4 pb-6"
+            >
               <div class="max-w-[85%] space-y-2">
                 <!-- Author info -->
                 <%= if @video.author_name do %>

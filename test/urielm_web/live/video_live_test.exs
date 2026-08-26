@@ -92,6 +92,31 @@ defmodule UrielmWeb.VideoLiveTest do
       assert has_element?(view, "#short-video-tag-agents[href='/videos?tag=agents']", "Agents")
     end
 
+    test "TikTok Shorts use the native player chrome without duplicate overlays", %{conn: conn} do
+      video =
+        video_fixture(%{
+          format: "short",
+          youtube_url: nil,
+          tiktok_url: "https://www.tiktok.com/@askcatgpt/video/7675882960125431053",
+          published_at: DateTime.utc_now()
+        })
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, ~s([data-name="TikTokEmbed"]))
+      refute has_element?(view, "#short-video-actions")
+      refute has_element?(view, "#short-video-metadata")
+    end
+
+    test "YouTube Shorts retain Urielm actions and metadata", %{conn: conn} do
+      video = video_fixture(%{format: "short", published_at: DateTime.utc_now()})
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, "#short-video-actions")
+      assert has_element?(view, "#short-video-metadata")
+    end
+
     test "authenticated viewer gets the completion control", %{public_video: video} do
       user = user_fixture()
       conn = log_in_user(build_conn(), user)

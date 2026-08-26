@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TikTok player upgrade</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --canvas: #1a1b26;
+        --surface: #24283b;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --blue: #7aa2f7;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 32px; background: var(--canvas); color: var(--text); font: 16px/1.6 ui-sans-serif, system-ui, sans-serif; }
+      main { display: grid; gap: 32px; max-width: 1120px; margin: auto; }
+      h1, h2, p { margin: 0; }
+      .tabs { display: flex; gap: 8px; }
+      .tab { border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; background: var(--surface); color: var(--text); }
+      .tab[aria-selected="true"] { border-color: var(--blue); color: var(--blue); }
+      .stage { position: relative; min-height: 680px; overflow: hidden; border-radius: 20px; background: #000; }
+      .player { position: absolute; inset: 0; display: grid; place-items: center; }
+      .video { display: grid; place-items: center; width: min(100%, 420px); height: 100%; background: linear-gradient(160deg, #11131d, #24283b); }
+      .controls { display: flex; gap: 12px; align-items: center; width: calc(100% - 32px); position: absolute; bottom: 20px; padding: 12px; border-radius: 12px; background: #11131de6; }
+      .play { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--blue); color: #1a1b26; font-weight: 800; }
+      .track { height: 4px; flex: 1; border-radius: 99px; background: var(--border); }
+      .track::before { content: ""; display: block; width: 38%; height: 100%; border-radius: inherit; background: var(--blue); }
+      .annotation { border: 1px solid var(--border); border-radius: 16px; padding: 20px; background: var(--surface); }
+      .annotation strong { color: var(--blue); }
+      @media (max-width: 640px) { body { padding: 0; } main { gap: 0; } header, .annotation { margin: 20px; } .stage { min-height: 100svh; border-radius: 0; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>TikTok player upgrade</h1>
+        <p>Native, responsive controls replace the enlarged oEmbed card.</p>
+        <div class="tabs" role="tablist" aria-label="Mockup views">
+          <button class="tab" role="tab" aria-selected="true">Short / mobile</button>
+          <button class="tab" role="tab" aria-selected="false">Theater / desktop</button>
+        </div>
+      </header>
+      <section class="stage" aria-label="Programmable TikTok player mockup">
+        <div class="player">
+          <div class="video">
+            <p>9:16 TikTok video</p>
+            <div class="controls">
+              <button class="play" aria-label="Play">▶</button>
+              <div class="track" aria-hidden="true"></div>
+              <span>0:18 / 0:47</span>
+              <span>CC</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <aside class="annotation">
+        <strong>Implementation:</strong> use TikTok’s player/v1 iframe with playback, progress, volume,
+        fullscreen, timestamps, captions, description, and music information enabled. Shorts loop;
+        autoplay remains off. Keep a persistent “View on TikTok” recovery link.
+      </aside>
+    </main>
+  </body>
+</html>
