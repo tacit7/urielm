@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video detail redesign — Urielm mockup</title>
+    <style>
+      :root {
+        --bg: #16161e;
+        --surface: #1a1b26;
+        --surface-2: #24283b;
+        --surface-3: #292e42;
+        --border: #343b58;
+        --blue: #7aa2f7;
+        --blue-strong: #2e7de9;
+        --text: #c0caf5;
+        --text-strong: #f0f3ff;
+        --muted: #7f8cb6;
+        --green: #9ece6a;
+        --yellow: #e0af68;
+        --shadow: 0 24px 80px rgb(3 7 18 / 0.42);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 50% -20%, rgb(46 125 233 / 0.14), transparent 38rem),
+          var(--bg);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      button, a { font: inherit; }
+      button { color: inherit; }
+      a { color: inherit; text-decoration: none; }
+
+      .switcher {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        border-bottom: 1px solid rgb(52 59 88 / 0.65);
+        background: rgb(22 22 30 / 0.88);
+        backdrop-filter: blur(18px);
+      }
+      .switcher button {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 750;
+      }
+      .switcher button.active { border-color: var(--blue); background: var(--blue); color: #16161e; }
+      .view { display: none; }
+      .view.active { display: block; }
+
+      .nav {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        border-bottom: 1px solid rgb(52 59 88 / 0.5);
+        background: rgb(26 27 38 / 0.84);
+      }
+      .brand { display: flex; align-items: center; gap: 10px; color: var(--text-strong); font-weight: 900; }
+      .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; background: var(--blue); color: #16161e; }
+      .links { display: flex; gap: 22px; color: var(--muted); font-size: 13px; font-weight: 650; }
+      .links .active { color: var(--blue); }
+      .avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--surface-3); font-size: 12px; font-weight: 850; }
+
+      .page { max-width: 1280px; margin: 0 auto; padding: 30px 28px 64px; }
+      .back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 700; }
+      .back:hover { color: var(--blue); }
+      .player {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        margin-top: 18px;
+        border: 1px solid rgb(122 162 247 / 0.2);
+        border-radius: 22px;
+        background:
+          radial-gradient(circle at 65% 30%, rgb(122 162 247 / 0.34), transparent 30%),
+          linear-gradient(145deg, #0e1425, #1f3159 58%, #101522);
+        box-shadow: var(--shadow);
+      }
+      .player::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgb(4 8 18 / 0.45), transparent 40%); }
+      .play { position: absolute; z-index: 2; inset: 50% auto auto 50%; transform: translate(-50%, -50%); display: grid; width: 76px; height: 76px; place-items: center; border: 1px solid rgb(255 255 255 / 0.3); border-radius: 50%; background: rgb(255 255 255 / 0.92); color: #173467; box-shadow: 0 16px 50px rgb(0 0 0 / 0.45); font-size: 25px; }
+      .duration { position: absolute; z-index: 2; right: 16px; bottom: 14px; border-radius: 7px; background: rgb(6 10 20 / 0.85); padding: 5px 8px; color: white; font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+      .headline { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: start; padding: 28px 2px 20px; }
+      .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--blue); font: 800 11px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; text-transform: uppercase; }
+      .eyebrow span { width: 5px; height: 5px; border-radius: 50%; background: var(--blue); }
+      h1 { max-width: 850px; margin: 10px 0 0; color: var(--text-strong); font-size: clamp(28px, 4vw, 46px); line-height: 1.07; letter-spacing: -.04em; }
+      .byline { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+      .creator-avatar { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgb(122 162 247 / 0.35); border-radius: 50%; background: rgb(122 162 247 / 0.12); color: var(--blue); font-weight: 900; }
+      .creator strong { display: block; color: var(--text); font-size: 13px; }
+      .creator small { display: block; margin-top: 3px; color: var(--muted); }
+      .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; padding-top: 23px; }
+      .btn { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); padding: 0 14px; color: var(--text); font-size: 12px; font-weight: 800; }
+      .btn-primary { border-color: var(--blue); background: var(--blue); color: #16161e; }
+      .btn-icon { width: 40px; padding: 0; }
+
+      .content-grid { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 26px; align-items: start; }
+      .panel { border: 1px solid rgb(52 59 88 / 0.82); border-radius: 18px; background: rgb(26 27 38 / 0.76); box-shadow: 0 14px 38px rgb(3 7 18 / 0.15); }
+      .tabs { display: flex; gap: 6px; overflow-x: auto; padding: 8px; border-bottom: 1px solid rgb(52 59 88 / 0.7); }
+      .tab { border: 0; border-radius: 11px; background: transparent; padding: 10px 14px; color: var(--muted); font-size: 12px; font-weight: 800; white-space: nowrap; }
+      .tab.active { background: rgb(122 162 247 / 0.12); color: var(--blue); }
+      .panel-body { padding: 24px; }
+      .panel-body h2 { margin: 0 0 14px; color: var(--text-strong); font-size: 20px; }
+      .panel-body p { margin: 0 0 14px; color: #aab5d8; font-size: 14px; line-height: 1.72; }
+      .takeaway { display: grid; grid-template-columns: auto 1fr; gap: 12px; margin-top: 22px; border: 1px solid rgb(122 162 247 / 0.2); border-radius: 14px; background: rgb(122 162 247 / 0.07); padding: 16px; }
+      .takeaway-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: rgb(122 162 247 / 0.14); color: var(--blue); }
+      .takeaway strong { display: block; color: var(--text-strong); font-size: 13px; }
+      .takeaway span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+      .sidebar { position: sticky; top: 88px; display: grid; gap: 14px; }
+      .side-card { padding: 18px; }
+      .side-label { color: var(--muted); font: 800 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; text-transform: uppercase; }
+      .side-title { margin: 10px 0 4px; color: var(--text-strong); font-size: 16px; }
+      .side-copy { color: var(--muted); font-size: 12px; line-height: 1.55; }
+      .resource { display: flex; align-items: center; gap: 11px; margin-top: 13px; border-top: 1px solid rgb(52 59 88 / .65); padding-top: 13px; color: var(--text); font-size: 12px; font-weight: 750; }
+      .resource-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: var(--surface-3); color: var(--blue); }
+      .next-card { overflow: hidden; }
+      .next-thumb { height: 112px; background: radial-gradient(circle at 70% 30%, rgb(122 162 247 / .42), transparent 30%), linear-gradient(140deg, #11172a, #264471); }
+      .next-body { padding: 15px 17px 18px; }
+      .next-body strong { display: block; margin-top: 7px; color: var(--text-strong); font-size: 13px; line-height: 1.45; }
+
+      .comments .panel-body { padding-top: 20px; }
+      .composer { display: flex; gap: 10px; border-bottom: 1px solid rgb(52 59 88 / .65); padding-bottom: 20px; }
+      .composer input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 13px; outline: none; background: var(--surface-2); padding: 12px 14px; color: var(--text); }
+      .comment { display: grid; grid-template-columns: 34px 1fr; gap: 11px; padding: 20px 0; border-bottom: 1px solid rgb(52 59 88 / .5); }
+      .comment:last-child { border-bottom: 0; }
+      .comment strong { color: var(--text); font-size: 13px; }
+      .comment time { margin-left: 7px; color: var(--muted); font-size: 11px; }
+      .comment p { margin: 6px 0 0; font-size: 13px; line-height: 1.55; }
+
+      .mobile-shell { width: min(390px, calc(100vw - 24px)); min-height: 812px; margin: 22px auto 52px; overflow: hidden; border: 1px solid var(--border); border-radius: 30px; background: var(--bg); box-shadow: var(--shadow); }
+      .mobile-nav { height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid rgb(52 59 88 / .55); background: var(--surface); }
+      .mobile-player { aspect-ratio: 16 / 9; display: grid; place-items: center; background: radial-gradient(circle at 60% 30%, rgb(122 162 247 / .4), transparent 33%), linear-gradient(145deg, #0e1425, #223e6b); color: white; font-size: 22px; }
+      .mobile-content { padding: 18px 16px 88px; }
+      .mobile-content h1 { margin-top: 7px; font-size: 25px; }
+      .mobile-actions { display: grid; grid-template-columns: 1fr 42px 42px; gap: 8px; margin-top: 17px; }
+      .mobile-tabs { position: sticky; top: 0; z-index: 2; display: flex; gap: 4px; overflow-x: auto; margin: 20px -16px 0; border-block: 1px solid rgb(52 59 88 / .62); background: rgb(22 22 30 / .94); padding: 8px 16px; }
+      .mobile-card { margin-top: 16px; border: 1px solid rgb(52 59 88 / .72); border-radius: 15px; background: var(--surface); padding: 17px; }
+      .mobile-card h2 { margin: 0 0 10px; color: var(--text-strong); font-size: 16px; }
+      .mobile-card p { margin: 0; color: #aab5d8; font-size: 13px; line-height: 1.65; }
+      .mobile-dock { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--border); background: rgb(26 27 38 / .96); padding: 9px 8px 11px; }
+      .mobile-dock div { display: grid; gap: 4px; place-items: center; color: var(--muted); font-size: 9px; font-weight: 750; }
+      .mobile-dock .active { color: var(--blue); }
+
+      .annotation { max-width: 1280px; margin: 0 auto 28px; border: 1px dashed rgb(122 162 247 / .38); border-radius: 14px; background: rgb(122 162 247 / .06); padding: 14px 17px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+      .annotation strong { color: var(--blue); }
+
+      @media (max-width: 800px) {
+        .desktop-only { display: none !important; }
+        .page { padding-inline: 16px; }
+        .headline { grid-template-columns: 1fr; }
+        .actions { justify-content: flex-start; padding-top: 0; }
+        .content-grid { grid-template-columns: 1fr; }
+        .sidebar { position: static; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="switcher" aria-label="Mockup views">
+      <button class="active" data-view="overview">Desktop overview</button>
+      <button data-view="comments">Desktop comments</button>
+      <button data-view="mobile">Mobile</button>
+    </div>
+
+    <section id="overview" class="view active">
+      <header class="nav">
+        <div class="brand"><span class="brand-mark">U</span> urielm</div>
+        <nav class="links"><span>Home</span><span class="active">Videos</span><span>Courses</span><span>Blog</span><span>Community</span></nav>
+        <div class="avatar">UM</div>
+      </header>
+      <main class="page">
+        <a class="back" href="#">← All videos</a>
+        <div class="player"><span class="play">▶</span><span class="duration">18:42</span></div>
+        <section class="headline">
+          <div>
+            <div class="eyebrow"><span></span> Practical AI workflow</div>
+            <h1>Build an AI research assistant that actually stays useful</h1>
+            <div class="byline">
+              <div class="creator-avatar">U</div>
+              <div class="creator"><strong>Uriel Maldonado</strong><small>Published Aug 24, 2026 · Standard video</small></div>
+            </div>
+          </div>
+          <div class="actions"><button class="btn btn-primary">✓ Mark complete</button><button class="btn">↑ 128</button><button class="btn btn-icon" aria-label="Share">↗</button></div>
+        </section>
+        <div class="content-grid">
+          <article class="panel">
+            <div class="tabs"><button class="tab active">Overview</button><button class="tab">Resources <small>3</small></button><button class="tab">Comments <small>24</small></button></div>
+            <div class="panel-body">
+              <h2>What you’ll build</h2>
+              <p>In this walkthrough, we turn a loose research prompt into a dependable workflow that gathers sources, checks its own assumptions, and leaves behind a clear trail you can review.</p>
+              <p>You’ll see how to scope the assistant’s job, shape useful intermediate outputs, and recognize when a prompt needs another round of refinement.</p>
+              <div class="takeaway"><div class="takeaway-icon">✦</div><div><strong>Key takeaway</strong><span>Give the model a narrow job, an explicit output shape, and a stopping condition you can verify.</span></div></div>
+            </div>
+          </article>
+          <aside class="sidebar">
+            <section class="panel side-card"><div class="side-label">About the creator</div><h2 class="side-title">Uriel Maldonado</h2><p class="side-copy">Building practical tools and clear lessons for people working with AI.</p><a class="resource" href="#"><span class="resource-icon">↗</span>Visit creator profile</a></section>
+            <section class="panel side-card"><div class="side-label">Resources</div><a class="resource" href="#"><span class="resource-icon">⌘</span>Starter prompt template</a><a class="resource" href="#"><span class="resource-icon">↗</span>Example project repository</a></section>
+            <a class="panel next-card" href="#"><div class="next-thumb"></div><div class="next-body"><div class="side-label">Up next</div><strong>Five ways to test a prompt before you trust it</strong></div></a>
+          </aside>
+        </div>
+      </main>
+      <div class="annotation"><strong>Implementation note:</strong> The existing YouTube/TikTok player, completion state, votes, Markdown content, creator fields, and resources remain intact. The redesign removes the competing page-level mobile dock and gives the global app navigation room to work.</div>
+    </section>
+
+    <section id="comments" class="view">
+      <header class="nav"><div class="brand"><span class="brand-mark">U</span> urielm</div><nav class="links"><span>Home</span><span class="active">Videos</span><span>Courses</span><span>Blog</span><span>Community</span></nav><div class="avatar">UM</div></header>
+      <main class="page">
+        <a class="back" href="#">← All videos</a>
+        <div class="player"><span class="play">▶</span><span class="duration">18:42</span></div>
+        <section class="headline"><div><div class="eyebrow"><span></span> Practical AI workflow</div><h1>Build an AI research assistant that actually stays useful</h1><div class="byline"><div class="creator-avatar">U</div><div class="creator"><strong>Uriel Maldonado</strong><small>Published Aug 24, 2026 · Standard video</small></div></div></div><div class="actions"><button class="btn btn-primary">✓ Completed</button><button class="btn">↑ 128</button><button class="btn btn-icon">↗</button></div></section>
+        <div class="content-grid">
+          <article class="panel comments"><div class="tabs"><button class="tab">Overview</button><button class="tab">Resources <small>3</small></button><button class="tab active">Comments <small>24</small></button></div><div class="panel-body"><div class="composer"><div class="creator-avatar">U</div><input value="" placeholder="Add to the discussion…" /><button class="btn btn-primary">Comment</button></div><div class="comment"><div class="avatar">AR</div><div><strong>Alex Rivera</strong><time>2 hours ago</time><p>The stopping-condition example immediately made my research prompt more reliable. It also made reviewing the output much faster.</p></div></div><div class="comment"><div class="avatar">JM</div><div><strong>Jamie Moore</strong><time>Yesterday</time><p>Would love to see a follow-up that applies this workflow to long technical documents.</p></div></div></div></article>
+          <aside class="sidebar"><section class="panel side-card"><div class="side-label">Discussion</div><h2 class="side-title">24 comments</h2><p class="side-copy">Keep replies specific, constructive, and connected to the lesson.</p></section><a class="panel next-card" href="#"><div class="next-thumb"></div><div class="next-body"><div class="side-label">Up next</div><strong>Five ways to test a prompt before you trust it</strong></div></a></aside>
+        </div>
+      </main>
+      <div class="annotation"><strong>Comments state:</strong> Discussion is a first-class tab rather than a distant section. The existing comment tree and moderation behavior power this view; only its container and hierarchy change.</div>
+    </section>
+
+    <section id="mobile" class="view">
+      <div class="mobile-shell">
+        <header class="mobile-nav"><div class="brand"><span class="brand-mark">U</span> urielm</div><span>⌕</span></header>
+        <div class="mobile-player">▶</div>
+        <main class="mobile-content">
+          <a class="back" href="#">← All videos</a>
+          <div class="eyebrow" style="margin-top:16px"><span></span> Practical AI workflow</div>
+          <h1>Build an AI research assistant that actually stays useful</h1>
+          <div class="byline"><div class="creator-avatar">U</div><div class="creator"><strong>Uriel Maldonado</strong><small>Aug 24, 2026 · 18 min</small></div></div>
+          <div class="mobile-actions"><button class="btn btn-primary">✓ Mark complete</button><button class="btn btn-icon">↑</button><button class="btn btn-icon">↗</button></div>
+          <nav class="mobile-tabs"><button class="tab active">Overview</button><button class="tab">Resources</button><button class="tab">Comments 24</button></nav>
+          <article class="mobile-card"><h2>What you’ll build</h2><p>Turn a loose research prompt into a dependable workflow that gathers sources, checks assumptions, and produces an output you can verify.</p></article>
+          <article class="mobile-card"><div class="side-label">About the creator</div><h2 style="margin-top:9px">Uriel Maldonado</h2><p>Building practical tools and clear lessons for people working with AI.</p></article>
+          <article class="mobile-card"><div class="side-label">Up next</div><h2 style="margin-top:9px">Five ways to test a prompt before you trust it</h2></article>
+        </main>
+        <nav class="mobile-dock"><div>⌂<span>Home</span></div><div class="active">▶<span>Videos</span></div><div>◫<span>Forum</span></div><div>●<span>Profile</span></div></nav>
+      </div>
+      <div class="annotation"><strong>Mobile behavior:</strong> The player stays edge-to-edge, controls remain thumb-friendly, content tabs scroll horizontally, and only the global app dock remains fixed. No second dock competes for the bottom of the screen.</div>
+    </section>
+
+    <script>
+      document.querySelectorAll(".switcher button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".switcher button, .view").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          document.getElementById(button.dataset.view).classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>

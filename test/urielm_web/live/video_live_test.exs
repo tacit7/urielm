@@ -3,14 +3,16 @@ defmodule UrielmWeb.VideoLiveTest do
   import Phoenix.LiveViewTest
   import Urielm.Fixtures
 
-  alias Urielm.Content
-
   describe "VideoLive" do
     setup do
       public_video =
         video_fixture(%{
           visibility: "public",
-          published_at: DateTime.utc_now()
+          published_at: DateTime.utc_now(),
+          author_name: "Uriel Maldonado",
+          author_url: "https://urielm.dev",
+          author_bio_md: "Building practical tools with AI.",
+          resources_md: "- [Starter prompt](https://example.com/prompt)"
         })
 
       signed_in_video =
@@ -44,6 +46,53 @@ defmodule UrielmWeb.VideoLiveTest do
 
       assert html =~ "Description"
       assert html =~ "Test description"
+    end
+
+    test "standard video uses the theater-first detail layout", %{
+      conn: conn,
+      public_video: video
+    } do
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, "#standard-video-page")
+      assert has_element?(view, "#video-back-link[href='/videos']")
+      assert has_element?(view, "#video-player-shell")
+      assert has_element?(view, "#video-detail-header")
+      assert has_element?(view, "#video-share-button[data-text]")
+      assert has_element?(view, "#video-detail-tabs[aria-label='Video details']")
+      assert has_element?(view, "#video-tab-description[aria-current='page']")
+      assert has_element?(view, "#video-creator-card")
+      assert has_element?(view, "#video-resources-card")
+      refute has_element?(view, "#standard-video-page .dock")
+    end
+
+    test "authenticated viewer gets the completion control", %{public_video: video} do
+      user = user_fixture()
+      conn = log_in_user(build_conn(), user)
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, "#video-completion-control")
+    end
+
+    test "shows the next accessible standard video", %{conn: conn, public_video: video} do
+      next_video =
+        video_fixture(%{
+          title: "Test prompts before trusting them",
+          visibility: "public",
+          format: "standard",
+          published_at: DateTime.utc_now() |> DateTime.add(60, :second)
+        })
+
+      video_fixture(%{
+        visibility: "signed_in",
+        format: "standard",
+        published_at: DateTime.utc_now() |> DateTime.add(120, :second)
+      })
+
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+
+      assert has_element?(view, "#video-next-card-#{next_video.id}")
     end
 
     test "signed_in video redirects anonymous user", %{conn: conn, signed_in_video: video} do
@@ -120,10 +169,17 @@ defmodule UrielmWeb.VideoLiveTest do
           thread_id: thread.id
         })
 
-      {:ok, _view, html} = live(conn, ~p"/videos/#{video.slug}")
+      {:ok, view, _html} = live(conn, ~p"/videos/#{video.slug}")
+      child = find_live_child(view, "page-video")
 
-      assert html =~ "Comments"
-      assert html =~ "CommentTree"
+      assert has_element?(view, "#video-tab-comments", "Comments")
+
+      child
+      |> element("#video-tab-comments")
+      |> render_click()
+
+      assert has_element?(child, "#video-comments-section")
+      assert render(child) =~ "CommentTree"
     end
 
     @tag :skip

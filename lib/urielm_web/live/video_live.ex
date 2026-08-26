@@ -26,9 +26,10 @@ defmodule UrielmWeb.VideoLive do
        |> assign(:completed, false)
        |> assign(:thread, nil)
        |> assign(:comment_tree, [])
+       |> assign(:comment_form, to_form(%{"body" => ""}))
        |> assign(:nav_items, [])
        |> assign(:active_section, "description")
-       |> assign(:dock_tab, "home")
+       |> assign(:next_video, nil)
        |> assign(:reporting_comment_id, nil)
        |> assign(:upvotes, 0)
        |> assign(:downvotes, 0)
@@ -67,6 +68,7 @@ defmodule UrielmWeb.VideoLive do
 
             nav_items = build_nav_items(video, thread)
             default_section = (List.first(nav_items) || %{key: "description"}).key
+            next_video = next_accessible_video(video, user)
 
             # Load vote data
             {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", video.id)
@@ -79,9 +81,10 @@ defmodule UrielmWeb.VideoLive do
              |> assign(:completed, completed)
              |> assign(:thread, thread)
              |> assign(:comment_tree, comment_tree)
+             |> assign(:comment_form, to_form(%{"body" => ""}))
              |> assign(:nav_items, nav_items)
              |> assign(:active_section, default_section)
-             |> assign(:dock_tab, "home")
+             |> assign(:next_video, next_video)
              |> assign(:reporting_comment_id, nil)
              |> assign(:upvotes, upvotes)
              |> assign(:downvotes, downvotes)
@@ -135,17 +138,12 @@ defmodule UrielmWeb.VideoLive do
 
     items =
       if video.description_md && video.description_md != "",
-        do: items ++ [%{key: "description", label: "Description"}],
+        do: items ++ [%{key: "description", label: "Overview"}],
         else: items
 
     items =
       if video.resources_md && video.resources_md != "",
         do: items ++ [%{key: "resources", label: "Resources"}],
-        else: items
-
-    items =
-      if video.author_name,
-        do: items ++ [%{key: "author", label: "About"}],
         else: items
 
     # Add comments tab if thread exists
@@ -157,19 +155,12 @@ defmodule UrielmWeb.VideoLive do
     items
   end
 
-  # Visibility helper for mobile dock + desktop tabs
-  # Mobile: show if dock_tab matches
-  # Desktop: show if active_section matches
-  defp section_visibility(dock_tab, active_section, mobile_key, desktop_key) do
-    mobile_matches = dock_tab == mobile_key
-    desktop_matches = active_section == desktop_key
-
-    case {mobile_matches, desktop_matches} do
-      {true, true} -> ""
-      {true, false} -> "lg:hidden"
-      {false, true} -> "hidden lg:block"
-      {false, false} -> "hidden"
-    end
+  defp next_accessible_video(video, user) do
+    Content.list_published_videos(limit: 12)
+    |> Enum.find(fn candidate ->
+      candidate.id != video.id and candidate.format == "standard" and
+        Content.can_view_video?(user, candidate)
+    end)
   end
 
   defp assign_meta_tags(socket, video, slug) do
@@ -226,11 +217,6 @@ defmodule UrielmWeb.VideoLive do
   @impl true
   def handle_event("tab_change", %{"key" => key}, socket) do
     {:noreply, assign(socket, :active_section, key)}
-  end
-
-  @impl true
-  def handle_event("set_dock_tab", %{"tab" => tab}, socket) do
-    {:noreply, assign(socket, :dock_tab, tab)}
   end
 
   @impl true
@@ -461,7 +447,7 @@ defmodule UrielmWeb.VideoLive do
                   props={%{tiktokUrl: @video.tiktok_url, fullscreen: true}}
                   socket={@socket}
                   class="h-full w-full object-cover"
-                ssr={false}
+                  ssr={false}
                 />
               <% else %>
                 <.svelte
@@ -471,7 +457,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                   socket={@socket}
                   class="h-full w-full object-cover"
-                ssr={false}
+                  ssr={false}
                 />
               <% end %>
               
@@ -497,7 +483,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
-              ssr={false}
+                ssr={false}
               />
               
     <!-- Comments drawer trigger -->
@@ -572,7 +558,7 @@ defmodule UrielmWeb.VideoLive do
                       name="MarkdownRenderer"
                       props={%{content: @video.description_md}}
                       socket={@socket}
-                    ssr={false}
+                      ssr={false}
                     />
                   </div>
                 <% end %>
@@ -619,7 +605,7 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
-              ssr={false}
+                ssr={false}
               />
             <% else %>
               <p class="text-sm text-base-content/60 text-center py-8">
@@ -665,52 +651,108 @@ defmodule UrielmWeb.VideoLive do
   end
 
   defp render_standard(assigns) do
+    assigns =
+      assigns
+      |> assign(:viewer_id, viewer_id(assigns.current_user))
+      |> assign(:viewer_admin?, viewer_admin?(assigns.current_user))
+      |> assign(:has_nav_items?, assigns.nav_items != [])
+
     ~H"""
-    <div class="min-h-screen bg-base-100 text-base-content pt-16">
-      <!-- Video Embed -->
-      <div class="w-full max-w-[1800px] mx-auto">
-        <%= if @video.tiktok_url && @video.tiktok_url != "" do %>
-          <.svelte
-            name="TikTokEmbed"
-            props={%{tiktokUrl: @video.tiktok_url}}
-            socket={@socket}
-          ssr={false}
-          />
-        <% else %>
-          <div class="aspect-video bg-base-content overflow-hidden lg:rounded-xl">
+    <div id="standard-video-page" class="min-h-screen bg-base-100 text-base-content">
+      <main class="mx-auto w-full max-w-7xl px-0 pb-28 pt-5 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16">
+        <.link
+          id="video-back-link"
+          navigate={~p"/videos"}
+          class="group mx-4 mb-4 inline-flex items-center gap-2 text-sm font-bold text-base-content/50 transition-colors hover:text-primary sm:mx-0"
+        >
+          <.um_icon
+            name="hero-arrow-left"
+            class="size-4 transition-transform group-hover:-translate-x-0.5"
+          /> All videos
+        </.link>
+
+        <section
+          id="video-player-shell"
+          aria-label="Video player"
+          class="relative aspect-video overflow-hidden bg-[#080d19] shadow-2xl shadow-black/25 sm:rounded-2xl sm:border sm:border-primary/15"
+        >
+          <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_65%_20%,color-mix(in_oklab,var(--color-primary)_22%,transparent),transparent_38%)]">
+          </div>
+          <%= if @video.tiktok_url && @video.tiktok_url != "" do %>
+            <.svelte
+              name="TikTokEmbed"
+              props={%{tiktokUrl: @video.tiktok_url}}
+              socket={@socket}
+              class="relative z-10 h-full w-full"
+              ssr={false}
+            />
+          <% else %>
             <.svelte
               name="YouTubePlayer"
               props={%{videoId: extract_youtube_id(@video.youtube_url), controls: true}}
               socket={@socket}
-              class="w-full h-full"
-            ssr={false}
+              class="relative z-10 h-full w-full"
+              ssr={false}
             />
+          <% end %>
+        </section>
+
+        <section
+          id="video-detail-header"
+          class="grid gap-6 px-4 py-7 sm:px-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:py-9"
+        >
+          <div>
+            <p class="flex items-center gap-2 font-mono text-[0.68rem] font-black uppercase tracking-[0.16em] text-primary">
+              <span class="size-1.5 rounded-full bg-primary"></span> Standard video
+            </p>
+            <h1 class="mt-3 max-w-4xl text-3xl font-black leading-[1.08] tracking-[-0.04em] text-base-content sm:text-4xl lg:text-5xl">
+              {@video.title}
+            </h1>
+
+            <div class="mt-5 flex items-center gap-3 text-sm text-base-content/55">
+              <span class="grid size-10 place-items-center rounded-full border border-primary/25 bg-primary/10 font-black text-primary">
+                {author_initial(@video.author_name)}
+              </span>
+              <div>
+                <%= if @video.author_url do %>
+                  <a
+                    href={@video.author_url}
+                    target="_blank"
+                    rel="noopener"
+                    class="font-bold text-base-content transition-colors hover:text-primary"
+                  >
+                    {author_name(@video)}
+                  </a>
+                <% else %>
+                  <p class="font-bold text-base-content">{author_name(@video)}</p>
+                <% end %>
+                <p class="mt-0.5 text-xs">
+                  Published {format_video_date(video_date(@video))}
+                </p>
+              </div>
+            </div>
           </div>
-        <% end %>
-      </div>
-      
-    <!-- Main Content -->
-      <div class="max-w-4xl mx-auto px-4 py-6 pb-24 lg:pb-6">
-        <!-- Video Title & Actions -->
-        <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
-          <h1 class="text-2xl font-bold text-base-content">{@video.title}</h1>
-          <div class="flex items-center gap-3">
-            <!-- Mark Complete -->
-            <%= if @current_user do %>
-              <label class="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-success checkbox-sm"
-                  checked={@completed}
-                  phx-click={if @completed, do: "unmark_video_complete", else: "mark_video_complete"}
-                />
-                <span class="text-sm text-base-content/70">
-                  {if @completed, do: "Completed", else: "Mark complete"}
-                </span>
-              </label>
-            <% end %>
-            <!-- Vote Buttons -->
-            <div class="flex items-center bg-base-200 rounded-full px-2 py-1">
+
+          <div class="flex flex-wrap items-center gap-2 lg:justify-end lg:pt-7">
+            <button
+              :if={@current_user}
+              id="video-completion-control"
+              type="button"
+              phx-click={if(@completed, do: "unmark_video_complete", else: "mark_video_complete")}
+              aria-pressed={@completed}
+              class={[
+                "btn btn-sm h-10 rounded-full px-4 transition duration-200",
+                if(@completed,
+                  do: "btn-success",
+                  else: "btn-primary"
+                )
+              ]}
+            >
+              <.um_icon name="hero-check-circle" class="size-4" />
+              {if @completed, do: "Completed", else: "Mark complete"}
+            </button>
+
+            <div class="flex h-10 items-center rounded-full border border-base-300/80 bg-base-200/70 px-2">
               <.svelte
                 name="VoteButtons"
                 props={
@@ -725,309 +767,288 @@ defmodule UrielmWeb.VideoLive do
                   }
                 }
                 socket={@socket}
-              ssr={false}
+                ssr={false}
               />
             </div>
+
+            <button
+              id="video-share-button"
+              type="button"
+              aria-label="Copy video link"
+              phx-hook="CopyToClipboard"
+              data-text={@canonical_url}
+              class="btn btn-ghost btn-circle btn-sm size-10 border border-base-300/80 bg-base-200/70 transition hover:border-primary/35 hover:text-primary"
+            >
+              <.um_icon name="hero-arrow-up-on-square" class="size-4" />
+            </button>
           </div>
-        </div>
-        
-    <!-- Author Info (if available) -->
-        <%= if @video.author_name do %>
-          <div class="flex items-center gap-3 pb-4 border-b border-base-300 mb-4">
-            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span class="text-primary font-semibold">
-                {String.upcase(String.slice(@video.author_name, 0, 1))}
-              </span>
-            </div>
-            <div>
-              <%= if @video.author_url do %>
+        </section>
+
+        <div class={[
+          "grid gap-6 px-4 sm:px-0 lg:items-start",
+          if(@has_nav_items?,
+            do: "lg:grid-cols-[minmax(0,1fr)_19rem]",
+            else: "lg:grid-cols-1"
+          )
+        ]}>
+          <article
+            :if={@has_nav_items?}
+            id="video-content-panel"
+            class="card ui-card overflow-hidden"
+          >
+            <nav
+              id="video-detail-tabs"
+              aria-label="Video details"
+              class="flex gap-1 overflow-x-auto border-b border-base-300/70 p-2"
+            >
+              <button
+                :for={item <- @nav_items}
+                id={"video-tab-#{item.key}"}
+                type="button"
+                phx-click="tab_change"
+                phx-value-key={item.key}
+                aria-current={if(@active_section == item.key, do: "page", else: nil)}
+                class={[
+                  "btn btn-sm flex-none rounded-xl border-0 px-4 transition duration-200",
+                  if(@active_section == item.key,
+                    do: "bg-primary/10 text-primary shadow-none hover:bg-primary/15",
+                    else: "btn-ghost text-base-content/50 hover:text-base-content"
+                  )
+                ]}
+              >
+                {item.label}
+                <span
+                  :if={Map.has_key?(item, :count)}
+                  class="rounded-full bg-base-300/70 px-1.5 py-0.5 text-[0.62rem]"
+                >
+                  {item.count}
+                </span>
+              </button>
+            </nav>
+
+            <section
+              :if={@active_section == "description"}
+              id="video-description-section"
+              class="card-body p-5 sm:p-7"
+            >
+              <h2 class="text-xl font-black tracking-tight text-base-content">Description</h2>
+              <div class="prose prose-sm mt-1 max-w-none text-base-content/75 sm:prose-base">
+                <.svelte
+                  name="MarkdownRenderer"
+                  props={%{content: @video.description_md}}
+                  socket={@socket}
+                  ssr={false}
+                />
+              </div>
+            </section>
+
+            <section
+              :if={@active_section == "resources"}
+              id="video-resources-section"
+              class="card-body p-5 sm:p-7"
+            >
+              <h2 class="text-xl font-black tracking-tight text-base-content">Resources</h2>
+              <div class="prose prose-sm mt-1 max-w-none text-base-content/75 sm:prose-base">
+                <.svelte
+                  name="MarkdownRenderer"
+                  props={%{content: @video.resources_md}}
+                  socket={@socket}
+                  ssr={false}
+                />
+              </div>
+            </section>
+
+            <section
+              :if={@active_section == "comments" && @thread}
+              id="video-comments-section"
+              class="card-body p-5 sm:p-7"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <h2 class="text-xl font-black tracking-tight text-base-content">
+                  Discussion
+                </h2>
+                <span class="badge badge-ghost font-mono text-xs">
+                  {@thread.comment_count} comments
+                </span>
+              </div>
+
+              <%= if @current_user do %>
+                <div class="mt-5 flex gap-3 border-b border-base-300/60 pb-6">
+                  <span class="grid size-10 flex-none place-items-center rounded-full bg-primary text-sm font-black text-primary-content">
+                    {user_initial(@current_user)}
+                  </span>
+                  <.form
+                    for={@comment_form}
+                    id="video-comment-form"
+                    phx-submit="create_comment"
+                    class="min-w-0 flex-1 space-y-3"
+                  >
+                    <.input
+                      field={@comment_form[:body]}
+                      id="video-comment-input"
+                      type="textarea"
+                      placeholder="Add to the discussion…"
+                      required
+                      phx-hook="ExpandingTextarea"
+                      phx-focus={JS.show(to: "#video-comment-actions")}
+                      rows="2"
+                      class="textarea textarea-bordered w-full resize-none bg-base-200/60"
+                    />
+                    <div id="video-comment-actions" class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-sm rounded-full"
+                        phx-click={
+                          JS.dispatch("reset", to: "#video-comment-form")
+                          |> JS.set_attribute({"rows", "2"}, to: "#video-comment-input")
+                        }
+                      >
+                        Cancel
+                      </button>
+                      <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
+                        Comment
+                      </button>
+                    </div>
+                  </.form>
+                </div>
+              <% else %>
+                <div class="mt-5 flex items-center gap-3 rounded-xl border border-base-300/70 bg-base-200/50 p-4">
+                  <span class="grid size-9 place-items-center rounded-full bg-base-300 font-bold">
+                    ?
+                  </span>
+                  <p class="text-sm text-base-content/60">
+                    <.link navigate={~p"/signin"} class="font-bold text-primary hover:underline">
+                      Sign in
+                    </.link>
+                    to join the discussion.
+                  </p>
+                </div>
+              <% end %>
+
+              <div class="mt-6">
+                <.svelte
+                  name="CommentTree"
+                  props={
+                    %{
+                      comments: @comment_tree,
+                      current_user_id: @viewer_id,
+                      current_user_is_admin: @viewer_admin?,
+                      thread_author_id: @thread.author_id,
+                      solved_comment_id: nil
+                    }
+                  }
+                  socket={@socket}
+                  ssr={false}
+                />
+              </div>
+            </section>
+          </article>
+
+          <aside
+            id="video-context-sidebar"
+            class={[
+              "space-y-4 lg:sticky lg:top-24",
+              !@has_nav_items? && "lg:max-w-sm"
+            ]}
+          >
+            <section :if={@video.author_name} id="video-creator-card" class="card ui-card">
+              <div class="card-body p-5">
+                <p class="font-mono text-[0.65rem] font-black uppercase tracking-[0.14em] text-base-content/40">
+                  About the creator
+                </p>
+                <div class="mt-2 flex items-center gap-3">
+                  <span class="grid size-11 place-items-center rounded-full border border-primary/25 bg-primary/10 font-black text-primary">
+                    {author_initial(@video.author_name)}
+                  </span>
+                  <div class="min-w-0">
+                    <p class="truncate font-black text-base-content">{@video.author_name}</p>
+                    <p class="text-xs text-base-content/45">Video creator</p>
+                  </div>
+                </div>
+                <div
+                  :if={@video.author_bio_md && @video.author_bio_md != ""}
+                  class="prose prose-sm mt-3 max-w-none text-base-content/65"
+                >
+                  <.svelte
+                    name="MarkdownRenderer"
+                    props={%{content: @video.author_bio_md}}
+                    socket={@socket}
+                    ssr={false}
+                  />
+                </div>
                 <a
+                  :if={@video.author_url}
                   href={@video.author_url}
                   target="_blank"
                   rel="noopener"
-                  class="font-semibold text-base-content hover:text-primary"
+                  class="btn btn-ghost btn-sm mt-2 justify-start rounded-xl px-0 text-primary hover:bg-transparent"
                 >
-                  {@video.author_name}
+                  Visit creator profile <.um_icon name="hero-arrow-up-right" class="size-4" />
                 </a>
-              <% else %>
-                <p class="font-semibold text-base-content">{@video.author_name}</p>
-              <% end %>
-              <p class="text-xs text-base-content/60">
-                {@video.format || "standard"} video {if date =
-                                                          @video.published_at || @video.inserted_at,
-                                                        do:
-                                                          " · #{Calendar.strftime(date, "%b %d, %Y")}",
-                                                        else: ""}
-              </p>
-            </div>
-          </div>
-        <% end %>
-        
-    <!-- Desktop: UnderlineNav -->
-        <%= if length(@nav_items) > 0 do %>
-          <div class="hidden lg:block mb-6">
-            <.svelte
-              name="UnderlineNav"
-              props={
-                %{
-                  items: @nav_items,
-                  activeKey: @active_section,
-                  showCounts: true,
-                  size: "md"
-                }
-              }
-              socket={@socket}
-            ssr={false}
-            />
-          </div>
-        <% end %>
-        
-    <!-- Content Sections -->
-        <div class="space-y-4">
-          <!-- HOME/DESCRIPTION TAB -->
-          <div class={[
-            "space-y-4",
-            section_visibility(@dock_tab, @active_section, "home", "description")
-          ]}>
-            <%= if @video.description_md && @video.description_md != "" do %>
-              <div class="bg-base-200 rounded-xl p-4">
-                <div class="prose prose-sm max-w-none">
-                  <.svelte
-                    name="MarkdownRenderer"
-                    props={%{content: @video.description_md}}
-                    socket={@socket}
-                  ssr={false}
-                  />
-                </div>
               </div>
-            <% end %>
-          </div>
-          
-    <!-- RESOURCES TAB -->
-          <div class={[
-            "space-y-4",
-            section_visibility(@dock_tab, @active_section, "resources", "resources")
-          ]}>
-            <%= if @video.resources_md && @video.resources_md != "" do %>
-              <h3 class="text-lg font-semibold text-base-content">Resources</h3>
-              <div class="bg-base-200 rounded-xl p-4">
-                <div class="prose prose-sm max-w-none">
-                  <.svelte
-                    name="MarkdownRenderer"
-                    props={%{content: @video.resources_md}}
-                    socket={@socket}
-                  ssr={false}
-                  />
-                </div>
-              </div>
-            <% else %>
-              <p class="text-sm text-base-content/60 text-center py-8">
-                No resources available for this video.
-              </p>
-            <% end %>
-          </div>
-          
-    <!-- AUTHOR TAB -->
-          <div class={[
-            "space-y-4",
-            section_visibility(@dock_tab, @active_section, "author", "author")
-          ]}>
-            <%= if @video.author_name do %>
-              <h3 class="text-lg font-semibold text-base-content">About the Author</h3>
-              <div class="bg-base-200 rounded-xl p-4">
-                <%= if @video.author_url do %>
-                  <a
-                    href={@video.author_url}
-                    target="_blank"
-                    rel="noopener"
-                    class="link link-primary font-medium"
-                  >
-                    {@video.author_name}
-                  </a>
-                <% else %>
-                  <p class="font-medium text-base-content">{@video.author_name}</p>
-                <% end %>
-                <%= if @video.author_bio_md && @video.author_bio_md != "" do %>
-                  <div class="mt-3 prose prose-sm max-w-none">
-                    <.svelte
-                      name="MarkdownRenderer"
-                      props={%{content: @video.author_bio_md}}
-                      socket={@socket}
-                    ssr={false}
-                    />
-                  </div>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
-          
-    <!-- COMMENTS TAB -->
-          <div class={[
-            "space-y-4",
-            section_visibility(@dock_tab, @active_section, "comments", "comments")
-          ]}>
-            <%= if @thread do %>
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-base-content">
-                  {@thread.comment_count} Comments
-                </h3>
-              </div>
-              
-    <!-- Add Comment Form -->
-              <%= if @current_user do %>
-                <div class="flex gap-3">
-                  <div class="avatar placeholder">
-                    <div class="bg-primary text-primary-content w-10 h-10 rounded-full">
-                      <span class="text-sm">
-                        {String.upcase(
-                          String.slice(@current_user.username || @current_user.email || "U", 0, 1)
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="flex-1">
-                    <form phx-submit="create_comment" class="space-y-3" id="video-comment-form">
-                      <textarea
-                        id="video-comment-input"
-                        name="body"
-                        placeholder="Add a comment..."
-                        required
-                        phx-hook="ExpandingTextarea"
-                        phx-focus={JS.show(to: "#video-comment-actions")}
-                        class="textarea textarea-ghost w-full focus:textarea-bordered bg-transparent resize-none"
-                        rows="1"
-                      ></textarea>
-                      <div id="video-comment-actions" class="hidden flex justify-end gap-2">
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-sm"
-                          phx-click={
-                            JS.hide(to: "#video-comment-actions")
-                            |> JS.dispatch("reset", to: "#video-comment-form")
-                            |> JS.set_attribute({"rows", "1"}, to: "#video-comment-input")
-                          }
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary btn-sm">Comment</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              <% else %>
-                <div class="flex gap-3 items-center p-4 bg-base-200/50 rounded-lg">
-                  <div class="avatar placeholder">
-                    <div class="bg-base-300 w-10 h-10 rounded-full">
-                      <span class="text-sm">?</span>
-                    </div>
-                  </div>
-                  <span class="text-base-content/70">
-                    <.link navigate={~p"/signin"} class="link link-primary">Sign in</.link> to comment
+            </section>
+
+            <section
+              :if={@video.resources_md && @video.resources_md != ""}
+              id="video-resources-card"
+              class="card ui-card"
+            >
+              <div class="card-body p-5">
+                <p class="font-mono text-[0.65rem] font-black uppercase tracking-[0.14em] text-base-content/40">
+                  Included resources
+                </p>
+                <button
+                  type="button"
+                  phx-click="tab_change"
+                  phx-value-key="resources"
+                  class="btn btn-ghost mt-2 h-auto min-h-0 justify-start gap-3 rounded-xl border-t border-base-300/60 px-0 pt-4 text-left hover:bg-transparent hover:text-primary"
+                >
+                  <span class="grid size-9 flex-none place-items-center rounded-lg bg-base-300/70 text-primary">
+                    <.um_icon name="hero-link" class="size-4" />
                   </span>
-                </div>
-              <% end %>
+                  <span>
+                    <span class="block text-sm font-bold">Open video resources</span>
+                    <span class="mt-0.5 block text-xs font-normal text-base-content/40">
+                      Links, notes, and downloads
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </section>
 
-              <.svelte
-                name="CommentTree"
-                props={
-                  %{
-                    comments: @comment_tree,
-                    current_user_id: (@current_user && @current_user.id) || nil,
-                    current_user_is_admin: (@current_user && @current_user.is_admin) || false,
-                    thread_author_id: @thread.author_id,
-                    solved_comment_id: nil
-                  }
-                }
-                socket={@socket}
-              ssr={false}
-              />
-            <% else %>
-              <p class="text-sm text-base-content/60 text-center py-8">
-                Comments not enabled for this video.
-              </p>
-            <% end %>
-          </div>
+            <.link
+              :if={@next_video}
+              id={"video-next-card-#{@next_video.id}"}
+              navigate={~p"/videos/#{@next_video.slug}"}
+              class="card ui-card ui-card-interactive group overflow-hidden"
+            >
+              <div class="relative aspect-video overflow-hidden bg-[radial-gradient(circle_at_70%_25%,color-mix(in_oklab,var(--color-primary)_28%,transparent),transparent_34%),linear-gradient(145deg,var(--color-base-300),var(--color-base-200))]">
+                <img
+                  :if={video_thumbnail(@next_video)}
+                  src={video_thumbnail(@next_video)}
+                  alt=""
+                  loading="lazy"
+                  class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                />
+                <span class="absolute inset-0 grid place-items-center bg-black/10">
+                  <span class="grid size-10 place-items-center rounded-full bg-white/90 text-[#173467] shadow-lg">
+                    <.um_icon name="hero-play-solid" class="ml-0.5 size-4" />
+                  </span>
+                </span>
+              </div>
+              <div class="card-body p-5">
+                <p class="font-mono text-[0.65rem] font-black uppercase tracking-[0.14em] text-primary">
+                  Up next
+                </p>
+                <h2 class="mt-1 line-clamp-2 text-sm font-black leading-snug text-base-content transition-colors group-hover:text-primary">
+                  {@next_video.title}
+                </h2>
+              </div>
+            </.link>
+          </aside>
         </div>
-      </div>
-      
-    <!-- Mobile Bottom Dock -->
-      <div class="dock fixed bottom-0 left-0 right-0 z-20 lg:hidden bg-base-200 border-t border-base-300">
-        <button
-          type="button"
-          phx-click="set_dock_tab"
-          phx-value-tab="home"
-          class={["dock-item", if(@dock_tab == "home", do: "dock-active", else: "")]}
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
-          <span class="dock-label text-xs">Home</span>
-        </button>
+      </main>
 
-        <%= if @video.resources_md && @video.resources_md != "" do %>
-          <button
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="resources"
-            class={["dock-item", if(@dock_tab == "resources", do: "dock-active", else: "")]}
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-            <span class="dock-label text-xs">Resources</span>
-          </button>
-        <% end %>
-
-        <%= if @video.author_name do %>
-          <button
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="author"
-            class={["dock-item", if(@dock_tab == "author", do: "dock-active", else: "")]}
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            <span class="dock-label text-xs">About</span>
-          </button>
-        <% end %>
-
-        <%= if @thread do %>
-          <button
-            type="button"
-            phx-click="set_dock_tab"
-            phx-value-tab="comments"
-            class={["dock-item", if(@dock_tab == "comments", do: "dock-active", else: "")]}
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            <span class="dock-label text-xs">{@thread.comment_count}</span>
-          </button>
-        <% end %>
-      </div>
-      
-    <!-- Report Comment Modal -->
       <.report_modal
         id="report_comment_modal"
         title="Report Comment"
@@ -1039,5 +1060,41 @@ defmodule UrielmWeb.VideoLive do
       />
     </div>
     """
+  end
+
+  defp author_name(%{author_name: name}) when is_binary(name) and name != "", do: name
+  defp author_name(_video), do: "Urielm"
+
+  defp author_initial(name) when is_binary(name) and name != "" do
+    case name |> String.trim() |> String.first() do
+      nil -> "U"
+      initial -> String.upcase(initial)
+    end
+  end
+
+  defp author_initial(_name), do: "U"
+
+  defp user_initial(%{username: username}) when is_binary(username) and username != "",
+    do: author_initial(username)
+
+  defp user_initial(%{email: email}), do: author_initial(email)
+
+  defp viewer_id(nil), do: nil
+  defp viewer_id(user), do: user.id
+
+  defp viewer_admin?(nil), do: false
+  defp viewer_admin?(user), do: user.is_admin
+
+  defp video_date(%{published_at: nil, inserted_at: inserted_at}), do: inserted_at
+  defp video_date(%{published_at: published_at}), do: published_at
+
+  defp format_video_date(nil), do: "recently"
+  defp format_video_date(date), do: Calendar.strftime(date, "%b %d, %Y")
+
+  defp video_thumbnail(video) do
+    case extract_youtube_id(video.youtube_url) do
+      nil -> nil
+      id -> "https://img.youtube.com/vi/#{id}/hqdefault.jpg"
+    end
   end
 end
