@@ -437,4 +437,67 @@ defmodule Urielm.AccountsTest do
       assert Accounts.prompt_saved?(nil, prompt.id) == false
     end
   end
+
+  describe "update_user_profile/2 (profile form mass-assignment guard)" do
+    setup do
+      import Urielm.Fixtures
+      %{user: user_fixture()}
+    end
+
+    test "cannot change email or email_verified through the profile update path", %{user: user} do
+      original_email = user.email
+
+      params = %{
+        "email" => "attacker@example.com",
+        "email_verified" => "true",
+        "active" => "false",
+        "bio" => "legit bio update"
+      }
+
+      {:ok, updated} = Accounts.update_user_profile(user, params)
+
+      assert updated.email == original_email
+      assert updated.email_verified == user.email_verified
+      assert updated.active == true
+      assert updated.bio == "legit bio update"
+    end
+
+    test "still updates the allowed profile fields", %{user: user} do
+      {:ok, updated} =
+        Accounts.update_user_profile(user, %{
+          "display_name" => "New Name",
+          "location" => "Berlin",
+          "website" => "https://example.com",
+          "avatar_url" => "https://example.com/a.png"
+        })
+
+      assert updated.display_name == "New Name"
+      assert updated.location == "Berlin"
+      assert updated.website == "https://example.com"
+      assert updated.avatar_url == "https://example.com/a.png"
+    end
+  end
+
+  describe "update_user_password/2" do
+    setup do
+      import Urielm.Fixtures
+      user = user_fixture()
+
+      unverified =
+        user
+        |> Ecto.Changeset.change(%{email_verified: false})
+        |> Urielm.Repo.update!()
+
+      %{user: unverified}
+    end
+
+    test "changing a password does not flip email_verified", %{user: user} do
+      assert user.email_verified == false
+
+      {:ok, updated} = Accounts.update_user_password(user, %{password: "new-password-123"})
+
+      assert updated.email_verified == false
+      assert Bcrypt.verify_pass("new-password-123", updated.password_hash)
+    end
+  end
 end

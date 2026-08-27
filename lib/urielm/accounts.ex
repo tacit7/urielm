@@ -167,11 +167,15 @@ defmodule Urielm.Accounts do
   Returns a changeset for tracking user profile changes.
   """
   def change_user_profile(%User{} = user, attrs \\ %{}) do
-    User.changeset(user, attrs)
+    User.profile_changeset(user, attrs)
   end
 
   @doc """
   Updates a user's profile information.
+
+  Casts every profile-related field including `:email`. Reserved for internal
+  and OAuth callers that legitimately set the email of record. Do NOT feed raw
+  params from the profile form here; use `update_user_profile/2` for that.
   """
   def update_user(%User{} = user, attrs) do
     user
@@ -180,11 +184,24 @@ defmodule Urielm.Accounts do
   end
 
   @doc """
-  Updates a user's password.
+  Updates a user's self-service profile fields (display name, bio, location,
+  website, avatar URL).
+
+  Cannot change email, email verification, account state, or username. This is
+  the only path the profile form is allowed to reach.
+  """
+  def update_user_profile(%User{} = user, attrs) do
+    user
+    |> User.profile_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates a user's password. Only touches the password hash.
   """
   def update_user_password(%User{} = user, attrs) do
     user
-    |> User.registration_changeset(attrs)
+    |> User.password_changeset(attrs)
     |> Repo.update()
   end
 
