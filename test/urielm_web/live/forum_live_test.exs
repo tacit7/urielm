@@ -55,8 +55,9 @@ defmodule UrielmWeb.ForumLiveTest do
 
       assert has_element?(view, "#forum-mobile-header")
       assert has_element?(view, "#forum-sidebar-nav")
-      assert has_element?(view, "#community-discovery-header")
-      assert has_element?(view, "#forum-search-link[href='/forum/search']")
+      assert has_element?(view, "#forum-page-shell.ui-page-shell")
+      assert has_element?(view, "#community-discovery-header.ui-page-header")
+      assert has_element?(view, "#forum-search-link.ui-card[href='/forum/search']")
       assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Latest")
     end
 
@@ -90,6 +91,7 @@ defmodule UrielmWeb.ForumLiveTest do
       assert has_element?(view, "#community-discovery-header")
       assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Categories")
       assert has_element?(view, "#forum-category-#{category.id}")
+      assert has_element?(view, "#forum-category-surface-#{category.id}.ui-card")
       assert has_element?(view, "#forum-board-#{board.id}[href='/forum/b/#{board.slug}']")
     end
 
