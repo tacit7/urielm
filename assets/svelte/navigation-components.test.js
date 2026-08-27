@@ -21,10 +21,17 @@ test("desktop navigation uses the daisyUI horizontal menu structure", () => {
 })
 
 test("theme control swaps aligned sun and moon icons", () => {
+  assert.match(themeToggle, /let \{ id = 'tokyo-theme-toggle' \} = \$props\(\)/)
+  assert.match(themeToggle, /id=\{id\}/)
   assert.match(themeToggle, /class:swap-active=\{currentTheme === DARK_THEME\}/)
   assert.match(themeToggle, /class="[^"]*swap swap-rotate[^"]*size-11[^"]*"/)
   assert.match(themeToggle, /<UMIcon name="sun" className="swap-on size-4" \/>/)
   assert.match(themeToggle, /<UMIcon name="moon" className="swap-off size-4" \/>/)
+})
+
+test("mobile dropdown owns the mobile theme control", () => {
+  assert.match(navbar, /<div class="hidden lg:block">\s*<ThemeToggle id="desktop-theme-toggle" \/>\s*<\/div>/)
+  assert.match(navbar, /id="mobile-nav"[\s\S]*id="mobile-theme-control"[\s\S]*Appearance[\s\S]*<ThemeToggle id="mobile-theme-toggle" \/>/)
 })
 
 test("account menu uses the shared icon system and controlled state", () => {

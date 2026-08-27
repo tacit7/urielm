@@ -166,7 +166,9 @@
         </a>
       {/if}
 
-      <ThemeToggle />
+      <div class="hidden lg:block">
+        <ThemeToggle id="desktop-theme-toggle" />
+      </div>
 
       {#if currentUser}
         <div class="hidden lg:block">
@@ -237,6 +239,14 @@
                 </li>
               {/if}
             </ul>
+
+            <div
+              id="mobile-theme-control"
+              class="mt-1 flex min-h-12 items-center justify-between border-t border-base-300/60 px-3 pt-1"
+            >
+              <span class="text-sm font-semibold text-base-content/70">Appearance</span>
+              <ThemeToggle id="mobile-theme-toggle" />
+            </div>
 
             {#if !currentUser}
               <div class="grid grid-cols-2 gap-2 p-2 pt-3">

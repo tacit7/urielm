@@ -2,6 +2,7 @@
   import UMIcon from './UMIcon.svelte'
   import { DARK_THEME, normalizeTheme, oppositeTheme } from '../js/theme.js'
 
+  let { id = 'tokyo-theme-toggle' } = $props()
   let currentTheme = $state(DARK_THEME)
 
   function toggleTheme() {
@@ -32,7 +33,7 @@
 </script>
 
 <button
-  id="tokyo-theme-toggle"
+  id={id}
   onclick={toggleTheme}
   class="btn btn-ghost btn-circle swap swap-rotate size-11 text-base-content/65 transition duration-200 hover:bg-primary/10 hover:text-primary motion-reduce:transition-none"
   class:swap-active={currentTheme === DARK_THEME}
