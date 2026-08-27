@@ -9,6 +9,7 @@ defmodule UrielmWeb.SignupEmailLive do
       |> assign(:form, to_form(%{"email" => "", "password" => ""}))
       |> assign(:error, nil)
       |> assign(:loading, false)
+      |> assign(:page_title, "Create account with email")
 
     {:ok, socket}
   end
@@ -17,101 +18,74 @@ defmodule UrielmWeb.SignupEmailLive do
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash}>
-      <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <div class="max-w-md w-full space-y-8">
-          <div class="text-center">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-              Create account
-            </h1>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Sign up with your email address
-            </p>
-          </div>
+      <div id="auth-page" class="ui-auth-page">
+        <div class="ui-auth-frame">
+          <section id="signup-email-card" class="ui-auth-panel">
+            <header>
+              <p class="ui-eyebrow text-secondary">Email signup</p>
+              <h1 class="mt-2 text-3xl font-black text-base-content">Create your account</h1>
+              <p class="mt-2 text-sm leading-relaxed text-base-content/55">
+                Use your email address and a secure password to get started.
+              </p>
+            </header>
 
-          <.form for={@form} phx-submit="submit" class="space-y-4">
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
-              </label>
-              <input
+            <.form for={@form} phx-submit="submit" id="signup-email-form" class="mt-7 space-y-4">
+              <.input
+                field={@form[:email]}
+                id="signup-email-address"
                 type="email"
-                name="email"
-                id="email"
-                value={@form[:email].value}
+                label="Email address"
                 required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autocomplete="email"
                 placeholder="you@example.com"
               />
-            </div>
 
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <input
+              <.input
+                field={@form[:password]}
+                id="signup-email-password"
                 type="password"
-                name="password"
-                id="password"
-                value={@form[:password].value}
+                label="Password"
                 required
+                autocomplete="new-password"
                 minlength="8"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                help="Use at least 8 characters."
                 placeholder="At least 8 characters"
               />
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Minimum 8 characters
-              </p>
-            </div>
 
-            <%= if @error do %>
-              <div class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                <p class="text-sm text-red-600 dark:text-red-400">{@error}</p>
-              </div>
-            <% end %>
-
-            <button
-              type="submit"
-              disabled={@loading}
-              class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <%= if @loading do %>
-                <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  >
-                  </circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  >
-                  </path>
-                </svg>
-              <% else %>
-                Create account
+              <%= if @error do %>
+                <.form_feedback id="signup-email-error" kind={:error} title="Account not created">
+                  {@error}
+                </.form_feedback>
               <% end %>
-            </button>
-          </.form>
 
-          <div class="text-center space-y-3">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Already have an account?
-              <a href="/signin" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                Sign in
-              </a>
-            </p>
+              <.button
+                id="signup-email-submit"
+                type="submit"
+                disabled={@loading}
+                loading_label="Creating account…"
+                class="btn btn-primary h-12 w-full rounded-full font-bold"
+              >
+                Create account
+              </.button>
+            </.form>
 
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              <a href="/signup" class="font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                ← Back to signup options
-              </a>
-            </p>
-          </div>
+            <div class="mt-6 space-y-3 text-center text-sm text-base-content/55">
+              <p>
+                Already have an account?
+                <.link navigate={~p"/signin"} class="font-bold text-primary hover:underline">
+                  Sign in
+                </.link>
+              </p>
+
+              <.link
+                id="signup-options-link"
+                navigate={~p"/signup"}
+                class="inline-flex items-center gap-1.5 font-semibold text-base-content/60 hover:text-primary"
+              >
+                <.um_icon name="hero-arrow-left" class="size-4" /> Signup options
+              </.link>
+            </div>
+          </section>
         </div>
       </div>
     </Layouts.auth>

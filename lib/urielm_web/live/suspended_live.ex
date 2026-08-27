@@ -11,6 +11,7 @@ defmodule UrielmWeb.SuspendedLive do
       socket
       |> assign(:reason, reason)
       |> assign(:until, until)
+      |> assign(:page_title, "Account suspended")
 
     {:ok, socket}
   end
@@ -19,76 +20,53 @@ defmodule UrielmWeb.SuspendedLive do
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash}>
-      <div class="min-h-screen flex items-center justify-center bg-base-100 px-4">
-        <div class="max-w-lg w-full">
-          <div class="card bg-base-200 shadow-xl">
-            <div class="card-body text-center space-y-6">
-              <div class="flex justify-center">
-                <div class="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-8 w-8 text-error"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              <div>
-                <h1 class="text-2xl font-bold text-base-content">
-                  Account Suspended
-                </h1>
-                <p class="mt-2 text-base-content/70">
-                  Your account has been suspended and you cannot access the site.
-                </p>
-              </div>
-
-              <%= if @reason do %>
-                <div class="bg-base-300 rounded-lg p-4 text-left">
-                  <p class="text-sm font-medium text-base-content/70 mb-1">Reason:</p>
-                  <p class="text-base-content">{@reason}</p>
-                </div>
-              <% end %>
-
-              <%= if @until do %>
-                <div class="text-sm text-base-content/70">
-                  <p>
-                    Your suspension ends on
-                    <span class="font-medium text-base-content">
-                      {Calendar.strftime(@until, "%B %d, %Y at %I:%M %p")}
-                    </span>
-                  </p>
-                </div>
-              <% else %>
-                <p :if={@reason} class="text-sm text-base-content/70">
-                  This suspension is permanent.
-                </p>
-              <% end %>
-
-              <div class="divider"></div>
-
-              <div class="text-sm text-base-content/70">
-                <p>
-                  If you believe this is a mistake, please contact us at
-                  <a href="mailto:support@urielm.dev" class="link link-primary">
-                    support@urielm.dev
-                  </a>
-                </p>
-              </div>
-
-              <a href="/" class="btn btn-ghost btn-sm">
-                Return to Home
-              </a>
+      <div id="auth-page" class="ui-auth-page">
+        <div class="ui-auth-frame">
+          <section id="suspended-card" class="ui-auth-panel text-center">
+            <div class="mx-auto grid size-14 place-items-center rounded-2xl bg-error/10 text-error">
+              <.um_icon name="hero-no-symbol" class="size-7" />
             </div>
-          </div>
+
+            <header class="mt-6">
+              <p class="ui-eyebrow text-error">Access restricted</p>
+              <h1 class="mt-2 text-3xl font-black text-base-content">Account suspended</h1>
+              <p class="mt-2 text-sm leading-relaxed text-base-content/55">
+                Your account is currently unable to access the site.
+              </p>
+            </header>
+
+            <div
+              :if={@reason}
+              class="mt-6 rounded-xl border border-base-300 bg-base-100/45 p-4 text-left"
+            >
+              <p class="text-xs font-bold uppercase text-base-content/45">Reason</p>
+              <p class="mt-1 text-sm leading-relaxed text-base-content">{@reason}</p>
+            </div>
+
+            <p :if={@until} class="mt-5 text-sm leading-relaxed text-base-content/60">
+              Your suspension ends on <strong class="font-bold text-base-content">
+                {Calendar.strftime(@until, "%B %d, %Y at %I:%M %p")}
+              </strong>.
+            </p>
+            <p :if={!@until && @reason} class="mt-5 text-sm text-base-content/60">
+              This suspension is permanent.
+            </p>
+
+            <div class="divider my-6"></div>
+
+            <p class="text-sm leading-relaxed text-base-content/60">
+              If you believe this is a mistake, contact <a
+                href="mailto:support@urielm.dev"
+                class="link link-primary font-semibold"
+              >
+                support@urielm.dev
+              </a>.
+            </p>
+
+            <.link navigate={~p"/"} class="btn btn-ghost mt-5 w-full rounded-xl">
+              Return home
+            </.link>
+          </section>
         </div>
       </div>
     </Layouts.auth>

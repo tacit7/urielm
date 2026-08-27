@@ -36,6 +36,7 @@ defmodule UrielmWeb.SetHandleLive do
         |> assign(:available, available)
         |> assign(:error, nil)
         |> assign(:pending_redirect, pending_redirect)
+        |> assign(:page_title, "Choose your handle")
 
       {:ok, socket}
     end
@@ -45,125 +46,95 @@ defmodule UrielmWeb.SetHandleLive do
   def render(assigns) do
     ~H"""
     <Layouts.auth flash={@flash}>
-      <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <div class="max-w-md w-full space-y-6">
-          <div class="text-center">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-              Choose your handle
-            </h1>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Used for your profile URL and mentions
-            </p>
-          </div>
+      <div id="auth-page" class="ui-auth-page">
+        <div class="ui-auth-frame">
+          <section id="set-handle-card" class="ui-auth-panel">
+            <header class="text-center">
+              <div class="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <.um_icon name="hero-at-symbol" class="size-7" />
+              </div>
+              <p class="ui-eyebrow mt-5">Your public identity</p>
+              <h1 class="mt-2 text-3xl font-black text-base-content">Choose your handle</h1>
+              <p class="mt-2 text-sm leading-relaxed text-base-content/55">
+                Your handle appears in your profile URL and mentions.
+              </p>
+            </header>
 
-          <.form for={@form} phx-submit="submit" phx-change="check_availability" class="space-y-4">
-            <div>
-              <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Username
-              </label>
-              <div class="mt-1 relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span class="text-gray-500 dark:text-gray-400 sm:text-sm">@</span>
-                </div>
-                <input
+            <.form
+              for={@form}
+              id="set-handle-form"
+              phx-submit="submit"
+              phx-change="check_availability"
+              class="mt-7 space-y-4"
+            >
+              <div>
+                <.input
+                  field={@form[:username]}
+                  id="handle-username"
                   type="text"
-                  name="username"
-                  id="username"
-                  value={@form[:username].value}
+                  label="Username"
                   phx-debounce="500"
                   required
+                  autocomplete="username"
                   pattern="^(?=.{3,20}$)[a-z0-9]+([_-][a-z0-9]+)*$"
-                  class="block w-full pl-7 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  help="Use 3–20 lowercase letters, numbers, dashes, or underscores."
                   placeholder="yourhandle"
                 />
-                <%= if @checking do %>
-                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg class="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                      >
-                      </circle>
-                      <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      >
-                      </path>
-                    </svg>
-                  </div>
-                <% end %>
-                <%= if @available == true do %>
-                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                <% end %>
-                <%= if @available == false do %>
-                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                <% end %>
+
+                <p
+                  :if={@checking}
+                  id="handle-availability"
+                  role="status"
+                  class="mt-1.5 flex items-center gap-2 text-sm text-base-content/55"
+                >
+                  <.um_icon name="hero-arrow-path" class="size-4 animate-spin" />
+                  Checking availability
+                </p>
+                <p
+                  :if={!@checking && @available == true}
+                  id="handle-availability"
+                  role="status"
+                  class="mt-1.5 flex items-center gap-2 text-sm font-semibold text-success"
+                >
+                  <.um_icon name="hero-check-circle" class="size-4" /> This username is available
+                </p>
+                <p
+                  :if={!@checking && @available == false && is_nil(@error)}
+                  id="handle-availability"
+                  role="status"
+                  class="mt-1.5 flex items-center gap-2 text-sm font-semibold text-error"
+                >
+                  <.um_icon name="hero-x-circle" class="size-4" /> This username is already taken
+                </p>
               </div>
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                3-20 characters, lowercase, letters/numbers/dashes/underscores
-              </p>
-              <%= if @available == false do %>
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">
-                  This username is already taken
-                </p>
-              <% end %>
-              <%= if @error do %>
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {@error}
-                </p>
-              <% end %>
-            </div>
 
-            <div>
-              <label
-                for="display_name"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Display name <span class="text-gray-500 dark:text-gray-400">(optional)</span>
-              </label>
-              <input
+              <.input
+                field={@form[:display_name]}
+                id="handle-display-name"
                 type="text"
-                name="display_name"
-                id="display_name"
-                value={@form[:display_name].value}
+                label="Display name (optional)"
+                autocomplete="name"
                 maxlength="50"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Your Name"
+                help="Used on posts; you can change it later."
+                placeholder="Your name"
               />
-              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Used on posts; you can change it later
-              </p>
-            </div>
 
-            <button
-              type="submit"
-              disabled={@available != true}
-              class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Continue
-            </button>
-          </.form>
+              <%= if @error do %>
+                <.form_feedback id="set-handle-error" kind={:error} title="Handle not available">
+                  {@error}
+                </.form_feedback>
+              <% end %>
+
+              <.button
+                id="set-handle-submit"
+                type="submit"
+                disabled={@available != true}
+                class="btn btn-primary h-12 w-full rounded-full font-bold"
+              >
+                Continue
+              </.button>
+            </.form>
+          </section>
         </div>
       </div>
     </Layouts.auth>

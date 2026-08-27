@@ -19,7 +19,7 @@ defmodule UrielmWeb.SigninLive do
     <Layouts.auth flash={@flash}>
       <div
         id="auth-page"
-        class="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_18%_20%,color-mix(in_oklab,var(--color-secondary)_10%,transparent),transparent_34%),radial-gradient(circle_at_82%_80%,color-mix(in_oklab,var(--color-primary)_8%,transparent),transparent_32%)] px-5 pb-12 pt-24 sm:px-7 lg:px-8 lg:py-28"
+        class="ui-auth-page lg:px-8 lg:py-28"
       >
         <div class="mx-auto grid min-h-[calc(100vh-8rem)] w-full max-w-6xl items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,29rem)] lg:gap-20">
           <section id="auth-story" class="hidden max-w-xl lg:block">
@@ -55,7 +55,7 @@ defmodule UrielmWeb.SigninLive do
 
           <section
             id="signin-card"
-            class="mx-auto w-full max-w-md rounded-3xl border border-base-300/70 bg-base-200/65 p-6 shadow-2xl shadow-base-300/20 backdrop-blur-xl sm:p-8"
+            class="ui-auth-panel mx-auto"
           >
             <header>
               <p class="ui-eyebrow text-secondary lg:hidden">Welcome back</p>
@@ -114,7 +114,7 @@ defmodule UrielmWeb.SigninLive do
               </p>
             </details>
 
-            <div class="my-6 flex items-center gap-3 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-base-content/35">
+            <div class="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-base-content/35">
               <span class="h-px flex-1 bg-base-300/70"></span>
               or use email <span class="h-px flex-1 bg-base-300/70"></span>
             </div>
