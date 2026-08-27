@@ -502,6 +502,39 @@ defmodule UrielmWeb.AuthControllerTest do
       assert Enum.take(statuses, 10) |> Enum.all?(&(&1 == 401))
       assert List.last(statuses) == 429
     end
+
+    test "a spoofed X-Forwarded-For cannot mint a fresh per-IP bucket", %{conn: conn} do
+      # X-Forwarded-For is client-supplied. If the limiter keyed on the leftmost
+      # entry, varying it per request would reset the per-IP budget every time
+      # and defeat the limit entirely. We key on the rightmost (proxy-appended)
+      # entry, so all of these collapse onto the same bucket.
+      statuses =
+        for i <- 1..11 do
+          conn
+          |> put_req_header("x-forwarded-for", "10.9.9.#{i}, 203.0.113.7")
+          |> post(~p"/auth/signin", %{email: "spoof#{i}@example.com", password: "x"})
+          |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(statuses, 10) |> Enum.all?(&(&1 == 401))
+      assert List.last(statuses) == 429
+    end
+
+    test "distinct real client IPs get independent buckets", %{conn: conn} do
+      # The rightmost entry is what the proxy observed, so two genuinely
+      # different clients must not share a budget.
+      for i <- 1..10 do
+        assert conn
+               |> put_req_header("x-forwarded-for", "198.51.100.1")
+               |> post(~p"/auth/signin", %{email: "hostA#{i}@example.com", password: "x"})
+               |> Map.fetch!(:status) == 401
+      end
+
+      assert conn
+             |> put_req_header("x-forwarded-for", "198.51.100.2")
+             |> post(~p"/auth/signin", %{email: "hostB@example.com", password: "x"})
+             |> Map.fetch!(:status) == 401
+    end
   end
 
   describe "DELETE /auth/logout" do
