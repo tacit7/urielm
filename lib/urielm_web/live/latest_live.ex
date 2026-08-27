@@ -7,41 +7,43 @@ defmodule UrielmWeb.LatestLive do
 
   @impl true
   def mount(params, _session, socket) do
-    user = socket.assigns[:current_user]
     page = parse_page(params["page"])
 
-    if connected?(socket) do
-      categories = Forum.list_categories_with_boards()
+    {:ok,
+     socket
+     |> assign(:page_title, "Latest")
+     |> assign(:all_categories, [])
+     |> assign(:page, page)
+     |> assign(:meta, nil)
+     |> stream(:threads, [])}
+  end
 
-      flop_params = %{
-        page: page,
-        page_size: LiveHelpers.page_size(),
-        order_by: [:updated_at, :id],
-        order_directions: [:desc, :desc]
-      }
+  @impl true
+  def handle_params(params, _uri, socket) do
+    page = parse_page(params["page"])
+    user = socket.assigns[:current_user]
 
-      {threads, meta} =
-        case Forum.paginate_latest_threads(flop_params) do
-          {:ok, {data, meta}} -> {data, meta}
-          {:error, _meta} -> {[], nil}
-        end
+    categories = Forum.list_categories_with_boards()
 
-      {:ok,
-       socket
-       |> assign(:page_title, "Latest")
-       |> assign(:all_categories, categories)
-       |> assign(:page, page)
-       |> assign(:meta, meta)
-       |> stream(:threads, serialize_threads(threads, user), reset: true)}
-    else
-      {:ok,
-       socket
-       |> assign(:page_title, "Latest")
-       |> assign(:all_categories, [])
-       |> assign(:page, page)
-       |> assign(:meta, nil)
-       |> stream(:threads, [])}
-    end
+    flop_params = %{
+      page: page,
+      page_size: LiveHelpers.page_size(),
+      order_by: [:updated_at, :id],
+      order_directions: [:desc, :desc]
+    }
+
+    {threads, meta} =
+      case Forum.paginate_latest_threads(flop_params) do
+        {:ok, {data, meta}} -> {data, meta}
+        {:error, _meta} -> {[], nil}
+      end
+
+    {:noreply,
+     socket
+     |> assign(:all_categories, categories)
+     |> assign(:page, page)
+     |> assign(:meta, meta)
+     |> stream(:threads, serialize_threads(threads, user), reset: true)}
   end
 
   @impl true

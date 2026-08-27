@@ -63,6 +63,15 @@ defmodule UrielmWeb.ForumLiveTest do
       assert has_element?(view, "#threads[phx-update='stream']")
     end
 
+    test "pagination patch reloads the latest discussions" do
+      {:ok, view, _html} = live(build_conn(), ~p"/forum")
+
+      html = render_patch(view, ~p"/forum?page=1")
+
+      assert html =~ "Latest discussions"
+      assert has_element?(view, "#latest-discussions-surface.ui-card")
+    end
+
     test "updates the signed-in user's unread badge without a reload", %{
       user: user,
       thread: thread
