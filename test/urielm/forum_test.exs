@@ -1,11 +1,13 @@
 defmodule Urielm.ForumTest do
   use Urielm.DataCase
 
+  import Ecto.Query
   import Urielm.Fixtures
 
   alias Urielm.Forum
   alias Urielm.Forum.{Thread, Comment}
   alias Urielm.Engagement.Vote
+  alias Urielm.Repo
 
   describe "categories" do
     test "list_categories/1 returns all non-hidden categories" do
@@ -785,6 +787,71 @@ defmodule Urielm.ForumTest do
       assert length(results) >= 1
       assert Enum.any?(results, &(&1.id == thread1.id))
       assert !Enum.any?(results, &(&1.id == thread2.id))
+    end
+
+    test "search_threads/2 respects author, category, and date filters" do
+      category = category_fixture()
+      other_category = category_fixture(%{name: "Other Category"})
+      board = board_fixture(%{category_id: category.id})
+      other_board = board_fixture(%{category_id: other_category.id})
+
+      target_author =
+        user_fixture(%{username: "target-filter-user", display_name: "Target Filter User"})
+
+      other_author =
+        user_fixture(%{username: "other-filter-user", display_name: "Other Filter User"})
+
+      target =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: target_author.id,
+          title: "Phoenix filter target",
+          body: "The target thread for advanced search filters"
+        })
+
+      author_distractor =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: other_author.id,
+          title: "Phoenix filter author distractor",
+          body: "Same query, wrong author"
+        })
+
+      category_distractor =
+        thread_fixture(%{
+          board_id: other_board.id,
+          author_id: target_author.id,
+          title: "Phoenix filter category distractor",
+          body: "Same query, wrong category"
+        })
+
+      old_distractor =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: target_author.id,
+          title: "Phoenix filter old distractor",
+          body: "Same query, wrong date range"
+        })
+
+      old_date = DateTime.utc_now() |> DateTime.add(-30, :day) |> DateTime.truncate(:second)
+
+      Repo.update_all(
+        from(t in Thread, where: t.id == ^old_distractor.id),
+        set: [inserted_at: old_date, updated_at: old_date]
+      )
+
+      results =
+        Forum.search_threads("Phoenix",
+          author: "target-filter",
+          category_id: to_string(category.id),
+          from_date: Date.utc_today() |> Date.add(-7) |> Date.to_iso8601(),
+          to_date: Date.utc_today() |> Date.to_iso8601()
+        )
+
+      assert Enum.any?(results, &(&1.id == target.id))
+      refute Enum.any?(results, &(&1.id == author_distractor.id))
+      refute Enum.any?(results, &(&1.id == category_distractor.id))
+      refute Enum.any?(results, &(&1.id == old_distractor.id))
     end
 
     test "search_threads/2 excludes removed threads" do

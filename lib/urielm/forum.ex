@@ -1394,39 +1394,14 @@ defmodule Urielm.Forum do
   # Search
 
   def search_threads(query, opts \\ []) do
-    board_id = Keyword.get(opts, :board_id)
     limit = Keyword.get(opts, :limit, 20)
     offset = Keyword.get(opts, :offset, 0)
 
-    base_query =
-      from(t in Thread)
-      |> where([t], t.is_removed == false)
-      |> thread_preloads()
-
-    query_string = String.trim(query)
-
-    if String.length(query_string) > 0 do
-      # Use full-text search with tsquery
-      query_pattern = "%#{query_string}%"
-
-      base_query
-      |> where(
-        [t],
-        fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string) or
-          ilike(t.title, ^query_pattern) or
-          ilike(t.body, ^query_pattern)
-      )
-      |> order_by(
-        [t],
-        fragment("ts_rank(?, plainto_tsquery('english', ?)) DESC", t.search_vector, ^query_string)
-      )
-      |> then(&if is_nil(board_id), do: &1, else: where(&1, [t], t.board_id == ^board_id))
-      |> limit(^limit)
-      |> offset(^offset)
-      |> Repo.all()
-    else
-      []
-    end
+    query
+    |> search_query(opts)
+    |> limit(^limit)
+    |> offset(^offset)
+    |> Repo.all()
   end
 
   @doc """
@@ -1435,42 +1410,9 @@ defmodule Urielm.Forum do
   Returns {:ok, {threads, meta}} or {:error, meta}.
   """
   def paginate_search_threads(query, params \\ %{}, opts \\ []) do
-    board_id = Keyword.get(opts, :board_id)
-
-    base_query =
-      from(t in Thread)
-      |> where([t], t.is_removed == false)
-      |> thread_preloads()
-
-    query_string = String.trim(to_string(query))
-
-    q =
-      if String.length(query_string) > 0 do
-        pattern = "%#{query_string}%"
-
-        base_query
-        |> where(
-          [t],
-          fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string) or
-            ilike(t.title, ^pattern) or
-            ilike(t.body, ^pattern)
-        )
-        |> order_by([t],
-          desc:
-            fragment(
-              "ts_rank(?, plainto_tsquery('english', ?))",
-              t.search_vector,
-              ^query_string
-            ),
-          desc: t.id
-        )
-        |> then(&if is_nil(board_id), do: &1, else: where(&1, [t], t.board_id == ^board_id))
-      else
-        # empty query returns no results
-        from(t in base_query, where: false)
-      end
-
-    Flop.validate_and_run(q, params, for: Thread, repo: Repo)
+    query
+    |> search_query(opts)
+    |> Flop.validate_and_run(params, for: Thread, repo: Repo)
   end
 
   # Topic Reads - Track which topics users have read
@@ -1737,6 +1679,162 @@ defmodule Urielm.Forum do
 
   # Common thread preloads used across queries
   defp thread_preloads(query), do: preload(query, [:author, :board])
+
+  defp search_query(query, opts) do
+    base_query =
+      from(t in Thread)
+      |> where([t], t.is_removed == false)
+      |> thread_preloads()
+
+    query_string = query |> to_string() |> String.trim()
+    has_filters? = search_filters_present?(opts)
+
+    base_query =
+      if String.length(query_string) > 0 do
+        pattern = "%#{query_string}%"
+
+        base_query
+        |> where(
+          [t],
+          fragment("? @@ plainto_tsquery('english', ?)", t.search_vector, ^query_string) or
+            ilike(t.title, ^pattern) or
+            ilike(t.body, ^pattern)
+        )
+      else
+        if has_filters? do
+          base_query
+        else
+          from(t in base_query, where: false)
+        end
+      end
+
+    base_query
+    |> maybe_filter_board(opts)
+    |> maybe_filter_author(opts)
+    |> maybe_filter_category(opts)
+    |> maybe_filter_date_range(opts)
+    |> maybe_order_search_results(query_string, has_filters?)
+  end
+
+  defp maybe_order_search_results(query, query_string, has_filters?) do
+    cond do
+      String.length(query_string) > 0 ->
+        order_by(
+          query,
+          [t],
+          desc:
+            fragment(
+              "ts_rank(?, plainto_tsquery('english', ?))",
+              t.search_vector,
+              ^query_string
+            ),
+          desc: t.id
+        )
+
+      has_filters? ->
+        order_by(query, [t], desc: t.inserted_at, desc: t.id)
+
+      true ->
+        query
+    end
+  end
+
+  defp maybe_filter_board(query, opts) do
+    case Keyword.get(opts, :board_id) do
+      nil -> query
+      board_id -> where(query, [t], t.board_id == ^board_id)
+    end
+  end
+
+  defp maybe_filter_author(query, opts) do
+    case Keyword.get(opts, :author) |> normalize_search_filter() do
+      nil ->
+        query
+
+      author ->
+        pattern = "%#{author}%"
+
+        query
+        |> join(:inner, [t], a in assoc(t, :author), as: :search_author)
+        |> where(
+          [search_author: author],
+          ilike(author.username, ^pattern) or ilike(author.display_name, ^pattern)
+        )
+    end
+  end
+
+  defp maybe_filter_category(query, opts) do
+    case Keyword.get(opts, :category_id) |> normalize_search_filter() do
+      nil ->
+        query
+
+      category_id ->
+        query
+        |> join(:inner, [t], b in assoc(t, :board), as: :search_board)
+        |> where([search_board: board], board.category_id == ^category_id)
+    end
+  end
+
+  defp maybe_filter_date_range(query, opts) do
+    query
+    |> maybe_filter_from_date(Keyword.get(opts, :from_date))
+    |> maybe_filter_to_date(Keyword.get(opts, :to_date))
+  end
+
+  defp maybe_filter_from_date(query, from_date) do
+    case normalize_search_date(from_date) do
+      nil ->
+        query
+
+      from_datetime ->
+        where(query, [t], t.inserted_at >= ^from_datetime)
+    end
+  end
+
+  defp maybe_filter_to_date(query, to_date) do
+    case normalize_search_date(to_date) do
+      nil ->
+        query
+
+      to_datetime ->
+        where(query, [t], t.inserted_at < ^DateTime.add(to_datetime, 86_400, :second))
+    end
+  end
+
+  defp normalize_search_filter(nil), do: nil
+
+  defp normalize_search_filter(value) when is_binary(value) do
+    value = String.trim(value)
+    if value == "", do: nil, else: value
+  end
+
+  defp normalize_search_filter(value), do: value
+
+  defp normalize_search_date(nil), do: nil
+
+  defp normalize_search_date(value) when is_binary(value) do
+    case Date.from_iso8601(String.trim(value)) do
+      {:ok, date} ->
+        {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+        datetime
+
+      _ ->
+        nil
+    end
+  end
+
+  defp normalize_search_date(_value), do: nil
+
+  defp search_filters_present?(opts) do
+    Enum.any?(opts, fn
+      {:board_id, value} -> not is_nil(value)
+      {:author, value} -> normalize_search_filter(value) != nil
+      {:category_id, value} -> normalize_search_filter(value) != nil
+      {:from_date, value} -> normalize_search_date(value) != nil
+      {:to_date, value} -> normalize_search_date(value) != nil
+      _ -> false
+    end)
+  end
 
   # Preload thread metadata for struct (post-fetch)
   defp preload_thread_meta(%Thread{} = thread),

@@ -1,10 +1,13 @@
 defmodule UrielmWeb.SearchLiveTest do
   use UrielmWeb.ConnCase, async: false
 
+  import Ecto.Query
   import Phoenix.LiveViewTest
   import Urielm.Fixtures
 
   alias Urielm.Forum
+  alias Urielm.Forum.Thread
+  alias Urielm.Repo
 
   setup do
     user = user_fixture()
@@ -32,39 +35,96 @@ defmodule UrielmWeb.SearchLiveTest do
       assert has_element?(view, "#forum-search-form")
       assert has_element?(view, "#forum-search-query")
       assert has_element?(view, "#forum-search-submit[phx-disable-with='Searching…']")
+      assert has_element?(view, "#forum-search-advanced-row")
+      assert has_element?(view, "#forum-search-author")
+      assert has_element?(view, "#forum-search-category")
+      assert has_element?(view, "#forum-search-from-date")
+      assert has_element?(view, "#forum-search-to-date")
       assert has_element?(view, "#search-start-state[data-ui-state='empty']")
     end
 
     test "loads results with ?q= param", %{conn: conn, thread: thread} do
-      {:ok, _live, html} = live(conn, "/forum/search?q=sourdough")
-      assert html =~ thread.title
+      {:ok, view, _html} = live(conn, "/forum/search?q=sourdough")
+
+      assert has_element?(view, result_selector(thread))
     end
 
     test "shows no results for unmatched query", %{conn: conn} do
-      {:ok, view, html} = live(conn, "/forum/search?q=zzznomatch999xyz")
+      {:ok, view, _html} = live(conn, "/forum/search?q=zzznomatch999xyz")
 
-      refute html =~ "sourdough"
       assert has_element?(view, "#search-empty-state[data-ui-state='empty']")
     end
   end
 
-  describe "search event" do
-    test "pushes patch with query param", %{conn: conn} do
-      {:ok, live, _html} = live(conn, "/forum/search")
+  describe "advanced search" do
+    test "filters by author, category, and date range", %{conn: conn, board: board} do
+      target_author =
+        user_fixture(%{username: "target-filter-user", display_name: "Target Filter User"})
 
-      render_click(live, "search", %{"query" => "sourdough"})
+      other_author =
+        user_fixture(%{username: "other-filter-user", display_name: "Other Filter User"})
 
-      html = render(live)
-      assert html =~ "sourdough"
-    end
+      other_category = category_fixture(%{name: "Other Category"})
+      other_board = board_fixture(%{category_id: other_category.id})
 
-    test "empty search clears results", %{conn: conn} do
-      {:ok, live, _html} = live(conn, "/forum/search?q=sourdough")
+      target_thread =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: target_author.id,
+          title: "Phoenix Search Target",
+          body: "A searchable thread for advanced forum search coverage."
+        })
 
-      render_click(live, "search", %{"query" => ""})
+      author_distractor =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: other_author.id,
+          title: "Phoenix Search Distractor",
+          body: "A searchable thread from a different author."
+        })
 
-      html = render(live)
-      refute html =~ "sourdough"
+      category_distractor =
+        thread_fixture(%{
+          board_id: other_board.id,
+          author_id: target_author.id,
+          title: "Phoenix Search Category Distractor",
+          body: "A searchable thread in the wrong category."
+        })
+
+      old_distractor =
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: target_author.id,
+          title: "Phoenix Search Old Distractor",
+          body: "A searchable thread outside the selected date range."
+        })
+
+      old_date = DateTime.utc_now() |> DateTime.add(-30, :day) |> DateTime.truncate(:second)
+
+      Repo.update_all(
+        from(t in Thread, where: t.id == ^old_distractor.id),
+        set: [inserted_at: old_date, updated_at: old_date]
+      )
+
+      from_date = Date.utc_today() |> Date.add(-7) |> Date.to_iso8601()
+      to_date = Date.utc_today() |> Date.to_iso8601()
+
+      {:ok, view, _html} = live(conn, "/forum/search")
+
+      render_submit(
+        form(view, "#forum-search-form", %{
+          "query" => "Phoenix",
+          "author" => "target-filter",
+          "category_id" => to_string(board.category_id),
+          "from_date" => from_date,
+          "to_date" => to_date
+        })
+      )
+
+      assert has_element?(view, result_selector(target_thread))
+      refute has_element?(view, result_selector(author_distractor))
+      refute has_element?(view, result_selector(category_distractor))
+      refute has_element?(view, result_selector(old_distractor))
     end
   end
 
@@ -118,8 +178,10 @@ defmodule UrielmWeb.SearchLiveTest do
 
   describe "anonymous user" do
     test "can search without being logged in", %{conn: conn, thread: thread} do
-      {:ok, _live, html} = live(conn, "/forum/search?q=sourdough")
-      assert html =~ thread.title
+      {:ok, view, _html} = live(conn, "/forum/search?q=sourdough")
+      assert has_element?(view, result_selector(thread))
     end
   end
+
+  defp result_selector(thread), do: "div[id='results-#{thread.id}']"
 end
