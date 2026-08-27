@@ -115,6 +115,46 @@ defmodule UrielmWeb.NotificationsLiveTest do
       assert has_element?(view, "#notifications-empty-state a[href='/forum']")
     end
 
+    test "renders notifications created by a watched thread reply", %{
+      conn: conn,
+      user: user,
+      other: other,
+      thread: thread
+    } do
+      {:ok, _subscription} = Forum.subscribe_to_thread(user.id, thread.id)
+
+      {:ok, _comment} =
+        Forum.create_comment(thread.id, other.id, %{"body" => "New comment from a watcher test"})
+
+      [notification] = Forum.list_notifications(user.id)
+
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
+
+      assert has_element?(view, "[data-notification-id='#{notification.id}']", other.username)
+      assert has_element?(view, "[data-notification-id='#{notification.id}']", thread.title)
+      assert has_element?(view, "#notifications-summary", "1 update is waiting for you.")
+    end
+
+    test "renders mention notifications created by a comment", %{
+      conn: conn,
+      user: user,
+      other: other,
+      thread: thread
+    } do
+      {:ok, _comment} =
+        Forum.create_comment(thread.id, other.id, %{
+          "body" => "Hello @#{user.username}, this is a mention test."
+        })
+
+      [notification] = Forum.list_notifications(user.id)
+
+      {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
+
+      assert has_element?(view, "[data-notification-id='#{notification.id}']", "Mention")
+      assert has_element?(view, "[data-notification-id='#{notification.id}']", thread.title)
+      assert has_element?(view, "#notifications-summary", "1 update is waiting for you.")
+    end
+
     test "displays notifications for current user", %{conn: conn, user: user, thread: thread} do
       actor = user_fixture()
 

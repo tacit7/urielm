@@ -363,6 +363,62 @@ defmodule Urielm.ForumTest do
       assert Enum.any?(Forum.list_notifications(thread_author.id), &(&1.subject_type == "reply"))
     end
 
+    test "create_thread/3 creates mention notifications for mentioned users" do
+      author = user_fixture()
+      mentioned = user_fixture()
+      board = board_fixture()
+
+      {:ok, thread} =
+        Forum.create_thread(board.id, author.id, %{
+          "title" => "Mentioned thread",
+          "slug" => "mentioned-thread",
+          "body" => "Hello @#{mentioned.username}"
+        })
+
+      mention =
+        Repo.get_by(Urielm.Forum.Mention,
+          user_id: mentioned.id,
+          mentioner_id: author.id,
+          target_type: "thread",
+          target_id: thread.id
+        )
+
+      assert mention != nil
+      assert Forum.count_unread_notifications(mentioned.id) == 1
+
+      [notification] = Forum.list_notifications(mentioned.id)
+      assert notification.subject_type == "mention"
+      assert notification.thread_id == thread.id
+      assert notification.message =~ thread.title
+    end
+
+    test "create_comment/3 creates mention notifications for mentioned users" do
+      author = user_fixture()
+      mentioned = user_fixture()
+      thread = thread_fixture(%{author_id: author.id})
+
+      {:ok, comment} =
+        Forum.create_comment(thread.id, author.id, %{
+          "body" => "Hi @#{mentioned.username}, welcome to the thread."
+        })
+
+      mention =
+        Repo.get_by(Urielm.Forum.Mention,
+          user_id: mentioned.id,
+          mentioner_id: author.id,
+          target_type: "comment",
+          target_id: comment.id
+        )
+
+      assert mention != nil
+      assert Forum.count_unread_notifications(mentioned.id) == 1
+
+      [notification] = Forum.list_notifications(mentioned.id)
+      assert notification.subject_type == "mention"
+      assert notification.thread_id == thread.id
+      assert notification.message =~ thread.title
+    end
+
     test "create_comment/3 respects muted topic settings for every recipient source" do
       thread_author = user_fixture()
       actor = user_fixture()
