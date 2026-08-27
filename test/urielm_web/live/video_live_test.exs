@@ -57,7 +57,7 @@ defmodule UrielmWeb.VideoLiveTest do
       assert has_element?(view, "#standard-video-page")
       assert has_element?(view, "#video-back-link[href='/videos']")
       assert has_element?(view, "#video-player-shell[data-ui-component='learning-media-player']")
-      assert has_element?(view, "#video-detail-header")
+      assert has_element?(view, "#video-detail-header .ui-eyebrow")
       assert has_element?(view, "#video-share-button[data-text]")
 
       assert has_element?(
@@ -66,8 +66,9 @@ defmodule UrielmWeb.VideoLiveTest do
              )
 
       assert has_element?(view, "#video-tab-description[aria-current='page']")
-      assert has_element?(view, "#video-creator-card")
-      assert has_element?(view, "#video-resources-card")
+      assert has_element?(view, "#video-content-panel.ui-card")
+      assert has_element?(view, "#video-creator-card.ui-card")
+      assert has_element?(view, "#video-resources-card.ui-card")
       refute has_element?(view, "#standard-video-page .dock")
     end
 
@@ -297,7 +298,7 @@ defmodule UrielmWeb.VideoLiveTest do
       |> element("#video-tab-comments")
       |> render_click()
 
-      assert has_element?(child, "#video-discussion-locked")
+      assert has_element?(child, "#video-discussion-locked.alert-warning")
       refute has_element?(child, "#video-comment-form")
       assert has_element?(child, ~s([data-name="CommentTree"]))
     end
@@ -327,7 +328,7 @@ defmodule UrielmWeb.VideoLiveTest do
       |> element("#video-tab-comments")
       |> render_click()
 
-      assert has_element?(child, "#video-discussion-locked")
+      assert has_element?(child, "#video-discussion-locked.alert-warning")
       refute has_element?(child, "#video-sign-in-to-comment")
     end
 

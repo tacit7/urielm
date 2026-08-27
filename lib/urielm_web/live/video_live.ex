@@ -457,7 +457,7 @@ defmodule UrielmWeb.VideoLive do
         <.link
           id="video-back-link"
           navigate={~p"/videos"}
-          class="group mx-4 mb-4 inline-flex items-center gap-2 text-sm font-bold text-base-content/50 transition-colors hover:text-primary sm:mx-0"
+          class="btn btn-ghost btn-sm mx-2 mb-4 gap-2 text-base-content/55 hover:text-primary sm:-ml-2"
         >
           <.um_icon
             name="hero-arrow-left"
@@ -476,8 +476,6 @@ defmodule UrielmWeb.VideoLive do
             )
           ]}
         >
-          <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_65%_20%,color-mix(in_oklab,var(--color-primary)_22%,transparent),transparent_38%)]">
-          </div>
           <%= if @video.tiktok_url && @video.tiktok_url != "" do %>
             <.svelte
               name="TikTokEmbed"
@@ -508,11 +506,11 @@ defmodule UrielmWeb.VideoLive do
           class="grid gap-6 px-4 py-7 sm:px-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:py-9"
         >
           <div>
-            <p class="flex items-center gap-2 font-mono text-[0.68rem] font-black uppercase tracking-[0.16em] text-primary">
+            <p class="ui-eyebrow flex items-center gap-2">
               <span class="size-1.5 rounded-full bg-primary"></span>
               {if @video.format == "short", do: "Short video", else: "Standard video"}
             </p>
-            <h1 class="mt-3 max-w-4xl text-3xl font-black leading-[1.08] tracking-[-0.04em] text-base-content sm:text-4xl lg:text-5xl">
+            <h1 class="mt-3 max-w-4xl text-3xl font-black leading-tight text-base-content sm:text-4xl">
               {@video.title}
             </h1>
 
@@ -545,7 +543,7 @@ defmodule UrielmWeb.VideoLive do
               aria-label="Video tags"
               class="mt-5 flex flex-wrap items-center gap-2"
             >
-              <span class="mr-1 text-xs font-bold uppercase text-base-content/45">Tags</span>
+              <span class="ui-eyebrow mr-1 text-base-content/45">Tags</span>
               <.link
                 :for={tag <- @video.tag_records}
                 id={"video-detail-tag-#{tag.slug}"}
@@ -618,7 +616,7 @@ defmodule UrielmWeb.VideoLive do
           <article
             :if={@has_nav_items?}
             id="video-content-panel"
-            class="card ui-card overflow-hidden"
+            class="card ui-card h-auto overflow-hidden"
           >
             <.learning_media_tabs
               id="video-detail-tabs"
@@ -633,7 +631,7 @@ defmodule UrielmWeb.VideoLive do
               id="video-description-section"
               class="card-body p-5 sm:p-7"
             >
-              <h2 class="text-xl font-black tracking-tight text-base-content">Overview</h2>
+              <h2 class="text-xl font-black text-base-content">Overview</h2>
               <div
                 :if={@video.description_md && @video.description_md != ""}
                 class="prose prose-sm mt-1 max-w-none text-base-content/75 sm:prose-base"
@@ -661,7 +659,7 @@ defmodule UrielmWeb.VideoLive do
               id="video-resources-section"
               class="card-body p-5 sm:p-7"
             >
-              <h2 class="text-xl font-black tracking-tight text-base-content">Resources</h2>
+              <h2 class="text-xl font-black text-base-content">Resources</h2>
               <div class="prose prose-sm mt-1 max-w-none text-base-content/75 sm:prose-base">
                 <.svelte
                   name="MarkdownRenderer"
@@ -678,7 +676,7 @@ defmodule UrielmWeb.VideoLive do
               class="card-body p-5 sm:p-7"
             >
               <div class="flex items-center justify-between gap-4">
-                <h2 class="text-xl font-black tracking-tight text-base-content">
+                <h2 class="text-xl font-black text-base-content">
                   Discussion
                 </h2>
                 <span class="badge badge-ghost font-mono text-xs">
@@ -701,12 +699,10 @@ defmodule UrielmWeb.VideoLive do
                     <div
                       id="video-discussion-locked"
                       role="status"
-                      class="mt-5 flex items-start gap-3 rounded-2xl border border-warning/25 bg-warning/8 p-4 text-sm"
+                      class="alert alert-warning mt-5 items-start text-sm"
                     >
-                      <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-warning/10 text-warning">
-                        <.um_icon name="lock_closed" class="size-4" />
-                      </span>
-                      <div class="min-w-0 pt-0.5">
+                      <.um_icon name="lock_closed" class="size-5 shrink-0" />
+                      <div class="min-w-0">
                         <p class="font-semibold text-base-content">This discussion is locked</p>
                         <p class="mt-1 max-w-2xl text-base-content/55">
                           New comments are closed, but the existing conversation remains available to read.
@@ -755,7 +751,7 @@ defmodule UrielmWeb.VideoLive do
                   <% true -> %>
                     <div
                       id="video-sign-in-to-comment"
-                      class="mt-5 flex items-center gap-3 rounded-xl border border-base-300/70 bg-base-200/50 p-4"
+                      class="ui-card ui-card-compact mt-5 flex h-auto items-center gap-3 p-4"
                     >
                       <span class="grid size-9 place-items-center rounded-full bg-base-300 font-bold">
                         ?
@@ -796,9 +792,13 @@ defmodule UrielmWeb.VideoLive do
               !@has_nav_items? && "lg:max-w-sm"
             ]}
           >
-            <section :if={@video.author_name} id="video-creator-card" class="card ui-card">
+            <section
+              :if={@video.author_name}
+              id="video-creator-card"
+              class="card ui-card h-auto"
+            >
               <div class="card-body p-5">
-                <p class="font-mono text-[0.65rem] font-black uppercase tracking-[0.14em] text-base-content/40">
+                <p class="ui-eyebrow text-base-content/45">
                   About the creator
                 </p>
                 <div class="mt-2 flex items-center gap-3">
@@ -826,7 +826,7 @@ defmodule UrielmWeb.VideoLive do
                   href={@video.author_url}
                   target="_blank"
                   rel="noopener"
-                  class="btn btn-ghost btn-sm mt-2 justify-start rounded-xl px-0 text-primary hover:bg-transparent"
+                  class="btn btn-ghost btn-sm mt-2 justify-start rounded-lg px-0 text-primary hover:bg-transparent"
                 >
                   Visit creator profile <.um_icon name="hero-arrow-up-right" class="size-4" />
                 </a>
@@ -836,17 +836,17 @@ defmodule UrielmWeb.VideoLive do
             <section
               :if={@video.resources_md && @video.resources_md != ""}
               id="video-resources-card"
-              class="card ui-card"
+              class="card ui-card h-auto"
             >
               <div class="card-body p-5">
-                <p class="font-mono text-[0.65rem] font-black uppercase tracking-[0.14em] text-base-content/40">
+                <p class="ui-eyebrow text-base-content/45">
                   Included resources
                 </p>
                 <button
                   type="button"
                   phx-click="tab_change"
                   phx-value-key="resources"
-                  class="btn btn-ghost mt-2 h-auto min-h-0 justify-start gap-3 rounded-xl border-t border-base-300/60 px-0 pt-4 text-left hover:bg-transparent hover:text-primary"
+                  class="btn btn-ghost mt-2 h-auto min-h-0 justify-start gap-3 rounded-lg border-t border-base-300/60 px-0 pt-4 text-left hover:bg-transparent hover:text-primary"
                 >
                   <span class="grid size-9 flex-none place-items-center rounded-lg bg-base-300/70 text-primary">
                     <.um_icon name="hero-link" class="size-4" />
@@ -865,9 +865,9 @@ defmodule UrielmWeb.VideoLive do
               :if={@next_video}
               id={"video-next-card-#{@next_video.id}"}
               navigate={~p"/videos/#{@next_video.slug}"}
-              class="card ui-card ui-card-interactive group overflow-hidden"
+              class="card ui-card ui-card-interactive group h-auto overflow-hidden"
             >
-              <div class="relative aspect-video overflow-hidden bg-[radial-gradient(circle_at_70%_25%,color-mix(in_oklab,var(--color-primary)_28%,transparent),transparent_34%),linear-gradient(145deg,var(--color-base-300),var(--color-base-200))]">
+              <div class="relative aspect-video overflow-hidden bg-base-300">
                 <img
                   :if={video_thumbnail(@next_video)}
                   src={video_thumbnail(@next_video)}
@@ -882,7 +882,7 @@ defmodule UrielmWeb.VideoLive do
                 </span>
               </div>
               <div class="card-body p-5">
-                <p class="font-mono text-[0.65rem] font-black uppercase tracking-[0.14em] text-primary">
+                <p class="ui-eyebrow">
                   Up next
                 </p>
                 <h2 class="mt-1 line-clamp-2 text-sm font-black leading-snug text-base-content transition-colors group-hover:text-primary">
