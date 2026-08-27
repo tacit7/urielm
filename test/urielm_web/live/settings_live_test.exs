@@ -34,9 +34,29 @@ defmodule UrielmWeb.SettingsLiveTest do
              )
 
       refute has_element?(view, "button", "Change Photo")
-      assert has_element?(view, "#settings-theme-day")
-      assert has_element?(view, "#settings-theme-night")
-      assert has_element?(view, "#delete-account-open")
+      assert has_element?(view, "[role='group'][aria-label='Color mode']")
+
+      assert has_element?(
+               view,
+               "#settings-theme-day[data-theme-choice='tokyo-day'][aria-pressed]"
+             )
+
+      assert has_element?(
+               view,
+               "#settings-theme-night[data-theme-choice='tokyo-night'][aria-pressed]"
+             )
+
+      assert has_element?(view, "#delete-account-open[aria-haspopup='dialog']")
+
+      assert has_element?(
+               view,
+               "#delete_account_modal[aria-labelledby='delete-account-title'][aria-describedby='delete-account-description']"
+             )
+
+      assert has_element?(view, "#delete-account-title")
+      assert has_element?(view, "#delete-account-description")
+      assert has_element?(view, "#delete-account-cancel")
+      assert has_element?(view, "#delete-account-confirm")
     end
 
     test "settings page displays user email information", %{conn: conn} do

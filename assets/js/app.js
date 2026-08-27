@@ -14,11 +14,18 @@ import {normalizeTheme} from "./theme.js"
     document.cookie = cookie
   }
 
+  const syncThemeControls = (theme) => {
+    document.querySelectorAll("[data-theme-choice]").forEach((control) => {
+      control.setAttribute("aria-pressed", String(control.dataset.themeChoice === theme))
+    })
+  }
+
   const setTheme = (theme) => {
     const normalizedTheme = normalizeTheme(theme)
     try { localStorage.setItem("phx:theme", normalizedTheme) } catch (_) {}
     try { setCookie('phx_theme', normalizedTheme) } catch (_) {}
     document.documentElement.setAttribute("data-theme", normalizedTheme)
+    syncThemeControls(normalizedTheme)
   }
 
   try {
@@ -29,6 +36,9 @@ import {normalizeTheme} from "./theme.js"
   }
   window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue))
   window.addEventListener("phx:set-theme", (e) => setTheme(e.detail?.theme ?? e.target?.dataset?.phxTheme))
+  window.addEventListener("phx:page-loading-stop", () => {
+    syncThemeControls(normalizeTheme(document.documentElement.dataset.theme))
+  })
 })()
 
 // Keep fixed mobile chrome out of the way while a composer owns the viewport.

@@ -263,22 +263,26 @@ defmodule UrielmWeb.SettingsLive do
                   <p class="font-bold">Color mode</p>
                   <p class="text-xs text-base-content/60">Switch between Tokyo Day and Night.</p>
                 </div>
-                <div class="join w-full sm:w-auto" aria-label="Color mode">
+                <div class="join w-full sm:w-auto" role="group" aria-label="Color mode">
                   <button
                     id="settings-theme-day"
                     type="button"
-                    class="btn btn-sm join-item flex-1 sm:flex-none"
+                    data-theme-choice="tokyo-day"
+                    aria-pressed="false"
+                    class="btn join-item min-h-11 flex-1 gap-2 sm:flex-none [[data-theme=tokyo-day]_&]:border-primary [[data-theme=tokyo-day]_&]:bg-primary [[data-theme=tokyo-day]_&]:text-primary-content"
                     phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-day"})}
                   >
-                    Tokyo Day
+                    <.um_icon name="sun" class="size-4" /> Tokyo Day
                   </button>
                   <button
                     id="settings-theme-night"
                     type="button"
-                    class="btn btn-sm join-item flex-1 sm:flex-none"
+                    data-theme-choice="tokyo-night"
+                    aria-pressed="false"
+                    class="btn join-item min-h-11 flex-1 gap-2 sm:flex-none [[data-theme=tokyo-night]_&]:border-primary [[data-theme=tokyo-night]_&]:bg-primary [[data-theme=tokyo-night]_&]:text-primary-content"
                     phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-night"})}
                   >
-                    Tokyo Night
+                    <.um_icon name="moon" class="size-4" /> Tokyo Night
                   </button>
                 </div>
               </div>
@@ -308,6 +312,7 @@ defmodule UrielmWeb.SettingsLive do
                 type="button"
                 class="btn btn-error w-full sm:w-auto"
                 onclick="delete_account_modal.showModal()"
+                aria-haspopup="dialog"
               >
                 Delete account
               </button>
@@ -316,18 +321,28 @@ defmodule UrielmWeb.SettingsLive do
         </div>
       </div>
 
-      <dialog id="delete_account_modal" class="modal">
-        <div class="modal-box">
-          <h3 class="text-lg font-black text-error">Delete account</h3>
-          <p class="py-4">
+      <dialog
+        id="delete_account_modal"
+        class="modal"
+        aria-labelledby="delete-account-title"
+        aria-describedby="delete-account-description"
+      >
+        <div class="modal-box rounded-lg border border-base-300">
+          <h2 id="delete-account-title" class="text-lg font-black text-error">Delete account</h2>
+          <p id="delete-account-description" class="py-4">
             Are you sure you want to delete your account? This action cannot be undone.
             All your data, including courses, saved prompts, and comments will be permanently deleted.
           </p>
           <div class="modal-action">
             <form method="dialog">
-              <button type="submit" class="btn">Cancel</button>
+              <button id="delete-account-cancel" type="submit" class="btn">Cancel</button>
             </form>
-            <button type="button" phx-click="delete_account" class="btn btn-error">
+            <button
+              id="delete-account-confirm"
+              type="button"
+              phx-click="delete_account"
+              class="btn btn-error"
+            >
               Yes, delete my account
             </button>
           </div>
