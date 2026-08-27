@@ -18,9 +18,11 @@ defmodule UrielmWeb.ThemesLive do
   end
 
   @impl true
-  def handle_event("select_theme", %{"theme" => theme}, socket) do
+  def handle_event("select_theme", %{"theme" => theme}, socket) when theme in @all_themes do
     {:noreply, assign(socket, :selected_theme, theme)}
   end
+
+  def handle_event("select_theme", _params, socket), do: {:noreply, socket}
 
   @theme_colors %{
     "tokyo-night" => %{primary: "#7aa2f7", secondary: "#6b82bd", accent: "#73daca"},
@@ -69,198 +71,202 @@ defmodule UrielmWeb.ThemesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen flex flex-col">
-      <div class="px-4 py-6 border-b border-base-300">
-        <h1 class="text-3xl font-bold">Tokyo themes</h1>
-        <p class="text-base-content/70">Choose the light or dark side of the same palette</p>
-      </div>
+    <div id="themes-page" class="ui-page-shell">
+      <header id="themes-page-header" class="ui-page-header ui-page-heading">
+        <h1 class="ui-section-title">Appearance</h1>
+        <p class="ui-section-copy">
+          Choose a color mode and preview the shared interface components before applying it.
+        </p>
+      </header>
 
-      <div class="flex flex-1 overflow-hidden">
-        <%!-- Left Pane: Theme List --%>
-        <div class="w-80 border-r border-base-300 overflow-y-auto">
-          <div class="p-4 space-y-6">
-            <%!-- Custom Themes Section --%>
+      <div class="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8">
+        <aside aria-labelledby="theme-options-label">
+          <fieldset id="theme-options">
+            <legend id="theme-options-label" class="ui-eyebrow mb-3">Color mode</legend>
+            <div class="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 lg:grid-cols-1">
+              <.theme_option
+                :for={theme <- @custom_themes}
+                theme={theme}
+                selected={@selected_theme == theme}
+              />
+            </div>
+          </fieldset>
+
+          <fieldset :if={@daisyui_themes != []} id="additional-theme-options" class="mt-8">
+            <legend class="ui-eyebrow mb-3">Additional themes</legend>
+            <div class="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 lg:grid-cols-1">
+              <.theme_option
+                :for={theme <- @daisyui_themes}
+                theme={theme}
+                selected={@selected_theme == theme}
+              />
+            </div>
+          </fieldset>
+        </aside>
+
+        <section
+          id="theme-preview"
+          data-theme={@selected_theme}
+          class="ui-card h-auto bg-base-100 text-base-content"
+          aria-labelledby="theme-preview-title"
+        >
+          <header class="flex flex-col gap-5 border-b border-base-300 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
             <div>
-              <h2 class="text-sm font-bold uppercase text-base-content/60 mb-3">Color mode</h2>
-              <div class="space-y-2">
-                <%= for theme <- @custom_themes do %>
-                  <% colors = theme_colors(theme) %>
-                  <div
-                    phx-click="select_theme"
-                    phx-value-theme={theme}
-                    class={"p-3 rounded-lg cursor-pointer transition-all border-2 #{if @selected_theme == theme, do: "border-primary bg-primary/10", else: "border-transparent hover:bg-base-200"}"}
-                  >
-                    <div class="flex items-center justify-between">
-                      <span class="font-medium text-sm capitalize">
-                        {String.replace(theme, "-", " ")}
-                      </span>
-                      <div class="flex gap-1">
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.primary}"}>
-                        </div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.secondary}"}>
-                        </div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.accent}"}>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-
-            <%!-- DaisyUI Themes Section --%>
-            <div :if={@daisyui_themes != []}>
-              <h2 class="text-sm font-bold uppercase text-base-content/60 mb-3">DaisyUI Themes</h2>
-              <div class="space-y-2 max-h-96 overflow-y-auto">
-                <%= for theme <- @daisyui_themes do %>
-                  <% colors = theme_colors(theme) %>
-                  <div
-                    phx-click="select_theme"
-                    phx-value-theme={theme}
-                    class={"p-3 rounded-lg cursor-pointer transition-all border-2 #{if @selected_theme == theme, do: "border-primary bg-primary/10", else: "border-transparent hover:bg-base-200"}"}
-                  >
-                    <div class="flex items-center justify-between">
-                      <span class="font-medium text-sm capitalize">{theme}</span>
-                      <div class="flex gap-1">
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.primary}"}>
-                        </div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.secondary}"}>
-                        </div>
-                        <div class="w-4 h-4 rounded" style={"background-color: #{colors.accent}"}>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <%!-- Right Pane: Theme Preview --%>
-        <div class="flex-1 overflow-y-auto p-8">
-          <div data-theme={@selected_theme} class="card bg-base-100 shadow-xl sticky top-8">
-            <div class="card-body">
-              <h2 class="card-title text-2xl">
-                {String.replace(@selected_theme, "-", " ")
-                |> String.split()
-                |> Enum.map(&String.capitalize/1)
-                |> Enum.join(" ")}
+              <p class="ui-eyebrow">Preview</p>
+              <h2 id="theme-preview-title" class="mt-1 text-2xl font-black text-base-content">
+                {theme_name(@selected_theme)}
               </h2>
-              <p class="text-base-content/70">
-                This is a preview of how the theme looks in action.
-              </p>
+            </div>
+            <button
+              id="apply-theme-button"
+              type="button"
+              class="btn btn-primary w-full gap-2 sm:w-auto"
+              phx-click={JS.dispatch("phx:set-theme", detail: %{theme: @selected_theme})}
+            >
+              <.um_icon name="hero-check" class="size-4" /> Apply theme
+            </button>
+          </header>
 
-              <div class="divider"></div>
-
-              <div class="space-y-6">
-                <%!-- Button Variants --%>
-                <div>
-                  <p class="font-semibold mb-3">Buttons</p>
-                  <div class="flex gap-2 flex-wrap">
-                    <button class="btn btn-primary">Primary</button>
-                    <button class="btn btn-secondary">Secondary</button>
-                    <button class="btn btn-accent">Accent</button>
-                    <button class="btn btn-success">Success</button>
-                    <button class="btn btn-warning">Warning</button>
-                    <button class="btn btn-error">Error</button>
-                  </div>
+          <div class="grid gap-0 xl:grid-cols-2">
+            <div class="space-y-8 border-b border-base-300 p-5 sm:p-7 xl:border-b-0 xl:border-r">
+              <.preview_group title="Buttons">
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary btn-sm">Primary</button>
+                  <button type="button" class="btn btn-secondary btn-sm">Secondary</button>
+                  <button type="button" class="btn btn-accent btn-sm">Accent</button>
+                  <button type="button" class="btn btn-ghost btn-sm">Ghost</button>
                 </div>
+              </.preview_group>
 
-                <%!-- Form Elements --%>
-                <div>
-                  <p class="font-semibold mb-3">Form Elements</p>
-                  <div class="space-y-3">
-                    <input
-                      type="text"
-                      placeholder="Text input"
-                      class="input input-bordered w-full"
-                    />
-                    <select class="select select-bordered w-full">
-                      <option>Select option</option>
-                      <option>Option 1</option>
-                      <option>Option 2</option>
-                    </select>
-                  </div>
+              <.preview_group title="Form controls">
+                <div class="space-y-2">
+                  <.input
+                    id="theme-preview-input"
+                    name="theme_preview_input"
+                    type="text"
+                    value=""
+                    placeholder="Text input"
+                  />
+                  <.input
+                    id="theme-preview-select"
+                    name="theme_preview_select"
+                    type="select"
+                    value="option-one"
+                    options={[{"Option one", "option-one"}, {"Option two", "option-two"}]}
+                  />
                 </div>
+              </.preview_group>
 
-                <%!-- Color Swatches --%>
-                <div>
-                  <p class="font-semibold mb-3">Color Palette</p>
-                  <div class="grid grid-cols-3 gap-4">
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 rounded bg-primary mb-2"></div>
-                      <span class="text-xs font-medium">Primary</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 rounded bg-secondary mb-2"></div>
-                      <span class="text-xs font-medium">Secondary</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 rounded bg-accent mb-2"></div>
-                      <span class="text-xs font-medium">Accent</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 rounded bg-success mb-2"></div>
-                      <span class="text-xs font-medium">Success</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 rounded bg-warning mb-2"></div>
-                      <span class="text-xs font-medium">Warning</span>
-                    </div>
-                    <div class="flex flex-col items-center">
-                      <div class="w-20 h-20 rounded bg-error mb-2"></div>
-                      <span class="text-xs font-medium">Error</span>
-                    </div>
-                  </div>
+              <.preview_group title="Badges">
+                <div class="flex flex-wrap gap-2">
+                  <span class="badge badge-primary">Primary</span>
+                  <span class="badge badge-secondary">Secondary</span>
+                  <span class="badge badge-accent">Accent</span>
+                  <span class="badge badge-success">Success</span>
+                  <span class="badge badge-warning">Warning</span>
+                  <span class="badge badge-error">Error</span>
                 </div>
+              </.preview_group>
+            </div>
 
-                <%!-- Badge Examples --%>
-                <div>
-                  <p class="font-semibold mb-3">Badges</p>
-                  <div class="flex gap-2 flex-wrap">
-                    <div class="badge badge-primary">Primary</div>
-                    <div class="badge badge-secondary">Secondary</div>
-                    <div class="badge badge-accent">Accent</div>
-                    <div class="badge badge-success">Success</div>
-                    <div class="badge badge-warning">Warning</div>
-                    <div class="badge badge-error">Error</div>
-                  </div>
+            <div class="space-y-8 p-5 sm:p-7">
+              <.preview_group title="Color palette">
+                <div class="grid grid-cols-3 gap-3 sm:grid-cols-6 xl:grid-cols-3">
+                  <.color_swatch label="Primary" class="bg-primary" />
+                  <.color_swatch label="Secondary" class="bg-secondary" />
+                  <.color_swatch label="Accent" class="bg-accent" />
+                  <.color_swatch label="Success" class="bg-success" />
+                  <.color_swatch label="Warning" class="bg-warning" />
+                  <.color_swatch label="Error" class="bg-error" />
                 </div>
+              </.preview_group>
 
-                <%!-- Alert Examples --%>
-                <div>
-                  <p class="font-semibold mb-3">Alerts</p>
-                  <div class="space-y-2">
-                    <div class="alert alert-info">
-                      <span>Info alert example</span>
-                    </div>
-                    <div class="alert alert-success">
-                      <span>Success alert example</span>
-                    </div>
-                    <div class="alert alert-warning">
-                      <span>Warning alert example</span>
-                    </div>
-                    <div class="alert alert-error">
-                      <span>Error alert example</span>
-                    </div>
-                  </div>
+              <.preview_group title="Alerts">
+                <div class="space-y-2">
+                  <div class="alert alert-info py-3"><span>Information message</span></div>
+                  <div class="alert alert-success py-3"><span>Success message</span></div>
+                  <div class="alert alert-warning py-3"><span>Warning message</span></div>
+                  <div class="alert alert-error py-3"><span>Error message</span></div>
                 </div>
-              </div>
-
-              <div class="card-actions justify-end mt-8">
-                <button
-                  class="btn btn-primary btn-lg"
-                  phx-click={JS.dispatch("phx:set-theme", detail: %{theme: @selected_theme})}
-                >
-                  Apply Theme
-                </button>
-              </div>
+              </.preview_group>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
     """
+  end
+
+  attr :theme, :string, required: true
+  attr :selected, :boolean, required: true
+
+  defp theme_option(assigns) do
+    assigns =
+      assigns
+      |> assign(:colors, theme_colors(assigns.theme))
+      |> assign(:label, theme_name(assigns.theme))
+
+    ~H"""
+    <button
+      id={"theme-option-#{@theme}"}
+      type="button"
+      phx-click="select_theme"
+      phx-value-theme={@theme}
+      aria-pressed={to_string(@selected)}
+      class={[
+        "btn h-auto min-h-16 justify-between rounded-xl border px-3 py-3 text-left normal-case sm:px-4",
+        if(@selected,
+          do: "border-primary bg-primary/10 text-base-content hover:bg-primary/15",
+          else:
+            "border-base-300 bg-base-100 text-base-content hover:border-primary/40 hover:bg-base-200"
+        )
+      ]}
+    >
+      <span class="min-w-0">
+        <span class="block truncate text-xs font-bold sm:text-sm">{@label}</span>
+        <span class="mt-0.5 block text-xs font-normal text-base-content/55">
+          {if @theme == "tokyo-night", do: "Dark", else: "Light"}
+        </span>
+      </span>
+      <span class="flex shrink-0 gap-0.5 sm:gap-1" aria-hidden="true">
+        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.primary}"}>
+        </span>
+        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.secondary}"}>
+        </span>
+        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.accent}"}></span>
+      </span>
+    </button>
+    """
+  end
+
+  attr :title, :string, required: true
+  slot :inner_block, required: true
+
+  defp preview_group(assigns) do
+    ~H"""
+    <section>
+      <h3 class="mb-3 text-sm font-black text-base-content">{@title}</h3>
+      {render_slot(@inner_block)}
+    </section>
+    """
+  end
+
+  attr :label, :string, required: true
+  attr :class, :string, required: true
+
+  defp color_swatch(assigns) do
+    ~H"""
+    <div class="min-w-0">
+      <div class={["aspect-square w-full rounded-lg", @class]}></div>
+      <span class="mt-1.5 block truncate text-center text-xs font-medium">{@label}</span>
+    </div>
+    """
+  end
+
+  defp theme_name(theme) do
+    theme
+    |> String.replace("-", " ")
+    |> String.split()
+    |> Enum.map_join(" ", &String.capitalize/1)
   end
 end
