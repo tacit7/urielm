@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tag management and groups — reference</title>
+    <style>
+      :root { color-scheme: dark; --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3348; --accent:#818cf8; --text:#e2e8f0; --muted:#94a3b8; }
+      * { box-sizing: border-box; } body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,sans-serif; }
+      main { width:min(1080px,calc(100% - 32px)); margin:40px auto; } h1,h2,p { margin:0; } h1 { font-size:28px; } h2 { font-size:16px; }
+      .tabs { display:flex; gap:8px; margin:24px 0; } .tab,.button { border:1px solid var(--border); border-radius:9px; padding:9px 13px; background:var(--surface2); color:var(--text); }
+      .tab.active,.button.primary { border-color:var(--accent); color:var(--accent); } .grid { display:grid; grid-template-columns:1.4fr 1fr; gap:16px; }
+      .card { border:1px solid var(--border); border-radius:14px; background:var(--surface); overflow:hidden; } .head,.row,.form { padding:16px; border-bottom:1px solid var(--border); }
+      .row:last-child { border-bottom:0; } .between { display:flex; align-items:center; justify-content:space-between; gap:12px; } .muted { color:var(--muted); }
+      .badge { display:inline-block; margin:7px 5px 0 0; border:1px solid var(--border); border-radius:999px; padding:4px 8px; font-size:12px; }
+      label { display:grid; gap:6px; margin-bottom:14px; font-weight:650; } input,textarea,select { width:100%; border:1px solid var(--border); border-radius:9px; padding:10px; background:var(--bg); color:var(--text); }
+      .annotation { margin-top:18px; border-left:3px solid var(--accent); padding:12px 14px; background:var(--surface); color:var(--muted); }
+      @media(max-width:760px){ .grid{grid-template-columns:1fr}.form-panel{position:fixed;inset:auto 0 0;border-radius:18px 18px 0 0;box-shadow:0 -12px 40px #0008} main{margin-bottom:380px} }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="between"><div><p class="muted">Admin / Forum organization</p><h1>Tags</h1></div><button class="button primary">New tag</button></div>
+      <nav class="tabs" aria-label="Admin pages"><span class="tab">Users</span><span class="tab">Moderation</span><span class="tab active">Tags</span><span class="tab">Trust levels</span></nav>
+      <div class="grid">
+        <section class="card">
+          <div class="head between"><div><h2>Tag groups</h2><p class="muted">Organize the public directory without changing tag URLs.</p></div><button class="button">New group</button></div>
+          <article class="row"><div class="between"><strong>Workflow</strong><span class="muted">3 tags</span></div><span class="badge">question</span><span class="badge">how-to</span><span class="badge">showcase</span></article>
+          <article class="row"><div class="between"><strong>Platform</strong><span class="muted">2 tags</span></div><span class="badge">phoenix</span><span class="badge">elixir</span></article>
+          <article class="row"><div class="between"><strong>Ungrouped</strong><span class="muted">1 tag</span></div><span class="badge">community</span></article>
+        </section>
+        <aside class="card form-panel">
+          <div class="head"><h2>Edit group</h2><p class="muted">Membership changes are atomic.</p></div>
+          <form class="form"><label>Name<input value="Workflow" /></label><label>Description<textarea>How a discussion is framed.</textarea></label><label>Tags<select multiple><option selected>question</option><option selected>how-to</option><option selected>showcase</option></select></label><div class="between"><button class="button">Delete</button><button class="button primary">Save group</button></div></form>
+        </aside>
+      </div>
+      <div class="annotation">Reference: desktop uses a side editor; narrow screens turn it into a bottom sheet. The implementation may use an inline card while preserving these hierarchy, states, and controls. Only administrators can open or mutate this screen. Public tag browse/detail URLs and thread badges remain unchanged.</div>
+    </main>
+  </body>
+</html>

@@ -6,14 +6,18 @@ defmodule UrielmWeb.TagsLive do
   @impl true
   def mount(_params, _session, socket) do
     categories = Forum.list_categories_with_boards()
-    tags = Forum.list_tags_with_counts()
+    directory = Forum.list_tag_directory()
+
+    tags_count =
+      Enum.sum(Enum.map(directory.groups, &length(&1.tags))) + length(directory.ungrouped)
 
     {:ok,
      socket
      |> assign(:page_title, "Tags")
      |> assign(:all_categories, categories)
-     |> assign(:tags, tags)
-     |> assign(:tags_count, length(tags))}
+     |> assign(:tag_groups, directory.groups)
+     |> assign(:ungrouped_tags, directory.ungrouped)
+     |> assign(:tags_count, tags_count)}
   end
 
   @impl true
@@ -51,7 +55,7 @@ defmodule UrielmWeb.TagsLive do
           </div>
 
           <.empty_state
-            :if={@tags == []}
+            :if={@tags_count == 0}
             id="forum-tags-empty-state"
             title="No tags yet"
             description="Tags will appear here once discussions start using them."
@@ -60,8 +64,34 @@ defmodule UrielmWeb.TagsLive do
             class="rounded-none border-0 bg-transparent"
           />
 
-          <div :if={@tags != []} class="divide-y divide-base-300/40">
-            <.tag_row :for={tag <- @tags} tag={tag} />
+          <div :if={@tags_count > 0} id="forum-tag-directory" class="divide-y divide-base-300/60">
+            <section
+              :for={group <- @tag_groups}
+              id={"forum-tag-group-#{group_dom_slug(group)}"}
+              class="bg-base-100/20"
+            >
+              <header class="border-b border-base-300/40 bg-base-200/35 px-5 py-4">
+                <h3 class="font-black text-base-content">{group.name}</h3>
+                <p :if={group.description} class="mt-1 text-sm text-base-content/50">
+                  {group.description}
+                </p>
+              </header>
+              <div class="divide-y divide-base-300/40">
+                <.tag_row :for={tag <- group.tags} tag={tag} />
+              </div>
+            </section>
+
+            <section :if={@ungrouped_tags != []} id="forum-ungrouped-tags">
+              <header
+                :if={@tag_groups != []}
+                class="border-b border-base-300/40 bg-base-200/35 px-5 py-4"
+              >
+                <h3 class="font-black text-base-content">Other tags</h3>
+              </header>
+              <div class="divide-y divide-base-300/40">
+                <.tag_row :for={tag <- @ungrouped_tags} tag={tag} />
+              </div>
+            </section>
           </div>
         </section>
       </div>
@@ -109,5 +139,15 @@ defmodule UrielmWeb.TagsLive do
       </div>
     </article>
     """
+  end
+
+  defp group_dom_slug(group) do
+    slug =
+      group.name
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9]+/u, "-")
+      |> String.trim("-")
+
+    if slug == "", do: group.id, else: slug
   end
 end

@@ -11,6 +11,8 @@ defmodule Urielm.Forum.Tag do
 
     has_many(:thread_tags, Urielm.Forum.ThreadTag)
     has_many(:threads, through: [:thread_tags, :thread])
+    has_many(:tag_group_memberships, Urielm.Forum.TagGroupMembership)
+    has_many(:tag_groups, through: [:tag_group_memberships, :tag_group])
 
     timestamps(type: :utc_datetime_usec)
   end

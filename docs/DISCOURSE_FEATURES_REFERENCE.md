@@ -14,8 +14,8 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Subcategories** - Nested organization (boards in our impl)
 - ✅ **Topics/Threads** - Discussion posts
 - ✅ **Posts/Comments** - Replies with nesting
-- ⚠️ **Tags** - Thread tagging, tag badges/links, and browse/detail UI are implemented; tag management/grouping remains incomplete
-- ❌ **Tag groups** - Grouped tag management
+- ✅ **Tags** - Thread tagging, tag badges/links, browse/detail UI, and admin CRUD are implemented
+- ✅ **Tag groups** - Admin CRUD and single-group membership organize the public tag directory; Discourse's advanced group permissions and parent/one-per-topic rules remain out of scope
 - ✅ **Search** - Full-text search
 - ✅ **Advanced search** - Query plus author, category, and date filters with SearchLive/context coverage
 - ❌ **Saved searches** - Persistent search queries

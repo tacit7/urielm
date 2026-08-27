@@ -5,7 +5,7 @@ defmodule UrielmWeb.AdminComponents do
 
   alias Urielm.Accounts.User
 
-  attr :current, :string, required: true, values: ~w(users moderation trust-levels)
+  attr :current, :string, required: true, values: ~w(users moderation tags trust-levels)
 
   @doc "Shared navigation for admin pages."
   def admin_nav(assigns) do
@@ -36,6 +36,17 @@ defmodule UrielmWeb.AdminComponents do
         ]}
       >
         Moderation
+      </a>
+      <a
+        id="admin-nav-tags"
+        href="/admin/tags"
+        aria-current={if(@current == "tags", do: "page", else: nil)}
+        class={[
+          "tab min-h-11 shrink-0 px-4 font-semibold",
+          @current == "tags" && "tab-active text-primary"
+        ]}
+      >
+        Tags
       </a>
       <a
         id="admin-nav-trust-levels"

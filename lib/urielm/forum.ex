@@ -10,6 +10,7 @@ defmodule Urielm.Forum do
   """
 
   import Ecto.Query, warn: false
+  alias Ecto.Multi
   require Logger
   alias Urielm.Repo
   alias Urielm.TrustLevel
@@ -25,6 +26,8 @@ defmodule Urielm.Forum do
     SavedComment,
     Tag,
     ThreadTag,
+    TagGroup,
+    TagGroupMembership,
     Report,
     Subscription,
     Notification,
@@ -971,6 +974,30 @@ defmodule Urielm.Forum do
     |> Repo.insert()
   end
 
+  def update_tag(%Tag{} = tag, attrs) do
+    tag
+    |> Tag.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_tag(%Tag{} = tag) do
+    Multi.new()
+    |> Multi.delete_all(
+      :thread_tags,
+      from(thread_tag in ThreadTag, where: thread_tag.tag_id == ^tag.id)
+    )
+    |> Multi.delete_all(
+      :tag_group_memberships,
+      from(membership in TagGroupMembership, where: membership.tag_id == ^tag.id)
+    )
+    |> Multi.delete(:tag, tag)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{tag: deleted_tag}} -> {:ok, deleted_tag}
+      {:error, _operation, reason, _changes} -> {:error, reason}
+    end
+  end
+
   def get_tag!(id) do
     Repo.get!(Tag, id)
   end
@@ -1005,6 +1032,117 @@ defmodule Urielm.Forum do
     )
     |> Repo.all()
   end
+
+  def list_tag_groups_with_tags do
+    tag_query = from(t in Tag, order_by: [asc: t.name])
+
+    TagGroup
+    |> order_by([group], asc: group.name)
+    |> Repo.all()
+    |> Repo.preload(tags: tag_query)
+  end
+
+  def get_tag_group!(id) do
+    TagGroup
+    |> Repo.get!(id)
+    |> Repo.preload(:tags)
+  end
+
+  def create_tag_group(attrs, tag_ids \\ []) do
+    Multi.new()
+    |> Multi.insert(:tag_group, TagGroup.changeset(%TagGroup{}, attrs))
+    |> Multi.run(:memberships, fn repo, %{tag_group: tag_group} ->
+      replace_tag_group_memberships(repo, tag_group.id, tag_ids)
+    end)
+    |> Repo.transaction()
+    |> tag_group_transaction_result()
+  end
+
+  def update_tag_group(%TagGroup{} = tag_group, attrs, tag_ids) do
+    Multi.new()
+    |> Multi.update(:tag_group, TagGroup.changeset(tag_group, attrs))
+    |> Multi.run(:memberships, fn repo, %{tag_group: updated_group} ->
+      replace_tag_group_memberships(repo, updated_group.id, tag_ids)
+    end)
+    |> Repo.transaction()
+    |> tag_group_transaction_result()
+  end
+
+  def delete_tag_group(%TagGroup{} = tag_group), do: Repo.delete(tag_group)
+
+  def list_tag_directory do
+    tags = list_tags_with_counts()
+    tags_by_id = Map.new(tags, &{&1.id, &1})
+    tag_groups = list_tag_groups_with_tags()
+
+    groups =
+      tag_groups
+      |> Enum.reject(&(&1.tags == []))
+      |> Enum.map(fn group ->
+        %{
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          tags: Enum.map(group.tags, &Map.fetch!(tags_by_id, &1.id))
+        }
+      end)
+
+    grouped_ids = MapSet.new(for group <- tag_groups, tag <- group.tags, do: tag.id)
+
+    %{
+      groups: groups,
+      ungrouped: Enum.reject(tags, &MapSet.member?(grouped_ids, &1.id))
+    }
+  end
+
+  defp replace_tag_group_memberships(repo, tag_group_id, tag_ids) do
+    tag_ids = tag_ids |> Enum.reject(&(&1 in [nil, ""])) |> Enum.uniq()
+    existing_tag_ids = repo.all(from(t in Tag, where: t.id in ^tag_ids, select: t.id))
+
+    grouped_elsewhere? =
+      repo.exists?(
+        from(membership in TagGroupMembership,
+          where: membership.tag_id in ^tag_ids and membership.tag_group_id != ^tag_group_id
+        )
+      )
+
+    cond do
+      length(existing_tag_ids) != length(tag_ids) ->
+        {:error, :invalid_tags}
+
+      grouped_elsewhere? ->
+        {:error, :tags_already_grouped}
+
+      true ->
+        repo.delete_all(
+          from(membership in TagGroupMembership,
+            where: membership.tag_group_id == ^tag_group_id
+          )
+        )
+
+        now = DateTime.utc_now()
+
+        rows =
+          Enum.map(tag_ids, fn tag_id ->
+            %{
+              id: Ecto.UUID.generate(),
+              tag_group_id: tag_group_id,
+              tag_id: tag_id,
+              inserted_at: now,
+              updated_at: now
+            }
+          end)
+
+        {_count, memberships} = repo.insert_all(TagGroupMembership, rows, returning: true)
+        {:ok, memberships}
+    end
+  end
+
+  defp tag_group_transaction_result({:ok, %{tag_group: tag_group}}) do
+    {:ok, Repo.preload(tag_group, :tags, force: true)}
+  end
+
+  defp tag_group_transaction_result({:error, _operation, reason, _changes}), do: {:error, reason}
 
   def count_threads_by_tag(tag_id) do
     from(t in Thread,

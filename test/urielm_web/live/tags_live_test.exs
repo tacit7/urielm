@@ -15,6 +15,7 @@ defmodule UrielmWeb.TagsLiveTest do
 
       {:ok, tag} = Forum.create_tag(%{name: "Question", slug: "question"})
       {:ok, _thread_tag} = Forum.add_tag_to_thread(thread.id, tag.id)
+      {:ok, _group} = Forum.create_tag_group(%{name: "Workflow"}, [tag.id])
 
       {:ok, view, _html} = live(conn, "/forum/tags")
 
@@ -26,6 +27,15 @@ defmodule UrielmWeb.TagsLiveTest do
       assert has_element?(view, "#forum-tag-question")
       assert has_element?(view, "#forum-tag-question .badge", "Tag")
       assert has_element?(view, "#forum-tag-question", "1")
+      assert has_element?(view, "#forum-tag-group-workflow", "Workflow")
+    end
+
+    test "keeps ungrouped tags visible", %{conn: conn} do
+      {:ok, tag} = Forum.create_tag(%{name: "Community", slug: "community"})
+      {:ok, view, _html} = live(conn, "/forum/tags")
+
+      assert has_element?(view, "#forum-ungrouped-tags")
+      assert has_element?(view, "#forum-tag-#{tag.slug}")
     end
   end
 

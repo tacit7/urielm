@@ -1266,6 +1266,72 @@ defmodule Urielm.ForumTest do
     end
   end
 
+  describe "tag management and groups" do
+    test "updates and deletes tags without leaving thread associations" do
+      thread = Fixtures.thread_fixture()
+      {:ok, tag} = Forum.create_tag(%{name: "Needs review", slug: "needs-review"})
+      {:ok, _thread_tag} = Forum.add_tag_to_thread(thread.id, tag.id)
+
+      assert {:ok, updated} =
+               Forum.update_tag(tag, %{name: "Reviewed", slug: "reviewed"})
+
+      assert updated.name == "Reviewed"
+      assert Forum.get_tag_by_slug("reviewed").id == tag.id
+
+      assert {:ok, _deleted} = Forum.delete_tag(updated)
+      assert Forum.get_tag_by_slug("reviewed") == nil
+      assert Forum.list_thread_tags(thread.id) == []
+    end
+
+    test "creates, updates, and deletes a tag group with atomic membership replacement" do
+      {:ok, question} = Forum.create_tag(%{name: "Question", slug: "question"})
+      {:ok, guide} = Forum.create_tag(%{name: "Guide", slug: "guide"})
+
+      assert {:ok, group} =
+               Forum.create_tag_group(
+                 %{name: "Workflow", description: "How discussions are framed"},
+                 [question.id]
+               )
+
+      assert Enum.map(group.tags, & &1.id) == [question.id]
+
+      assert {:ok, updated} =
+               Forum.update_tag_group(
+                 group,
+                 %{name: "Discussion type", description: "A clearer label"},
+                 [guide.id]
+               )
+
+      assert updated.name == "Discussion type"
+      assert Enum.map(updated.tags, & &1.id) == [guide.id]
+      assert {:ok, _deleted} = Forum.delete_tag_group(updated)
+      assert Forum.list_tag_groups_with_tags() == []
+      assert Forum.get_tag_by_slug("guide").id == guide.id
+    end
+
+    test "tag directory groups tags once and keeps ungrouped tags visible" do
+      {:ok, grouped} = Forum.create_tag(%{name: "Phoenix", slug: "phoenix"})
+      {:ok, ungrouped} = Forum.create_tag(%{name: "Community", slug: "community"})
+      {:ok, _group} = Forum.create_tag_group(%{name: "Platform"}, [grouped.id])
+
+      directory = Forum.list_tag_directory()
+
+      assert [%{name: "Platform", tags: [%{id: grouped_id}]}] = directory.groups
+      assert grouped_id == grouped.id
+      assert Enum.map(directory.ungrouped, & &1.id) == [ungrouped.id]
+    end
+
+    test "rejects a tag assigned to another group without partially creating a group" do
+      {:ok, tag} = Forum.create_tag(%{name: "Question", slug: "question"})
+      {:ok, _group} = Forum.create_tag_group(%{name: "Workflow"}, [tag.id])
+
+      assert {:error, :tags_already_grouped} =
+               Forum.create_tag_group(%{name: "Second group"}, [tag.id])
+
+      assert Enum.map(Forum.list_tag_groups_with_tags(), & &1.name) == ["Workflow"]
+    end
+  end
+
   describe "reporting/moderation" do
     test "create_report/4 creates a report for a thread" do
       user = user_fixture()
