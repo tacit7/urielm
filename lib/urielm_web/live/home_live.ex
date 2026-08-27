@@ -413,7 +413,7 @@ defmodule UrielmWeb.HomeLive do
     ~H"""
     <section id="home-courses" class="ui-section bg-base-100">
       <div class="ui-section-shell">
-        <!-- Section Header -->
+        <%!-- Section Header --%>
         <div class="ui-section-header ui-section-header-centered">
           <span class="ui-eyebrow">
             Learn AI Development
@@ -423,42 +423,39 @@ defmodule UrielmWeb.HomeLive do
             Structured learning paths to take you from curious beginner to confident AI developer.
           </p>
         </div>
-        
-    <!-- Course Cards Grid -->
+
+        <%!-- Course Cards Grid --%>
         <%= if Enum.empty?(@courses) do %>
-          <p class="text-base-content/50 text-sm">No courses yet.</p>
+          <.empty_state
+            id="home-courses-empty-state"
+            title="No courses yet."
+            icon="hero-book-open"
+            compact
+          />
         <% end %>
         <div class="grid md:grid-cols-3 gap-8">
           <%= for {course, index} <- Enum.with_index(@courses) do %>
             <% color = course_color_classes(index) %>
             <.link navigate={~p"/courses/#{course.slug}"} class="group">
               <div class="ui-card ui-card-interactive flex h-full flex-col p-8">
-                <!-- Icon -->
-                <div class={"w-14 h-14 rounded-2xl #{color.icon_bg} flex items-center justify-center mb-6"}>
-                  <svg
-                    class={"w-7 h-7 #{color.icon_text}"}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
+                <%!-- Icon --%>
+                <div class={"w-14 h-14 rounded-lg #{color.icon_bg} flex items-center justify-center mb-6"}>
+                  <.um_icon
+                    id={"home-course-icon-#{course.id}"}
+                    name="hero-book-open"
+                    class={"size-7 #{color.icon_text}"}
+                  />
                 </div>
-                
-    <!-- Content -->
+
+                <%!-- Content --%>
                 <h3 class="text-xl font-bold text-base-content mb-3 group-hover:text-primary transition-colors">
                   {course.title}
                 </h3>
                 <p class="text-base-content/60 text-sm leading-relaxed mb-6">
                   {course.description}
                 </p>
-                
-    <!-- Badge -->
+
+                <%!-- Badge --%>
                 <div class="mt-auto pt-6 border-t border-base-300">
                   <span class={"badge badge-outline #{color.badge}"}>Start Course</span>
                 </div>
@@ -466,19 +463,12 @@ defmodule UrielmWeb.HomeLive do
             </.link>
           <% end %>
         </div>
-        
-    <!-- CTA -->
+
+        <%!-- CTA --%>
         <div class="text-center mt-12">
           <.link navigate={~p"/courses"} class="btn btn-outline btn-lg rounded-full px-8 gap-2">
             View All Courses
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
+            <.um_icon id="home-courses-cta-icon" name="hero-arrow-right" class="size-5" />
           </.link>
         </div>
       </div>
@@ -490,7 +480,7 @@ defmodule UrielmWeb.HomeLive do
     ~H"""
     <section id="home-articles" class="ui-section bg-base-200/30">
       <div class="ui-section-shell">
-        <!-- Section Header -->
+        <%!-- Section Header --%>
         <div class="ui-section-header">
           <div>
             <span class="ui-eyebrow">
@@ -499,24 +489,21 @@ defmodule UrielmWeb.HomeLive do
             <h2 class="ui-section-title">Latest Articles</h2>
           </div>
           <.link navigate={~p"/blog"} class="btn btn-ghost gap-2 hidden md:flex">
-            Read All
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
+            Read All <.um_icon id="home-articles-cta-icon" name="hero-arrow-right" class="size-4" />
           </.link>
         </div>
-        
-    <!-- Blog Grid -->
+
+        <%!-- Blog Grid --%>
         <%= if Enum.empty?(@posts) do %>
-          <p class="text-base-content/50 text-sm">No posts yet.</p>
+          <.empty_state
+            id="home-articles-empty-state"
+            title="No posts yet."
+            icon="hero-document-text"
+            compact
+          />
         <% end %>
         <div class="grid lg:grid-cols-2 gap-8">
-          <!-- Featured Post (Large) — first post -->
+          <%!-- Featured Post (Large) - first post --%>
           <%= for post <- Enum.take(@posts, 1) do %>
             <.link navigate={~p"/blog/#{post.slug}"} class="group lg:row-span-2">
               <div class="ui-card ui-card-interactive flex h-full flex-col p-8">
@@ -534,8 +521,8 @@ defmodule UrielmWeb.HomeLive do
               </div>
             </.link>
           <% end %>
-          
-    <!-- Other Posts -->
+
+          <%!-- Other Posts --%>
           <%= for post <- Enum.drop(@posts, 1) do %>
             <.link navigate={~p"/blog/#{post.slug}"} class="group">
               <div class="ui-card ui-card-interactive ui-card-compact p-6">
@@ -564,7 +551,7 @@ defmodule UrielmWeb.HomeLive do
   defp prompts(assigns) do
     ~H"""
     <section id="home-prompts" class="ui-section relative overflow-hidden bg-base-100">
-      <!-- Background Pattern -->
+      <%!-- Background Pattern --%>
       <div class="absolute inset-0 opacity-[0.02]" aria-hidden="true">
         <div
           class="absolute inset-0"
@@ -574,7 +561,7 @@ defmodule UrielmWeb.HomeLive do
       </div>
 
       <div class="ui-section-shell relative">
-        <!-- Section Header -->
+        <%!-- Section Header --%>
         <div class="ui-section-header ui-section-header-centered">
           <span class="ui-eyebrow">
             Prompt Library
@@ -584,29 +571,26 @@ defmodule UrielmWeb.HomeLive do
             Battle-tested prompts for common tasks. Copy, customize, and use in your projects.
           </p>
         </div>
-        
-    <!-- Prompts Grid -->
+
+        <%!-- Prompts Grid --%>
         <%= if Enum.empty?(@prompts) do %>
-          <p class="text-base-content/50 text-sm">No prompts yet.</p>
+          <.empty_state
+            id="home-prompts-empty-state"
+            title="No prompts yet."
+            icon="hero-command-line"
+            compact
+          />
         <% end %>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <%= for prompt <- @prompts do %>
-            <.link navigate={~p"/prompts/#{prompt.id}"} class="group">
+            <.link navigate={~p"/prompts/#{prompt.id}"} class="group min-w-0">
               <div class="ui-card ui-card-interactive ui-card-compact flex items-center gap-4 p-5">
-                <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <svg
-                    class="w-6 h-6 text-accent"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+                <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <.um_icon
+                    id={"home-prompt-icon-#{prompt.id}"}
+                    name="hero-command-line"
+                    class="size-6 text-accent"
+                  />
                 </div>
                 <div class="flex-1 min-w-0">
                   <h3 class="font-semibold text-base-content group-hover:text-accent transition-colors truncate">
@@ -618,36 +602,21 @@ defmodule UrielmWeb.HomeLive do
                     <span class="text-xs text-base-content/50">{prompt.likes_count} likes</span>
                   </div>
                 </div>
-                <svg
-                  class="w-5 h-5 text-base-content/30 group-hover:text-accent group-hover:translate-x-1 transition-all"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <.um_icon
+                  id={"home-prompt-chevron-#{prompt.id}"}
+                  name="hero-chevron-right"
+                  class="size-5 text-base-content/30 group-hover:text-accent group-hover:translate-x-1 transition-all"
+                />
               </div>
             </.link>
           <% end %>
         </div>
-        
-    <!-- CTA -->
+
+        <%!-- CTA --%>
         <div class="text-center mt-12">
           <.link navigate={~p"/prompts"} class="btn btn-accent btn-lg rounded-full px-8 gap-2">
             Explore All Prompts
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
+            <.um_icon id="home-prompts-cta-icon" name="hero-arrow-right" class="size-5" />
           </.link>
         </div>
       </div>

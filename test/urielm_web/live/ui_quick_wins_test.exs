@@ -86,6 +86,22 @@ defmodule UrielmWeb.UiQuickWinsTest do
       assert has_element?(view, "#home-prompts.ui-section")
     end
 
+    test "uses shared empty states for homepage content without records" do
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#home-courses-empty-state[data-ui-state='empty']")
+      assert has_element?(view, "#home-articles-empty-state[data-ui-state='empty']")
+      assert has_element?(view, "#home-prompts-empty-state[data-ui-state='empty']")
+    end
+
+    test "uses shared interface icons for homepage content actions" do
+      {:ok, view, _html} = live(build_conn(), ~p"/")
+
+      assert has_element?(view, "#home-courses-cta-icon.hero-arrow-right")
+      assert has_element?(view, "#home-articles-cta-icon.hero-arrow-right")
+      assert has_element?(view, "#home-prompts-cta-icon.hero-arrow-right")
+    end
+
     test "defines reusable static and interactive card surfaces" do
       css = File.read!(Path.expand("../../../assets/css/app.css", __DIR__))
 

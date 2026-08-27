@@ -135,19 +135,15 @@ defmodule UrielmWeb.CourseLive do
             </span>
           </div>
 
-          <div
+          <.empty_state
             :if={Enum.empty?(@lessons)}
             id="course-lessons-empty"
-            class="ui-card flex min-h-56 flex-col items-center justify-center border-dashed px-6 text-center"
-          >
-            <div class="mb-4 flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <.um_icon name="hero-video-camera" class="size-5" />
-            </div>
-            <h3 class="font-black text-base-content">Lessons are coming soon</h3>
-            <p class="mt-2 max-w-md text-sm text-base-content/55">
-              This course outline is ready and the first lessons are being prepared.
-            </p>
-          </div>
+            title="Lessons are coming soon"
+            description="This course outline is ready and the first lessons are being prepared."
+            icon="hero-video-camera"
+            compact
+            class="min-h-56 border border-dashed border-base-300"
+          />
 
           <div :if={!Enum.empty?(@lessons)} id="course-lessons-list" class="grid gap-3">
             <.lesson_row :for={lesson <- @lessons} lesson={lesson} course={@course} />

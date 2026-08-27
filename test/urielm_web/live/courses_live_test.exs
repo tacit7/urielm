@@ -42,6 +42,22 @@ defmodule UrielmWeb.CoursesLiveTest do
     assert has_element?(view, "#lesson-#{lesson.id}")
   end
 
+  test "course detail uses the shared empty state when lessons are unavailable" do
+    suffix = System.unique_integer([:positive])
+
+    {:ok, course} =
+      Learning.create_course(%{
+        title: "Upcoming AI #{suffix}",
+        slug: "upcoming-ai-#{suffix}",
+        description: "A course outline awaiting its first lesson."
+      })
+
+    {:ok, view, _html} = live(build_conn(), ~p"/courses/#{course.slug}")
+
+    assert has_element?(view, "#course-lessons-empty[data-ui-state='empty']")
+    refute has_element?(view, "#course-lessons-list")
+  end
+
   defp course_with_lesson! do
     suffix = System.unique_integer([:positive])
 
