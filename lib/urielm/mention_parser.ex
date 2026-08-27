@@ -39,8 +39,12 @@ defmodule Urielm.MentionParser do
 
   defp process_single_mention(username, mentioner_id, target_type, target_id, acc) do
     case Accounts.get_user_by_username(username) do
-      nil -> acc
-      user when user.id == mentioner_id -> acc
+      nil ->
+        acc
+
+      user when user.id == mentioner_id ->
+        acc
+
       user ->
         case create_mention(user.id, mentioner_id, target_type, target_id) do
           {:ok, _} -> acc + 1

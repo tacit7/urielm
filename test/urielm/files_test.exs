@@ -41,7 +41,11 @@ defmodule Urielm.FilesTest do
 
       # UUID v7 string format: 36 chars with version nibble = 7
       assert is_binary(file.id)
-      assert String.match?(file.id, ~r/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+
+      assert String.match?(
+               file.id,
+               ~r/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+             )
     end
 
     test "rejects invalid entity type", %{user: user, thread: thread, upload: upload} do

@@ -153,9 +153,7 @@ defmodule UrielmWeb.AuthController do
   The token is minted by sign_post_signup_token/2 immediately after registration.
   """
   def post_signup(conn, %{"token" => token}) do
-    case Phoenix.Token.verify(conn, "post signup", token,
-           max_age: @post_signup_token_max_age
-         ) do
+    case Phoenix.Token.verify(conn, "post signup", token, max_age: @post_signup_token_max_age) do
       {:error, _} ->
         conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
