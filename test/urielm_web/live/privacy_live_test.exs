@@ -14,13 +14,14 @@ defmodule UrielmWeb.PrivacyLiveTest do
   test "privacy policy is public and exposes the complete policy structure" do
     {:ok, view, _html} = live(build_conn(), ~p"/privacy")
 
-    assert has_element?(view, "#privacy-policy-page")
-    assert has_element?(view, "#privacy-policy-title", "Privacy Policy")
+    assert has_element?(view, "#privacy-policy-page.ui-page-shell")
+    assert has_element?(view, "#privacy-policy-title.ui-section-title", "Privacy Policy")
     assert has_element?(view, "#privacy-policy-updated", "August 25, 2026")
-    assert has_element?(view, "#privacy-table-of-contents")
+    assert has_element?(view, "#privacy-table-of-contents.ui-card")
+    assert has_element?(view, "#privacy-summary.ui-card")
 
     for section <- 1..15 do
-      assert has_element?(view, "#privacy-section-#{section}")
+      assert has_element?(view, "#privacy-section-#{section}.ui-card")
     end
 
     assert has_element?(view, "#google-oauth-disclosure")

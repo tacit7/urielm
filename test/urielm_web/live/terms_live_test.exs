@@ -14,13 +14,13 @@ defmodule UrielmWeb.TermsLiveTest do
   test "terms of use are public and expose the complete agreement structure" do
     {:ok, view, _html} = live(build_conn(), ~p"/terms")
 
-    assert has_element?(view, "#terms-page")
-    assert has_element?(view, "#terms-title", "Terms of Use")
+    assert has_element?(view, "#terms-page.ui-page-shell")
+    assert has_element?(view, "#terms-title.ui-section-title", "Terms of Use")
     assert has_element?(view, "#terms-updated", "August 25, 2026")
-    assert has_element?(view, "#terms-table-of-contents")
+    assert has_element?(view, "#terms-table-of-contents.ui-card")
 
     for section <- 1..19 do
-      assert has_element?(view, "#terms-section-#{section}")
+      assert has_element?(view, "#terms-section-#{section}.ui-card")
     end
 
     assert has_element?(view, "#terms-governing-law", "Texas")

@@ -42,32 +42,23 @@ defmodule UrielmWeb.PrivacyLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div id="privacy-policy-page" class="min-h-screen bg-base-100">
-        <header class="relative overflow-hidden border-b border-base-300/70">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--color-primary)_14%,transparent),transparent_58%)]">
-          </div>
-          <div class="relative mx-auto max-w-5xl px-5 py-16 text-center sm:px-7 sm:py-22 lg:px-8">
-            <p class="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-              SMPL LABS LLC
-            </p>
-            <h1
-              id="privacy-policy-title"
-              class="text-4xl font-black tracking-[-0.045em] text-base-content sm:text-6xl"
-            >
-              Privacy Policy
-            </h1>
-            <p id="privacy-policy-updated" class="mt-4 text-sm text-base-content/60 sm:text-base">
+      <div id="privacy-policy-page" class="ui-page-shell max-w-6xl">
+        <header class="ui-page-header">
+          <div class="ui-page-heading">
+            <p class="ui-eyebrow">SMPL LABS LLC</p>
+            <h1 id="privacy-policy-title" class="ui-section-title">Privacy Policy</h1>
+            <p id="privacy-policy-updated" class="ui-section-copy mt-2">
               Last updated August 25, 2026
             </p>
           </div>
         </header>
 
-        <div class="mx-auto grid max-w-6xl gap-8 px-5 py-10 sm:px-7 lg:grid-cols-[16rem_minmax(0,48rem)] lg:justify-center lg:px-8 lg:py-14">
+        <div class="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start">
           <aside class="lg:sticky lg:top-24 lg:self-start">
             <nav
               id="privacy-table-of-contents"
               aria-label="Privacy policy sections"
-              class="card border border-base-300/80 bg-base-200/70 shadow-sm"
+              class="card ui-card ui-card-compact h-auto"
             >
               <div class="card-body gap-1 p-5">
                 <h2 class="mb-2 text-sm font-black text-base-content">On this page</h2>
@@ -84,7 +75,7 @@ defmodule UrielmWeb.PrivacyLive do
           </aside>
 
           <main class="min-w-0 space-y-5">
-            <section class="card border border-primary/20 bg-primary/6 shadow-sm">
+            <section class="card ui-card h-auto border-primary/30 bg-primary/6">
               <div class="card-body gap-4 p-6 sm:p-8">
                 <p class="text-xs font-black uppercase tracking-[0.16em] text-primary">Notice</p>
                 <p class="text-base leading-8 text-base-content/75">
@@ -108,7 +99,7 @@ defmodule UrielmWeb.PrivacyLive do
               </div>
             </section>
 
-            <section id="privacy-summary" class="card border border-base-300/80 bg-base-200 shadow-sm">
+            <section id="privacy-summary" class="card ui-card h-auto">
               <div class="card-body gap-5 p-6 sm:p-8">
                 <div>
                   <p class="text-xs font-black uppercase tracking-[0.16em] text-primary">
@@ -254,7 +245,7 @@ defmodule UrielmWeb.PrivacyLive do
             <.policy_section number={6} title="How do we handle Google and other social logins?">
               <div
                 id="google-oauth-disclosure"
-                class="mb-6 rounded-2xl border border-primary/20 bg-primary/6 p-5 sm:p-6"
+                class="mb-6 rounded-xl border border-primary/20 bg-primary/6 p-5 sm:p-6"
               >
                 <p class="text-xs font-black uppercase tracking-[0.16em] text-primary">
                   Google OAuth disclosure
@@ -396,7 +387,7 @@ defmodule UrielmWeb.PrivacyLive do
                 opt out of targeted advertising, sale or sharing, or profiling with significant effects.
               </p>
 
-              <div class="overflow-x-auto rounded-2xl border border-base-300/80">
+              <div class="overflow-x-auto rounded-lg border border-base-300/80">
                 <table class="table table-sm" aria-label="Categories of personal information">
                   <thead>
                     <tr>
@@ -508,7 +499,7 @@ defmodule UrielmWeb.PrivacyLive do
     ~H"""
     <section
       id={"privacy-section-#{@number}"}
-      class="card scroll-mt-24 border border-base-300/80 bg-base-200 shadow-sm"
+      class="card ui-card h-auto scroll-mt-24"
     >
       <div class="card-body gap-4 p-6 text-[0.95rem] leading-7 text-base-content/70 sm:p-8 sm:text-base sm:leading-8">
         <div class="flex items-start gap-3">
@@ -528,7 +519,7 @@ defmodule UrielmWeb.PrivacyLive do
 
   defp summary_item(assigns) do
     ~H"""
-    <div class="rounded-2xl bg-base-100/70 p-4">
+    <div class="rounded-lg border border-base-300/60 bg-base-100/60 p-4">
       <h3 class="font-bold text-base-content">{@title}</h3>
       <p class="mt-1 text-sm leading-6 text-base-content/65">{render_slot(@inner_block)}</p>
     </div>
