@@ -1,9 +1,11 @@
 <script>
+  import { onMount } from 'svelte'
   let {
     isOpen = false,
     replyText = $bindable(""),
     placeholder = "Write your reply...",
     submitLabel = "Reply",
+    draftKey = null,
     onSubmit = null,
     onDiscard = null
   } = $props()
@@ -13,6 +15,8 @@
   let composerHeight = $state(300)
   let isFullscreen = $state(false)
   let isDragging = $state(false)
+  let draftTimer = null
+  let draftHydrated = $state(false)
 
   $effect(() => {
     if (isOpen && textareaRef) {
@@ -20,13 +24,39 @@
     }
   })
 
+  $effect(() => {
+    if (!draftHydrated || !draftKey || typeof window === "undefined") {
+      return
+    }
+
+    if (!replyText.trim()) {
+      try {
+        localStorage.removeItem(draftKey)
+      } catch (_) {}
+
+      return
+    }
+
+    clearTimeout(draftTimer)
+    draftTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, replyText)
+      } catch (_) {}
+    }, 200)
+
+    return () => clearTimeout(draftTimer)
+  })
+
   function handleSubmit() {
     if (onSubmit && replyText.trim()) {
       onSubmit(replyText)
+      clearDraft()
     }
   }
 
   function handleDiscard() {
+    clearDraft()
+
     if (onDiscard) {
       onDiscard()
     }
@@ -64,6 +94,34 @@
 
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
+  }
+
+  onMount(() => {
+    if (!draftKey || typeof window === "undefined") {
+      draftHydrated = true
+      return
+    }
+
+    try {
+      const draft = localStorage.getItem(draftKey)
+      if (draft && !replyText.trim()) {
+        replyText = draft
+      }
+    } catch (_) {}
+
+    draftHydrated = true
+  })
+
+  function clearDraft() {
+    if (!draftKey || typeof window === "undefined") {
+      return
+    }
+
+    clearTimeout(draftTimer)
+
+    try {
+      localStorage.removeItem(draftKey)
+    } catch (_) {}
   }
 
   $effect(() => {

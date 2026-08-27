@@ -929,7 +929,12 @@ defmodule UrielmWeb.ThreadLive do
                 current_user_id: (@current_user && @current_user.id) || nil,
                 current_user_is_admin: (@current_user && @current_user.is_admin) || false,
                 thread_author_id: @thread.author_id,
-                solved_comment_id: @thread.solved_comment_id
+                solved_comment_id: @thread.solved_comment_id,
+                reply_draft_key:
+                  if(@current_user,
+                    do: "forum:thread-reply:#{@thread.id}:#{@current_user.id}",
+                    else: nil
+                  )
               }
             }
             socket={@socket}

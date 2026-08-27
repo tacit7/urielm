@@ -12,6 +12,7 @@
     current_user_is_admin = false,
     thread_author_id = null,
     solved_comment_id = null,
+    reply_draft_key = null,
     depth = 0,
     live
   } = $props()
@@ -259,6 +260,7 @@
   isOpen={isComposerOpen}
   bind:replyText={replyText}
   placeholder="Write your reply... (Markdown supported)"
+  draftKey={reply_draft_key}
   onSubmit={submitReply}
   onDiscard={cancelReply}
 />
