@@ -39,7 +39,10 @@ defmodule UrielmWeb.PromptLive do
               %{current_user: user} = socket.assigns
               target_id = to_string(prompt.id)
               {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
-              user_vote = if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+
+              user_vote =
+                if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+
               user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
 
               {:ok,
@@ -140,7 +143,9 @@ defmodule UrielmWeb.PromptLive do
                   case Content.get_prompt_with_comments(prompt.id) do
                     nil ->
                       {:noreply,
-                       socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
+                       socket
+                       |> put_flash(:error, "Prompt not found")
+                       |> redirect(to: ~p"/prompts")}
 
                     updated_prompt ->
                       {:noreply, assign(socket, :prompt, updated_prompt)}
@@ -203,136 +208,161 @@ defmodule UrielmWeb.PromptLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-base-100 text-base-content pt-20">
+    <div id="prompt-detail-page" class="ui-page-shell max-w-5xl">
       <%= if @prompt do %>
-      <div class="container mx-auto px-4 py-8">
-        <div class="mb-8">
-          <.link
-            navigate={~p"/prompts?#{%{category: @prompt.category}}"}
-            class="link link-hover text-sm mb-4"
-          >
-            ← Back to Prompts
-          </.link>
+        <.link
+          id="prompt-back-link"
+          navigate={~p"/prompts?#{%{category: @prompt.category}}"}
+          class="btn btn-ghost btn-sm -ml-2 mb-5 gap-2 text-base-content/55 hover:text-primary"
+        >
+          <.um_icon name="hero-arrow-left" class="size-4" /> All prompts
+        </.link>
 
-          <h1 class="text-4xl font-bold text-base-content mb-4">{@prompt.title}</h1>
+        <header id="prompt-detail-header" class="ui-page-header">
+          <p class="ui-eyebrow">Prompt library</p>
+          <h1 class="ui-section-title max-w-4xl">{@prompt.title}</h1>
 
-          <div class="flex items-center gap-4 text-sm text-base-content/60 mb-4">
+          <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-base-content/55">
             <span class="badge badge-secondary">{@prompt.category}</span>
             <span>{Calendar.strftime(@prompt.inserted_at, "%B %d, %Y")}</span>
           </div>
 
-          <%= if @prompt.tag_records && @prompt.tag_records != [] do %>
-            <div class="flex flex-wrap gap-2 mb-6">
-              <%= for tag <- @prompt.tag_records do %>
-                <span class="badge badge-outline">{tag.name}</span>
-              <% end %>
-            </div>
-          <% end %>
+          <div
+            :if={@prompt.tag_records && @prompt.tag_records != []}
+            id="prompt-detail-tags"
+            class="mt-4 flex flex-wrap gap-2"
+          >
+            <span :for={tag <- @prompt.tag_records} class="badge badge-outline">{tag.name}</span>
+          </div>
+        </header>
 
-          <%= if @prompt.prompt do %>
-            <div class="bg-base-200 rounded-lg p-6 mb-6">
-              <.svelte
-                name="MarkdownRenderer"
-                props={%{content: @prompt.prompt}}
-                socket={@socket}
+        <section :if={@prompt.prompt} id="prompt-content-panel" class="ui-card h-auto p-5 sm:p-7">
+          <div class="prose max-w-none text-base-content/80 prose-headings:text-base-content prose-a:text-primary">
+            <.svelte
+              name="MarkdownRenderer"
+              props={%{content: @prompt.prompt}}
+              socket={@socket}
               ssr={false}
-              />
-            </div>
+            />
+          </div>
 
-            <div class="flex gap-4 items-center mb-6">
-              <.svelte
-                name="PromptActions"
-                props={
-                  %{
-                    upvotes: @upvotes,
-                    downvotes: @downvotes,
-                    savesCount: @prompt.saves_count,
-                    userVote: @user_vote,
-                    userSaved: @user_saved,
-                    promptId: to_string(@prompt.id)
-                  }
+          <div class="mt-6 flex items-center justify-between gap-3 border-t border-base-300/60 pt-4">
+            <.svelte
+              name="PromptActions"
+              props={
+                %{
+                  upvotes: @upvotes,
+                  downvotes: @downvotes,
+                  savesCount: @prompt.saves_count,
+                  userVote: @user_vote,
+                  userSaved: @user_saved,
+                  promptId: to_string(@prompt.id)
                 }
-                socket={@socket}
-              >
-                <button
-                  id="copy-prompt-btn"
-                  phx-hook="CopyToClipboard"
-                  data-text={@prompt.prompt}
-                  class="flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors"
-                  title="Copy to clipboard"
-                >
-                  <.um_icon name="hero-clipboard-document" class="w-5 h-5" />
-                </button>
-              </.svelte>
-            </div>
-          <% end %>
-        </div>
+              }
+              socket={@socket}
+            />
+            <button
+              id="copy-prompt-btn"
+              type="button"
+              phx-hook="CopyToClipboard"
+              data-text={@prompt.prompt}
+              class="btn btn-ghost btn-sm btn-square"
+              title="Copy prompt"
+              aria-label="Copy prompt"
+            >
+              <.um_icon name="hero-clipboard-document" class="size-5" />
+            </button>
+          </div>
+        </section>
 
-        <div class="divider"></div>
-
-        <div class="max-w-2xl">
-          <h2 class="text-2xl font-bold text-base-content mb-6">
-            Comments ({@prompt.comments_count})
-          </h2>
+        <section id="prompt-comments-section" class="mt-10 max-w-3xl">
+          <div class="mb-5 flex items-center justify-between gap-4">
+            <h2 class="text-xl font-black text-base-content">Comments</h2>
+            <span class="badge badge-ghost font-mono text-xs">
+              {@prompt.comments_count}
+            </span>
+          </div>
 
           <%= if @current_user do %>
-            <div class="mb-8">
-              <.form for={@comment_form} phx-submit="save_comment" class="space-y-4">
-                <.input
-                  field={@comment_form[:body]}
-                  type="textarea"
-                  placeholder="Share your thoughts..."
-                  class="textarea textarea-bordered w-full"
-                  phx-focus="comment_focus"
-                />
-                <button type="submit" class="btn btn-primary">Post Comment</button>
-              </.form>
-            </div>
+            <.form
+              for={@comment_form}
+              id="prompt-comment-form"
+              phx-submit="save_comment"
+              class="ui-card ui-card-compact mb-6 h-auto space-y-4 p-4 sm:p-5"
+            >
+              <.input
+                field={@comment_form[:body]}
+                id="prompt-comment-body"
+                type="textarea"
+                label="Your comment"
+                placeholder="Share a useful thought"
+                required
+                class="textarea textarea-bordered min-h-28 w-full resize-y rounded-lg bg-base-100"
+                phx-focus="comment_focus"
+              />
+              <div class="flex justify-end">
+                <button id="prompt-comment-submit" type="submit" class="btn btn-primary btn-sm">
+                  Post comment
+                </button>
+              </div>
+            </.form>
           <% else %>
-            <div class="alert alert-info mb-8">
+            <div id="prompt-sign-in-to-comment" class="alert alert-info mb-6">
+              <.um_icon name="hero-information-circle" class="size-5 shrink-0" />
               <span>
-                <.link navigate={~p"/auth/signin"} class="link link-primary">Sign in</.link>
-                to comment on this prompt
+                <.link navigate={~p"/signin"} class="link link-primary font-semibold">Sign in</.link>
+                to comment on this prompt.
               </span>
             </div>
           <% end %>
 
-          <div class="space-y-4">
-            <%= if @prompt.comments && length(@prompt.comments) > 0 do %>
-              <%= for comment <- @prompt.comments do %>
-                <div class="card ui-card ui-card-compact">
-                  <div class="card-body p-4">
-                    <div class="flex justify-between items-start">
-                      <div>
-                        <p class="font-semibold text-base-content">
-                          {(comment.user && comment.user.username) || "Anonymous"}
-                        </p>
-                        <p class="text-xs text-base-content/60">
-                          {Calendar.strftime(comment.inserted_at, "%B %d, %Y at %H:%M")}
-                        </p>
-                      </div>
-
-                      <%= if @current_user && (comment.user_id == @current_user.id or @current_user.is_admin) do %>
-                        <button
-                          phx-click="delete_comment"
-                          phx-value-id={comment.id}
-                          class="btn btn-xs btn-ghost text-error"
-                        >
-                          Delete
-                        </button>
-                      <% end %>
+          <div id="prompt-comment-list" class="space-y-3">
+            <%= if @prompt.comments && @prompt.comments != [] do %>
+              <article
+                :for={comment <- @prompt.comments}
+                id={"prompt-comment-#{comment.id}"}
+                class="card ui-card ui-card-compact h-auto"
+              >
+                <div class="card-body p-4 sm:p-5">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                      <p class="truncate font-semibold text-base-content">
+                        {(comment.user && comment.user.username) || "Anonymous"}
+                      </p>
+                      <p class="text-xs text-base-content/55">
+                        {Calendar.strftime(comment.inserted_at, "%B %d, %Y at %H:%M")}
+                      </p>
                     </div>
 
-                    <p class="text-base-content mt-3">{comment.body}</p>
+                    <button
+                      :if={
+                        @current_user &&
+                          (comment.user_id == @current_user.id or @current_user.is_admin)
+                      }
+                      id={"delete-prompt-comment-#{comment.id}"}
+                      type="button"
+                      phx-click="delete_comment"
+                      phx-value-id={comment.id}
+                      class="btn btn-ghost btn-xs text-error"
+                    >
+                      Delete
+                    </button>
                   </div>
+
+                  <p class="mt-3 leading-7 text-base-content/80">{comment.body}</p>
                 </div>
-              <% end %>
+              </article>
             <% else %>
-              <p class="text-base-content/60 text-center py-8">No comments yet. Be the first!</p>
+              <.empty_state
+                id="prompt-comments-empty"
+                title="No comments yet"
+                description="Start the discussion with a useful observation or question."
+                icon="hero-chat-bubble-left-right"
+                compact
+              />
             <% end %>
           </div>
-        </div>
-      </div>
+        </section>
       <% end %>
     </div>
     """
