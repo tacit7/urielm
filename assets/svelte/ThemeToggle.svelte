@@ -34,13 +34,11 @@
 <button
   id="tokyo-theme-toggle"
   onclick={toggleTheme}
-  class="btn btn-ghost btn-circle size-11 text-base-content/65 transition duration-200 hover:bg-primary/10 hover:text-primary motion-reduce:transition-none"
+  class="btn btn-ghost btn-circle swap swap-rotate size-11 text-base-content/65 transition duration-200 hover:bg-primary/10 hover:text-primary motion-reduce:transition-none"
+  class:swap-active={currentTheme === DARK_THEME}
   aria-label={currentTheme === DARK_THEME ? 'Switch to Tokyo Day' : 'Switch to Tokyo Night'}
   title={currentTheme === DARK_THEME ? 'Switch to Tokyo Day' : 'Switch to Tokyo Night'}
 >
-  {#if currentTheme === DARK_THEME}
-    <UMIcon name="sun" className="size-4" />
-  {:else}
-    <UMIcon name="moon" className="size-4" />
-  {/if}
+  <UMIcon name="sun" className="swap-on size-4" />
+  <UMIcon name="moon" className="swap-off size-4" />
 </button>
