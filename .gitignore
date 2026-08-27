@@ -50,6 +50,7 @@ bin/docker-deploy.sh
 
 # macOS
 .DS_Store
+.codex/
 .claude/worktrees/
 .worktrees/
 docs/courses
