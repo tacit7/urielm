@@ -188,15 +188,19 @@ defmodule Urielm.Forum do
 
   def paginate_threads(board_id, params \\ %{}, opts \\ []) do
     solved_filter = Keyword.get(opts, :solved)
+    params = prepend_flop_order(params, :is_pinned, :desc)
 
     base =
       from(t in Thread)
       |> where([t], t.board_id == ^board_id and t.is_removed == false)
       |> maybe_filter_solved(solved_filter)
-      |> order_by([t], desc: t.is_pinned)
       |> thread_preloads()
 
-    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+    Flop.validate_and_run(base, params,
+      for: Thread,
+      repo: Repo,
+      default_order: thread_default_order()
+    )
   end
 
   defp maybe_filter_solved(query, nil), do: query
@@ -842,7 +846,7 @@ defmodule Urielm.Forum do
         order_by: [desc: st.inserted_at, desc: t.id]
       )
 
-    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+    Flop.validate_and_run(base, params, for: Thread, repo: Repo, ordering: false)
   end
 
   def count_saved_threads(user_id) do
@@ -997,11 +1001,14 @@ defmodule Urielm.Forum do
         on: tt.thread_id == t.id,
         where: tt.tag_id == ^tag_id,
         where: t.is_removed == false,
-        preload: [:author, :board],
-        order_by: [desc: t.inserted_at, desc: t.id]
+        preload: [:author, :board]
       )
 
-    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+    Flop.validate_and_run(base, params,
+      for: Thread,
+      repo: Repo,
+      default_order: inserted_thread_order()
+    )
   end
 
   # Reporting/Moderation
@@ -1412,7 +1419,7 @@ defmodule Urielm.Forum do
   def paginate_search_threads(query, params \\ %{}, opts \\ []) do
     query
     |> search_query(opts)
-    |> Flop.validate_and_run(params, for: Thread, repo: Repo)
+    |> Flop.validate_and_run(params, for: Thread, repo: Repo, ordering: false)
   end
 
   # Topic Reads - Track which topics users have read
@@ -1458,11 +1465,14 @@ defmodule Urielm.Forum do
         left_join: tr in TopicRead,
         on: tr.user_id == ^user_id and tr.thread_id == t.id,
         where: t.board_id == ^board_id and t.is_removed == false and is_nil(tr.id),
-        preload: [:author, :board],
-        order_by: [desc: t.inserted_at, desc: t.id]
+        preload: [:author, :board]
       )
 
-    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+    Flop.validate_and_run(base, params,
+      for: Thread,
+      repo: Repo,
+      default_order: inserted_thread_order()
+    )
   end
 
   def list_new_threads(_user_id, board_id, opts \\ []) do
@@ -1490,11 +1500,14 @@ defmodule Urielm.Forum do
     base =
       from(t in Thread,
         where: t.board_id == ^board_id and t.is_removed == false and t.inserted_at > ^cutoff,
-        preload: [:author, :board],
-        order_by: [desc: t.inserted_at, desc: t.id]
+        preload: [:author, :board]
       )
 
-    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+    Flop.validate_and_run(base, params,
+      for: Thread,
+      repo: Repo,
+      default_order: inserted_thread_order()
+    )
   end
 
   def list_latest_threads(board_id, opts \\ []) do
@@ -1596,9 +1609,12 @@ defmodule Urielm.Forum do
       from(t in Thread)
       |> where([t], t.author_id == ^author_id and t.is_removed == false)
       |> thread_preloads()
-      |> order_by([t], desc: t.inserted_at, desc: t.id)
 
-    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+    Flop.validate_and_run(base, params,
+      for: Thread,
+      repo: Repo,
+      default_order: inserted_thread_order()
+    )
   end
 
   def list_comments_by_author(author_id, opts \\ []) do
@@ -1619,9 +1635,12 @@ defmodule Urielm.Forum do
       from(c in Comment)
       |> where([c], c.author_id == ^author_id and c.is_removed == false)
       |> preload([:author, thread: :board])
-      |> order_by([c], desc: c.inserted_at, desc: c.id)
 
-    Flop.validate_and_run(base, params, for: Comment, repo: Repo)
+    Flop.validate_and_run(base, params,
+      for: Comment,
+      repo: Repo,
+      default_order: inserted_comment_order()
+    )
   end
 
   def count_threads_by_author(author_id) do
@@ -1679,6 +1698,56 @@ defmodule Urielm.Forum do
 
   # Common thread preloads used across queries
   defp thread_preloads(query), do: preload(query, [:author, :board])
+
+  defp thread_default_order do
+    %{order_by: [:is_pinned, :updated_at, :id], order_directions: [:desc, :desc, :desc]}
+  end
+
+  defp inserted_thread_order do
+    %{order_by: [:inserted_at, :id], order_directions: [:desc, :desc]}
+  end
+
+  defp inserted_comment_order do
+    %{order_by: [:inserted_at, :id], order_directions: [:desc, :desc]}
+  end
+
+  defp prepend_flop_order(params, field, direction) when is_map(params) do
+    order_by = Map.get(params, :order_by) || Map.get(params, "order_by") || []
+
+    order_directions =
+      Map.get(params, :order_directions) || Map.get(params, "order_directions") || []
+
+    cond do
+      List.wrap(order_by) == [] ->
+        params
+
+      Enum.any?(List.wrap(order_by), &flop_field_equals?(&1, field)) ->
+        params
+
+      true ->
+        {order_key, direction_key} = flop_order_keys(params)
+
+        params
+        |> Map.put(order_key, [field | List.wrap(order_by)])
+        |> Map.put(direction_key, [direction | List.wrap(order_directions)])
+    end
+  end
+
+  defp prepend_flop_order(params, _field, _direction), do: params
+
+  defp flop_order_keys(params) do
+    if Map.has_key?(params, "order_by") or Map.has_key?(params, "order_directions") do
+      {"order_by", "order_directions"}
+    else
+      {:order_by, :order_directions}
+    end
+  end
+
+  defp flop_field_equals?(field, expected) when is_binary(field) do
+    field == Atom.to_string(expected)
+  end
+
+  defp flop_field_equals?(field, expected), do: field == expected
 
   defp search_query(query, opts) do
     base_query =

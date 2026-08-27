@@ -96,8 +96,7 @@ defmodule UrielmWeb.Components.ReportModal do
         class="modal-backdrop"
         aria-label="Close report dialog"
         phx-click={JS.remove_attribute("open", to: "##{@id}")}
-      >
-      </button>
+      ></button>
     </dialog>
     """
   end

@@ -4,7 +4,16 @@ defmodule Urielm.Forum.Thread do
   # use Flop.Schema
   @derive {Flop.Schema,
            filterable: [],
-           sortable: [:id, :title, :inserted_at, :updated_at, :score, :author_id, :board_id]}
+           sortable: [
+             :id,
+             :title,
+             :inserted_at,
+             :updated_at,
+             :score,
+             :author_id,
+             :board_id,
+             :is_pinned
+           ]}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id

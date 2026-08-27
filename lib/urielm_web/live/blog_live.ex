@@ -321,8 +321,7 @@ defmodule UrielmWeb.BlogLive do
                       >
                         <div class="flex items-center gap-2 text-xs font-medium text-base-content/45">
                           <span>{format_post_date(post)}</span>
-                          <span class="size-1 rounded-full bg-base-content/20" aria-hidden="true">
-                          </span>
+                          <span class="size-1 rounded-full bg-base-content/20" aria-hidden="true"></span>
                           <span>{read_time(post.body)} min read</span>
                         </div>
                         <h3 class="mt-4 text-xl font-bold leading-snug tracking-tight text-base-content transition-colors group-hover:text-primary">

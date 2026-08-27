@@ -668,8 +668,8 @@ defmodule UrielmWeb.HomeLive do
               </a>
             </div>
           </div>
-          
-    <!-- Quick Links -->
+
+          <!-- Quick Links -->
           <div>
             <h4 class="font-semibold text-base-content mb-4">Learn</h4>
             <ul class="space-y-3">
@@ -707,8 +707,8 @@ defmodule UrielmWeb.HomeLive do
               </li>
             </ul>
           </div>
-          
-    <!-- Community -->
+
+          <!-- Community -->
           <div>
             <h4 class="font-semibold text-base-content mb-4">Community</h4>
             <ul class="space-y-3">
@@ -740,8 +740,8 @@ defmodule UrielmWeb.HomeLive do
             </ul>
           </div>
         </div>
-        
-    <!-- Bottom Bar -->
+
+        <!-- Bottom Bar -->
         <div class="border-t border-base-300 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p class="text-sm text-base-content/50">
             © 2026 Uriel Maldonado. All rights reserved.

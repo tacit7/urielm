@@ -297,8 +297,7 @@ defmodule UrielmWeb.NotificationsLive do
                       data-unread-indicator
                       class="size-2 rounded-full bg-secondary shadow-[0_0_12px_color-mix(in_oklab,var(--color-secondary)_65%,transparent)]"
                       aria-label="Unread"
-                    >
-                    </span>
+                    ></span>
                     <button
                       id={"notification-read-#{notif.id}"}
                       type="button"

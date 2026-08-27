@@ -229,10 +229,8 @@ defmodule UrielmWeb.ThemesLive do
         </span>
       </span>
       <span class="flex shrink-0 gap-0.5 sm:gap-1" aria-hidden="true">
-        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.primary}"}>
-        </span>
-        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.secondary}"}>
-        </span>
+        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.primary}"}></span>
+        <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.secondary}"}></span>
         <span class="size-3.5 rounded sm:size-4" style={"background-color: #{@colors.accent}"}></span>
       </span>
     </button>

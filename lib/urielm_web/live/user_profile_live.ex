@@ -842,8 +842,7 @@ defmodule UrielmWeb.UserProfileLive do
                 class="modal-backdrop"
                 phx-click="cancel_delete"
                 aria-label="Close delete account dialog"
-              >
-              </button>
+              ></button>
             </div>
           <% end %>
         <% end %>
@@ -1076,8 +1075,7 @@ defmodule UrielmWeb.UserProfileLive do
             class="modal-backdrop"
             phx-click="close_mod_modal"
             aria-label="Close suspend user dialog"
-          >
-          </button>
+          ></button>
         </div>
       <% end %>
 
@@ -1143,8 +1141,7 @@ defmodule UrielmWeb.UserProfileLive do
             class="modal-backdrop"
             phx-click="close_mod_modal"
             aria-label="Close silence user dialog"
-          >
-          </button>
+          ></button>
         </div>
       <% end %>
     </div>

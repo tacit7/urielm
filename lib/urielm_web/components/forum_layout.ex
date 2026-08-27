@@ -68,8 +68,7 @@ defmodule UrielmWeb.Components.ForumLayout do
           aria-label="Close sidebar"
           role="button"
           tabindex="-1"
-        >
-        </label>
+        ></label>
         <nav
           id="forum-sidebar-nav"
           aria-label="Community navigation"

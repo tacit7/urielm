@@ -210,8 +210,7 @@ defmodule UrielmWeb.VideosLive do
             phx-click="close_tag_picker"
             aria-label="Close tag filters"
             class="absolute inset-0 bg-neutral/45 backdrop-blur-[2px]"
-          >
-          </button>
+          ></button>
 
           <section class="relative z-10 w-full rounded-t-lg border border-base-300 bg-base-100 shadow-2xl md:w-80 md:rounded-lg">
             <header class="flex items-center justify-between border-b border-base-300 px-5 py-4">

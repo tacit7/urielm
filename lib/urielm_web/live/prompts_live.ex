@@ -385,8 +385,7 @@ defmodule UrielmWeb.PromptsLive do
           aria-label="close sidebar"
           class="drawer-overlay"
           phx-click="close_prompt_modal"
-        >
-        </label>
+        ></label>
 
         <div class="bg-base-200 min-h-full w-full max-w-2xl">
           <%= if @selected_prompt do %>

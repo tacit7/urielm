@@ -42,10 +42,10 @@ defmodule Urielm.MixProject do
       {:phoenix, "~> 1.8.1"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.1.0"},
+      {:phoenix_live_view, "~> 1.2.0"},
       {:live_svelte, "~> 0.16.0"},
       {:lazy_html, ">= 0.1.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:phoenix_live_dashboard, "~> 0.9.0"},
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.19"},
       {:phoenix_ecto, "~> 4.6"},
@@ -73,8 +73,7 @@ defmodule Urielm.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:floki, "~> 0.36"},
       # Pagination
-      {:flop, "~> 0.25"},
-      {:flop_phoenix, "~> 0.22"},
+      {:flop, "~> 0.28"},
       # File uploads with Cloudflare R2 (S3-compatible)
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
@@ -112,7 +111,7 @@ defmodule Urielm.MixProject do
         "phx.digest"
       ],
       precommit: [
-        "compile --no-verification --warnings-as-errors",
+        "compile --warnings-as-errors",
         "deps.unlock --unused",
         "format",
         "test"

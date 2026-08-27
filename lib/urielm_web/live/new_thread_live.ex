@@ -138,8 +138,7 @@ defmodule UrielmWeb.NewThreadLive do
           <span class={[
             "badge badge-sm shrink-0",
             UrielmWeb.ForumColors.badge_class(@board.slug)
-          ]}>
-          </span>
+          ]}></span>
           <div class="min-w-0">
             <p class="truncate text-sm font-bold text-base-content">{@board.name}</p>
             <p class="text-xs text-base-content/45">

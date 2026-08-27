@@ -330,8 +330,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
           <span
             class="loading loading-dots loading-sm text-primary"
             aria-label="Loading more reports"
-          >
-          </span>
+          ></span>
         </div>
       </div>
     </Layouts.app>
