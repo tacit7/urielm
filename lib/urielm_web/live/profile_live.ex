@@ -16,9 +16,25 @@ defmodule UrielmWeb.ProfileLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold">Profile</h1>
-        <p class="mt-4 text-base-content/70">Profile page coming soon...</p>
+      <div id="profile-page" class="ui-page-shell max-w-4xl">
+        <header id="profile-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">Profile</h1>
+          <p class="ui-section-copy">Review your public identity and account details.</p>
+        </header>
+
+        <.empty_state
+          id="profile-overview-empty-state"
+          title="Profile overview is coming soon"
+          description="Your account preferences and editable profile details are available in Settings."
+          icon="hero-user-circle"
+          compact
+        >
+          <:action>
+            <.link navigate={~p"/settings"} class="btn btn-primary btn-sm rounded-full">
+              Open settings <.um_icon name="hero-arrow-right" class="size-4" />
+            </.link>
+          </:action>
+        </.empty_state>
       </div>
     </Layouts.app>
     """

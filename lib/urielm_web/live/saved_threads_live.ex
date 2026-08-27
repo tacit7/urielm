@@ -111,43 +111,41 @@ defmodule UrielmWeb.SavedThreadsLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-3xl">
-          <div class="mb-8">
-            <h1 class="text-4xl font-bold text-base-content mb-2">Saved Threads</h1>
-            <p class="text-base-content/60">Threads you've bookmarked for later</p>
-          </div>
+      <div id="saved-threads-page" class="ui-page-shell max-w-4xl">
+        <header id="saved-threads-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">Saved threads</h1>
+          <p class="ui-section-copy">Discussions you've bookmarked for later.</p>
+        </header>
 
-          <div id="threads" phx-update="stream" class="space-y-4">
-            <.empty_state
-              id="saved-threads-empty-state"
-              title="No saved discussions yet"
-              description="Save useful conversations and they will be waiting here when you return."
-              icon="hero-bookmark"
-              compact
-              class="hidden only:grid"
-            >
-              <:action>
-                <.link navigate={~p"/forum"} class="btn btn-primary btn-sm rounded-full">
-                  Explore discussions <.um_icon name="hero-arrow-right" class="size-4" />
-                </.link>
-              </:action>
-            </.empty_state>
-            <div :for={{id, thread} <- @streams.threads} id={id}>
-              <.svelte
-                name="ThreadCard"
-                props={thread}
-                socket={@socket}
-                ssr={false}
-              />
-            </div>
+        <div id="threads" phx-update="stream" class="space-y-4">
+          <.empty_state
+            id="saved-threads-empty-state"
+            title="No saved discussions yet"
+            description="Save useful conversations and they will be waiting here when you return."
+            icon="hero-bookmark"
+            compact
+            class="hidden only:grid"
+          >
+            <:action>
+              <.link navigate={~p"/forum"} class="btn btn-primary btn-sm rounded-full">
+                Explore discussions <.um_icon name="hero-arrow-right" class="size-4" />
+              </.link>
+            </:action>
+          </.empty_state>
+          <div :for={{id, thread} <- @streams.threads} id={id}>
+            <.svelte
+              name="ThreadCard"
+              props={thread}
+              socket={@socket}
+              ssr={false}
+            />
           </div>
+        </div>
 
-          <div class="flex items-center justify-center gap-2 mt-8">
-            <%= if @meta do %>
-              <.pagination meta={@meta} path={fn n -> ~p"/saved?page=#{n}" end} />
-            <% end %>
-          </div>
+        <div class="mt-8 flex items-center justify-center gap-2">
+          <%= if @meta do %>
+            <.pagination meta={@meta} path={fn n -> ~p"/saved?page=#{n}" end} />
+          <% end %>
         </div>
       </div>
     </Layouts.app>

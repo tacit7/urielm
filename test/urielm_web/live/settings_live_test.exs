@@ -18,6 +18,12 @@ defmodule UrielmWeb.SettingsLiveTest do
 
       # Verify page loaded with expected content
       assert html =~ "Settings"
+      assert has_element?(view, "#settings-page.ui-page-shell")
+      assert has_element?(view, "#settings-header.ui-page-header")
+      assert has_element?(view, "#profile-settings-section.ui-card")
+      assert has_element?(view, "#password-settings-section.ui-card")
+      assert has_element?(view, "#appearance-settings-section.ui-card")
+      assert has_element?(view, "#danger-settings-section.ui-card")
       assert has_element?(view, "#profile-settings-form")
       assert has_element?(view, "#profile-settings-submit[phx-disable-with='Saving profile…']")
       assert has_element?(view, "#password-settings-form")
@@ -26,6 +32,11 @@ defmodule UrielmWeb.SettingsLiveTest do
                view,
                "#password-settings-submit[phx-disable-with='Changing password…']"
              )
+
+      refute has_element?(view, "button", "Change Photo")
+      assert has_element?(view, "#settings-theme-day")
+      assert has_element?(view, "#settings-theme-night")
+      assert has_element?(view, "#delete-account-open")
     end
 
     test "settings page displays user email information", %{conn: conn} do
@@ -36,6 +47,19 @@ defmodule UrielmWeb.SettingsLiveTest do
 
       # Verify user email is displayed (name may be nil)
       assert html =~ user.email
+    end
+  end
+
+  describe "profile overview" do
+    test "uses the shared page hierarchy and points to existing settings", %{conn: conn} do
+      user = Fixtures.user_fixture()
+
+      {:ok, view, _html} = live(log_in_user(conn, user), "/profile")
+
+      assert has_element?(view, "#profile-page.ui-page-shell")
+      assert has_element?(view, "#profile-header.ui-page-header")
+      assert has_element?(view, "#profile-overview-empty-state[data-ui-state='empty']")
+      assert has_element?(view, "#profile-overview-empty-state a[href='/settings']")
     end
   end
 end

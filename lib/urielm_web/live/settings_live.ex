@@ -99,245 +99,241 @@ defmodule UrielmWeb.SettingsLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <div class="mb-8">
-          <h1 class="text-3xl font-bold">Settings</h1>
-          <p class="text-base-content/70">Manage your account settings and preferences</p>
-        </div>
+      <div id="settings-page" class="ui-page-shell max-w-4xl">
+        <header id="settings-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">Settings</h1>
+          <p class="ui-section-copy">Manage your account details, security, and appearance.</p>
+        </header>
 
         <div class="space-y-6">
-          <%!-- Profile Information Card --%>
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Profile Information</h2>
-              <p class="text-sm text-base-content/70">
-                Update your personal information and account details
-              </p>
+          <section id="profile-settings-section" class="ui-card h-auto p-5 sm:p-7">
+            <h2 class="text-xl font-black text-base-content">Profile information</h2>
+            <p class="text-sm text-base-content/70">
+              Update your personal information and account details.
+            </p>
 
-              <div class="divider"></div>
+            <div class="divider my-6"></div>
 
-              <%!-- Avatar Section --%>
-              <div class="flex items-center gap-4 mb-4">
-                <div class="avatar placeholder">
-                  <div class="bg-primary text-primary-content w-20 rounded-full">
-                    <%= if @user.avatar_url do %>
-                      <img src={@user.avatar_url} alt={@user.name || @user.email} />
-                    <% else %>
-                      <span class="text-2xl">{get_initials(@user)}</span>
-                    <% end %>
+            <div class="mb-5 flex items-center gap-4">
+              <div class="avatar">
+                <%= if @user.avatar_url do %>
+                  <div class="size-20 overflow-hidden rounded-full">
+                    <img src={@user.avatar_url} alt={@user.name || @user.email} />
                   </div>
-                </div>
-                <div>
-                  <button class="btn btn-outline btn-sm">Change Photo</button>
-                  <p class="text-xs text-base-content/60 mt-1">JPG, PNG, or GIF. Max 2MB.</p>
-                </div>
+                <% else %>
+                  <div class="grid size-20 place-items-center rounded-full bg-primary text-primary-content">
+                    <span class="text-2xl font-bold">{get_initials(@user)}</span>
+                  </div>
+                <% end %>
               </div>
-
-              <.form
-                for={@profile_form}
-                id="profile-settings-form"
-                phx-submit="update_profile"
-                class="space-y-4"
-              >
-                <.input
-                  field={@profile_form[:name]}
-                  type="text"
-                  label="Full Name"
-                  placeholder="Enter your full name"
-                />
-
-                <.input
-                  field={@profile_form[:username]}
-                  type="text"
-                  label="Username"
-                  help="3–20 characters: letters, numbers, and underscores only."
-                  placeholder="Enter your username"
-                />
-
-                <.input
-                  field={@profile_form[:email]}
-                  type="email"
-                  label="Email Address"
-                  placeholder="Enter your email"
-                />
-
-                <.input
-                  field={@profile_form[:bio]}
-                  type="textarea"
-                  label="Bio"
-                  help="Maximum 1,000 characters."
-                  placeholder="Tell us about yourself..."
-                />
-
-                <.input
-                  field={@profile_form[:location]}
-                  type="text"
-                  label="Location"
-                  placeholder="City, Country"
-                />
-
-                <.input
-                  field={@profile_form[:website]}
-                  type="url"
-                  label="Website"
-                  placeholder="https://example.com"
-                />
-
-                <div class="card-actions">
-                  <.button
-                    id="profile-settings-submit"
-                    type="submit"
-                    loading_label="Saving profile…"
-                    class="btn btn-primary"
-                  >
-                    Save Profile
-                  </.button>
-                </div>
-              </.form>
-            </div>
-          </div>
-
-          <%!-- Change Password Card --%>
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Change Password</h2>
-              <p class="text-sm text-base-content/70">
-                Update your password to keep your account secure
-              </p>
-
-              <div class="divider"></div>
-
-              <.form
-                for={@password_form}
-                id="password-settings-form"
-                phx-submit="change_password"
-                class="space-y-4"
-              >
-                <.input
-                  field={@password_form[:current_password]}
-                  type="password"
-                  label="Current Password"
-                  placeholder="Enter current password"
-                  required
-                />
-
-                <.input
-                  field={@password_form[:new_password]}
-                  type="password"
-                  label="New Password"
-                  help="Use at least 8 characters."
-                  placeholder="Enter new password"
-                  minlength="8"
-                  required
-                />
-
-                <.input
-                  field={@password_form[:confirm_password]}
-                  type="password"
-                  label="Confirm New Password"
-                  placeholder="Confirm new password"
-                  minlength="8"
-                  required
-                />
-
-                <div class="card-actions">
-                  <.button
-                    id="password-settings-submit"
-                    type="submit"
-                    loading_label="Changing password…"
-                    class="btn btn-primary"
-                  >
-                    Change Password
-                  </.button>
-                </div>
-              </.form>
-            </div>
-          </div>
-
-          <%!-- Theme Settings Card --%>
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Appearance</h2>
-              <p class="text-sm text-base-content/70">Customize your theme preference</p>
-
-              <div class="divider"></div>
-
-              <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="font-medium">Theme</p>
-                    <p class="text-xs text-base-content/60">Choose your preferred color scheme</p>
-                  </div>
-                  <div class="join">
-                    <button
-                      class="btn btn-sm join-item"
-                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-day"})}
-                    >
-                      Tokyo Day
-                    </button>
-                    <button
-                      class="btn btn-sm join-item"
-                      phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-night"})}
-                    >
-                      Tokyo Night
-                    </button>
-                  </div>
-                </div>
-                <div class="flex justify-end">
-                  <a href="/themes" class="btn btn-outline btn-sm">
-                    More Themes
-                  </a>
-                </div>
+              <div>
+                <p class="font-bold text-base-content">Profile image</p>
+                <p class="mt-1 text-xs leading-5 text-base-content/55">
+                  Shown on your profile and community activity.
+                </p>
               </div>
             </div>
-          </div>
 
-          <%!-- Danger Zone Card --%>
-          <div class="card bg-base-100 shadow-xl border-2 border-error">
-            <div class="card-body">
-              <h2 class="card-title text-error">Danger Zone</h2>
-              <p class="text-sm text-base-content/70">Irreversible and destructive actions</p>
+            <.form
+              for={@profile_form}
+              id="profile-settings-form"
+              phx-submit="update_profile"
+              class="space-y-4"
+            >
+              <.input
+                field={@profile_form[:name]}
+                type="text"
+                label="Full name"
+                placeholder="Enter your full name"
+              />
 
-              <div class="divider"></div>
+              <.input
+                field={@profile_form[:username]}
+                type="text"
+                label="Username"
+                help="3–20 characters: letters, numbers, and underscores only."
+                placeholder="Enter your username"
+              />
 
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="font-medium">Delete Account</p>
-                  <p class="text-xs text-base-content/60">
-                    Permanently delete your account and all data
-                  </p>
-                </div>
-                <button
-                  class="btn btn-error"
-                  onclick="delete_account_modal.showModal()"
+              <.input
+                field={@profile_form[:email]}
+                type="email"
+                label="Email address"
+                placeholder="Enter your email"
+              />
+
+              <.input
+                field={@profile_form[:bio]}
+                type="textarea"
+                label="Bio"
+                help="Maximum 1,000 characters."
+                placeholder="Tell us about yourself..."
+              />
+
+              <.input
+                field={@profile_form[:location]}
+                type="text"
+                label="Location"
+                placeholder="City, Country"
+              />
+
+              <.input
+                field={@profile_form[:website]}
+                type="url"
+                label="Website"
+                placeholder="https://example.com"
+              />
+
+              <div class="flex justify-end">
+                <.button
+                  id="profile-settings-submit"
+                  type="submit"
+                  loading_label="Saving profile…"
+                  class="btn btn-primary"
                 >
-                  Delete Account
-                </button>
+                  Save profile
+                </.button>
+              </div>
+            </.form>
+          </section>
+
+          <section id="password-settings-section" class="ui-card h-auto p-5 sm:p-7">
+            <h2 class="text-xl font-black text-base-content">Change password</h2>
+            <p class="text-sm text-base-content/70">
+              Update your password to keep your account secure.
+            </p>
+
+            <div class="divider my-6"></div>
+
+            <.form
+              for={@password_form}
+              id="password-settings-form"
+              phx-submit="change_password"
+              class="space-y-4"
+            >
+              <.input
+                field={@password_form[:current_password]}
+                type="password"
+                label="Current password"
+                placeholder="Enter current password"
+                required
+              />
+
+              <.input
+                field={@password_form[:new_password]}
+                type="password"
+                label="New password"
+                help="Use at least 8 characters."
+                placeholder="Enter new password"
+                minlength="8"
+                required
+              />
+
+              <.input
+                field={@password_form[:confirm_password]}
+                type="password"
+                label="Confirm new password"
+                placeholder="Confirm new password"
+                minlength="8"
+                required
+              />
+
+              <div class="flex justify-end">
+                <.button
+                  id="password-settings-submit"
+                  type="submit"
+                  loading_label="Changing password…"
+                  class="btn btn-primary"
+                >
+                  Change password
+                </.button>
+              </div>
+            </.form>
+          </section>
+
+          <section id="appearance-settings-section" class="ui-card h-auto p-5 sm:p-7">
+            <h2 class="text-xl font-black text-base-content">Appearance</h2>
+            <p class="text-sm text-base-content/70">Choose your preferred color mode.</p>
+
+            <div class="divider my-6"></div>
+
+            <div class="space-y-4">
+              <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p class="font-bold">Color mode</p>
+                  <p class="text-xs text-base-content/60">Switch between Tokyo Day and Night.</p>
+                </div>
+                <div class="join w-full sm:w-auto" aria-label="Color mode">
+                  <button
+                    id="settings-theme-day"
+                    type="button"
+                    class="btn btn-sm join-item flex-1 sm:flex-none"
+                    phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-day"})}
+                  >
+                    Tokyo Day
+                  </button>
+                  <button
+                    id="settings-theme-night"
+                    type="button"
+                    class="btn btn-sm join-item flex-1 sm:flex-none"
+                    phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "tokyo-night"})}
+                  >
+                    Tokyo Night
+                  </button>
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <.link navigate={~p"/themes"} class="btn btn-outline btn-sm">
+                  Preview components <.um_icon name="hero-arrow-right" class="size-4" />
+                </.link>
               </div>
             </div>
-          </div>
+          </section>
+
+          <section id="danger-settings-section" class="ui-card h-auto border-error/45 p-5 sm:p-7">
+            <h2 class="text-xl font-black text-error">Danger zone</h2>
+            <p class="text-sm text-base-content/70">Irreversible account actions.</p>
+
+            <div class="divider my-6"></div>
+
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="font-bold">Delete account</p>
+                <p class="text-xs text-base-content/60">
+                  Permanently delete your account and all associated data.
+                </p>
+              </div>
+              <button
+                id="delete-account-open"
+                type="button"
+                class="btn btn-error w-full sm:w-auto"
+                onclick="delete_account_modal.showModal()"
+              >
+                Delete account
+              </button>
+            </div>
+          </section>
         </div>
       </div>
 
-      <%!-- Delete Account Confirmation Modal --%>
       <dialog id="delete_account_modal" class="modal">
         <div class="modal-box">
-          <h3 class="font-bold text-lg text-error">Delete Account</h3>
+          <h3 class="text-lg font-black text-error">Delete account</h3>
           <p class="py-4">
             Are you sure you want to delete your account? This action cannot be undone.
             All your data, including courses, saved prompts, and comments will be permanently deleted.
           </p>
           <div class="modal-action">
             <form method="dialog">
-              <button class="btn">Cancel</button>
+              <button type="submit" class="btn">Cancel</button>
             </form>
-            <button phx-click="delete_account" class="btn btn-error">
-              Yes, Delete My Account
+            <button type="button" phx-click="delete_account" class="btn btn-error">
+              Yes, delete my account
             </button>
           </div>
         </div>
         <form method="dialog" class="modal-backdrop">
-          <button>close</button>
+          <button type="submit" aria-label="Close delete account dialog">close</button>
         </form>
       </dialog>
     </Layouts.app>

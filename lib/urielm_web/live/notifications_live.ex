@@ -115,20 +115,17 @@ defmodule UrielmWeb.NotificationsLive do
     >
       <div
         id="notifications-page"
-        class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12 lg:py-16"
+        class="ui-page-shell max-w-4xl"
       >
         <header
           id="notifications-header"
-          class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+          class="ui-page-header flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
         >
           <div>
-            <p class="ui-eyebrow">Community inbox</p>
-            <h1 class="mt-2 text-3xl font-black tracking-tight text-base-content sm:text-4xl lg:text-5xl">
-              Notifications
-            </h1>
+            <h1 class="ui-section-title">Notifications</h1>
             <p
               id="notifications-summary"
-              class="mt-3 text-sm leading-6 text-base-content/55 sm:text-base"
+              class="ui-section-copy"
             >
               <%= if @unread_count > 0 do %>
                 {@unread_count} {if @unread_count == 1, do: "update is", else: "updates are"} waiting for you.
@@ -145,13 +142,13 @@ defmodule UrielmWeb.NotificationsLive do
             phx-disable-with="Marking read…"
             class="btn btn-outline btn-sm w-full rounded-xl border-base-300 sm:w-auto"
           >
-            <.um_icon name="check_circle" class="size-4" /> Mark all read
+            <.um_icon name="hero-check-circle" class="size-4" /> Mark all read
           </button>
         </header>
 
         <nav
           id="notification-filters"
-          class="mt-7 flex items-center gap-1 border-b border-base-300/60 sm:mt-9"
+          class="tabs tabs-border flex items-center"
           aria-label="Notification filters"
         >
           <.link
@@ -159,9 +156,9 @@ defmodule UrielmWeb.NotificationsLive do
             patch={~p"/notifications"}
             aria-current={if(!@unread_only, do: "page", else: nil)}
             class={[
-              "min-h-11 px-3 py-3 text-sm font-semibold transition-colors",
+              "tab min-h-11 px-3 text-sm font-semibold",
               if(!@unread_only,
-                do: "border-b-2 border-secondary text-secondary",
+                do: "tab-active text-primary",
                 else: "text-base-content/50 hover:text-base-content"
               )
             ]}
@@ -173,9 +170,9 @@ defmodule UrielmWeb.NotificationsLive do
             patch={~p"/notifications?unread=true"}
             aria-current={if(@unread_only, do: "page", else: nil)}
             class={[
-              "min-h-11 px-3 py-3 text-sm font-semibold transition-colors",
+              "tab min-h-11 px-3 text-sm font-semibold",
               if(@unread_only,
-                do: "border-b-2 border-secondary text-secondary",
+                do: "tab-active text-primary",
                 else: "text-base-content/50 hover:text-base-content"
               )
             ]}
@@ -190,31 +187,37 @@ defmodule UrielmWeb.NotificationsLive do
         <div id="notifications" phx-update="stream" class="mt-6">
           <div
             id={if(@unread_only, do: "notifications-empty-unread", else: "notifications-empty-state")}
-            class="hidden only:flex min-h-80 flex-col items-center justify-center rounded-3xl border border-base-300/60 bg-base-200/35 px-6 py-14 text-center"
+            data-ui-state="empty"
+            class="hidden only:block"
           >
-            <div class="flex size-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
-              <.um_icon
-                name={if(@unread_only, do: "check_circle", else: "bell")}
-                class="size-7"
-              />
-            </div>
-            <h2 class="mt-5 text-lg font-bold text-base-content">
-              {if(@unread_only, do: "Nothing unread", else: "No notifications yet")}
-            </h2>
-            <p class="mt-2 max-w-sm text-sm leading-6 text-base-content/50">
-              <%= if @unread_only do %>
-                You've seen every update. New replies and discussion activity will appear here.
-              <% else %>
-                Replies and updates from discussions you follow will show up here.
-              <% end %>
-            </p>
-            <.link
-              navigate={if(@unread_only, do: ~p"/notifications", else: ~p"/forum")}
-              class="btn btn-ghost btn-sm mt-5 rounded-xl text-secondary"
+            <.empty_state
+              id={
+                if(@unread_only,
+                  do: "notifications-empty-unread-content",
+                  else: "notifications-empty-content"
+                )
+              }
+              title={if(@unread_only, do: "Nothing unread", else: "No notifications yet")}
+              description={
+                if(@unread_only,
+                  do:
+                    "You've seen every update. New replies and discussion activity will appear here.",
+                  else: "Replies and updates from discussions you follow will show up here."
+                )
+              }
+              icon={if(@unread_only, do: "hero-check-circle", else: "hero-bell")}
+              compact
             >
-              {if(@unread_only, do: "View all notifications", else: "Explore discussions")}
-              <.um_icon name="hero-arrow-right" class="size-4" />
-            </.link>
+              <:action>
+                <.link
+                  navigate={if(@unread_only, do: ~p"/notifications", else: ~p"/forum")}
+                  class="btn btn-primary btn-sm rounded-full"
+                >
+                  {if(@unread_only, do: "View all notifications", else: "Explore discussions")}
+                  <.um_icon name="hero-arrow-right" class="size-4" />
+                </.link>
+              </:action>
+            </.empty_state>
           </div>
 
           <div
@@ -225,7 +228,7 @@ defmodule UrielmWeb.NotificationsLive do
             <h2
               :if={notif.show_day_heading}
               data-day-heading={notif.day_label}
-              class="mb-3 mt-8 first:mt-0 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-base-content/40"
+              class="mb-3 mt-8 text-xs font-bold uppercase tracking-widest text-base-content/40 first:mt-0"
             >
               {notif.day_label}
             </h2>

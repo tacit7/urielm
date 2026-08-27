@@ -21,8 +21,11 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
     end
 
     test "authenticated user can access saved threads", %{conn: conn, user: user} do
-      {:ok, _live, html} = live(log_in_user(conn, user), "/saved")
-      assert html =~ "Saved"
+      {:ok, view, _html} = live(log_in_user(conn, user), "/saved")
+
+      assert has_element?(view, "#saved-threads-page.ui-page-shell")
+      assert has_element?(view, "#saved-threads-header.ui-page-header")
+      assert has_element?(view, "#threads[phx-update='stream']")
     end
   end
 

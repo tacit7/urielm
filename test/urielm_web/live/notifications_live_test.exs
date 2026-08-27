@@ -25,8 +25,8 @@ defmodule UrielmWeb.NotificationsLiveTest do
     test "authenticated user can access notifications page", %{conn: conn, user: user} do
       {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
 
-      assert has_element?(view, "#notifications-page")
-      assert has_element?(view, "#notifications-header")
+      assert has_element?(view, "#notifications-page.ui-page-shell")
+      assert has_element?(view, "#notifications-header.ui-page-header")
       assert has_element?(view, "#notification-filters")
       assert has_element?(view, "#notification-filter-all[aria-current='page']")
       assert has_element?(view, "#notification-filter-unread")
@@ -111,7 +111,7 @@ defmodule UrielmWeb.NotificationsLiveTest do
     test "shows empty state when no notifications", %{conn: conn, user: user} do
       {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
 
-      assert has_element?(view, "#notifications-empty-state")
+      assert has_element?(view, "#notifications-empty-state[data-ui-state='empty']")
       assert has_element?(view, "#notifications-empty-state a[href='/forum']")
     end
 
