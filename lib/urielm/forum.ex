@@ -970,13 +970,35 @@ defmodule Urielm.Forum do
 
   def list_reports(opts \\ []) do
     status = Keyword.get(opts, :status, "pending")
+    search = opts |> Keyword.get(:search, "") |> String.trim()
 
-    from(r in Report)
-    |> where([r], r.status == ^status)
-    |> preload(:user)
+    Report
+    |> maybe_filter_report_status(status)
+    |> maybe_search_reports(search)
+    |> preload([r], [:user, :reviewed_by])
     |> order_by([r], desc: r.inserted_at, desc: r.id)
     |> apply_pagination(opts, 50)
     |> Repo.all()
+  end
+
+  defp maybe_filter_report_status(query, "all"), do: query
+
+  defp maybe_filter_report_status(query, status) do
+    where(query, [r], r.status == ^status)
+  end
+
+  defp maybe_search_reports(query, ""), do: query
+
+  defp maybe_search_reports(query, search) do
+    pattern = "%#{search}%"
+
+    from(r in query,
+      join: u in assoc(r, :user),
+      where:
+        ilike(r.description, ^pattern) or ilike(r.reason, ^pattern) or
+          ilike(r.target_type, ^pattern) or ilike(r.status, ^pattern) or
+          ilike(u.username, ^pattern)
+    )
   end
 
   def get_report!(id) do

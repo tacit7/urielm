@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Moderation report history — Mockup</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --canvas: #1a1b26;
+        --surface: #24283b;
+        --surface-soft: #202334;
+        --surface-raised: #2a2f46;
+        --border: #3b4261;
+        --text: #c0caf5;
+        --muted: #9aa5ce;
+        --blue: #7aa2f7;
+        --blue-ink: #17213c;
+        --amber: #e0af68;
+        --green: #9ece6a;
+        --rose: #f7768e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      button, input { font: inherit; }
+      button { color: inherit; }
+
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 3px;
+      }
+
+      ::selection { background: color-mix(in srgb, var(--blue) 35%, transparent); }
+
+      .shell {
+        width: min(100% - 2rem, 72rem);
+        margin: 0 auto;
+        padding: 3rem 0 5rem;
+      }
+
+      .mockup-note {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .page-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 2rem;
+        margin-bottom: 1.75rem;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 750;
+        letter-spacing: -0.03em;
+        line-height: 1.08;
+      }
+
+      .lede {
+        max-width: 43rem;
+        margin: 0.65rem 0 0;
+        color: var(--muted);
+      }
+
+      .admin-links { display: flex; gap: 0.4rem; }
+
+      .quiet-link {
+        padding: 0.65rem 0.8rem;
+        border-radius: 0.75rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .quiet-link:hover { background: var(--surface-soft); color: var(--text); }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.65rem;
+        border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+        border-radius: 1rem;
+        background: var(--surface-soft);
+      }
+
+      .filters {
+        display: flex;
+        gap: 0.25rem;
+        overflow-x: auto;
+        scrollbar-color: var(--border) transparent;
+      }
+
+      .filter {
+        min-height: 2.65rem;
+        padding: 0.6rem 0.85rem;
+        border: 0;
+        border-radius: 0.7rem;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 750;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .filter:hover { background: var(--surface-raised); color: var(--text); }
+
+      .filter.active {
+        background: color-mix(in srgb, var(--blue) 16%, var(--surface));
+        color: var(--blue);
+      }
+
+      .count {
+        display: inline-flex;
+        min-width: 1.35rem;
+        height: 1.35rem;
+        align-items: center;
+        justify-content: center;
+        margin-left: 0.35rem;
+        padding-inline: 0.32rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, currentColor 13%, transparent);
+        font-size: 0.7rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .search {
+        display: flex;
+        min-width: 15rem;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--canvas);
+        color: var(--muted);
+      }
+
+      .search svg { width: 1rem; height: 1rem; flex: none; }
+      .search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); }
+      .search input::placeholder { color: var(--muted); opacity: 0.9; }
+
+      .list-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 1.6rem 0 0.75rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .list-head strong { color: var(--text); font-size: 0.92rem; }
+
+      .reports { display: grid; gap: 0.75rem; }
+
+      .report {
+        border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+        border-radius: 1rem;
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .report-main { padding: 1.15rem 1.25rem; }
+
+      .report-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 1.25rem;
+        align-items: start;
+      }
+
+      .badges { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.65rem; }
+
+      .badge {
+        display: inline-flex;
+        min-height: 1.55rem;
+        align-items: center;
+        padding: 0.22rem 0.55rem;
+        border-radius: 999px;
+        background: var(--surface-raised);
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 750;
+      }
+
+      .badge.pending { background: color-mix(in srgb, var(--amber) 13%, transparent); color: var(--amber); }
+      .badge.resolved { background: color-mix(in srgb, var(--green) 13%, transparent); color: var(--green); }
+      .badge.dismissed { background: color-mix(in srgb, var(--border) 55%, transparent); color: var(--muted); }
+
+      h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+        font-weight: 750;
+        letter-spacing: -0.015em;
+      }
+
+      .meta { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.78rem; }
+      .meta strong { color: var(--text); font-weight: 700; }
+
+      .actions { display: flex; gap: 0.4rem; }
+
+      .btn {
+        min-height: 2.5rem;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid transparent;
+        border-radius: 0.7rem;
+        background: transparent;
+        font-size: 0.78rem;
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      .btn-primary { background: var(--blue); color: var(--blue-ink); }
+      .btn-primary:hover { background: color-mix(in srgb, var(--blue) 88%, white); }
+      .btn-outline { border-color: var(--border); color: var(--text); }
+      .btn-outline:hover { background: var(--surface-raised); }
+      .btn-ghost { color: var(--muted); }
+      .btn-ghost:hover { background: var(--surface-raised); color: var(--text); }
+
+      .reason {
+        margin: 1rem 0 0;
+        padding: 0.85rem 0.95rem;
+        border-radius: 0.75rem;
+        background: var(--surface-soft);
+        color: var(--text);
+        font-size: 0.86rem;
+      }
+
+      .history {
+        display: grid;
+        grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+        gap: 0.7rem;
+        align-items: start;
+        padding: 0.85rem 1.25rem;
+        border-top: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+        background: color-mix(in srgb, var(--surface-soft) 82%, transparent);
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .history-icon {
+        display: grid;
+        width: 1.5rem;
+        height: 1.5rem;
+        place-items: center;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--green) 13%, transparent);
+        color: var(--green);
+      }
+
+      .history-icon svg { width: 0.78rem; height: 0.78rem; }
+      .history strong { color: var(--text); }
+
+      .view-link { color: var(--blue); font-weight: 700; text-decoration: none; }
+      .view-link:hover { text-decoration: underline; text-underline-offset: 0.2rem; }
+
+      .annotation-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+
+      .annotation {
+        padding: 1rem;
+        border: 1px dashed color-mix(in srgb, var(--blue) 38%, transparent);
+        border-radius: 0.9rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .annotation strong { display: block; margin-bottom: 0.3rem; color: var(--text); }
+
+      .mobile-preview {
+        width: min(100%, 25rem);
+        margin-top: 3.5rem;
+      }
+
+      .mobile-preview h3 { margin: 0 0 0.75rem; font-size: 0.9rem; }
+      .mobile-preview .toolbar { align-items: stretch; flex-direction: column; }
+      .mobile-preview .search { min-width: 0; }
+      .mobile-preview .report-top { grid-template-columns: 1fr; }
+      .mobile-preview .actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .mobile-preview .actions .btn-ghost { grid-column: 1 / -1; }
+      .mobile-preview .history { grid-template-columns: 1.5rem minmax(0, 1fr); }
+      .mobile-preview .history .view-link { grid-column: 2; }
+
+      @media (max-width: 760px) {
+        .shell { width: 100%; padding-top: 1.5rem; }
+        .mockup-note, .page-head, .toolbar, .list-head, .annotation-grid { margin-inline: 1rem; }
+        .page-head { align-items: start; flex-direction: column; gap: 0.75rem; }
+        .admin-links { display: none; }
+        .toolbar { align-items: stretch; flex-direction: column; }
+        .search { min-width: 0; }
+        .report { border-inline: 0; border-radius: 0; }
+        .report-top { grid-template-columns: 1fr; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; }
+        .actions .btn-ghost { grid-column: 1 / -1; }
+        .history { grid-template-columns: 1.5rem minmax(0, 1fr); }
+        .history .view-link { grid-column: 2; }
+        .annotation-grid { grid-template-columns: 1fr; }
+        .mobile-preview { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <p class="mockup-note">Design mockup · Moderation history · Tokyo Night</p>
+
+      <header class="page-head">
+        <div>
+          <h1>Moderation reports</h1>
+          <p class="lede">Review new reports and revisit past decisions without losing their context.</p>
+        </div>
+        <nav class="admin-links" aria-label="Admin pages">
+          <a class="quiet-link" href="#">Users</a>
+          <a class="quiet-link" href="#">Trust levels</a>
+        </nav>
+      </header>
+
+      <section class="toolbar" aria-label="Report filters">
+        <div class="filters">
+          <button class="filter">Pending <span class="count">5</span></button>
+          <button class="filter">Resolved</button>
+          <button class="filter">Reviewed</button>
+          <button class="filter">Dismissed</button>
+          <button class="filter active">All</button>
+        </div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input type="search" placeholder="Search reports" aria-label="Search reports" />
+        </label>
+      </section>
+
+      <div class="list-head">
+        <strong>All reports</strong>
+        <span>Newest first</span>
+      </div>
+
+      <section class="reports" aria-label="Pending moderation reports">
+        <article class="report">
+          <div class="report-main">
+            <div class="report-top">
+              <div>
+                <div class="badges">
+                  <span class="badge pending">Pending</span>
+                  <span class="badge">Comment</span>
+                  <span class="badge">Spam</span>
+                </div>
+                <h2>“This link is repeated across several discussions…”</h2>
+                <p class="meta">Reported by <strong>alexr</strong> · 18 minutes ago</p>
+              </div>
+              <div class="actions">
+                <button class="btn btn-primary">Resolve</button>
+                <button class="btn btn-outline">Approve</button>
+                <button class="btn btn-ghost">Dismiss</button>
+              </div>
+            </div>
+            <p class="reason">The same promotional link appears in multiple replies and does not relate to the discussion.</p>
+          </div>
+          <div class="history">
+            <span class="history-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+            </span>
+            <span>Report received from <strong>alexr</strong> · Aug 26 at 3:42 PM</span>
+            <a class="view-link" href="#">View comment ↗</a>
+          </div>
+        </article>
+
+        <article class="report">
+          <div class="report-main">
+            <div class="report-top">
+              <div>
+                <div class="badges">
+                  <span class="badge resolved">Resolved</span>
+                  <span class="badge">Thread</span>
+                  <span class="badge">Abuse</span>
+                </div>
+                <h2>Choosing a local model for document search</h2>
+                <p class="meta">Reported by <strong>maya</strong> · Yesterday</p>
+              </div>
+            </div>
+            <p class="reason">A reply targets another member rather than addressing the technical question.</p>
+          </div>
+          <div class="history">
+            <span class="history-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
+            </span>
+            <span><strong>uriel781</strong> resolved this · Yesterday at 9:14 PM · “Removed the reply and messaged the author.”</span>
+            <a class="view-link" href="#">View thread ↗</a>
+          </div>
+        </article>
+
+        <article class="report">
+          <div class="report-main">
+            <div class="report-top">
+              <div>
+                <div class="badges">
+                  <span class="badge dismissed">Dismissed</span>
+                  <span class="badge">Comment</span>
+                  <span class="badge">Other</span>
+                </div>
+                <h2>“I found the benchmark results helpful…”</h2>
+                <p class="meta">Reported by <strong>samk</strong> · Aug 23</p>
+              </div>
+            </div>
+          </div>
+          <div class="history">
+            <span class="history-icon" style="color: var(--muted); background: var(--surface-raised)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+            </span>
+            <span><strong>uriel781</strong> dismissed this · Aug 23 at 11:06 AM · “Constructive disagreement; no action needed.”</span>
+            <a class="view-link" href="#">View comment ↗</a>
+          </div>
+        </article>
+      </section>
+
+      <section class="annotation-grid" aria-label="Design notes">
+        <div class="annotation"><strong>Status is the primary filter</strong>Borrowed from Discourse’s review queue, simplified to the states Urielm already stores.</div>
+        <div class="annotation"><strong>History stays attached</strong>Reviewer, action time, notes, and the original content link remain visible after handling.</div>
+        <div class="annotation"><strong>Pending actions stay focused</strong>Only pending reports show moderation controls; handled reports are calm, read-only records.</div>
+      </section>
+
+      <section class="mobile-preview" aria-label="Mobile layout preview">
+        <h3>Mobile behavior</h3>
+        <div class="toolbar">
+          <div class="filters">
+            <button class="filter active">Pending <span class="count">5</span></button>
+            <button class="filter">Resolved</button>
+            <button class="filter">Reviewed</button>
+            <button class="filter">Dismissed</button>
+            <button class="filter">All</button>
+          </div>
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <input type="search" placeholder="Search reports" aria-label="Search reports" />
+          </label>
+        </div>
+        <div class="reports" style="margin-top: .75rem">
+          <article class="report">
+            <div class="report-main">
+              <div class="report-top">
+                <div>
+                  <div class="badges"><span class="badge pending">Pending</span><span class="badge">Comment</span></div>
+                  <h2>“This link is repeated across several discussions…”</h2>
+                  <p class="meta">Reported by <strong>alexr</strong> · 18 minutes ago</p>
+                </div>
+                <div class="actions"><button class="btn btn-primary">Resolve</button><button class="btn btn-outline">Approve</button><button class="btn btn-ghost">Dismiss</button></div>
+              </div>
+              <p class="reason">The same promotional link appears in multiple replies.</p>
+            </div>
+            <div class="history">
+              <span class="history-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path></svg></span>
+              <span>Report received · Aug 26 at 3:42 PM</span>
+              <a class="view-link" href="#">View comment ↗</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
