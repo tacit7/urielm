@@ -131,7 +131,13 @@ defmodule UrielmWeb.NotificationsLiveTest do
       assert has_element?(view, "[data-notification-id='#{notif.id}']", thread.title)
       assert has_element?(view, "[data-notification-id='#{notif.id}'] [data-unread-indicator]")
       assert has_element?(view, "[data-day-heading='Today']")
-      assert has_element?(view, "#notification-read-#{notif.id}")
+
+      assert has_element?(
+               view,
+               "#notification-read-#{notif.id}[aria-label='Mark as read'][title='Mark as read']"
+             )
+
+      assert has_element?(view, "#notification-read-#{notif.id} .hero-check")
       assert has_element?(view, "#notification-thread-#{notif.id}[href='/forum/t/#{thread.id}']")
     end
 

@@ -140,7 +140,7 @@ defmodule UrielmWeb.NotificationsLive do
             id="notifications-mark-all"
             phx-click="mark_all_as_read"
             phx-disable-with="Marking read…"
-            class="btn btn-outline btn-sm w-full rounded-xl border-base-300 sm:w-auto"
+            class="btn btn-outline btn-sm w-full rounded-lg border-base-300 sm:w-auto"
           >
             <.um_icon name="hero-check-circle" class="size-4" /> Mark all read
           </button>
@@ -234,7 +234,7 @@ defmodule UrielmWeb.NotificationsLive do
             </h2>
 
             <article class={[
-              "group mb-3 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] gap-3 rounded-2xl border p-4 transition duration-200 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-4 sm:p-5",
+              "group mb-3 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] gap-3 rounded-lg border p-4 transition duration-200 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-4 sm:p-5",
               if(notif.read_at,
                 do: "border-base-300/60 bg-base-200/35 hover:bg-base-200/60",
                 else:
@@ -301,12 +301,14 @@ defmodule UrielmWeb.NotificationsLive do
                     </span>
                     <button
                       id={"notification-read-#{notif.id}"}
+                      type="button"
                       phx-click="mark_as_read"
                       phx-value-notification_id={notif.id}
-                      phx-disable-with="Marking…"
-                      class="btn btn-ghost btn-xs hidden rounded-lg text-base-content/45 sm:inline-flex"
+                      class="btn btn-ghost btn-square min-h-11 min-w-11 rounded-lg text-base-content/55 hover:text-base-content"
+                      aria-label="Mark as read"
+                      title="Mark as read"
                     >
-                      Mark read
+                      <.um_icon name="hero-check" class="size-4" />
                     </button>
                   </div>
                 <% end %>
