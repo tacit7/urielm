@@ -429,22 +429,27 @@ defmodule UrielmWeb.LessonLive do
                       compact
                     />
 
-                    <ul id="lesson-comment-list" class="grid gap-3">
+                    <ul id="lesson-comment-list" class="divide-y divide-base-content/10">
                       <li
                         :for={comment <- @lesson.comments}
                         id={"lesson-comment-#{comment.id}"}
-                        class="rounded-xl border border-base-content/10 bg-base-200/55 p-4"
+                        class="py-4 first:pt-0 last:pb-0"
                       >
-                        <p class="mb-3 whitespace-pre-line text-sm text-base-content">
-                          {comment.body}
-                        </p>
-                        <p class="text-xs text-base-content/50">
-                          <span class="font-bold">
+                        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <p class="font-semibold text-base-content">
                             {if comment.user,
                               do: comment.user.name || comment.user.email,
                               else: "Anonymous"}
-                          </span>
-                          · {Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M")}
+                          </p>
+                          <time
+                            datetime={NaiveDateTime.to_iso8601(comment.inserted_at)}
+                            class="text-xs text-base-content/50"
+                          >
+                            {Calendar.strftime(comment.inserted_at, "%b %d, %Y at %H:%M")}
+                          </time>
+                        </div>
+                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-base-content/80 sm:text-base">
+                          {comment.body}
                         </p>
                       </li>
                     </ul>
@@ -464,19 +469,24 @@ defmodule UrielmWeb.LessonLive do
                           rows="4"
                         />
                         <div class="mt-3 flex justify-end">
-                          <button type="submit" class="btn btn-primary btn-sm rounded-full px-5">
-                            Comment
+                          <button
+                            id="lesson-comment-submit"
+                            type="submit"
+                            class="btn btn-primary btn-sm"
+                          >
+                            Post comment
                           </button>
                         </div>
                       </.form>
                     <% else %>
-                      <div class="mt-6 rounded-xl border border-base-content/10 bg-base-200/55 p-5 text-center">
-                        <p class="mb-3 text-sm text-base-content/60">
-                          Sign in to join the discussion.
-                        </p>
-                        <.link navigate={~p"/signin"} class="btn btn-primary btn-sm rounded-full px-5">
-                          Sign in
-                        </.link>
+                      <div id="lesson-sign-in-to-comment" class="alert alert-info mt-6">
+                        <.um_icon name="hero-information-circle" class="size-5 shrink-0" />
+                        <span>
+                          <.link navigate={~p"/signin"} class="link link-primary font-semibold">
+                            Sign in
+                          </.link>
+                          to join the lesson discussion.
+                        </span>
                       </div>
                     <% end %>
                   </section>
@@ -530,7 +540,9 @@ defmodule UrielmWeb.LessonLive do
 
           <div
             id="lesson-mobile-dock"
-            class="dock fixed inset-x-0 bottom-0 z-20 border-t border-base-content/10 bg-base-200 lg:hidden"
+            data-navigation="lesson-dock"
+            aria-label="Lesson sections"
+            class="dock fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 border-t border-base-content/10 bg-base-200 lg:hidden"
           >
             <.dock_button
               id="lesson-mobile-overview"

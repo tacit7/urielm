@@ -31,7 +31,12 @@ defmodule UrielmWeb.LessonLiveTest do
     assert has_element?(view, "#lesson-content")
     assert has_element?(view, "#course-outline")
     assert has_element?(view, "#outline-lesson-#{lesson.id}[aria-current='page']")
-    assert has_element?(view, "#lesson-mobile-dock")
+    assert has_element?(view, "#lesson-sign-in-to-comment.alert-info")
+
+    assert has_element?(
+             view,
+             "#lesson-mobile-dock[data-navigation='lesson-dock'][aria-label='Lesson sections']"
+           )
 
     assert has_element?(
              view,
@@ -90,6 +95,8 @@ defmodule UrielmWeb.LessonLiveTest do
 
     assert [%{body: "A useful observation"}] = Learning.list_lesson_comments(lesson)
     assert has_element?(lesson_view, "#lesson-tab-comments", "1")
+    assert has_element?(lesson_view, "#lesson-comment-list [id^='lesson-comment-']")
+    assert has_element?(lesson_view, "#lesson-comment-submit")
   end
 
   defp course_with_lessons! do
