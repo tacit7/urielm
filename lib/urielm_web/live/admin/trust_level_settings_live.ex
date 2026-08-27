@@ -1,6 +1,8 @@
 defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
   use UrielmWeb, :live_view
 
+  import UrielmWeb.AdminComponents
+
   alias Urielm.TrustLevel
   alias Urielm.TrustLevelConfig
 
@@ -80,43 +82,40 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-6xl">
-          <div class="mb-8 flex items-center justify-between">
-            <div>
-              <h1 class="text-3xl font-bold text-base-content">Trust Level Settings</h1>
-              <p class="text-base-content/60 mt-2">
-                Configure user tiers, permissions, and rate limits
-              </p>
-            </div>
-            <div class="flex gap-2">
-              <a href="/admin/users" class="btn btn-ghost btn-sm">Users</a>
-              <a href="/admin/moderation" class="btn btn-ghost btn-sm">Moderation Queue</a>
-            </div>
-          </div>
+      <div id="admin-trust-levels-page" class="ui-page-shell max-w-6xl">
+        <header id="admin-trust-levels-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">Trust level settings</h1>
+          <p class="ui-section-copy">
+            Configure user tiers, permissions, and rate limits.
+          </p>
+        </header>
 
-          <div class="grid gap-4">
-            <%= for config <- @configs do %>
-              <div class="card bg-base-200 border border-base-300">
-                <div class="card-body">
-                  <%= if @editing == config.level do %>
-                    <.edit_form config={config} form={@edit_form} />
-                  <% else %>
-                    <.config_view config={config} />
-                    <div class="card-actions justify-end mt-4">
-                      <button
-                        phx-click="edit"
-                        phx-value-level={config.level}
-                        class="btn btn-sm btn-primary"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  <% end %>
+        <.admin_nav current="trust-levels" />
+
+        <div id="trust-level-configs" class="grid gap-4">
+          <%= for config <- @configs do %>
+            <section
+              id={"trust-level-#{config.level}"}
+              class="ui-card h-auto p-5 sm:p-6"
+            >
+              <%= if @editing == config.level do %>
+                <.edit_form config={config} form={@edit_form} />
+              <% else %>
+                <.config_view config={config} />
+                <div class="mt-5 flex justify-end">
+                  <button
+                    id={"edit-trust-level-#{config.level}"}
+                    type="button"
+                    phx-click="edit"
+                    phx-value-level={config.level}
+                    class="btn btn-sm btn-primary"
+                  >
+                    Edit level
+                  </button>
                 </div>
-              </div>
-            <% end %>
-          </div>
+              <% end %>
+            </section>
+          <% end %>
         </div>
       </div>
     </Layouts.app>
@@ -126,22 +125,20 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
   defp config_view(assigns) do
     ~H"""
     <div class="space-y-4">
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <div
-          class="w-4 h-4 rounded-full"
+          class="size-3.5 shrink-0 rounded-full"
           style={"background-color: var(--color-#{@config.color})"}
         />
-        <div>
-          <h2 class="text-xl font-bold text-base-content">
-            Level {@config.level} - {@config.name}
-          </h2>
-        </div>
+        <h2 class="text-lg font-black text-base-content sm:text-xl">
+          Level {@config.level} · {@config.name}
+        </h2>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <span class="text-base-content/60">Auto-Promotion Thresholds</span>
-          <div class="space-y-1 mt-2">
+      <div class="grid gap-5 text-sm sm:grid-cols-2">
+        <div class="rounded-lg bg-base-100/45 p-4">
+          <h3 class="font-bold text-base-content">Auto-promotion thresholds</h3>
+          <div class="mt-2 space-y-1 text-base-content/65">
             <div>Topics: {@config.min_topics}</div>
             <div>Posts: {@config.min_posts}</div>
             <div>Days Joined: {@config.min_days_joined}</div>
@@ -150,9 +147,9 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
           </div>
         </div>
 
-        <div>
-          <span class="text-base-content/60">Rate Limits</span>
-          <div class="space-y-1 mt-2">
+        <div class="rounded-lg bg-base-100/45 p-4">
+          <h3 class="font-bold text-base-content">Rate limits</h3>
+          <div class="mt-2 space-y-1 text-base-content/65">
             <div>
               Posts/Minute: {if @config.max_posts_per_minute == -1,
                 do: "Unlimited",
@@ -173,7 +170,7 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
       </div>
 
       <div class="space-y-2">
-        <span class="text-base-content/60 text-sm">Permissions</span>
+        <h3 class="text-sm font-bold text-base-content">Permissions</h3>
         <div class="flex flex-wrap gap-2">
           <%= if @config.can_pin_topics do %>
             <span class="badge badge-success">Can Pin Topics</span>
@@ -198,179 +195,72 @@ defmodule UrielmWeb.Admin.TrustLevelSettingsLive do
 
   defp edit_form(assigns) do
     ~H"""
-    <form phx-submit="save" class="space-y-4">
-      <div class="flex items-center gap-4 mb-4">
+    <.form
+      for={@form}
+      id={"trust-level-form-#{@config.level}"}
+      phx-submit="save"
+      class="space-y-5"
+    >
+      <div class="flex items-center gap-3">
         <div
-          class="w-4 h-4 rounded-full"
+          class="size-3.5 shrink-0 rounded-full"
           style={"background-color: var(--color-#{@config.color})"}
         />
-        <h2 class="text-xl font-bold text-base-content">
-          Level {@config.level} - {@config.name}
+        <h2 class="text-lg font-black text-base-content sm:text-xl">
+          Edit level {@config.level} · {@config.name}
         </h2>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Min Topics</span>
-          </label>
-          <.input
-            name="trust_level_config[min_topics]"
-            type="number"
-            value={@config.min_topics}
-            label="Min Topics"
-          />
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Min Posts</span>
-          </label>
-          <.input
-            name="trust_level_config[min_posts]"
-            type="number"
-            value={@config.min_posts}
-            label="Min Posts"
-          />
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Min Days Joined</span>
-          </label>
-          <.input
-            name="trust_level_config[min_days_joined]"
-            type="number"
-            value={@config.min_days_joined}
-            label="Min Days Joined"
-          />
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Min Likes Given</span>
-          </label>
-          <.input
-            name="trust_level_config[min_likes_given]"
-            type="number"
-            value={@config.min_likes_given}
-            label="Min Likes Given"
-          />
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Min Likes Received</span>
-          </label>
-          <.input
-            name="trust_level_config[min_likes_received]"
-            type="number"
-            value={@config.min_likes_received}
-            label="Min Likes Received"
-          />
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Max Posts Per Minute</span>
-          </label>
-          <.input
-            name="trust_level_config[max_posts_per_minute]"
-            type="number"
-            value={@config.max_posts_per_minute}
-            label="Max Posts Per Minute"
-          />
-          <p class="text-xs text-base-content/60 mt-1">-1 for unlimited</p>
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Max New Topics Per Day</span>
-          </label>
-          <.input
-            name="trust_level_config[max_new_topics_per_day]"
-            type="number"
-            value={@config.max_new_topics_per_day}
-            label="Max New Topics Per Day"
-          />
-          <p class="text-xs text-base-content/60 mt-1">-1 for unlimited</p>
-        </div>
-
-        <div>
-          <label class="label">
-            <span class="label-text font-semibold">Post Edit Time Limit (min)</span>
-          </label>
-          <.input
-            name="trust_level_config[post_edit_time_limit]"
-            type="number"
-            value={@config.post_edit_time_limit}
-            label="Post Edit Time Limit (min)"
-          />
-          <p class="text-xs text-base-content/60 mt-1">-1 for unlimited</p>
-        </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <.input field={@form[:min_topics]} type="number" label="Minimum topics" />
+        <.input field={@form[:min_posts]} type="number" label="Minimum posts" />
+        <.input field={@form[:min_days_joined]} type="number" label="Minimum days joined" />
+        <.input field={@form[:min_likes_given]} type="number" label="Minimum likes given" />
+        <.input field={@form[:min_likes_received]} type="number" label="Minimum likes received" />
+        <.input
+          field={@form[:max_posts_per_minute]}
+          type="number"
+          label="Maximum posts per minute"
+          help="Use -1 for unlimited."
+        />
+        <.input
+          field={@form[:max_new_topics_per_day]}
+          type="number"
+          label="Maximum new topics per day"
+          help="Use -1 for unlimited."
+        />
+        <.input
+          field={@form[:post_edit_time_limit]}
+          type="number"
+          label="Post edit window (minutes)"
+          help="Use -1 for unlimited."
+        />
       </div>
 
-      <div class="space-y-2">
-        <label class="label">
-          <span class="label-text font-semibold">Permissions</span>
-        </label>
-
-        <div class="space-y-2">
-          <label class="label cursor-pointer gap-2">
-            <input
-              type="checkbox"
-              name="trust_level_config[can_pin_topics]"
-              value="true"
-              checked={@config.can_pin_topics}
-              class="checkbox checkbox-sm"
-            />
-            <span class="label-text">Can Pin Topics</span>
-          </label>
-
-          <label class="label cursor-pointer gap-2">
-            <input
-              type="checkbox"
-              name="trust_level_config[can_feature_topics]"
-              value="true"
-              checked={@config.can_feature_topics}
-              class="checkbox checkbox-sm"
-            />
-            <span class="label-text">Can Feature Topics</span>
-          </label>
-
-          <label class="label cursor-pointer gap-2">
-            <input
-              type="checkbox"
-              name="trust_level_config[can_close_topics]"
-              value="true"
-              checked={@config.can_close_topics}
-              class="checkbox checkbox-sm"
-            />
-            <span class="label-text">Can Close Topics</span>
-          </label>
-
-          <label class="label cursor-pointer gap-2">
-            <input
-              type="checkbox"
-              name="trust_level_config[can_moderate]"
-              value="true"
-              checked={@config.can_moderate}
-              class="checkbox checkbox-sm"
-            />
-            <span class="label-text">Can Moderate</span>
-          </label>
+      <fieldset>
+        <legend class="mb-3 text-sm font-bold text-base-content">Permissions</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <.input field={@form[:can_pin_topics]} type="checkbox" label="Can pin topics" />
+          <.input field={@form[:can_feature_topics]} type="checkbox" label="Can feature topics" />
+          <.input field={@form[:can_close_topics]} type="checkbox" label="Can close topics" />
+          <.input field={@form[:can_moderate]} type="checkbox" label="Can moderate" />
         </div>
-      </div>
+      </fieldset>
 
-      <div class="card-actions justify-end gap-2 mt-6">
-        <button type="button" phx-click="cancel_edit" class="btn btn-ghost">
+      <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button
+          id={"cancel-trust-level-#{@config.level}"}
+          type="button"
+          phx-click="cancel_edit"
+          class="btn btn-ghost"
+        >
           Cancel
         </button>
-        <button type="submit" class="btn btn-primary">
-          Save Changes
+        <button id={"save-trust-level-#{@config.level}"} type="submit" class="btn btn-primary">
+          Save changes
         </button>
       </div>
-    </form>
+    </.form>
     """
   end
 end

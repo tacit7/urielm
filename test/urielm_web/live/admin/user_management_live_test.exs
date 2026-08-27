@@ -10,8 +10,15 @@ defmodule UrielmWeb.Admin.UserManagementLiveTest do
     test "admin can access /admin/users", %{conn: conn} do
       admin = Fixtures.admin_fixture()
       conn = log_in_user(conn, admin)
-      {:ok, _view, html} = live(conn, "/admin/users")
+      {:ok, view, html} = live(conn, "/admin/users")
+
       assert html =~ "User Management"
+      assert has_element?(view, "#admin-users-page.ui-page-shell")
+      assert has_element?(view, "#admin-users-header.ui-page-header")
+      assert has_element?(view, "#admin-page-nav")
+      assert has_element?(view, "#admin-nav-users[aria-current='page']")
+      assert has_element?(view, "#admin-user-filters.ui-card")
+      assert has_element?(view, "#admin-users-table.ui-card")
     end
 
     test "non-admin is redirected to /", %{conn: conn} do

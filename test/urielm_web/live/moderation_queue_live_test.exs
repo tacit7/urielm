@@ -23,12 +23,16 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
         })
 
       conn = log_in_user(conn, admin)
-      {:ok, _view, html} = live(conn, "/admin/moderation")
+      {:ok, view, html} = live(conn, "/admin/moderation")
 
       # Admin sees the report card
       assert html =~ "data-testid=\"report-card-"
       assert html =~ "Spam"
       assert html =~ reporter.username
+      assert has_element?(view, "#admin-moderation-page.ui-page-shell")
+      assert has_element?(view, "#admin-moderation-header.ui-page-header")
+      assert has_element?(view, "#admin-nav-moderation[aria-current='page']")
+      assert has_element?(view, "#moderation-report-toolbar.ui-card")
     end
 
     test "admin can approve a report", %{conn: conn} do
@@ -285,6 +289,42 @@ defmodule UrielmWeb.Admin.ModerationQueueLiveTest do
 
       # Attempt to access trust-levels page - should redirect
       assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/admin/trust-levels")
+    end
+
+    test "trust-level settings use the shared admin hierarchy", %{conn: conn} do
+      admin = Fixtures.admin_fixture()
+      conn = log_in_user(conn, admin)
+
+      {:ok, view, _html} = live(conn, "/admin/trust-levels")
+
+      assert has_element?(view, "#admin-trust-levels-page.ui-page-shell")
+      assert has_element?(view, "#admin-trust-levels-header.ui-page-header")
+      assert has_element?(view, "#admin-nav-trust-levels[aria-current='page']")
+      assert has_element?(view, "#trust-level-configs")
+      assert has_element?(view, "#trust-level-configs > section.ui-card")
+    end
+
+    test "trust-level edit form preserves the existing save workflow", %{conn: conn} do
+      admin = Fixtures.admin_fixture()
+      conn = log_in_user(conn, admin)
+
+      {:ok, view, _html} = live(conn, "/admin/trust-levels")
+
+      view |> element("#edit-trust-level-0") |> render_click()
+
+      assert has_element?(view, "#trust-level-form-0")
+
+      assert has_element?(
+               view,
+               "#trust-level-form-0 input[name='trust_level_config[min_topics]']"
+             )
+
+      view
+      |> form("#trust-level-form-0", trust_level_config: %{min_topics: "0"})
+      |> render_submit()
+
+      refute has_element?(view, "#trust-level-form-0")
+      assert has_element?(view, "#edit-trust-level-0")
     end
 
     test "anonymous users are redirected to signup from admin pages", %{conn: conn} do
