@@ -13,15 +13,6 @@ defmodule UrielmWeb.Router do
     plug UrielmWeb.Plugs.Auth, :fetch_current_user
   end
 
-  pipeline :require_auth do
-    plug UrielmWeb.Plugs.Auth, :require_authenticated_user
-  end
-
-  pipeline :require_admin do
-    plug UrielmWeb.Plugs.Auth, :require_authenticated_user
-    plug UrielmWeb.Plugs.Auth, :require_admin
-  end
-
   pipeline :api do
     plug :accepts, ["json"]
   end

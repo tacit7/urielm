@@ -36,7 +36,7 @@ defmodule UrielmWeb.NewThreadLive do
              |> assign(:page_title, "New Discussion")
              |> assign(:board, board)
              |> assign(:all_categories, categories)
-             |> assign_composer(Thread.changeset(%Thread{}, %{}), %{})}
+             |> assign_composer(Thread.create_changeset(%Thread{}, %{}), %{})}
         end
     end
   end
@@ -45,7 +45,7 @@ defmodule UrielmWeb.NewThreadLive do
   def handle_event("validate", %{"thread" => thread_params0}, socket) do
     changeset =
       %Thread{}
-      |> Thread.changeset(Params.normalize(thread_params0))
+      |> Thread.create_changeset(allowed_params(thread_params0))
       |> Map.put(:action, :validate)
 
     {:noreply, assign_composer(socket, changeset, thread_params0)}
@@ -63,7 +63,7 @@ defmodule UrielmWeb.NewThreadLive do
       |> Map.take(["title", "body"])
       |> Params.normalize()
 
-    changeset = Thread.changeset(%Thread{}, params)
+    changeset = Thread.create_changeset(%Thread{}, params)
 
     {:noreply, assign_composer(socket, changeset, params)}
   end
@@ -72,8 +72,9 @@ defmodule UrielmWeb.NewThreadLive do
   def handle_event("save", %{"thread" => thread_params0}, socket) do
     %{board: board, current_user: user} = socket.assigns
 
-    # Auto-generate slug from title
-    params = Params.normalize(thread_params0)
+    # Whitelist client-supplied fields; moderation fields (is_pinned, is_locked,
+    # pinned_by_id, ...) must never come from the composer.
+    params = allowed_params(thread_params0)
 
     params_with_slug =
       if params["slug"] && params["slug"] != "" do
@@ -96,9 +97,23 @@ defmodule UrielmWeb.NewThreadLive do
          |> put_flash(:error, "This board is locked and not accepting new threads")
          |> redirect(to: ~p"/forum/b/#{board.slug}")}
 
+      {:error, :silenced} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Your account is silenced and cannot create threads")
+         |> redirect(to: ~p"/forum/b/#{board.slug}")}
+
       {:error, changeset} ->
         {:noreply, assign_composer(socket, changeset, params)}
     end
+  end
+
+  # Only these fields may be set from the composer form. Everything else
+  # (moderation/state fields) is dropped before it can reach the changeset.
+  defp allowed_params(thread_params) do
+    thread_params
+    |> Params.normalize()
+    |> Map.take(["title", "body", "slug", "kind"])
   end
 
   @impl true

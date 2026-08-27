@@ -97,6 +97,10 @@ defmodule UrielmWeb.ThreadLive do
           {:error, :thread_locked} ->
             {:noreply, put_flash(socket, :error, "This thread is locked")}
 
+          {:error, :silenced} ->
+            {:noreply,
+             put_flash(socket, :error, "Your account is silenced and cannot post comments")}
+
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to post comment")}
         end

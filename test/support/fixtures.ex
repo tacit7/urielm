@@ -91,10 +91,19 @@ defmodule Urielm.Fixtures do
     # Normalize attrs to string keys and merge
     attrs = Map.new(attrs, fn {k, v} -> {to_string(k), v} end)
 
-    {:ok, thread} =
-      Urielm.Forum.create_thread(board_id, author_id, Map.merge(thread_attrs, attrs))
+    # create_thread only accepts user-facing fields; moderation/state fields
+    # (is_removed, is_locked, ...) are applied afterwards via update_thread.
+    {create_attrs, state_attrs} = Map.split(attrs, ~w(title slug body kind))
 
-    thread
+    {:ok, thread} =
+      Urielm.Forum.create_thread(board_id, author_id, Map.merge(thread_attrs, create_attrs))
+
+    if map_size(state_attrs) == 0 do
+      thread
+    else
+      {:ok, thread} = Urielm.Forum.update_thread(thread, state_attrs)
+      thread
+    end
   end
 
   def comment_fixture(thread, author \\ nil, attrs \\ %{}) do
