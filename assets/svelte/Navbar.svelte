@@ -102,7 +102,7 @@
       : 'border-transparent bg-base-100/55 backdrop-blur-md'
   } ${hideNavbar ? '-translate-y-full' : ''}`}
 >
-  <nav class="navbar mx-auto min-h-[4.25rem] max-w-7xl gap-2 px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
+  <nav class="navbar relative mx-auto min-h-[4.25rem] max-w-7xl gap-2 px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
     <div class="navbar-start w-auto shrink-0">
       <a
         id="nav-brand"
@@ -116,7 +116,7 @@
       </a>
     </div>
 
-    <div class="hidden flex-1 items-center pl-5 lg:flex">
+    <div class="navbar-center absolute left-1/2 hidden -translate-x-1/2 lg:flex">
       <ul id="desktop-nav-links" class="menu menu-horizontal flex-nowrap gap-0.5 p-0">
         {#each primaryNavItems as item}
           <li>

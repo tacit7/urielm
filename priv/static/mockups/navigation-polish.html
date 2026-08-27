@@ -27,10 +27,10 @@
       .tabs a:hover { background: var(--surface); color: var(--text); }
       .frame { width: min(1180px, calc(100% - 32px)); margin: 28px auto 60px; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--bg); box-shadow: 0 22px 60px rgba(4, 5, 10, .38); }
       .frame-title { display: flex; justify-content: space-between; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-      .navbar { min-height: 68px; display: flex; align-items: center; gap: 20px; padding: 0 24px; border-bottom: 1px solid rgba(59,66,97,.72); background: rgba(26,27,38,.96); }
+      .navbar { min-height: 68px; position: relative; display: flex; align-items: center; gap: 20px; padding: 0 24px; border-bottom: 1px solid rgba(59,66,97,.72); background: rgba(26,27,38,.96); }
       .brand { flex: none; padding: 9px 10px; border-radius: 12px; color: var(--text); text-decoration: none; font-size: 19px; font-weight: 900; letter-spacing: -.03em; }
       .brand span { color: var(--muted); }
-      .desktop-links { display: flex; align-items: center; gap: 3px; }
+      .desktop-links { position: absolute; left: 50%; display: flex; align-items: center; gap: 3px; transform: translateX(-50%); }
       .nav-link { position: relative; min-height: 44px; display: inline-flex; align-items: center; padding: 0 13px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 720; }
       .nav-link:hover { background: var(--surface); color: var(--text); }
       .nav-link.active { background: rgba(122,162,247,.13); color: var(--primary); }
@@ -107,7 +107,7 @@
         </div>
       </div>
       <div class="content"><h1>Build useful things with more clarity.</h1><p>The active destination is unmistakable, while secondary controls remain quiet until needed.</p></div>
-      <div class="annotation"><strong>Behavior:</strong> 44px minimum targets, `aria-current="page"`, visible keyboard focus, and stable header height. The active state combines semantic color, a contained surface, and a subtle bottom marker—never color alone.</div>
+      <div class="annotation"><strong>Behavior:</strong> Primary destinations remain centered in the viewport between the independently anchored brand and account actions. Targets remain at least 44px tall, with `aria-current="page"`, visible keyboard focus, and a stable header height.</div>
     </section>
 
     <section id="account" class="frame">

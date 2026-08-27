@@ -14,6 +14,7 @@ test("mobile navigation exposes controlled menu semantics", () => {
 })
 
 test("desktop navigation uses the daisyUI horizontal menu structure", () => {
+  assert.match(navbar, /class="navbar-center[^\"]*absolute[^\"]*left-1\/2[^\"]*-translate-x-1\/2[^\"]*lg:flex"/)
   assert.match(navbar, /<ul id="desktop-nav-links" class="menu menu-horizontal/)
   assert.match(navbar, /\{#each primaryNavItems as item\}\s*<li>/)
 })
