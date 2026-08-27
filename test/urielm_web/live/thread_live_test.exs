@@ -32,6 +32,10 @@ defmodule UrielmWeb.ThreadLiveTest do
       assert has_element?(view, "#thread-replies")
       assert has_element?(view, "#comment-form.ui-card")
       assert has_element?(view, "#comment-form textarea[name='body']")
+      assert has_element?(
+               view,
+               ~s([data-name="CommentTree"][data-props*="forum:thread-reply:#{thread.id}:#{author.id}"])
+             )
     end
 
     test "shows a clear sign-in state instead of the reply form", %{conn: conn, thread: thread} do
