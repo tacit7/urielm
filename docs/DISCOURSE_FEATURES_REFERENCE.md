@@ -255,17 +255,18 @@ Comprehensive list of Discourse features for comparison and implementation track
 ## Audit Notes
 
 **Audit source**: EITS team `discourse-feature-audit` on August 17, 2026.
-**Latest update**: EITS team `discourse-partials-2026-08-27` merge review on August 27, 2026.
+**Latest update**: EITS team `discourse-next-features-2026-08-27` integration review on August 27, 2026.
+**Latest validation**: Main branch passed `mix compile --warnings-as-errors`, focused forum/composer/tag tests, and `mix precommit` with 816 tests after the integration.
 
 The audit found several rows that were stale in either direction:
 
 - Some rows marked ✅ are only partial, backend-only, or insufficiently covered by tests.
 - Some rows marked ❌ are implemented or partially implemented now, especially moderation queue, suspension/silencing, categories page, topic lists, embeds, and admin pages.
-- `mix compile --warnings-as-errors` was reported blocked by pre-existing HEEx/template warnings during the audit, outside the scope of this document update.
+- Compile warnings-as-errors were fixed after the original audit; remaining gaps below are feature coverage gaps, not current compile blockers.
 
 ### Test Coverage Gaps
 
-- Tag management UI tests beyond browse/detail/tag-badge coverage
+- Advanced tag-rule tests for required tags, category-specific allowed tags, parent tags, and one-per-topic constraints
 - Server-side drafts, drag/drop uploads, and broader shortcut UI tests
 - Auto-close timer UI/live tests
 - Email/push notification delivery tests
