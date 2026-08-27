@@ -26,6 +26,9 @@ defmodule UrielmWeb.SearchLiveTest do
     test "loads empty state without query", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/forum/search")
 
+      assert has_element?(view, "#forum-search-page")
+      assert has_element?(view, "#forum-search-header.ui-page-header")
+      assert has_element?(view, "#forum-search-surface.ui-card")
       assert has_element?(view, "#forum-search-form")
       assert has_element?(view, "#forum-search-query")
       assert has_element?(view, "#forum-search-submit[phx-disable-with='Searching…']")

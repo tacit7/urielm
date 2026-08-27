@@ -112,7 +112,7 @@ defmodule UrielmWeb.NewThreadLive do
       current_board={@board.slug}
     >
       <div id="new-thread-page">
-        <header class="mb-7 max-w-3xl sm:mb-9">
+        <header id="new-thread-header" class="ui-page-header ui-page-heading">
           <.link
             id="new-thread-back-link"
             navigate={~p"/forum/b/#{@board.slug}"}
@@ -124,18 +124,15 @@ defmodule UrielmWeb.NewThreadLive do
             /> Back to {@board.name}
           </.link>
 
-          <p class="ui-eyebrow mt-7">New discussion</p>
-          <h1 class="mt-2 text-3xl font-black tracking-tight text-base-content sm:text-4xl lg:text-5xl">
-            Start something useful
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-base-content/55 sm:text-base">
+          <h1 class="ui-section-title mt-7">Start a discussion</h1>
+          <p class="ui-section-copy">
             Share a clear question, useful idea, or practical lesson with the community.
           </p>
         </header>
 
         <section
           id="new-thread-board-context"
-          class="mb-5 flex items-center gap-3 rounded-2xl border border-base-300/70 bg-base-200/45 px-4 py-3.5 sm:px-5"
+          class="ui-card ui-card-compact mb-5 flex h-auto items-center gap-3 px-4 py-3.5 sm:px-5"
           aria-label="Publishing destination"
         >
           <span class={[
@@ -149,11 +146,11 @@ defmodule UrielmWeb.NewThreadLive do
               Your discussion will be published to this board.
             </p>
           </div>
-          <.um_icon name="check_circle" class="ml-auto size-5 shrink-0 text-accent" />
+          <.um_icon name="hero-check-circle" class="ml-auto size-5 shrink-0 text-accent" />
         </section>
 
         <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.7fr)]">
-          <section class="rounded-3xl border border-base-300/70 bg-base-200/45 shadow-sm">
+          <section id="new-thread-composer" class="ui-card h-auto">
             <.form
               for={@thread_form}
               id="new-thread-form"
@@ -177,7 +174,7 @@ defmodule UrielmWeb.NewThreadLive do
                   id="new-thread-title"
                   type="text"
                   placeholder="Summarize the discussion in one clear sentence"
-                  class="input input-lg w-full rounded-xl border-base-300 bg-base-100/75 text-base shadow-none transition focus:border-secondary focus:outline-none"
+                  class="input input-bordered input-lg w-full border-base-300 bg-base-100/75 text-base shadow-none transition focus:border-secondary focus:outline-none"
                   error_class="input-error"
                   maxlength="300"
                   phx-debounce="250"
@@ -202,7 +199,7 @@ defmodule UrielmWeb.NewThreadLive do
                   id="new-thread-body"
                   type="textarea"
                   placeholder="Add context, what you tried, and what kind of response would help…"
-                  class="textarea min-h-72 w-full resize-y rounded-xl border-base-300 bg-base-100/75 px-4 py-3 text-base leading-7 shadow-none transition focus:border-secondary focus:outline-none sm:min-h-80"
+                  class="textarea textarea-bordered min-h-72 w-full resize-y border-base-300 bg-base-100/75 px-4 py-3 text-base leading-7 shadow-none transition focus:border-secondary focus:outline-none sm:min-h-80"
                   error_class="textarea-error"
                   maxlength="10000"
                   phx-debounce="250"
@@ -216,13 +213,13 @@ defmodule UrielmWeb.NewThreadLive do
 
               <div class="mt-7 flex flex-col-reverse gap-3 border-t border-base-300/50 pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p class="flex items-center gap-2 text-xs text-base-content/40">
-                  <.um_icon name="check_circle" class="size-4 text-accent" />
+                  <.um_icon name="hero-check-circle" class="size-4 text-accent" />
                   Drafts are kept on this device.
                 </p>
                 <div class="grid grid-cols-2 gap-2 sm:flex">
                   <.link
                     navigate={~p"/forum/b/#{@board.slug}"}
-                    class="btn btn-ghost rounded-xl"
+                    class="btn btn-ghost"
                   >
                     Cancel
                   </.link>
@@ -230,7 +227,7 @@ defmodule UrielmWeb.NewThreadLive do
                     id="new-thread-submit"
                     type="submit"
                     loading_label="Publishing…"
-                    class="btn btn-primary rounded-xl px-5 shadow-sm transition-transform hover:-translate-y-0.5"
+                    class="btn btn-primary px-5"
                   >
                     Publish discussion
                   </.button>
@@ -242,7 +239,7 @@ defmodule UrielmWeb.NewThreadLive do
           <aside class="grid gap-4 lg:sticky lg:top-8">
             <section
               id="new-thread-preview"
-              class="rounded-3xl border border-base-300/70 bg-base-200/45 p-5 sm:p-6"
+              class="ui-card h-auto p-5 sm:p-6"
               aria-labelledby="new-thread-preview-label"
             >
               <p id="new-thread-preview-label" class="ui-eyebrow">Live preview</p>
@@ -271,7 +268,7 @@ defmodule UrielmWeb.NewThreadLive do
 
             <section
               id="new-thread-guidance"
-              class="rounded-3xl border border-base-300/70 bg-base-100 p-5 sm:p-6"
+              class="ui-card h-auto p-5 sm:p-6"
               aria-labelledby="new-thread-guidance-title"
             >
               <div class="flex items-center gap-2 text-secondary">

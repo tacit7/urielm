@@ -131,10 +131,15 @@ defmodule UrielmWeb.SearchLive do
       unread_notification_count={@unread_notification_count}
       current_path="/forum/search"
     >
-      <div class="container mx-auto px-4 py-8 max-w-3xl">
-        <div class="mb-8">
-          <h1 class="text-4xl font-bold text-base-content mb-4">Search Forum</h1>
+      <div id="forum-search-page" class="mx-auto w-full max-w-3xl">
+        <header id="forum-search-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">Search discussions</h1>
+          <p class="ui-section-copy">
+            Find useful conversations by topic, phrase, or tag.
+          </p>
+        </header>
 
+        <section id="forum-search-surface" class="ui-card h-auto p-4 sm:p-5">
           <.form
             for={@search_form}
             id="forum-search-form"
@@ -148,19 +153,19 @@ defmodule UrielmWeb.SearchLive do
                 type="search"
                 label="Search discussions"
                 placeholder="Search threads by title, content, or tags..."
-                class="input input-bordered min-h-11 w-full rounded-xl"
+                class="input input-bordered min-h-11 w-full"
               />
             </div>
             <.button
               id="forum-search-submit"
               type="submit"
               loading_label="Searching…"
-              class="btn btn-primary min-h-11 rounded-xl sm:self-end"
+              class="btn btn-primary min-h-11 sm:self-end"
             >
               <.icon name="hero-magnifying-glass" class="size-5" /> Search
             </.button>
           </.form>
-        </div>
+        </section>
 
         <%= if String.length(String.trim(@query)) == 0 do %>
           <.empty_state
@@ -169,9 +174,10 @@ defmodule UrielmWeb.SearchLive do
             description="Enter a topic, phrase, or tag to find relevant discussions."
             icon="hero-magnifying-glass"
             compact
+            class="mt-6"
           />
         <% else %>
-          <div id="results" phx-update="stream" class="space-y-4">
+          <div id="results" phx-update="stream" class="mt-6 space-y-4">
             <.empty_state
               id="search-empty-state"
               title="No matching discussions"
@@ -190,7 +196,7 @@ defmodule UrielmWeb.SearchLive do
             </div>
           </div>
 
-          <div class="flex items-center justify-center gap-2 mt-8">
+          <div class="mt-8 flex items-center justify-center gap-2">
             <%= if @meta do %>
               <.pagination meta={@meta} path={fn n -> ~p"/forum/search?q=#{@query}&page=#{n}" end} />
             <% end %>

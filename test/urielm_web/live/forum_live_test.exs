@@ -359,14 +359,16 @@ defmodule UrielmWeb.ForumLiveTest do
       {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}/new")
 
       assert has_element?(view, "#new-thread-page")
-      assert has_element?(view, "#new-thread-board-context", board.name)
+      assert has_element?(view, "#new-thread-header.ui-page-header")
+      assert has_element?(view, "#new-thread-board-context.ui-card", board.name)
+      assert has_element?(view, "#new-thread-composer.ui-card")
       assert has_element?(view, "#new-thread-form[phx-hook='DiscussionDraft']")
       assert has_element?(view, "#new-thread-title[maxlength='300']")
       assert has_element?(view, "#new-thread-body[maxlength='10000']")
       assert has_element?(view, "#new-thread-title-count", "0 / 300")
       assert has_element?(view, "#new-thread-body-count", "0 / 10,000")
-      assert has_element?(view, "#new-thread-preview")
-      assert has_element?(view, "#new-thread-guidance")
+      assert has_element?(view, "#new-thread-preview.ui-card")
+      assert has_element?(view, "#new-thread-guidance.ui-card")
       assert has_element?(view, "#new-thread-submit[phx-disable-with='Publishing…']")
     end
 
