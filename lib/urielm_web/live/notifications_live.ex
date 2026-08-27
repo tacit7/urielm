@@ -406,6 +406,7 @@ defmodule UrielmWeb.NotificationsLive do
       "comment" -> "New comment"
       "reply" -> "Reply"
       "thread_update" -> "Thread updated"
+      "mention" -> "Mention"
       _ -> "Notification"
     end
   end
@@ -413,6 +414,7 @@ defmodule UrielmWeb.NotificationsLive do
   defp notification_icon("comment"), do: "reply"
   defp notification_icon("reply"), do: "reply"
   defp notification_icon("thread_update"), do: "bell"
+  defp notification_icon("mention"), do: "bell"
   defp notification_icon(_subject_type), do: "bell"
 
   defp actor_initial(%{username: username}) when is_binary(username) and username != "" do
@@ -426,6 +428,9 @@ defmodule UrielmWeb.NotificationsLive do
 
   defp fallback_message(%{actor: %{username: username}, subject_type: "comment"}),
     do: "#{username} commented on a discussion you follow."
+
+  defp fallback_message(%{actor: %{username: username}, subject_type: "mention"}),
+    do: "#{username} mentioned you in a discussion."
 
   defp fallback_message(%{subject_type: "thread_update"}),
     do: "A discussion you follow was updated."

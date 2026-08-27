@@ -307,6 +307,7 @@ defmodule Urielm.Forum do
         # Process mentions
         body = Map.get(attrs, "body", "")
         MentionParser.process_mentions(body, author_id, "thread", thread.id)
+        notify_mentions(body, author_id, thread, thread.id)
         {:ok, thread}
 
       error ->
@@ -499,6 +500,7 @@ defmodule Urielm.Forum do
               # Process mentions
               body = Map.get(attrs, "body", "")
               MentionParser.process_mentions(body, author_id, "comment", comment.id)
+              notify_mentions(body, author_id, thread, comment.id)
               notify_comment_recipients(thread, comment, user)
               {:ok, comment}
 
@@ -1351,6 +1353,31 @@ defmodule Urielm.Forum do
 
     Repo.insert_all(Notification, attrs_list)
     Enum.each(recipient_ids, &broadcast_unread_notification_count/1)
+    :ok
+  end
+
+  defp notify_mentions(body, mentioner_id, thread, target_id) do
+    mentioner_name =
+      case Repo.get(Urielm.Accounts.User, mentioner_id) do
+        nil -> "Someone"
+        user -> user.username || user.display_name || user.email || "Someone"
+      end
+
+    message = "#{mentioner_name} mentioned you in #{thread.title}"
+
+    body
+    |> MentionParser.extract_mentions()
+    |> Enum.map(&Urielm.Accounts.get_user_by_username/1)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.reject(&(&1.id == mentioner_id))
+    |> Enum.each(fn user ->
+      create_notification(user.id, "mention", target_id, %{
+        actor_id: mentioner_id,
+        thread_id: thread.id,
+        message: message
+      })
+    end)
+
     :ok
   end
 

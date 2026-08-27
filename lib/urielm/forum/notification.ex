@@ -31,7 +31,7 @@ defmodule Urielm.Forum.Notification do
       :read_at
     ])
     |> validate_required([:user_id, :subject_type, :subject_id])
-    |> validate_inclusion(:subject_type, ["comment", "reply", "thread_update"])
+    |> validate_inclusion(:subject_type, ["comment", "reply", "thread_update", "mention"])
     |> validate_length(:message, max: 500)
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:actor_id)
