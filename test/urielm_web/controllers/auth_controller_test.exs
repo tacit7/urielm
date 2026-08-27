@@ -427,6 +427,116 @@ defmodule UrielmWeb.AuthControllerTest do
     end
   end
 
+  describe "auth endpoint rate limiting" do
+    setup do
+      # The suite runs with :rate_limit_bypass = true; turn it off here so the
+      # limiter actually engages, and reset the shared GenServer state so counts
+      # start from zero regardless of test order.
+      old_value = Application.get_env(:urielm, :rate_limit_bypass)
+      Application.put_env(:urielm, :rate_limit_bypass, false)
+      :sys.replace_state(Urielm.RateLimiter, fn _ -> %{} end)
+
+      on_exit(fn ->
+        Application.put_env(:urielm, :rate_limit_bypass, old_value)
+        :sys.replace_state(Urielm.RateLimiter, fn _ -> %{} end)
+      end)
+
+      :ok
+    end
+
+    test "repeated signin attempts return 429 without leaking account existence", %{conn: conn} do
+      {:ok, _user} =
+        Accounts.register_user(%{
+          email: "throttle@example.com",
+          username: "throttleuser",
+          display_name: "Throttle User",
+          password: "password123"
+        })
+
+      params = %{email: "throttle@example.com", password: "wrongpassword"}
+
+      # Per-email limit is 5/min: the first 5 attempts get the normal 401,
+      # the 6th is rate limited.
+      statuses =
+        for _ <- 1..6 do
+          conn |> post(~p"/auth/signin", params) |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(statuses, 5) == [401, 401, 401, 401, 401]
+      assert List.last(statuses) == 429
+
+      limited = post(conn, ~p"/auth/signin", params)
+      assert limited.status == 429
+      body = json_response(limited, 429)
+      assert body["error"] == "Too many attempts. Please try again later."
+      # Must not reveal whether the account exists.
+      refute body["error"] =~ "email"
+      refute body["error"] =~ "password"
+    end
+
+    test "check_handle is rate limited per identifier", %{conn: conn} do
+      # Per-username limit is 15/min: the 16th lookup for the same handle is 429.
+      statuses =
+        for _ <- 1..16 do
+          conn
+          |> get(~p"/api/check-handle?username=sprayhandle")
+          |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(statuses, 15) |> Enum.all?(&(&1 == 200))
+      assert List.last(statuses) == 429
+
+      assert json_response(get(conn, ~p"/api/check-handle?username=sprayhandle"), 429)["error"] ==
+               "Too many attempts. Please try again later."
+    end
+
+    test "signin rate limit also keys on the client IP", %{conn: conn} do
+      # Per-IP limit is 10/min across distinct emails from the same host.
+      statuses =
+        for i <- 1..11 do
+          conn
+          |> post(~p"/auth/signin", %{email: "iptest#{i}@example.com", password: "x"})
+          |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(statuses, 10) |> Enum.all?(&(&1 == 401))
+      assert List.last(statuses) == 429
+    end
+
+    test "a spoofed X-Forwarded-For cannot mint a fresh per-IP bucket", %{conn: conn} do
+      # X-Forwarded-For is client-supplied. If the limiter keyed on the leftmost
+      # entry, varying it per request would reset the per-IP budget every time
+      # and defeat the limit entirely. We key on the rightmost (proxy-appended)
+      # entry, so all of these collapse onto the same bucket.
+      statuses =
+        for i <- 1..11 do
+          conn
+          |> put_req_header("x-forwarded-for", "10.9.9.#{i}, 203.0.113.7")
+          |> post(~p"/auth/signin", %{email: "spoof#{i}@example.com", password: "x"})
+          |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(statuses, 10) |> Enum.all?(&(&1 == 401))
+      assert List.last(statuses) == 429
+    end
+
+    test "distinct real client IPs get independent buckets", %{conn: conn} do
+      # The rightmost entry is what the proxy observed, so two genuinely
+      # different clients must not share a budget.
+      for i <- 1..10 do
+        assert conn
+               |> put_req_header("x-forwarded-for", "198.51.100.1")
+               |> post(~p"/auth/signin", %{email: "hostA#{i}@example.com", password: "x"})
+               |> Map.fetch!(:status) == 401
+      end
+
+      assert conn
+             |> put_req_header("x-forwarded-for", "198.51.100.2")
+             |> post(~p"/auth/signin", %{email: "hostB@example.com", password: "x"})
+             |> Map.fetch!(:status) == 401
+    end
+  end
+
   describe "DELETE /auth/logout" do
     setup do
       {:ok, _user} =

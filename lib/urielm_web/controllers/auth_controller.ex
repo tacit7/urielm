@@ -3,6 +3,28 @@ defmodule UrielmWeb.AuthController do
   plug Ueberauth
 
   alias Urielm.Accounts
+  alias Urielm.RateLimiter
+
+  # Rate limits for the email/password auth endpoints, as `{max_requests, window_seconds}`.
+  #
+  # Every signin/signup attempt costs a full bcrypt round, so unthrottled these
+  # endpoints allow both credential stuffing and a cheap CPU DoS. check_handle is
+  # an unauthenticated username-enumeration oracle.
+  #
+  # Each request is keyed on BOTH the client IP and the submitted identifier
+  # (email for signin/signup, username for check_handle) and the stricter of the
+  # two wins. IP-only is trivially bypassed by a distributed attacker; identifier
+  # -only lets one host spray many accounts. Limits are per 60s so a human who
+  # fat-fingers a password a few times is never affected, while sustained abuse
+  # is capped. Tune here.
+  @signin_ip_limit {10, 60}
+  @signin_id_limit {5, 60}
+  @signup_ip_limit {5, 60}
+  @signup_id_limit {3, 60}
+  # check_handle is called from the signup form (client-side debounced), so it
+  # gets more headroom than the password endpoints.
+  @check_handle_ip_limit {30, 60}
+  @check_handle_id_limit {15, 60}
 
   @doc """
   Initiate OAuth request - handled by Ueberauth plug
@@ -66,6 +88,13 @@ defmodule UrielmWeb.AuthController do
     username = Map.get(params, "username")
     display_name = Map.get(params, "displayName")
 
+    case rate_limit(conn, "signup", email, @signup_ip_limit, @signup_id_limit) do
+      {:error, :rate_limited} -> too_many_requests(conn)
+      :ok -> do_signup(conn, email, password, username, display_name)
+    end
+  end
+
+  defp do_signup(conn, email, password, username, display_name) do
     user_params = %{
       email: email,
       password: password,
@@ -95,6 +124,13 @@ defmodule UrielmWeb.AuthController do
   Sign in with email and password
   """
   def signin(conn, %{"email" => email, "password" => password}) do
+    case rate_limit(conn, "signin", email, @signin_ip_limit, @signin_id_limit) do
+      {:error, :rate_limited} -> too_many_requests(conn)
+      :ok -> do_signin(conn, email, password)
+    end
+  end
+
+  defp do_signin(conn, email, password) do
     case Accounts.authenticate_user(email, password) do
       {:ok, user} ->
         conn
@@ -110,6 +146,53 @@ defmodule UrielmWeb.AuthController do
     end
   end
 
+  # Rate-limits an attempt on both the client IP and the submitted identifier.
+  # Returns `:ok` or `{:error, :rate_limited}`. Honors :rate_limit_bypass in tests.
+  defp rate_limit(conn, action, identifier, {ip_max, ip_window}, {id_max, id_window}) do
+    ip = client_ip(conn)
+    id = identifier |> to_string() |> String.trim() |> String.downcase()
+
+    RateLimiter.check_all([
+      {"auth_ip:#{ip}", action, max_requests: ip_max, window_seconds: ip_window},
+      {"auth_id:#{id}", action, max_requests: id_max, window_seconds: id_window}
+    ])
+  end
+
+  # Client IP, used as a rate-limit key.
+  #
+  # X-Forwarded-For is a client-supplied header, so the LEFTMOST entries are
+  # attacker-controlled: anyone can send "X-Forwarded-For: 1.2.3.4" and mint a
+  # fresh rate-limit bucket per request. Our reverse proxy appends the peer it
+  # actually saw, so the RIGHTMOST entry is the first value the attacker cannot
+  # forge. Take that one, dropping any hops the attacker prepended.
+  #
+  # :trusted_proxy_hops is how many proxies sit in front of the app (default 1).
+  # Raise it only if you add another appending proxy; each extra hop discards one
+  # more entry from the right.
+  defp client_ip(conn) do
+    hops = Application.get_env(:urielm, :trusted_proxy_hops, 1)
+
+    forwarded =
+      conn
+      |> get_req_header("x-forwarded-for")
+      |> Enum.flat_map(&String.split(&1, ","))
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    case Enum.at(forwarded, -hops) do
+      value when is_binary(value) -> value
+      nil -> conn.remote_ip |> :inet.ntoa() |> to_string()
+    end
+  end
+
+  # 429 for the JSON endpoints. Deliberately generic so it never leaks whether
+  # the account/handle exists.
+  defp too_many_requests(conn) do
+    conn
+    |> put_status(:too_many_requests)
+    |> json(%{error: "Too many attempts. Please try again later."})
+  end
+
   defp format_errors(errors) do
     errors
     |> Enum.map(fn {field, messages} ->
@@ -122,6 +205,19 @@ defmodule UrielmWeb.AuthController do
   Check if handle (username) is available
   """
   def check_handle(conn, %{"username" => username}) do
+    case rate_limit(
+           conn,
+           "check_handle",
+           username,
+           @check_handle_ip_limit,
+           @check_handle_id_limit
+         ) do
+      {:error, :rate_limited} -> too_many_requests(conn)
+      :ok -> do_check_handle(conn, username)
+    end
+  end
+
+  defp do_check_handle(conn, username) do
     case Accounts.get_user_by_username(String.downcase(String.trim(username))) do
       nil ->
         conn
