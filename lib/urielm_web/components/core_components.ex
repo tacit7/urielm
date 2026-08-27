@@ -762,6 +762,8 @@ defmodule UrielmWeb.CoreComponents do
   end
 
   # Generate compact page links (current ± 2 pages with ellipsis)
+  defp page_links(%{total_pages: total}) when total < 1, do: []
+
   defp page_links(%{current_page: current, total_pages: total}) do
     start_page = max(1, current - 2)
     end_page = min(total, current + 2)

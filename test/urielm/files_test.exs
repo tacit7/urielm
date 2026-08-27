@@ -83,7 +83,7 @@ defmodule Urielm.FilesTest do
       %{user: user, thread: thread, files: [file1, file2]}
     end
 
-    test "returns all files for an entity", %{thread: thread, files: files} do
+    test "returns all files for an entity", %{thread: thread} do
       result = Files.list_entity_files("thread", thread.id)
 
       assert length(result) == 2

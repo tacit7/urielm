@@ -51,13 +51,9 @@ defmodule Urielm.Upload do
   Delete a file from R2 storage.
   """
   def delete_file(key) do
-    bucket = Application.get_env(:urielm, :uploads)[:bucket]
-
-    S3.delete_object(bucket, key)
-    |> ExAws.request()
-    |> case do
-      {:ok, _} -> :ok
-      {:error, reason} -> {:error, reason}
+    case storage_adapter() do
+      :r2 -> delete_from_r2(key)
+      :noop -> :ok
     end
   end
 
@@ -117,6 +113,13 @@ defmodule Urielm.Upload do
   end
 
   defp upload_to_r2(key, file_binary, content_type) do
+    case storage_adapter() do
+      :r2 -> do_upload_to_r2(key, file_binary, content_type)
+      :noop -> :ok
+    end
+  end
+
+  defp do_upload_to_r2(key, file_binary, content_type) do
     bucket = Application.get_env(:urielm, :uploads)[:bucket]
 
     S3.put_object(bucket, key, file_binary,
@@ -133,6 +136,22 @@ defmodule Urielm.Upload do
   defp build_public_url(key) do
     public_url = Application.get_env(:urielm, :uploads)[:public_url]
     "#{public_url}/#{key}"
+  end
+
+  defp delete_from_r2(key) do
+    bucket = Application.get_env(:urielm, :uploads)[:bucket]
+
+    S3.delete_object(bucket, key)
+    |> ExAws.request()
+    |> case do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp storage_adapter do
+    Application.get_env(:urielm, :uploads, [])
+    |> Keyword.get(:storage_adapter, :r2)
   end
 
   @doc """

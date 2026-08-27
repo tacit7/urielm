@@ -32,3 +32,10 @@ config :phoenix_live_view,
 
 # Bypass rate limiting in tests
 config :urielm, :rate_limit_bypass, true
+
+# Keep upload tests isolated from Cloudflare R2.
+config :urielm, :uploads,
+  bucket: "test-bucket",
+  public_url: "https://example.test",
+  max_file_size: 10_485_760,
+  storage_adapter: :noop

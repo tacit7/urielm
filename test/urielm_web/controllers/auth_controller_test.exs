@@ -476,7 +476,7 @@ defmodule UrielmWeb.AuthControllerTest do
       conn = get(conn, ~p"/auth/post-signup/#{token}")
 
       assert get_session(conn, :user_id) == user.id
-      assert redirected_to(conn) != nil
+      assert is_binary(redirected_to(conn))
     end
 
     test "post_signup redirects to home for normal signup completion", %{conn: conn} do
@@ -507,7 +507,7 @@ defmodule UrielmWeb.AuthControllerTest do
       conn = get(conn, ~p"/auth/post-signup/#{token}")
 
       assert get_session(conn, :user_id) == user.id
-      assert redirected_to(conn) != nil
+      assert is_binary(redirected_to(conn))
     end
 
     test "post_signup rejects invalid token", %{conn: conn} do

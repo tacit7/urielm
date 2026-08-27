@@ -161,13 +161,13 @@ if config_env() == :prod do
     max_file_size: 10_485_760
 end
 
-# OAuth provider secrets (dev/test)
-if config_env() in [:dev, :test] do
+# OAuth provider secrets (dev)
+if config_env() == :dev do
   config :ueberauth, Ueberauth.Strategy.Google.OAuth,
     client_id: env!("GOOGLE_CLIENT_ID", :string),
     client_secret: env!("GOOGLE_CLIENT_SECRET", :string)
 
-  # Cloudflare R2 configuration (dev/test)
+  # Cloudflare R2 configuration (dev)
   r2_endpoint = env!("R2_ENDPOINT", :string) |> String.replace(~r/^https?:\/\//, "")
 
   config :ex_aws, :s3,
@@ -184,4 +184,29 @@ if config_env() in [:dev, :test] do
     public_url: env!("R2_PUBLIC_URL", :string),
     # 10 MB in bytes
     max_file_size: 10_485_760
+end
+
+# OAuth and R2-shaped test configuration use deterministic fake values.
+if config_env() == :test do
+  config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+    client_id: System.get_env("GOOGLE_CLIENT_ID") || "test-google-client-id",
+    client_secret: System.get_env("GOOGLE_CLIENT_SECRET") || "test-google-client-secret"
+
+  r2_endpoint =
+    (System.get_env("R2_ENDPOINT") || "https://example.test")
+    |> String.replace(~r/^https?:\/\//, "")
+
+  config :ex_aws, :s3,
+    access_key_id: System.get_env("R2_ACCESS_KEY_ID") || "test-access-key-id",
+    secret_access_key: System.get_env("R2_SECRET_ACCESS_KEY") || "test-secret-access-key",
+    region: "auto",
+    host: r2_endpoint,
+    scheme: "https://",
+    bucket: System.get_env("R2_BUCKET") || "test-bucket"
+
+  config :urielm, :uploads,
+    bucket: System.get_env("R2_BUCKET") || "test-bucket",
+    public_url: System.get_env("R2_PUBLIC_URL") || "https://example.test",
+    max_file_size: 10_485_760,
+    storage_adapter: :noop
 end

@@ -3,7 +3,6 @@ defmodule Urielm.BillingTest do
   import Urielm.Fixtures
 
   alias Urielm.Billing
-  alias Urielm.Billing.Subscription
 
   describe "active_subscription?/1" do
     setup do

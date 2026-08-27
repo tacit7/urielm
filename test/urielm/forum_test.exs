@@ -561,7 +561,7 @@ defmodule Urielm.ForumTest do
 
       # Attempting another insert with same user, target, type should fail
       # But our implementation updates instead, so this is tested implicitly
-      {:ok, {:ok, vote2}} = Forum.cast_vote(user.id, "thread", thread.id, 1)
+      {:ok, {:ok, _vote2}} = Forum.cast_vote(user.id, "thread", thread.id, 1)
 
       # Should be only one vote
       votes =
@@ -1200,7 +1200,7 @@ defmodule Urielm.ForumTest do
       thread1 = thread_fixture()
       thread2 = thread_fixture()
 
-      {:ok, report1} =
+      {:ok, _report1} =
         Forum.create_report(user.id, "thread", thread1.id, %{
           reason: "spam",
           description: "This content appears to be spam."

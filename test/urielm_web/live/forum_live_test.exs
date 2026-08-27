@@ -223,8 +223,9 @@ defmodule UrielmWeb.ForumLiveTest do
     end
   end
 
-  @tag :board_live
   describe "BoardLive mount" do
+    @describetag :board_live
+
     test "renders board and threads for anonymous user", %{board: board, thread: thread} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
 

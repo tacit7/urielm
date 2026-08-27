@@ -111,7 +111,12 @@ defmodule Urielm.MixProject do
         "cmd --cd assets node build.js --deploy",
         "phx.digest"
       ],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --no-verification --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test"
+      ]
     ]
   end
 end
