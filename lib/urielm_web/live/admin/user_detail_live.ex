@@ -201,194 +201,235 @@ defmodule UrielmWeb.Admin.UserDetailLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div class="min-h-screen bg-base-100">
-        <div class="container mx-auto px-4 py-8 max-w-3xl">
-          <div class="mb-6">
-            <a href="/admin/users" class="text-sm text-base-content/50 hover:text-primary">
-              ← Back to Users
-            </a>
-          </div>
+      <div id="admin-user-detail-page" class="ui-page-shell max-w-6xl">
+        <header id="admin-user-detail-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">User details</h1>
+          <p class="ui-section-copy">Review account status, roles, and moderation controls.</p>
+        </header>
 
-          <%= if @user do %>
-          <div class="card bg-base-200 border border-base-300 mb-6">
-            <div class="card-body">
-              <div class="flex items-start gap-4">
-                <div class="avatar">
-                  <div class="w-16 rounded-full">
-                    <%= if @user.avatar_url do %>
-                      <img src={@user.avatar_url} alt={@user.username} />
-                    <% else %>
-                      <div class="bg-base-300 w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold">
-                        {String.first(@user.username || "?")}
-                      </div>
-                    <% end %>
-                  </div>
-                </div>
+        <.admin_nav current="users" />
 
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h1 class="text-2xl font-bold">{@user.username}</h1>
-                    <.role_badge user={@user} />
-                    <.status_badge user={@user} />
-                  </div>
-                  <%= if @user.display_name && @user.display_name != @user.username do %>
-                    <p class="text-base-content/60 mt-1">{@user.display_name}</p>
-                  <% end %>
-                  <p class="text-sm text-base-content/50 mt-1">{@user.email}</p>
-                  <p class="text-xs text-base-content/40 mt-1">
-                    Joined {Calendar.strftime(@user.inserted_at, "%B %d, %Y")} &middot;
-                    TL{@user.trust_level}
-                    <%= if @user.trust_level_locked do %>
-                      <span class="badge badge-xs badge-ghost ml-1">locked</span>
-                    <% end %>
-                  </p>
-                  <%= if @user.bio do %>
-                    <p class="text-sm text-base-content/70 mt-2">{@user.bio}</p>
+        <.link
+          id="admin-user-back-link"
+          navigate={~p"/admin/users"}
+          class="btn btn-ghost btn-sm -ml-2 mb-5 gap-2 text-base-content/55 hover:text-primary"
+        >
+          <.um_icon name="hero-arrow-left" class="size-4" /> All users
+        </.link>
+
+        <%= if @user do %>
+          <section id="admin-user-overview" class="ui-card mb-8 h-auto p-5 sm:p-7">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div class="avatar shrink-0">
+                <div class="size-16 rounded-full">
+                  <%= if @user.avatar_url do %>
+                    <img src={@user.avatar_url} alt={@user.username} />
+                  <% else %>
+                    <div class="grid size-16 place-items-center rounded-full bg-base-300 text-xl font-bold">
+                      {String.first(@user.username || "?")}
+                    </div>
                   <% end %>
                 </div>
               </div>
 
-              <%= if User.suspended?(@user) do %>
-                <div class="alert alert-error mt-4">
-                  <div>
-                    <p class="font-semibold">Suspended</p>
-                    <p class="text-sm">{@user.suspended_reason}</p>
-                    <%= if @user.suspended_until do %>
-                      <p class="text-xs opacity-75">
-                        Until {Calendar.strftime(@user.suspended_until, "%B %d, %Y %H:%M UTC")}
-                      </p>
-                    <% else %>
-                      <p class="text-xs opacity-75">Permanent</p>
-                    <% end %>
-                  </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="min-w-0 break-words text-2xl font-black text-base-content">
+                    {@user.username}
+                  </h2>
+                  <.role_badge user={@user} />
+                  <.status_badge user={@user} />
                 </div>
-              <% end %>
-
-              <%= if User.silenced?(@user) do %>
-                <div class="alert alert-warning mt-4">
-                  <div>
-                    <p class="font-semibold">Silenced</p>
-                    <p class="text-sm">{@user.silenced_reason}</p>
-                    <%= if @user.silenced_until do %>
-                      <p class="text-xs opacity-75">
-                        Until {Calendar.strftime(@user.silenced_until, "%B %d, %Y %H:%M UTC")}
-                      </p>
-                    <% else %>
-                      <p class="text-xs opacity-75">Permanent</p>
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <h2 class="text-lg font-semibold text-base-content">Actions</h2>
-
-            <div class="card bg-base-200 border border-base-300">
-              <div class="card-body">
-                <h3 class="font-medium mb-3">Trust Level</h3>
-                <div class="flex gap-2 flex-wrap">
-                  <%= for level <- 0..4 do %>
-                    <button
-                      phx-click="set_trust_level"
-                      phx-value-trust_level={level}
-                      class={"btn btn-sm #{if @user.trust_level == level, do: "btn-primary", else: "btn-ghost"}"}
-                      disabled={@user.trust_level_locked}
-                    >
-                      TL{level}
-                    </button>
-                  <% end %>
-                </div>
-                <%= if @user.trust_level_locked do %>
-                  <p class="text-xs text-base-content/50 mt-2">
-                    Trust level is locked for this user.
-                  </p>
-                <% end %>
+                <p
+                  :if={@user.display_name && @user.display_name != @user.username}
+                  class="mt-1 text-base-content/65"
+                >
+                  {@user.display_name}
+                </p>
+                <p class="mt-1 break-all text-sm text-base-content/55">{@user.email}</p>
+                <p class="mt-2 text-xs text-base-content/45">
+                  Joined {Calendar.strftime(@user.inserted_at, "%B %d, %Y")} · TL{@user.trust_level}
+                  <span :if={@user.trust_level_locked} class="badge badge-xs badge-ghost ml-1">
+                    locked
+                  </span>
+                </p>
+                <p :if={@user.bio} class="mt-3 max-w-3xl text-sm leading-6 text-base-content/70">
+                  {@user.bio}
+                </p>
               </div>
             </div>
 
-            <div class="card bg-base-200 border border-base-300">
-              <div class="card-body">
-                <h3 class="font-medium mb-3">Moderator Role</h3>
+            <div
+              :if={User.suspended?(@user)}
+              id="admin-user-suspended-status"
+              class="alert alert-error mt-5 items-start"
+            >
+              <.um_icon name="hero-no-symbol" class="size-5 shrink-0" />
+              <div>
+                <p class="font-semibold">Suspended</p>
+                <p class="text-sm">{@user.suspended_reason}</p>
+                <p class="text-xs opacity-75">
+                  {if @user.suspended_until,
+                    do: "Until #{Calendar.strftime(@user.suspended_until, "%B %d, %Y %H:%M UTC")}",
+                    else: "Permanent"}
+                </p>
+              </div>
+            </div>
+
+            <div
+              :if={User.silenced?(@user)}
+              id="admin-user-silenced-status"
+              class="alert alert-warning mt-5 items-start"
+            >
+              <.um_icon name="hero-speaker-x-mark" class="size-5 shrink-0" />
+              <div>
+                <p class="font-semibold">Silenced</p>
+                <p class="text-sm">{@user.silenced_reason}</p>
+                <p class="text-xs opacity-75">
+                  {if @user.silenced_until,
+                    do: "Until #{Calendar.strftime(@user.silenced_until, "%B %d, %Y %H:%M UTC")}",
+                    else: "Permanent"}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="admin-user-actions" aria-labelledby="admin-user-actions-title">
+            <div class="mb-5">
+              <h2 id="admin-user-actions-title" class="text-xl font-black text-base-content">
+                Account controls
+              </h2>
+              <p class="mt-1 text-sm text-base-content/55">
+                Changes apply immediately and are recorded for moderation review.
+              </p>
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+              <section id="admin-user-trust-control" class="ui-card h-auto p-5 sm:p-6">
+                <h3 class="font-bold text-base-content">Trust level</h3>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <button
+                    :for={level <- 0..4}
+                    id={"admin-user-trust-level-#{level}"}
+                    type="button"
+                    phx-click="set_trust_level"
+                    phx-value-trust_level={level}
+                    class={[
+                      "btn btn-sm",
+                      if(@user.trust_level == level, do: "btn-primary", else: "btn-ghost")
+                    ]}
+                    disabled={@user.trust_level_locked}
+                  >
+                    TL{level}
+                  </button>
+                </div>
+                <p :if={@user.trust_level_locked} class="mt-3 text-xs text-base-content/50">
+                  Trust level is locked for this user.
+                </p>
+              </section>
+
+              <section id="admin-user-role-control" class="ui-card h-auto p-5 sm:p-6">
+                <h3 class="font-bold text-base-content">Moderator role</h3>
                 <%= if @user.is_admin do %>
-                  <p class="text-sm text-base-content/50">Cannot change role of an admin.</p>
+                  <p class="mt-3 text-sm text-base-content/55">Admin roles cannot be changed here.</p>
                 <% else %>
-                  <div class="flex gap-2">
-                    <%= if @user.is_moderator do %>
-                      <button phx-click="revoke_mod" class="btn btn-sm btn-warning">
-                        Revoke Moderator
-                      </button>
-                    <% else %>
-                      <button phx-click="grant_mod" class="btn btn-sm btn-primary">
-                        Grant Moderator
-                      </button>
-                    <% end %>
+                  <div class="mt-4">
+                    <button
+                      :if={@user.is_moderator}
+                      id="admin-user-revoke-moderator"
+                      type="button"
+                      phx-click="revoke_mod"
+                      class="btn btn-warning btn-sm"
+                    >
+                      Revoke moderator
+                    </button>
+                    <button
+                      :if={!@user.is_moderator}
+                      id="admin-user-grant-moderator"
+                      type="button"
+                      phx-click="grant_mod"
+                      class="btn btn-primary btn-sm"
+                    >
+                      Grant moderator
+                    </button>
                   </div>
                 <% end %>
-              </div>
-            </div>
+              </section>
 
-            <div class="card bg-base-200 border border-base-300">
-              <div class="card-body">
-                <h3 class="font-medium mb-3">Suspension</h3>
-                <%= if User.suspended?(@user) do %>
-                  <button phx-click="unsuspend" class="btn btn-sm btn-success">
-                    Remove Suspension
-                  </button>
-                <% else %>
-                  <%= if @action == "suspend" do %>
-                    <.action_form
-                      action="suspend"
-                      label="Suspend user"
-                      duration={@duration}
-                      reason={@reason}
-                      danger={true}
-                    />
-                  <% else %>
+              <section id="admin-user-suspension-control" class="ui-card h-auto p-5 sm:p-6">
+                <h3 class="font-bold text-base-content">Suspension</h3>
+                <div class="mt-4">
+                  <%= if User.suspended?(@user) do %>
                     <button
-                      phx-click="show_action"
-                      phx-value-action="suspend"
-                      class="btn btn-sm btn-error"
+                      id="admin-user-unsuspend"
+                      type="button"
+                      phx-click="unsuspend"
+                      class="btn btn-success btn-sm"
                     >
-                      Suspend User
+                      Remove Suspension
                     </button>
+                  <% else %>
+                    <%= if @action == "suspend" do %>
+                      <.action_form
+                        action="suspend"
+                        label="Suspend user"
+                        duration={@duration}
+                        reason={@reason}
+                        danger={true}
+                      />
+                    <% else %>
+                      <button
+                        id="admin-user-show-suspend"
+                        type="button"
+                        phx-click="show_action"
+                        phx-value-action="suspend"
+                        class="btn btn-error btn-sm"
+                      >
+                        Suspend user
+                      </button>
+                    <% end %>
                   <% end %>
-                <% end %>
-              </div>
-            </div>
+                </div>
+              </section>
 
-            <div class="card bg-base-200 border border-base-300">
-              <div class="card-body">
-                <h3 class="font-medium mb-3">Silencing</h3>
-                <%= if User.silenced?(@user) do %>
-                  <button phx-click="unsilence" class="btn btn-sm btn-success">
-                    Remove Silence
-                  </button>
-                <% else %>
-                  <%= if @action == "silence" do %>
-                    <.action_form
-                      action="silence"
-                      label="Silence user"
-                      duration={@duration}
-                      reason={@reason}
-                      danger={false}
-                    />
-                  <% else %>
+              <section id="admin-user-silence-control" class="ui-card h-auto p-5 sm:p-6">
+                <h3 class="font-bold text-base-content">Silencing</h3>
+                <div class="mt-4">
+                  <%= if User.silenced?(@user) do %>
                     <button
-                      phx-click="show_action"
-                      phx-value-action="silence"
-                      class="btn btn-sm btn-warning"
+                      id="admin-user-unsilence"
+                      type="button"
+                      phx-click="unsilence"
+                      class="btn btn-success btn-sm"
                     >
-                      Silence User
+                      Remove Silence
                     </button>
+                  <% else %>
+                    <%= if @action == "silence" do %>
+                      <.action_form
+                        action="silence"
+                        label="Silence user"
+                        duration={@duration}
+                        reason={@reason}
+                        danger={false}
+                      />
+                    <% else %>
+                      <button
+                        id="admin-user-show-silence"
+                        type="button"
+                        phx-click="show_action"
+                        phx-value-action="silence"
+                        class="btn btn-warning btn-sm"
+                      >
+                        Silence user
+                      </button>
+                    <% end %>
                   <% end %>
-                <% end %>
-              </div>
+                </div>
+              </section>
             </div>
-          </div>
-          <% end %>
-        </div>
+          </section>
+        <% end %>
       </div>
     </Layouts.app>
     """
@@ -396,17 +437,19 @@ defmodule UrielmWeb.Admin.UserDetailLive do
 
   defp action_form(assigns) do
     ~H"""
-    <div class="space-y-3">
+    <div id={"admin-#{@action}-form"} class="space-y-4">
       <div>
-        <label class="label">
-          <span class="label-text text-sm">Duration</span>
-        </label>
-        <div class="flex gap-2 flex-wrap">
+        <p class="mb-2 text-sm font-semibold text-base-content">Duration</p>
+        <div class="flex flex-wrap gap-2">
           <%= for {label, value} <- [{"1 day", "1d"}, {"3 days", "3d"}, {"7 days", "7d"}, {"30 days", "30d"}, {"Permanent", "permanent"}] do %>
             <button
+              id={"admin-#{@action}-duration-#{value}"}
               phx-click="set_duration"
               phx-value-duration={value}
-              class={"btn btn-xs #{if @duration == value, do: "btn-primary", else: "btn-ghost"}"}
+              class={[
+                "btn btn-xs",
+                if(@duration == value, do: "btn-primary", else: "btn-ghost")
+              ]}
               type="button"
             >
               {label}
@@ -416,27 +459,39 @@ defmodule UrielmWeb.Admin.UserDetailLive do
       </div>
 
       <div>
-        <label class="label">
-          <span class="label-text text-sm">Reason <span class="text-error">*</span></span>
+        <label for={"admin-#{@action}-reason"} class="label">
+          <span class="label-text text-sm font-semibold">
+            Reason <span class="text-error">*</span>
+          </span>
         </label>
         <textarea
+          id={"admin-#{@action}-reason"}
           phx-keyup="set_reason"
           phx-value-reason={@reason}
           name="reason"
           placeholder="Required reason..."
-          class="textarea textarea-bordered w-full text-sm"
-          rows="2"
+          class="textarea textarea-bordered min-h-24 w-full resize-y rounded-lg bg-base-100 text-sm"
+          rows="3"
         >{@reason}</textarea>
       </div>
 
       <div class="flex gap-2">
         <button
+          id={"admin-#{@action}-confirm"}
+          type="button"
           phx-click={@action}
-          class={"btn btn-sm #{if @danger, do: "btn-error", else: "btn-warning"}"}
+          class={["btn btn-sm", if(@danger, do: "btn-error", else: "btn-warning")]}
         >
           Confirm
         </button>
-        <button phx-click="cancel_action" class="btn btn-sm btn-ghost">Cancel</button>
+        <button
+          id={"admin-#{@action}-cancel"}
+          type="button"
+          phx-click="cancel_action"
+          class="btn btn-ghost btn-sm"
+        >
+          Cancel
+        </button>
       </div>
     </div>
     """

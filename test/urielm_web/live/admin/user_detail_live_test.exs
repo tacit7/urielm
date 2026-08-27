@@ -13,11 +13,17 @@ defmodule UrielmWeb.Admin.UserDetailLiveTest do
       user = Fixtures.user_fixture()
       conn = log_in_user(conn, admin)
 
-      {:ok, _view, html} = live(conn, "/admin/users/#{user.id}")
+      {:ok, view, _html} = live(conn, "/admin/users/#{user.id}")
 
-      assert html =~ user.username
-      assert html =~ user.email
-      assert html =~ "TL#{user.trust_level}"
+      assert has_element?(view, "#admin-user-detail-page.ui-page-shell")
+      assert has_element?(view, "#admin-user-detail-header.ui-page-header")
+      assert has_element?(view, "#admin-nav-users[aria-current='page']")
+      assert has_element?(view, "#admin-user-overview.ui-card", user.username)
+      assert has_element?(view, "#admin-user-overview", user.email)
+      assert has_element?(view, "#admin-user-trust-control.ui-card", "TL#{user.trust_level}")
+      assert has_element?(view, "#admin-user-role-control.ui-card")
+      assert has_element?(view, "#admin-user-suspension-control.ui-card")
+      assert has_element?(view, "#admin-user-silence-control.ui-card")
     end
 
     test "non-admin is redirected to /", %{conn: conn} do
@@ -126,6 +132,8 @@ defmodule UrielmWeb.Admin.UserDetailLiveTest do
       view
       |> element("button[phx-click='show_action'][phx-value-action='suspend']")
       |> render_click()
+
+      assert has_element?(view, "#admin-suspend-form")
 
       view
       |> element("button[phx-click='set_duration'][phx-value-duration='7d']")
