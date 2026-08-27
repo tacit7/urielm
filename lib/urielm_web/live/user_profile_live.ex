@@ -268,7 +268,7 @@ defmodule UrielmWeb.UserProfileLive do
 
     # Only allow users to update their own profile
     if current_user && current_user.id == profile_user.id do
-      case Accounts.update_user(current_user, user_params) do
+      case Accounts.update_user_profile(current_user, user_params) do
         {:ok, updated_user} ->
           changeset = Accounts.change_user_profile(updated_user)
 

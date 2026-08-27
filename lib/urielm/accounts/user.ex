@@ -73,6 +73,25 @@ defmodule Urielm.Accounts.User do
     |> unique_constraint(:username)
   end
 
+  @doc """
+  Changeset for self-service profile edits from the profile form.
+
+  Casts only the fields a user may freely change about their own public
+  profile. It deliberately does NOT cast `:email`, `:email_verified`,
+  `:active` or `:username`, so the profile form cannot be used to take over
+  another account's email (the key OAuth identities link against) or to flip
+  account state. Email changes and moderation flags go through dedicated,
+  authorized changesets.
+  """
+  def profile_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:display_name, :bio, :location, :website, :avatar_url])
+    |> validate_length(:bio, max: 1000)
+    |> validate_length(:location, max: 100)
+    |> validate_length(:website, max: 200)
+    |> validate_display_name()
+  end
+
   defp validate_display_name(changeset) do
     changeset
     |> validate_length(:display_name, min: 2, max: 50)
@@ -127,6 +146,29 @@ defmodule Urielm.Accounts.User do
   end
 
   defp put_password_hash(changeset, _opts), do: changeset
+
+  @doc """
+  Changeset for changing the password on an existing account.
+
+  Sets only `:password_hash`. Unlike `registration_changeset/2` it never
+  touches `:email_verified`, so changing a password cannot silently mark an
+  unverified email as verified.
+  """
+  def password_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> validate_required([:password])
+    |> validate_length(:password, min: 8, message: "must be at least 8 characters")
+    |> put_password_change_hash()
+  end
+
+  defp put_password_change_hash(
+         %Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset
+       ) do
+    put_change(changeset, :password_hash, Bcrypt.hash_pwd_salt(password))
+  end
+
+  defp put_password_change_hash(changeset), do: changeset
 
   @doc """
   Verify a plain text password against the stored hash.

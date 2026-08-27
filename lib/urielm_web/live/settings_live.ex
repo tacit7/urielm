@@ -22,7 +22,10 @@ defmodule UrielmWeb.SettingsLive do
 
   @impl true
   def handle_event("update_profile", %{"user" => user_params0}, socket) do
-    case Accounts.update_user(socket.assigns.current_user, Params.normalize(user_params0)) do
+    case Accounts.update_user_profile(
+           socket.assigns.current_user,
+           Params.normalize(user_params0)
+         ) do
       {:ok, user} ->
         {:noreply,
          socket
