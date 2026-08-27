@@ -16,7 +16,7 @@ defmodule UrielmWeb.ChatLive do
        |> assign(:rooms, rooms)
        |> assign(:selected_room, nil)
        |> assign(:messages, [])
-       |> assign(:room_form, %{"name" => "", "description" => ""})
+       |> assign(:room_form, room_form())
        |> assign(:page_title, "Chat")}
     end
   end
@@ -72,114 +72,147 @@ defmodule UrielmWeb.ChatLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div class="flex h-[calc(100vh-4rem)] bg-base-200">
-        <%!-- Create Room Modal --%>
+      <div
+        id="chat-page"
+        class="grid h-[calc(100dvh-7.75rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-base-100 sm:h-[calc(100dvh-4.25rem)] sm:grid-cols-[16rem_minmax(0,1fr)] sm:grid-rows-1"
+      >
         <dialog id="create_room_modal" class="modal">
-          <div class="modal-box">
-            <h3 class="font-bold text-lg text-base-content">Create New Room</h3>
-            <form phx-submit="create_room" class="py-4">
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text text-base-content">Room Name</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="e.g., general, random, dev"
-                  class="input input-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/50"
-                  required
-                />
-              </div>
-              <div class="form-control w-full">
-                <label class="label">
-                  <span class="label-text text-base-content">Description (optional)</span>
-                </label>
-                <textarea
-                  name="description"
-                  placeholder="Optional room description"
-                  class="textarea textarea-bordered w-full bg-base-100 border-base-300 text-base-content placeholder-base-content/50"
-                  rows="3"
-                ></textarea>
-              </div>
+          <div class="modal-box max-w-lg rounded-lg border border-base-300 p-6 shadow-xl">
+            <div class="mb-5 space-y-1">
+              <p class="text-xs font-semibold uppercase text-primary">Chat administration</p>
+              <h2 class="text-xl font-semibold text-base-content">Create a room</h2>
+              <p class="text-sm text-base-content/60">
+                Add a focused space for a community conversation.
+              </p>
+            </div>
+
+            <.form for={@room_form} id="create-room-form" phx-submit="create_room">
+              <.input
+                field={@room_form[:name]}
+                label="Room name"
+                placeholder="e.g. general, random, dev"
+                autocomplete="off"
+                required
+              />
+              <.input
+                field={@room_form[:description]}
+                type="textarea"
+                label="Description (optional)"
+                placeholder="What will people discuss here?"
+                rows="3"
+              />
               <div class="modal-action">
-                <form method="dialog">
-                  <button class="btn btn-ghost">Cancel</button>
-                </form>
-                <button type="submit" class="btn btn-primary">Create</button>
+                <button
+                  id="cancel-create-room-button"
+                  type="button"
+                  class="btn btn-ghost"
+                  onclick="create_room_modal.close()"
+                >
+                  Cancel
+                </button>
+                <button id="submit-create-room-button" type="submit" class="btn btn-primary">
+                  Create room
+                </button>
               </div>
-            </form>
+            </.form>
           </div>
           <form method="dialog" class="modal-backdrop">
-            <button>close</button>
+            <button aria-label="Close create room dialog">close</button>
           </form>
         </dialog>
-        
-    <!-- Sidebar with rooms -->
-        <div class="w-64 bg-base-100 shadow-lg overflow-y-auto border-r border-base-300">
-          <div class="p-4 border-b border-base-300">
-            <h1 class="text-2xl font-bold text-base-content">Chat</h1>
-          </div>
 
-          <%= if @current_user.is_admin do %>
-            <div class="p-4">
-              <button
-                onclick="create_room_modal.showModal()"
-                class="w-full btn btn-primary btn-sm"
-              >
-                + New Room
-              </button>
+        <aside
+          id="chat-room-sidebar"
+          aria-label="Chat rooms"
+          class="min-w-0 border-b border-base-300 bg-base-200/55 sm:flex sm:min-h-0 sm:flex-col sm:border-r sm:border-b-0"
+        >
+          <header
+            id="chat-header"
+            class="flex h-14 items-center justify-between gap-3 border-b border-base-300 px-4"
+          >
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase text-primary">Community</p>
+              <h1 class="truncate text-base font-semibold text-base-content">Chat rooms</h1>
             </div>
-          <% end %>
 
-          <nav class="space-y-1 p-3">
+            <%= if @current_user.is_admin do %>
+              <button
+                id="create-room-button"
+                type="button"
+                onclick="create_room_modal.showModal()"
+                class="btn btn-primary btn-sm shrink-0"
+                aria-label="Create a chat room"
+              >
+                <.icon name="hero-plus" class="size-4" />
+                <span class="hidden sm:inline">New room</span>
+              </button>
+            <% end %>
+          </header>
+
+          <nav
+            id="chat-room-list"
+            class="flex min-w-0 gap-2 overflow-x-auto p-2 sm:min-h-0 sm:flex-1 sm:flex-col sm:gap-1 sm:overflow-x-hidden sm:overflow-y-auto sm:p-3"
+          >
             <%= for room <- @rooms do %>
               <.link
+                id={"chat-room-#{room.id}"}
                 navigate={~p"/chat?room_id=#{room.id}"}
                 class={[
-                  "block px-4 py-2 rounded-lg transition border-l-4 border-transparent",
+                  "btn btn-sm min-h-10 max-w-52 flex-none justify-start rounded-lg border-0 px-3 font-medium shadow-none transition sm:w-full sm:max-w-none",
                   @selected_room && @selected_room.id == room.id &&
-                    "bg-primary/10 text-primary border-l-primary font-semibold",
-                  @selected_room && @selected_room.id != room.id &&
-                    "text-base-content hover:bg-base-200/50"
+                    "bg-primary/10 text-primary hover:bg-primary/15",
+                  (!@selected_room || @selected_room.id != room.id) &&
+                    "btn-ghost text-base-content/65 hover:text-base-content"
                 ]}
+                aria-current={@selected_room && @selected_room.id == room.id && "page"}
               >
-                # {room.name}
+                <span aria-hidden="true" class="font-mono text-base-content/40">#</span>
+                <span class="truncate">{room.name}</span>
               </.link>
             <% end %>
           </nav>
-        </div>
-        
-    <!-- Main chat area -->
-        <div class="flex-1 flex flex-col bg-base-100 h-full">
+        </aside>
+
+        <main id="chat-conversation" class="flex min-h-0 min-w-0 flex-col bg-base-100">
           <%= if @selected_room do %>
             <.svelte
               name="ChatWindow"
-              class="h-full"
+              class="min-h-0 flex-1"
               props={
                 %{
                   room: serialize_room(@selected_room),
                   messages: Enum.map(@messages, &serialize_message/1),
                   userId: to_string(@current_user.id),
-                  socketToken:
-                    Phoenix.Token.sign(@socket, "user socket", @current_user.id)
+                  socketToken: Phoenix.Token.sign(@socket, "user socket", @current_user.id)
                 }
               }
               socket={@socket}
-            ssr={false}
+              ssr={false}
             />
           <% else %>
-            <div class="flex-1 flex items-center justify-center text-base-content/50">
-              <p>Select a room to start chatting</p>
+            <div class="grid min-h-0 flex-1 place-items-center overflow-y-auto p-6">
+              <.empty_state
+                id="chat-empty-state"
+                title="Choose a room"
+                description="Select a room to join the conversation."
+                icon="hero-chat-bubble-left-right"
+                compact
+                class="max-w-sm"
+              />
             </div>
           <% end %>
-        </div>
+        </main>
       </div>
     </Layouts.app>
     """
   end
 
   @impl true
-  def handle_event("create_room", %{"name" => name, "description" => description}, socket) do
+  def handle_event(
+        "create_room",
+        %{"room" => %{"name" => name, "description" => description}},
+        socket
+      ) do
     user = socket.assigns[:current_user]
 
     # Only allow admins to create rooms
@@ -195,7 +228,7 @@ defmodule UrielmWeb.ChatLive do
           {:noreply,
            socket
            |> assign(:rooms, Chat.list_rooms())
-           |> assign(:room_form, %{"name" => "", "description" => ""})
+           |> assign(:room_form, room_form())
            |> push_navigate(to: ~p"/chat?room_id=#{room.id}")}
 
         {:error, _changeset} ->
@@ -242,5 +275,9 @@ defmodule UrielmWeb.ChatLive do
       username: message.user.username,
       inserted_at: message.inserted_at
     }
+  end
+
+  defp room_form do
+    to_form(%{"name" => "", "description" => ""}, as: :room)
   end
 end
