@@ -922,6 +922,36 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
+  def list_tags_with_counts do
+    from(t in Tag,
+      left_join: tt in ThreadTag,
+      on: tt.tag_id == t.id,
+      left_join: thread in Thread,
+      on: thread.id == tt.thread_id and thread.is_removed == false,
+      group_by: [t.id, t.name, t.slug, t.inserted_at, t.updated_at],
+      order_by: [asc: t.name],
+      select: %{
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        inserted_at: t.inserted_at,
+        updated_at: t.updated_at,
+        thread_count: count(thread.id)
+      }
+    )
+    |> Repo.all()
+  end
+
+  def count_threads_by_tag(tag_id) do
+    from(t in Thread,
+      join: tt in ThreadTag,
+      on: tt.thread_id == t.id,
+      where: tt.tag_id == ^tag_id,
+      where: t.is_removed == false
+    )
+    |> Repo.aggregate(:count)
+  end
+
   def add_tag_to_thread(thread_id, tag_id) do
     %ThreadTag{}
     |> ThreadTag.changeset(%{thread_id: thread_id, tag_id: tag_id})
@@ -956,6 +986,20 @@ defmodule Urielm.Forum do
     )
     |> apply_pagination(opts)
     |> Repo.all()
+  end
+
+  def paginate_threads_by_tag(tag_id, params \\ %{}) do
+    base =
+      from(t in Thread,
+        join: tt in ThreadTag,
+        on: tt.thread_id == t.id,
+        where: tt.tag_id == ^tag_id,
+        where: t.is_removed == false,
+        preload: [:author, :board],
+        order_by: [desc: t.inserted_at, desc: t.id]
+      )
+
+    Flop.validate_and_run(base, params, for: Thread, repo: Repo)
   end
 
   # Reporting/Moderation
@@ -1668,7 +1712,8 @@ defmodule Urielm.Forum do
   defp thread_preloads(query), do: preload(query, [:author, :board])
 
   # Preload thread metadata for struct (post-fetch)
-  defp preload_thread_meta(%Thread{} = thread), do: Repo.preload(thread, [:author, :board])
+  defp preload_thread_meta(%Thread{} = thread),
+    do: Repo.preload(thread, [:author, :board, :tag_records])
 
   # Authorization helper for owner-or-admin checks
   defp authorized?(%{id: id, is_admin: true}, _owner_id) when not is_nil(id), do: true

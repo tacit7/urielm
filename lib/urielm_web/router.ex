@@ -86,6 +86,8 @@ defmodule UrielmWeb.Router do
     live_session :forum do
       live "/forum", LatestLive
       live "/forum/categories", ForumLive
+      live "/forum/tags", TagsLive
+      live "/forum/tags/:tag_slug", TagLive
       live "/forum/b/:board_slug", BoardLive
       live "/forum/t/:thread_id", ThreadLive
       live "/forum/search", SearchLive

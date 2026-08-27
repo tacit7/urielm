@@ -39,6 +39,8 @@ defmodule Urielm.Forum.Thread do
     )
 
     has_many(:comments, Urielm.Forum.Comment)
+    has_many(:thread_tags, Urielm.Forum.ThreadTag)
+    has_many(:tag_records, through: [:thread_tags, :tag])
     # Votes queried via Engagement context (target_type: "thread", target_id: id)
 
     timestamps(type: :utc_datetime_usec)

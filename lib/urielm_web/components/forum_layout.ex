@@ -102,6 +102,12 @@ defmodule UrielmWeb.Components.ForumLayout do
                 active={@current_path == "/forum/categories"}
               />
               <.nav_link
+                href="/forum/tags"
+                icon="hero-tag"
+                label="Tags"
+                active={String.starts_with?(@current_path, "/forum/tags")}
+              />
+              <.nav_link
                 href="/saved"
                 icon="bookmark"
                 label="Saved"
@@ -231,7 +237,7 @@ defmodule UrielmWeb.Components.ForumLayout do
     """
   end
 
-  attr :active_view, :string, required: true, values: ~w(latest categories)
+  attr :active_view, :string, required: true, values: ~w(latest categories tags)
   attr :count_label, :string, default: nil
 
   def discovery_header(assigns) do
@@ -271,6 +277,7 @@ defmodule UrielmWeb.Components.ForumLayout do
           label="Categories"
           active={@active_view == "categories"}
         />
+        <.view_link href={~p"/forum/tags"} label="Tags" active={@active_view == "tags"} />
         <span :if={@count_label} class="ml-auto shrink-0 text-xs text-base-content/35">
           {@count_label}
         </span>

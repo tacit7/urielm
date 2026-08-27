@@ -149,6 +149,14 @@ defmodule UrielmWeb.LiveHelpers do
       author_avatar_url: thread.author.avatar_url,
       board_name: thread.board.name,
       board_slug: thread.board.slug,
+      tag_records:
+        Enum.map(thread.tag_records || [], fn tag ->
+          %{
+            id: to_string(tag.id),
+            name: tag.name,
+            slug: tag.slug
+          }
+        end),
       solved_comment_id: thread.solved_comment_id && to_string(thread.solved_comment_id),
       is_locked: thread.is_locked || false,
       is_pinned: thread.is_pinned || false

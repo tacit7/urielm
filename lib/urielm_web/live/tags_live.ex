@@ -1,0 +1,113 @@
+defmodule UrielmWeb.TagsLive do
+  use UrielmWeb, :live_view
+
+  alias Urielm.Forum
+
+  @impl true
+  def mount(_params, _session, socket) do
+    categories = Forum.list_categories_with_boards()
+    tags = Forum.list_tags_with_counts()
+
+    {:ok,
+     socket
+     |> assign(:page_title, "Tags")
+     |> assign(:all_categories, categories)
+     |> assign(:tags, tags)
+     |> assign(:tags_count, length(tags))}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <UrielmWeb.Components.ForumLayout.forum_layout
+      categories={@all_categories}
+      flash={@flash}
+      current_user={@current_user}
+      unread_notification_count={@unread_notification_count}
+      current_path="/forum/tags"
+    >
+      <div id="forum-tags-page" class="mx-auto w-full max-w-5xl">
+        <UrielmWeb.Components.ForumLayout.discovery_header
+          active_view="tags"
+          count_label={"#{@tags_count} tags"}
+        />
+
+        <section id="forum-tags-surface" class="ui-card h-auto overflow-hidden">
+          <div class="flex flex-col gap-2 border-b border-base-300/40 bg-base-200/60 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 class="text-sm font-black uppercase tracking-[0.14em] text-base-content/50">
+                Browse tags
+              </h2>
+              <p class="mt-1 text-sm text-base-content/45">
+                Explore the tag directory and jump straight into the relevant discussions.
+              </p>
+            </div>
+            <div
+              id="forum-tags-management-note"
+              class="rounded-lg border border-base-300/70 bg-base-100 px-3 py-2 text-xs text-base-content/55"
+            >
+              Tags are attached to threads. Browse a tag to review and manage the discussions using it.
+            </div>
+          </div>
+
+          <.empty_state
+            :if={@tags == []}
+            id="forum-tags-empty-state"
+            title="No tags yet"
+            description="Tags will appear here once discussions start using them."
+            icon="hero-tag"
+            compact
+            class="rounded-none border-0 bg-transparent"
+          />
+
+          <div :if={@tags != []} class="divide-y divide-base-300/40">
+            <.tag_row :for={tag <- @tags} tag={tag} />
+          </div>
+        </section>
+      </div>
+    </UrielmWeb.Components.ForumLayout.forum_layout>
+    """
+  end
+
+  attr :tag, :map, required: true
+
+  defp tag_row(assigns) do
+    ~H"""
+    <article
+      id={"forum-tag-#{@tag.slug}"}
+      class="grid grid-cols-1 gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_8rem_10rem] sm:items-center"
+    >
+      <div class="min-w-0">
+        <.link
+          navigate={~p"/forum/tags/#{@tag.slug}"}
+          class="inline-flex items-center gap-2 font-semibold text-base-content transition-colors hover:text-secondary"
+        >
+          <span class="badge badge-outline badge-secondary h-auto px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em]">
+            Tag
+          </span>
+          <span class="truncate">{@tag.name}</span>
+        </.link>
+        <p class="mt-1 truncate font-mono text-xs text-base-content/35">/{@tag.slug}</p>
+      </div>
+
+      <div class="sm:text-center">
+        <div class="text-xs font-semibold uppercase tracking-[0.14em] text-base-content/35">
+          Discussions
+        </div>
+        <div class="mt-1 font-mono text-lg font-black text-base-content/70 tabular-nums">
+          {@tag.thread_count}
+        </div>
+      </div>
+
+      <div class="flex sm:justify-end">
+        <.link
+          navigate={~p"/forum/tags/#{@tag.slug}"}
+          class="btn btn-ghost btn-sm border border-base-300/70 bg-base-100"
+        >
+          Browse threads
+        </.link>
+      </div>
+    </article>
+    """
+  end
+end

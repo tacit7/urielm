@@ -645,6 +645,23 @@ defmodule UrielmWeb.ThreadLive do
             </span>
           </div>
 
+          <div
+            :if={Map.get(@thread, :tag_records, []) != []}
+            id="thread-tags"
+            aria-label="Thread tags"
+            class="mt-4 flex flex-wrap gap-2"
+          >
+            <.link
+              :for={tag <- Map.get(@thread, :tag_records, [])}
+              id={"thread-tag-#{tag.slug}"}
+              navigate={~p"/forum/tags/#{tag.slug}"}
+              class="badge badge-outline badge-secondary h-auto gap-1.5 py-1.5 text-xs font-bold normal-case transition-colors hover:bg-secondary/10"
+            >
+              <.um_icon name="hero-tag" class="size-3.5" />
+              {tag.name}
+            </.link>
+          </div>
+
           <h1 class="mt-4 max-w-3xl text-3xl font-black leading-tight text-base-content sm:text-4xl">
             {@thread.title}
           </h1>

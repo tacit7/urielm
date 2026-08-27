@@ -17,6 +17,17 @@ defmodule UrielmWeb.ThreadLiveTest do
       %{author: author, board: board, thread: thread}
     end
 
+    test "renders linked thread tags when present", %{conn: conn, author: author, thread: thread} do
+      {:ok, tag} = Forum.create_tag(%{name: "Question", slug: "question"})
+      {:ok, _thread_tag} = Forum.add_tag_to_thread(thread.id, tag.id)
+
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      assert has_element?(view, "#thread-tags[aria-label='Thread tags']")
+      assert has_element?(view, "#thread-tag-question[href='/forum/tags/question']")
+    end
+
     test "renders focused topic and reply landmarks", %{
       conn: conn,
       author: author,
