@@ -37,6 +37,7 @@ defmodule UrielmWeb.VideosLiveTest do
     {:ok, view, _html} = live(build_conn(), ~p"/videos")
 
     assert has_element?(view, "#videos-index")
+    assert has_element?(view, "#videos-index-header h1", "Videos")
     assert has_element?(view, "#video-toolbar")
     assert has_element?(view, "#video-search-form input[name='q']")
     assert has_element?(view, "#mobile-nav-videos[aria-current='page']")
@@ -44,7 +45,6 @@ defmodule UrielmWeb.VideosLiveTest do
     assert has_element?(view, "#video-card-#{standard.id}")
     assert has_element?(view, "#short-card-#{short.id}")
     refute has_element?(view, "#video-card-#{unpublished.id}")
-    refute has_element?(view, "#videos-index-header")
   end
 
   test "filters the library by search query" do
@@ -200,13 +200,22 @@ defmodule UrielmWeb.VideosLiveTest do
   test "distinguishes an empty library from a search with no matches" do
     {:ok, empty_view, _html} = live(build_conn(), ~p"/videos")
 
-    assert has_element?(empty_view, "#videos-empty-state", "New videos are on the way")
+    assert has_element?(
+             empty_view,
+             "#videos-empty-state[data-ui-state='empty']",
+             "New videos are on the way"
+           )
 
     published_video(%{title: "A useful video"})
 
     {:ok, filtered_view, _html} = live(build_conn(), ~p"/videos?q=missing")
 
-    assert has_element?(filtered_view, "#videos-no-results", "No videos found")
+    assert has_element?(
+             filtered_view,
+             "#videos-no-results[data-ui-state='empty']",
+             "No videos found"
+           )
+
     assert has_element?(filtered_view, "#clear-video-filters[href='/videos']")
   end
 

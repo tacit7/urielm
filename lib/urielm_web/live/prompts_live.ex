@@ -258,18 +258,15 @@ defmodule UrielmWeb.PromptsLive do
       />
 
       <div class="drawer-content min-h-screen bg-base-100 text-base-content">
-        <div class="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div id="prompts-page-header" class="mb-8 max-w-2xl">
-            <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-              Prompt library
-            </p>
-            <h1 class="text-4xl font-black tracking-[-0.035em] text-base-content sm:text-5xl">
+        <div class="ui-page-shell">
+          <header id="prompts-page-header" class="ui-page-header ui-page-heading">
+            <h1 class="ui-section-title">
               Prompts that help you ship.
             </h1>
-            <p class="mt-3 text-base leading-relaxed text-base-content/55 sm:text-lg">
+            <p class="ui-section-copy">
               Curated, reusable templates for building, writing, learning, and getting better work from AI.
             </p>
-          </div>
+          </header>
 
           <div
             id="prompt-toolbar"
@@ -330,14 +327,14 @@ defmodule UrielmWeb.PromptsLive do
           </div>
 
           <div id="prompts" phx-update="stream" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div
-              id="empty-state"
-              class="hidden only:block col-span-full rounded-2xl border border-dashed border-base-300 py-16 text-center text-base-content/50"
-            >
-              <.um_icon name="search" class="mx-auto mb-3 size-8 text-base-content/25" />
-              <p class="font-semibold text-base-content/70">No prompts found</p>
-              <p class="mt-1 text-sm">Try a broader search or another category.</p>
-            </div>
+            <.empty_state
+              id="prompts-empty-state"
+              title="No prompts found"
+              description="Try a broader search or another category."
+              icon="hero-magnifying-glass"
+              compact
+              class="hidden only:grid col-span-full"
+            />
             <div
               :for={{id, prompt} <- @streams.prompts}
               id={id}
@@ -346,7 +343,7 @@ defmodule UrielmWeb.PromptsLive do
               phx-value-id={prompt.id}
             >
               <div class="card-body gap-3 p-5">
-                <p class="text-[0.68rem] font-bold uppercase tracking-[0.14em] text-primary/80">
+                <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary/80">
                   {prompt.category || "Prompt"}
                 </p>
                 <h2 class="card-title text-lg leading-snug text-base-content transition-colors group-hover:text-primary">

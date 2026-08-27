@@ -221,13 +221,12 @@ defmodule UrielmWeb.BlogLive do
       </div>
     <% else %>
       <div id="blog-index" class="flex min-h-screen flex-col overflow-hidden bg-base-100">
-        <div class="mx-auto w-full max-w-6xl flex-1 px-5 py-14 sm:px-7 sm:py-18 lg:px-8 lg:py-24">
-          <header id="blog-index-header" class="max-w-3xl">
-            <p class="ui-eyebrow text-secondary">Writing & notes</p>
-            <h1 class="mt-3 text-4xl font-black leading-[1.02] tracking-[-0.045em] text-base-content sm:text-5xl lg:text-6xl">
+        <div class="ui-page-shell flex-1">
+          <header id="blog-index-header" class="ui-page-header ui-page-heading">
+            <h1 class="ui-section-title">
               Ideas worth building on.
             </h1>
-            <p class="mt-5 max-w-2xl text-base leading-relaxed text-base-content/60 sm:text-lg">
+            <p class="ui-section-copy">
               Practical notes on Elixir, Phoenix, AI workflows, and the craft of turning ambitious ideas into useful products.
             </p>
           </header>
@@ -250,14 +249,14 @@ defmodule UrielmWeb.BlogLive do
           <% else %>
             <article
               id={"blog-featured-post-#{@featured_post.id}"}
-              class="ui-card ui-card-interactive mt-12 overflow-hidden bg-base-200/60 sm:mt-14"
+              class="ui-card ui-card-interactive overflow-hidden bg-base-200/60"
             >
               <.link
                 patch={~p"/blog/#{@featured_post.slug}"}
                 class="group grid lg:grid-cols-[1.2fr_0.8fr]"
               >
                 <div class="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
-                  <span class="w-fit rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-secondary">
+                  <span class="badge h-auto w-fit border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-primary">
                     Latest essay
                   </span>
                   <h2 class="mt-5 text-2xl font-black leading-tight tracking-[-0.03em] text-base-content transition-colors group-hover:text-primary sm:text-3xl lg:text-4xl">
@@ -298,10 +297,9 @@ defmodule UrielmWeb.BlogLive do
               <section class="mt-12 sm:mt-16" aria-labelledby="blog-archive-heading">
                 <div class="mb-5 flex items-end justify-between gap-4">
                   <div>
-                    <p class="ui-eyebrow text-secondary">Keep reading</p>
                     <h2
                       id="blog-archive-heading"
-                      class="mt-1 text-2xl font-black tracking-tight text-base-content"
+                      class="text-2xl font-black tracking-tight text-base-content"
                     >
                       More from the blog
                     </h2>

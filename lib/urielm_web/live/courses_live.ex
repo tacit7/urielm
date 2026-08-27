@@ -23,13 +23,12 @@ defmodule UrielmWeb.CoursesLive do
   def render(assigns) do
     ~H"""
     <div id="courses-index" class="min-h-screen bg-base-100">
-      <div class="mx-auto max-w-7xl px-5 py-16 sm:px-7 lg:px-10 lg:py-24">
-        <header id="courses-index-header" class="mb-9 md:mb-12">
+      <div class="ui-page-shell">
+        <header id="courses-index-header" class="ui-page-header">
           <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div class="max-w-2xl">
-              <p class="ui-eyebrow mb-3">Learning / Courses</p>
+            <div class="ui-page-heading">
               <h1 class="ui-section-title">Courses</h1>
-              <p class="ui-section-copy mt-4">
+              <p class="ui-section-copy">
                 Practical, focused paths for building useful things with AI.
               </p>
             </div>
@@ -93,7 +92,7 @@ defmodule UrielmWeb.CoursesLive do
 
       <div class="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 lg:p-10">
         <div class="mb-4 flex flex-wrap items-center gap-2.5">
-          <span class="badge border-white/20 bg-white/10 font-mono text-[0.68rem] uppercase tracking-widest text-[#f2f4ff]">
+          <span class="badge border-white/20 bg-white/10 font-mono text-xs uppercase tracking-widest text-[#f2f4ff]">
             {@num} · Featured
           </span>
           <span class="font-mono text-xs text-[#c0caf5]">
@@ -154,7 +153,7 @@ defmodule UrielmWeb.CoursesLive do
 
       <div class="absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
         <div class="mb-2.5 flex items-center gap-2.5">
-          <span class="badge border-white/20 bg-white/10 font-mono text-[0.68rem] text-[#f2f4ff]">
+          <span class="badge border-white/20 bg-white/10 font-mono text-xs text-[#f2f4ff]">
             {@num}
           </span>
           <span class="font-mono text-xs text-[#c0caf5]">

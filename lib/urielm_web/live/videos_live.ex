@@ -104,7 +104,14 @@ defmodule UrielmWeb.VideosLive do
   def render(assigns) do
     ~H"""
     <div id="videos-index" class="min-h-screen bg-base-100">
-      <div class="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-18">
+      <div class="ui-page-shell">
+        <header id="videos-index-header" class="ui-page-header ui-page-heading">
+          <h1 class="ui-section-title">Videos</h1>
+          <p class="ui-section-copy">
+            Practical walkthroughs, focused lessons, and quick ideas you can apply right away.
+          </p>
+        </header>
+
         <div
           id="video-toolbar"
           class="flex flex-col gap-3 rounded-2xl border border-base-300/70 bg-base-200/40 p-3 md:flex-row md:items-center md:justify-between"
@@ -181,7 +188,7 @@ defmodule UrielmWeb.VideosLive do
               <span
                 :if={@tag_slugs != []}
                 id="video-tag-filter-count"
-                class="grid size-5 place-items-center rounded-full bg-primary text-[0.65rem] font-black text-primary-content"
+                class="grid size-5 place-items-center rounded-full bg-primary text-xs font-black text-primary-content"
               >
                 {length(@tag_slugs)}
               </span>
@@ -277,51 +284,39 @@ defmodule UrielmWeb.VideosLive do
           </section>
         </div>
 
-        <section
+        <.empty_state
           :if={@library_empty?}
           id="videos-empty-state"
-          class="ui-card mt-6 grid min-h-96 place-items-center border-dashed px-6 py-16 text-center"
+          title="New videos are on the way"
+          description="Check back soon for practical walkthroughs, quick ideas, and focused developer tutorials."
+          icon="hero-video-camera"
+          class="mt-6"
         >
-          <div>
-            <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <.um_icon name="hero-video-camera" class="size-7" />
-            </span>
-            <h1 class="mt-5 text-2xl font-black tracking-tight text-base-content">
-              New videos are on the way
-            </h1>
-            <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
-              Check back soon for practical walkthroughs, quick ideas, and focused developer tutorials.
-            </p>
-            <.link navigate={~p"/courses"} class="btn btn-outline btn-sm mt-6 rounded-full">
+          <:action>
+            <.link navigate={~p"/courses"} class="btn btn-outline btn-sm rounded-full">
               Explore courses
             </.link>
-          </div>
-        </section>
+          </:action>
+        </.empty_state>
 
-        <section
+        <.empty_state
           :if={!@library_empty? && @results_empty?}
           id="videos-no-results"
-          class="ui-card mt-6 grid min-h-96 place-items-center border-dashed px-6 py-16 text-center"
+          title="No videos found"
+          description="Nothing matches your current search and format. Try a broader search or clear the filters."
+          icon="hero-magnifying-glass"
+          class="mt-6"
         >
-          <div>
-            <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <.um_icon name="search" class="size-7" />
-            </span>
-            <h1 class="mt-5 text-2xl font-black tracking-tight text-base-content">
-              No videos found
-            </h1>
-            <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-base-content/55">
-              Nothing matches your current search and format. Try a broader search or clear the filters.
-            </p>
+          <:action>
             <.link
               id="clear-video-filters"
               navigate={~p"/videos"}
-              class="btn btn-outline btn-primary btn-sm mt-6 rounded-full"
+              class="btn btn-outline btn-primary btn-sm rounded-full"
             >
               Clear filters
             </.link>
-          </div>
-        </section>
+          </:action>
+        </.empty_state>
 
         <div :if={!@library_empty? && !@results_empty?} id="video-results">
           <.featured_video :if={@featured_video} video={@featured_video} />
@@ -402,7 +397,7 @@ defmodule UrielmWeb.VideosLive do
 
         <div class="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="badge border-primary/25 bg-primary/10 font-mono text-[0.68rem] uppercase tracking-wider text-primary">
+            <span class="badge border-primary/25 bg-primary/10 font-mono text-xs uppercase tracking-wider text-primary">
               Featured video
             </span>
             <.access_badge video={@video} />
@@ -423,7 +418,7 @@ defmodule UrielmWeb.VideosLive do
           >
             <span
               :for={tag <- Enum.take(@video.tag_records, 4)}
-              class="badge badge-sm border-primary/20 bg-primary/5 text-[0.68rem] font-bold text-primary"
+              class="badge badge-sm border-primary/20 bg-primary/5 text-xs font-bold text-primary"
             >
               {tag.name}
             </span>
@@ -473,7 +468,7 @@ defmodule UrielmWeb.VideosLive do
           </span>
         </div>
         <div class="flex flex-1 flex-col p-5">
-          <div class="flex items-center justify-between gap-3 text-[0.68rem]">
+          <div class="flex items-center justify-between gap-3 text-xs">
             <span class="font-bold uppercase tracking-[0.12em] text-primary">Video</span>
             <.access_badge video={@video} />
           </div>
@@ -487,7 +482,7 @@ defmodule UrielmWeb.VideosLive do
           >
             <span
               :for={tag <- Enum.take(@video.tag_records, 3)}
-              class="badge badge-sm border-primary/20 bg-primary/5 text-[0.65rem] font-bold text-primary"
+              class="badge badge-sm border-primary/20 bg-primary/5 text-xs font-bold text-primary"
             >
               {tag.name}
             </span>
@@ -526,7 +521,7 @@ defmodule UrielmWeb.VideosLive do
         </div>
         <div class="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-[#080d19]/95 via-[#080d19]/10 to-transparent p-3.5">
           <div class="flex items-start justify-between gap-2">
-            <span class="badge border-white/20 bg-[#0d1423]/70 text-[0.6rem] font-black uppercase tracking-widest text-white">
+            <span class="badge border-white/20 bg-[#0d1423]/70 text-xs font-black uppercase tracking-widest text-white">
               Short
             </span>
             <.access_badge video={@video} compact />
@@ -539,7 +534,7 @@ defmodule UrielmWeb.VideosLive do
             >
               <span
                 :for={tag <- Enum.take(@video.tag_records, 2)}
-                class="badge h-auto border-white/20 bg-[#0d1423]/70 px-1.5 py-1 text-[0.55rem] font-bold text-white"
+                class="badge h-auto border-white/20 bg-[#0d1423]/70 px-1.5 py-1 text-xs font-bold text-white"
               >
                 {tag.name}
               </span>
@@ -547,7 +542,7 @@ defmodule UrielmWeb.VideosLive do
             <h3 class="line-clamp-3 text-sm font-black leading-snug text-white">
               {@video.title}
             </h3>
-            <p class="mt-2 text-[0.65rem] text-white/55">{format_date(@video.published_at)}</p>
+            <p class="mt-2 text-xs text-white/55">{format_date(@video.published_at)}</p>
           </div>
         </div>
       </.link>
@@ -567,7 +562,7 @@ defmodule UrielmWeb.VideosLive do
       data-access={@video.visibility}
       class={[
         "badge h-auto border-base-300/80 bg-base-100/70 font-mono text-base-content/55",
-        if(@compact, do: "px-1.5 py-1 text-[0.55rem]", else: "px-2 py-1 text-[0.62rem]"),
+        if(@compact, do: "px-1.5 py-1 text-xs", else: "px-2 py-1 text-xs"),
         @video.visibility != "public" && "border-warning/30 bg-warning/10 text-warning"
       ]}
     >

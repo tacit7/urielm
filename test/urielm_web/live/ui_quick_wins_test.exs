@@ -175,6 +175,7 @@ defmodule UrielmWeb.UiQuickWinsTest do
       assert has_element?(view, "#prompt-search-form input[name='query']")
       assert has_element?(view, "#prompt-category-filter select[name='category']")
       assert has_element?(view, "#prompt-quick-filters button[phx-click='filter_changed']")
+      assert has_element?(view, "#prompts-empty-state[data-ui-state='empty']")
     end
 
     test "quick filters update the active category in place" do

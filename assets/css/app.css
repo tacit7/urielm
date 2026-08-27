@@ -269,6 +269,25 @@
 
 /* Shared content surfaces and section hierarchy */
 @layer components {
+  .ui-page-shell {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding: 3rem 1rem;
+  }
+
+  .ui-page-header {
+    margin-bottom: 2rem;
+  }
+
+  .ui-page-heading {
+    max-width: 48rem;
+  }
+
+  .ui-page-header .ui-section-title {
+    margin-top: 0;
+  }
+
   .ui-section {
     padding-block: clamp(4rem, 8vw, 6rem);
   }
@@ -523,6 +542,18 @@
 
     .ui-section-header-centered {
       display: block;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .ui-page-shell {
+      padding: 4rem 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ui-page-shell {
+      padding: 5rem 2rem;
     }
   }
 
