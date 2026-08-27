@@ -8,22 +8,31 @@ defmodule UrielmWeb.SearchLive do
   @impl true
   def mount(_params, _session, socket) do
     all_categories = Forum.list_categories_with_boards()
+    default_filters = default_search_filters()
+
+    category_options =
+      [{"All categories", ""} | Enum.map(all_categories, &{&1.name, to_string(&1.id)})]
 
     {:ok,
      socket
      |> assign(:page_title, "Search Forum")
      |> assign(:query, "")
-     |> assign(:search_form, to_form(%{"query" => ""}))
+     |> assign(:search_filters, default_filters)
+     |> assign(:search_form, to_form(default_filters))
+     |> assign(:search_active, false)
      |> assign(:page, 1)
      |> assign(:meta, nil)
      |> assign(:has_more, false)
      |> assign(:all_categories, all_categories)
+     |> assign(:category_options, category_options)
      |> stream(:results, [])}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
-    query = Map.get(params, "q", "")
+    search_filters = search_filters(params)
+    query = search_filters["query"]
+    search_active = search_active?(search_filters)
 
     page =
       case params["page"] do
@@ -41,20 +50,30 @@ defmodule UrielmWeb.SearchLive do
       end
 
     socket =
-      if String.length(String.trim(query)) > 0 do
+      if search_active do
+        search_opts = search_opts(search_filters)
+
         {:ok, {results, meta}} =
-          Forum.paginate_search_threads(query, %{page: page, page_size: LiveHelpers.page_size()})
+          Forum.paginate_search_threads(
+            query,
+            %{page: page, page_size: LiveHelpers.page_size()},
+            search_opts
+          )
 
         socket
         |> assign(:query, query)
-        |> assign(:search_form, to_form(%{"query" => query}))
+        |> assign(:search_filters, search_filters)
+        |> assign(:search_form, to_form(search_filters))
+        |> assign(:search_active, true)
         |> assign(:page, page)
         |> assign(:meta, meta)
         |> stream(:results, serialize_threads(results, socket.assigns.current_user), reset: true)
       else
         socket
         |> assign(:query, query)
-        |> assign(:search_form, to_form(%{"query" => query}))
+        |> assign(:search_filters, search_filters)
+        |> assign(:search_form, to_form(search_filters))
+        |> assign(:search_active, false)
         |> assign(:page, page)
         |> assign(:meta, nil)
         |> stream(:results, [], reset: true)
@@ -64,8 +83,9 @@ defmodule UrielmWeb.SearchLive do
   end
 
   @impl true
-  def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: ~p"/forum/search?q=#{query}&page=1")}
+  def handle_event("search", params, socket) do
+    search_filters = search_filters(params)
+    {:noreply, push_patch(socket, to: search_path(search_filters, 1))}
   end
 
   @impl true
@@ -144,9 +164,9 @@ defmodule UrielmWeb.SearchLive do
             for={@search_form}
             id="forum-search-form"
             phx-submit="search"
-            class="flex flex-col gap-2 sm:flex-row"
+            class="space-y-4"
           >
-            <div class="min-w-0 flex-1">
+            <div class="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_auto]">
               <.input
                 field={@search_form[:query]}
                 id="forum-search-query"
@@ -155,19 +175,58 @@ defmodule UrielmWeb.SearchLive do
                 placeholder="Search threads by title, content, or tags..."
                 class="input input-bordered min-h-11 w-full"
               />
+
+              <div class="flex items-end">
+                <.button
+                  id="forum-search-submit"
+                  type="submit"
+                  loading_label="Searching…"
+                  class="btn btn-primary min-h-11 w-full lg:w-auto"
+                >
+                  <.icon name="hero-magnifying-glass" class="size-5" /> Search
+                </.button>
+              </div>
             </div>
-            <.button
-              id="forum-search-submit"
-              type="submit"
-              loading_label="Searching…"
-              class="btn btn-primary min-h-11 sm:self-end"
+
+            <div
+              id="forum-search-advanced-row"
+              class="grid gap-3 rounded-2xl border border-base-300/70 bg-base-200/40 p-3 sm:grid-cols-2 xl:grid-cols-4"
             >
-              <.icon name="hero-magnifying-glass" class="size-5" /> Search
-            </.button>
+              <.input
+                field={@search_form[:author]}
+                id="forum-search-author"
+                type="search"
+                label="Author"
+                placeholder="Search by username"
+                class="input input-bordered min-h-11 w-full"
+              />
+              <.input
+                field={@search_form[:category_id]}
+                id="forum-search-category"
+                type="select"
+                label="Category"
+                options={@category_options}
+                class="select select-bordered min-h-11 w-full"
+              />
+              <.input
+                field={@search_form[:from_date]}
+                id="forum-search-from-date"
+                type="date"
+                label="From"
+                class="input input-bordered min-h-11 w-full"
+              />
+              <.input
+                field={@search_form[:to_date]}
+                id="forum-search-to-date"
+                type="date"
+                label="To"
+                class="input input-bordered min-h-11 w-full"
+              />
+            </div>
           </.form>
         </section>
 
-        <%= if String.length(String.trim(@query)) == 0 do %>
+        <%= if not @search_active do %>
           <.empty_state
             id="search-start-state"
             title="Search the community"
@@ -198,7 +257,7 @@ defmodule UrielmWeb.SearchLive do
 
           <div class="mt-8 flex items-center justify-center gap-2">
             <%= if @meta do %>
-              <.pagination meta={@meta} path={fn n -> ~p"/forum/search?q=#{@query}&page=#{n}" end} />
+              <.pagination meta={@meta} path={fn n -> search_path(@search_filters, n) end} />
             <% end %>
           </div>
         <% end %>
@@ -209,6 +268,52 @@ defmodule UrielmWeb.SearchLive do
 
   defp serialize_threads(threads, current_user),
     do: LiveHelpers.serialize_thread_list(threads, current_user)
+
+  defp default_search_filters do
+    %{
+      "query" => "",
+      "author" => "",
+      "category_id" => "",
+      "from_date" => "",
+      "to_date" => ""
+    }
+  end
+
+  defp search_filters(params) do
+    default_search_filters()
+    |> Map.merge(Map.take(params, ["author", "category_id", "from_date", "to_date"]))
+    |> Map.put("query", Map.get(params, "query", Map.get(params, "q", "")))
+  end
+
+  defp search_opts(search_filters) do
+    search_filters
+    |> Map.take(["author", "category_id", "from_date", "to_date"])
+    |> Enum.reject(fn {_key, value} -> is_nil(value) or value == "" end)
+    |> Enum.map(fn {key, value} ->
+      case key do
+        "category_id" -> {:category_id, value}
+        "from_date" -> {:from_date, value}
+        "to_date" -> {:to_date, value}
+        "author" -> {:author, value}
+      end
+    end)
+  end
+
+  defp search_active?(search_filters) do
+    search_filters["query"] != "" or search_opts(search_filters) != []
+  end
+
+  defp search_path(search_filters, page) do
+    search_filters
+    |> Map.put("q", search_filters["query"])
+    |> Map.delete("query")
+    |> Map.put("page", page)
+    |> Enum.reject(fn {_key, value} -> is_nil(value) or value == "" end)
+    |> Enum.into(%{})
+    |> then(fn params ->
+      "/forum/search?#{URI.encode_query(params)}"
+    end)
+  end
 
   # serialization and vote lookups now live in LiveHelpers
 end
