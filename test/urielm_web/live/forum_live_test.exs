@@ -97,6 +97,58 @@ defmodule UrielmWeb.ForumLiveTest do
       assert has_element?(view, "#forum-board-#{board.id}[href='/forum/b/#{board.slug}']")
     end
 
+    test "signed-in users can change all four category notification levels", %{
+      category: category,
+      user: user
+    } do
+      {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum/categories")
+
+      assert has_element?(view, "#category-notification-form-#{category.id}")
+
+      assert has_element?(
+               view,
+               "#category-notification-level-#{category.id} option[value='normal']"
+             )
+
+      assert has_element?(
+               view,
+               "#category-notification-level-#{category.id} option[value='watching']"
+             )
+
+      assert has_element?(
+               view,
+               "#category-notification-level-#{category.id} option[value='tracking']"
+             )
+
+      assert has_element?(
+               view,
+               "#category-notification-level-#{category.id} option[value='muted']"
+             )
+
+      for level <- ~w(watching tracking muted normal) do
+        view
+        |> form("#category-notification-form-#{category.id}", %{
+          "category_notification" => %{"level" => level}
+        })
+        |> render_change()
+
+        assert Forum.get_category_watch_level(user.id, category.id) == level
+
+        assert has_element?(
+                 view,
+                 "#category-notification-level-#{category.id} option[value='#{level}'][selected]"
+               )
+      end
+    end
+
+    test "category notification controls are hidden from anonymous visitors", %{
+      category: category
+    } do
+      {:ok, view, _html} = live(build_conn(), ~p"/forum/categories")
+
+      refute has_element?(view, "#category-notification-form-#{category.id}")
+    end
+
     test "mount displays forum categories and boards", %{category: category, board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/categories")
 

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Category notifications — UI reference</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --border: #2e3348;
+        --accent: #818cf8;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, sans-serif; }
+      main { width: min(920px, calc(100% - 32px)); margin: 48px auto; }
+      header { margin-bottom: 28px; }
+      h1 { margin: 4px 0 8px; font-size: 32px; letter-spacing: -.04em; }
+      .eyebrow { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+      .category { overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+      .category-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+      .category-header h2 { margin: 0; font-size: 16px; }
+      .category-header p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+      select { min-width: 170px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface2); color: var(--text); padding: 9px 36px 9px 12px; font: inherit; font-weight: 700; }
+      .board { display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 16px 20px; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
+      .board:last-child { border: 0; }
+      .board strong { display: block; }
+      .board span { color: var(--muted); font-size: 12px; }
+      .annotation { margin-top: 22px; border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; background: var(--surface2); padding: 14px 16px; color: var(--muted); }
+      .annotation strong { color: var(--text); }
+      @media (max-width: 560px) {
+        main { margin-top: 24px; }
+        .category-header { align-items: stretch; flex-direction: column; }
+        select { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Community · Categories</div>
+        <h1>Choose how each space reaches you</h1>
+        <p>Notification controls sit with the category they affect and collapse to full width on mobile.</p>
+      </header>
+
+      <section class="category">
+        <div class="category-header">
+          <div>
+            <h2>Building with AI</h2>
+            <p>2 boards · category-level preference</p>
+          </div>
+          <label>
+            <span class="eyebrow">Notifications</span><br />
+            <select aria-label="Notifications for Building with AI">
+              <option>Regular</option>
+              <option selected>Watching</option>
+              <option>Tracking</option>
+              <option>Muted</option>
+            </select>
+          </label>
+        </div>
+        <div class="board"><div><strong>Agents &amp; workflows</strong><span>Patterns, tools, and field notes</span></div><span>42 topics</span></div>
+        <div class="board"><div><strong>Prompt craft</strong><span>Techniques and critique</span></div><span>18 topics</span></div>
+      </section>
+
+      <div class="annotation">
+        <strong>Behavior:</strong> Watching notifies for new topics and replies; Tracking keeps unread visibility without every reply notification; Regular uses topic defaults; Muted removes category notification and unread noise. An explicit topic watch remains in force.
+      </div>
+    </main>
+  </body>
+</html>

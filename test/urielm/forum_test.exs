@@ -40,6 +40,110 @@ defmodule Urielm.ForumTest do
     end
   end
 
+  describe "category notification levels" do
+    test "defaults to normal and persists each supported level" do
+      user = user_fixture()
+      category = category_fixture()
+
+      assert Forum.get_category_watch_level(user.id, category.id) == "normal"
+
+      for level <- ~w(watching tracking normal muted) do
+        assert {:ok, _watch} = Forum.set_category_watch_level(user.id, category.id, level)
+        assert Forum.get_category_watch_level(user.id, category.id) == level
+      end
+    end
+
+    test "watching a category notifies the watcher about new topics and replies" do
+      watcher = user_fixture()
+      author = user_fixture()
+      replier = user_fixture()
+      category = category_fixture()
+      board = board_fixture(%{category_id: category.id})
+
+      {:ok, _watch} = Forum.set_category_watch_level(watcher.id, category.id, "watching")
+
+      {:ok, thread} =
+        Forum.create_thread(board.id, author.id, %{
+          "title" => "Watched category topic",
+          "slug" => "watched-category-topic",
+          "body" => "A topic created inside a watched category."
+        })
+
+      assert [%{subject_type: "thread_update", thread_id: thread_id}] =
+               Forum.list_notifications(watcher.id)
+
+      assert thread_id == thread.id
+
+      {:ok, _comment} =
+        Forum.create_comment(thread.id, replier.id, %{"body" => "A watched category reply"})
+
+      assert Enum.count(Forum.list_notifications(watcher.id)) == 2
+
+      {:ok, _setting} = Forum.set_notification_level(watcher.id, thread.id, "muted")
+
+      {:ok, _comment} =
+        Forum.create_comment(thread.id, replier.id, %{"body" => "A topic-muted reply"})
+
+      assert Enum.count(Forum.list_notifications(watcher.id)) == 2
+    end
+
+    test "tracking and normal categories do not notify users about every reply" do
+      tracking_user = user_fixture()
+      normal_user = user_fixture()
+      author = user_fixture()
+      category = category_fixture()
+      thread = thread_fixture(%{board_id: board_fixture(%{category_id: category.id}).id})
+
+      {:ok, _watch} = Forum.set_category_watch_level(tracking_user.id, category.id, "tracking")
+      {:ok, _comment} = Forum.create_comment(thread.id, author.id, %{"body" => "Quiet reply"})
+
+      assert Forum.list_notifications(tracking_user.id) == []
+      assert Forum.list_notifications(normal_user.id) == []
+
+      assert Enum.any?(
+               Forum.list_unread_threads(tracking_user.id, thread.board_id),
+               &(&1.id == thread.id)
+             )
+    end
+
+    test "muted categories suppress notifications and unread noise unless a topic is explicitly watched" do
+      muted_author = user_fixture()
+      topic_watcher = user_fixture()
+      actor = user_fixture()
+      category = category_fixture()
+      board = board_fixture(%{category_id: category.id})
+      muted_thread = thread_fixture(%{board_id: board.id, author_id: muted_author.id})
+      watched_thread = thread_fixture(%{board_id: board.id})
+
+      {:ok, _watch} = Forum.set_category_watch_level(muted_author.id, category.id, "muted")
+      {:ok, _watch} = Forum.set_category_watch_level(topic_watcher.id, category.id, "muted")
+      {:ok, _subscription} = Forum.subscribe_to_thread(topic_watcher.id, watched_thread.id)
+
+      {:ok, _setting} =
+        Forum.set_notification_level(topic_watcher.id, watched_thread.id, "watching")
+
+      {:ok, _comment} =
+        Forum.create_comment(muted_thread.id, actor.id, %{"body" => "Muted category reply"})
+
+      {:ok, _comment} =
+        Forum.create_comment(watched_thread.id, actor.id, %{"body" => "Explicitly watched reply"})
+
+      assert Forum.list_notifications(muted_author.id) == []
+      assert [%{thread_id: watched_thread_id}] = Forum.list_notifications(topic_watcher.id)
+      assert watched_thread_id == watched_thread.id
+
+      unread_ids =
+        topic_watcher.id
+        |> Forum.list_unread_threads(board.id)
+        |> Enum.map(& &1.id)
+
+      assert watched_thread.id in unread_ids
+      refute muted_thread.id in unread_ids
+      assert Forum.thread_unread?(topic_watcher.id, watched_thread.id)
+      refute Forum.thread_unread?(topic_watcher.id, muted_thread.id)
+    end
+  end
+
   describe "boards" do
     test "list_boards/2 returns all boards in category" do
       category = category_fixture()

@@ -9,12 +9,39 @@ defmodule UrielmWeb.ForumLive do
   @impl true
   def mount(_params, _session, socket) do
     categories = Forum.list_categories_with_boards()
+    current_user = socket.assigns[:current_user]
 
     {:ok,
      socket
      |> assign(:page_title, "Community")
      |> assign(:all_categories, categories)
-     |> assign(:categories, serialize_categories(categories))}
+     |> assign(:categories, serialize_categories(categories, current_user))}
+  end
+
+  @impl true
+  def handle_event(
+        "set_category_notification",
+        %{"category_notification" => %{"category_id" => category_id, "level" => level}},
+        socket
+      ) do
+    case socket.assigns[:current_user] do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Sign in to change category notifications")}
+
+      user ->
+        case Forum.set_category_watch_level(user.id, category_id, level) do
+          {:ok, _watch} ->
+            {:noreply,
+             assign(
+               socket,
+               :categories,
+               serialize_categories(socket.assigns.all_categories, user)
+             )}
+
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Could not update category notifications")}
+        end
+    end
   end
 
   @impl true
@@ -60,11 +87,41 @@ defmodule UrielmWeb.ForumLive do
     ~H"""
     <section id={"forum-category-#{@category.id}"}>
       <%!-- Category label --%>
-      <div class="mb-3 flex items-center justify-between gap-3 px-1">
-        <h2 class="ui-eyebrow text-base-content/55">
-          {@category.name}
-        </h2>
-        <span class="text-xs text-base-content/30">{length(@category.boards)} boards</span>
+      <div class="mb-3 flex flex-col gap-3 px-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="ui-eyebrow text-base-content/55">
+            {@category.name}
+          </h2>
+          <span class="text-xs text-base-content/30">{length(@category.boards)} boards</span>
+        </div>
+
+        <.form
+          :if={@category.notification_form}
+          for={@category.notification_form}
+          id={"category-notification-form-#{@category.id}"}
+          phx-change="set_category_notification"
+          class="w-full sm:w-52"
+        >
+          <input
+            type="hidden"
+            name={@category.notification_form[:category_id].name}
+            value={@category.notification_form[:category_id].value}
+          />
+          <.input
+            field={@category.notification_form[:level]}
+            id={"category-notification-level-#{@category.id}"}
+            type="select"
+            label="Notifications"
+            options={[
+              {"Regular", "normal"},
+              {"Watching", "watching"},
+              {"Tracking", "tracking"},
+              {"Muted", "muted"}
+            ]}
+            help={notification_help(@category.notification_form[:level].value)}
+            class="select select-bordered select-sm w-full bg-base-100 transition-colors focus:border-primary"
+          />
+        </.form>
       </div>
 
       <%!-- Board table --%>
@@ -150,12 +207,31 @@ defmodule UrielmWeb.ForumLive do
     """
   end
 
-  defp serialize_categories(categories) do
+  defp serialize_categories(categories, current_user) do
+    watch_levels =
+      if current_user do
+        Forum.list_category_watch_levels(current_user.id, Enum.map(categories, & &1.id))
+      else
+        %{}
+      end
+
     Enum.map(categories, fn category ->
+      notification_form =
+        if current_user do
+          to_form(
+            %{
+              "category_id" => to_string(category.id),
+              "level" => Map.get(watch_levels, category.id, "normal")
+            },
+            as: :category_notification
+          )
+        end
+
       %{
         id: to_string(category.id),
         name: category.name,
         slug: category.slug,
+        notification_form: notification_form,
         boards: serialize_boards(category.boards)
       }
     end)
@@ -176,4 +252,9 @@ defmodule UrielmWeb.ForumLive do
       }
     end)
   end
+
+  defp notification_help("watching"), do: "Every new topic and reply"
+  defp notification_help("tracking"), do: "Unread activity, without every alert"
+  defp notification_help("muted"), do: "No category alerts or unread noise"
+  defp notification_help(_level), do: "Topic-level defaults"
 end

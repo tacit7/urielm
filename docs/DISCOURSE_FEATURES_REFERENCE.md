@@ -120,7 +120,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Email notifications** - Digest emails
 - ❌ **Push notifications** - Browser push
 - ✅ **Thread watching** - Subscribe/unsubscribe support and watched-thread subscriber notification generation are covered
-- ⚠️ **Category watching** - Backend watch/mute levels exist; UI/route/tests are missing
+- ✅ **Category watching** - Category-page controls cover normal, watching, tracking, and muted behavior with notification and unread suppression tests
 - ✅ **Mention notifications** - Mention rows and NotificationsLive rendering are covered
 - ✅ **Reply notifications** - Thread/comment recipients are notified when replied to
 - ❌ **Quote notifications** - Notified when quoted
@@ -243,13 +243,13 @@ Comprehensive list of Discourse features for comparison and implementation track
 ## Implementation Status Summary
 
 **Tracked Feature Rows**: 195
-**Implemented**: 53 (27%)
-**Partial / Needs Verification**: 30 (15%)
+**Implemented**: 54 (28%)
+**Partial / Needs Verification**: 29 (15%)
 **Missing**: 112 (57%)
 **Core Features Implemented or Partial**: ~83%
 **Advanced Features Implemented or Partial**: ~10%
 
-**Recent Addition**: Forum tags browse/detail UI, advanced search filters, reply draft persistence, and notification generation coverage.
+**Recent Addition**: Category notification controls with watch/track/mute behavior, topic-level precedence, and unread suppression coverage.
 **Previous Addition**: Generic file upload library (Cloudflare R2, polymorphic, UUID v7)
 
 ## Audit Notes
@@ -269,7 +269,6 @@ The audit found several rows that were stale in either direction:
 - Composer preview, side-by-side, upload, and broader shortcut UI tests
 - Auto-close timer UI/live tests
 - Email/push notification delivery tests
-- Category-watch UI/route/tests
 - Resume-position tests for last read position
 - Embed integration tests beyond helper coverage
 - Mobile and accessibility regression coverage
@@ -283,7 +282,7 @@ The audit found several rows that were stale in either direction:
 1. **Fix compile warnings-as-errors** - Required for reliable verification
 2. **Notification delivery channels** - Email, push, schedules, and delivery preferences
 3. **Composer completion** - Preview, uploads, server-side drafts, shortcuts, and UI coverage
-4. **Category watch/mute UI** - Complete route, UI, and coverage for category notification levels
+4. **Notification preference management** - Broader consolidated management UI beyond category and topic pages
 5. **Tag management** - Tag groups, required tags, and admin/bulk management
 
 ### Medium Priority (Nice to have)

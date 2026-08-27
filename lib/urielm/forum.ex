@@ -298,25 +298,26 @@ defmodule Urielm.Forum do
         max_topics_per_day = config.max_new_topics_per_day
 
         with_rate_limit(author_id, "create_thread", max_topics_per_day, 86_400, fn ->
-          insert_thread(board_id, author_id, attrs)
+          insert_thread(board, user, attrs)
         end)
       end
     end
   end
 
-  defp insert_thread(board_id, author_id, attrs) do
+  defp insert_thread(board, user, attrs) do
     attrs = Urielm.Params.normalize(attrs)
 
     case %Thread{}
          |> Thread.create_changeset(
-           Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id})
+           Map.merge(attrs, %{"board_id" => board.id, "author_id" => user.id})
          )
          |> Repo.insert() do
       {:ok, thread} ->
         # Process mentions
         body = Map.get(attrs, "body", "")
-        MentionParser.process_mentions(body, author_id, "thread", thread.id)
-        notify_mentions(body, author_id, thread, thread.id)
+        MentionParser.process_mentions(body, user.id, "thread", thread.id)
+        notify_mentions(body, user.id, thread, thread.id)
+        notify_category_watchers_of_thread(board.category_id, thread, user)
         {:ok, thread}
 
       error ->
@@ -751,9 +752,28 @@ defmodule Urielm.Forum do
       |> Repo.all()
       |> MapSet.new()
 
+    suppressed_ids =
+      from(t in Thread,
+        join: b in Board,
+        on: b.id == t.board_id,
+        left_join: setting in TopicNotificationSetting,
+        on: setting.user_id == ^user_id and setting.thread_id == t.id,
+        left_join: watch in CategoryWatch,
+        on: watch.user_id == ^user_id and watch.category_id == b.category_id,
+        where: t.id in ^thread_ids,
+        where:
+          setting.notification_level == "muted" or
+            (watch.watch_level == "muted" and
+               (is_nil(setting.id) or setting.notification_level != "watching")),
+        select: t.id
+      )
+      |> Repo.all()
+      |> MapSet.new()
+
     thread_ids
     |> MapSet.new()
     |> MapSet.difference(read_ids)
+    |> MapSet.difference(suppressed_ids)
   end
 
   @doc """
@@ -1293,6 +1313,7 @@ defmodule Urielm.Forum do
             select: s.user_id
           )
           |> Repo.all()
+          |> exclude_muted_recipients(thread_id)
 
         now = DateTime.utc_now()
 
@@ -1332,8 +1353,10 @@ defmodule Urielm.Forum do
         )
         |> Repo.all()
 
+      category_watcher_ids = category_watcher_ids_for_thread(thread.id)
+
       recipient_ids =
-        [thread.author_id, parent_author_id | subscriber_ids]
+        [thread.author_id, parent_author_id | subscriber_ids ++ category_watcher_ids]
         |> Enum.reject(&is_nil/1)
         |> Enum.uniq()
         |> Enum.reject(&(&1 == actor.id))
@@ -1363,7 +1386,7 @@ defmodule Urielm.Forum do
   defp exclude_muted_recipients([], _thread_id), do: []
 
   defp exclude_muted_recipients(recipient_ids, thread_id) do
-    muted_ids =
+    topic_muted_ids =
       from(setting in TopicNotificationSetting,
         where:
           setting.thread_id == ^thread_id and setting.user_id in ^recipient_ids and
@@ -1373,7 +1396,52 @@ defmodule Urielm.Forum do
       |> Repo.all()
       |> MapSet.new()
 
+    category_muted_ids =
+      from(watch in CategoryWatch,
+        join: board in Board,
+        on: board.category_id == watch.category_id,
+        join: thread in Thread,
+        on: thread.board_id == board.id,
+        left_join: setting in TopicNotificationSetting,
+        on: setting.user_id == watch.user_id and setting.thread_id == thread.id,
+        where:
+          thread.id == ^thread_id and watch.user_id in ^recipient_ids and
+            watch.watch_level == "muted" and
+            (is_nil(setting.id) or setting.notification_level != "watching"),
+        select: watch.user_id
+      )
+      |> Repo.all()
+      |> MapSet.new()
+
+    muted_ids = MapSet.union(topic_muted_ids, category_muted_ids)
     Enum.reject(recipient_ids, &MapSet.member?(muted_ids, &1))
+  end
+
+  defp category_watcher_ids_for_thread(thread_id) do
+    from(watch in CategoryWatch,
+      join: board in Board,
+      on: board.category_id == watch.category_id,
+      join: thread in Thread,
+      on: thread.board_id == board.id,
+      where: thread.id == ^thread_id and watch.watch_level == "watching",
+      select: watch.user_id
+    )
+    |> Repo.all()
+  end
+
+  defp notify_category_watchers_of_thread(category_id, thread, actor) do
+    recipient_ids =
+      from(watch in CategoryWatch,
+        where:
+          watch.category_id == ^category_id and watch.watch_level == "watching" and
+            watch.user_id != ^actor.id,
+        select: watch.user_id
+      )
+      |> Repo.all()
+
+    actor_name = actor.username || actor.display_name || actor.email
+    message = "#{actor_name} started #{thread.title}"
+    insert_notifications(recipient_ids, thread.id, actor.id, "thread_update", message)
   end
 
   defp insert_notifications([], _thread_id, _actor_id, _subject_type, _message), do: :ok
@@ -1415,6 +1483,7 @@ defmodule Urielm.Forum do
     |> Enum.map(&Urielm.Accounts.get_user_by_username/1)
     |> Enum.reject(&is_nil/1)
     |> Enum.reject(&(&1.id == mentioner_id))
+    |> Enum.filter(&notification_allowed?(&1.id, thread.id))
     |> Enum.each(fn user ->
       create_notification(user.id, "mention", target_id, %{
         actor_id: mentioner_id,
@@ -1435,6 +1504,10 @@ defmodule Urielm.Forum do
   end
 
   defp notification_topic(user_id), do: "forum_notifications:#{user_id}"
+
+  defp notification_allowed?(user_id, thread_id) do
+    exclude_muted_recipients([user_id], thread_id) != []
+  end
 
   # Search
 
@@ -1476,16 +1549,27 @@ defmodule Urielm.Forum do
   end
 
   def thread_unread?(user_id, thread_id) do
-    read = Repo.get_by(TopicRead, user_id: user_id, thread_id: thread_id)
-    read == nil
+    user_id
+    |> bulk_unread_thread_ids([thread_id])
+    |> MapSet.member?(thread_id)
   end
 
   def list_unread_threads(user_id, board_id, opts \\ []) do
     from(t in Thread,
       left_join: tr in TopicRead,
       on: tr.user_id == ^user_id and tr.thread_id == t.id,
+      left_join: setting in TopicNotificationSetting,
+      on: setting.user_id == ^user_id and setting.thread_id == t.id,
+      join: board in Board,
+      on: board.id == t.board_id,
+      left_join: watch in CategoryWatch,
+      on: watch.user_id == ^user_id and watch.category_id == board.category_id,
       where: t.board_id == ^board_id and t.is_removed == false,
       where: is_nil(tr.id),
+      where:
+        (is_nil(setting.id) or setting.notification_level != "muted") and
+          (is_nil(watch.id) or watch.watch_level != "muted" or
+             setting.notification_level == "watching"),
       preload: [:author, :board],
       order_by: [desc: t.inserted_at, desc: t.id]
     )
@@ -1502,7 +1586,17 @@ defmodule Urielm.Forum do
       from(t in Thread,
         left_join: tr in TopicRead,
         on: tr.user_id == ^user_id and tr.thread_id == t.id,
+        left_join: setting in TopicNotificationSetting,
+        on: setting.user_id == ^user_id and setting.thread_id == t.id,
+        left_join: board in Board,
+        on: board.id == t.board_id,
+        left_join: watch in CategoryWatch,
+        on: watch.user_id == ^user_id and watch.category_id == board.category_id,
         where: t.board_id == ^board_id and t.is_removed == false and is_nil(tr.id),
+        where:
+          (is_nil(setting.id) or setting.notification_level != "muted") and
+            (is_nil(watch.id) or watch.watch_level != "muted" or
+               setting.notification_level == "watching"),
         preload: [:author, :board]
       )
 
@@ -1608,11 +1702,22 @@ defmodule Urielm.Forum do
     )
   end
 
+  def set_category_watch_level(_user_id, _category_id, _level), do: {:error, :invalid_level}
+
   def get_category_watch_level(user_id, category_id) do
     case Repo.get_by(CategoryWatch, user_id: user_id, category_id: category_id) do
       nil -> "normal"
       watch -> watch.watch_level
     end
+  end
+
+  def list_category_watch_levels(user_id, category_ids) do
+    from(watch in CategoryWatch,
+      where: watch.user_id == ^user_id and watch.category_id in ^category_ids,
+      select: {watch.category_id, watch.watch_level}
+    )
+    |> Repo.all()
+    |> Map.new()
   end
 
   def watching_category?(user_id, category_id) do
