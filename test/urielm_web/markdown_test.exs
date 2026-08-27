@@ -25,6 +25,41 @@ defmodule UrielmWeb.MarkdownTest do
       refute html =~ "<script"
     end
 
+    # SEC-4: Earmark passes raw block-level HTML straight through to
+    # Phoenix.HTML.raw/1. These prove the html_sanitize_ex scrubber neutralizes
+    # the classic XSS vectors that the old <script>-only regex let through.
+    test "drops img onerror payloads and javascript: hrefs (SEC-4)" do
+      markdown = """
+      <div>
+        <img src="https://example.com/x.png" onerror="stealCookies()">
+        <a href="javascript:stealCookies()">click me</a>
+      </div>
+      """
+
+      {:safe, html} = Markdown.to_html(markdown)
+
+      assert html =~ "<img"
+      refute html =~ "onerror"
+      refute html =~ "javascript:"
+      refute html =~ "stealCookies"
+    end
+
+    test "drops raw svg onload and iframe embeds (SEC-4)" do
+      markdown = """
+      <div>
+        <svg onload="stealCookies()"></svg>
+        <iframe src="https://evil.example"></iframe>
+      </div>
+      """
+
+      {:safe, html} = Markdown.to_html(markdown)
+
+      refute html =~ "onload"
+      refute html =~ "<svg"
+      refute html =~ "<iframe"
+      refute html =~ "stealCookies"
+    end
+
     test "renders standard markdown" do
       markdown = "# Title\n\n**bold** and *italic*"
       {:safe, html} = Markdown.to_html(markdown)
