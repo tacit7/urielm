@@ -14,25 +14,25 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Subcategories** - Nested organization (boards in our impl)
 - ✅ **Topics/Threads** - Discussion posts
 - ✅ **Posts/Comments** - Replies with nesting
-- ⚠️ **Tags** - Backend/thread tagging exists; browse/management UI and tag UI tests need coverage
+- ⚠️ **Tags** - Thread tagging, tag badges/links, and browse/detail UI are implemented; tag management/grouping remains incomplete
 - ❌ **Tag groups** - Grouped tag management
 - ✅ **Search** - Full-text search
-- ⚠️ **Advanced search** - Full-text and some filters exist; Discourse-level user/date/category filters are incomplete
+- ✅ **Advanced search** - Query plus author, category, and date filters with SearchLive/context coverage
 - ❌ **Saved searches** - Persistent search queries
 
 ### Content Creation
 - ⚠️ **Rich text editor** - Tiptap pieces exist; forum composer integration and coverage need verification
 - ✅ **Markdown support** - Full markdown syntax
 - ❌ **BBCode support** - Alternative markup
-- ⚠️ **Composer** - Composer/editor flow exists, but Discourse-style bottom anchoring/resizing is partial
+- ⚠️ **Composer** - Bottom-anchored reply composer and local reply drafts exist; full preview/upload flow remains partial
 - ⚠️ **Grippie** - Resize behavior appears partial and lacks UI coverage
-- ⚠️ **Draft system** - LocalStorage drafts only; no server-side draft system
+- ⚠️ **Draft system** - LocalStorage reply drafts persist per thread/user and clear on submit/discard; no server-side draft system
 - ❌ **Draft sequences** - Multiple drafts per user
 - ⚠️ **Preview** - Preview/renderer pieces exist; composer preview flow lacks end-to-end coverage
 - ⚠️ **Side-by-side** - Preview-side styling exists, but split editor/preview UI is not fully verified
 - ⚠️ **Uploads** - Generic upload library with R2 is backend complete; composer UI remains pending
 - ❌ **Drag-drop** - Drag files into composer
-- ⚠️ **Keyboard shortcuts** - Some shortcuts exist; composer shortcut coverage is incomplete
+- ⚠️ **Keyboard shortcuts** - Some shortcuts and reply submit shortcut coverage exist; broader shortcut coverage is incomplete
 
 ### Formatting & Embeds
 - ✅ **Bold, italic, strike** - Text formatting
@@ -63,7 +63,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Following users** - Subscribe to user activity
 - ❌ **Muting users** - Hide specific users
 - ❌ **Ignoring users** - Complete user block
-- ⚠️ **Mentions** - Mention parsing/notification backend exists; UI wiring and end-to-end coverage are incomplete
+- ⚠️ **Mentions** - Parsing plus mention notification creation/rendering are implemented; richer mention UI remains incomplete
 - ❌ **Quoting** - Quote previous posts
 - ❌ **Multi-quote** - Quote multiple posts at once
 - ❌ **Whispers** - Mod-only visible posts
@@ -116,17 +116,17 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ❌ **Staff notes** - Private mod notes on users
 
 ### Notifications
-- ⚠️ **In-app notifications** - Notification list and unread state exist; generation flows are partial
+- ✅ **In-app notifications** - Notification list, unread state, reply/subscriber generation, and mention rendering are covered
 - ❌ **Email notifications** - Digest emails
 - ❌ **Push notifications** - Browser push
-- ⚠️ **Thread watching** - Subscribe/unsubscribe support exists; auto-generated subscriber notification coverage is missing
+- ✅ **Thread watching** - Subscribe/unsubscribe support and watched-thread subscriber notification generation are covered
 - ⚠️ **Category watching** - Backend watch/mute levels exist; UI/route/tests are missing
-- ⚠️ **Mention notifications** - Backend ready; UI wiring and end-to-end coverage are incomplete
-- ❌ **Reply notifications** - Notified when replied to
+- ✅ **Mention notifications** - Mention rows and NotificationsLive rendering are covered
+- ✅ **Reply notifications** - Thread/comment recipients are notified when replied to
 - ❌ **Quote notifications** - Notified when quoted
 - ❌ **Like notifications** - Notified when liked
 - ✅ **Notification preferences** - Per-topic settings
-- ⚠️ **Muted topics** - Per-topic mute level exists; UI/tests are incomplete
+- ⚠️ **Muted topics** - Per-topic mute level exists and recipient suppression is covered; broader mute-management UI remains incomplete
 - ❌ **Notification schedules** - Quiet hours
 
 ### Discovery & Navigation
@@ -135,7 +135,7 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ✅ **Top topics** - Sorted by score
 - ✅ **Unread** - Unread for current user
 - ✅ **Categories page** - Category overview exists
-- ❌ **Tags page** - Browse by tags
+- ✅ **Tags page** - Browse by tags
 - ❌ **Top contributors** - User leaderboard
 - ❌ **Similar topics** - Related content suggestions
 - ❌ **Suggested topics** - Personalized recommendations
@@ -243,17 +243,19 @@ Comprehensive list of Discourse features for comparison and implementation track
 ## Implementation Status Summary
 
 **Tracked Feature Rows**: 195
-**Implemented**: 47 (24%)
-**Partial / Needs Verification**: 34 (17%)
-**Missing**: 114 (58%)
-**Core Features Implemented or Partial**: ~80%
+**Implemented**: 53 (27%)
+**Partial / Needs Verification**: 30 (15%)
+**Missing**: 112 (57%)
+**Core Features Implemented or Partial**: ~83%
 **Advanced Features Implemented or Partial**: ~10%
 
-**Recent Addition**: Generic file upload library (Cloudflare R2, polymorphic, UUID v7)
+**Recent Addition**: Forum tags browse/detail UI, advanced search filters, reply draft persistence, and notification generation coverage.
+**Previous Addition**: Generic file upload library (Cloudflare R2, polymorphic, UUID v7)
 
 ## Audit Notes
 
 **Audit source**: EITS team `discourse-feature-audit` on August 17, 2026.
+**Latest update**: EITS team `discourse-partials-2026-08-27` merge review on August 27, 2026.
 
 The audit found several rows that were stale in either direction:
 
@@ -263,11 +265,10 @@ The audit found several rows that were stale in either direction:
 
 ### Test Coverage Gaps
 
-- Tag UI and tag browsing/management tests
-- `SearchLive` and advanced-search filter tests
-- Composer, preview, side-by-side, draft, upload, and shortcut UI tests
+- Tag management UI tests beyond browse/detail/tag-badge coverage
+- Composer preview, side-by-side, upload, and broader shortcut UI tests
 - Auto-close timer UI/live tests
-- End-to-end mention notification and subscriber notification generation tests
+- Email/push notification delivery tests
 - Category-watch UI/route/tests
 - Resume-position tests for last read position
 - Embed integration tests beyond helper coverage
@@ -280,15 +281,15 @@ The audit found several rows that were stale in either direction:
 
 ### High Priority (User-facing, high value)
 1. **Fix compile warnings-as-errors** - Required for reliable verification
-2. **Advanced search completion** - User/date/category filters and SearchLive coverage
-3. **Email notifications** - Critical for retention
-4. **Composer completion** - Preview, drafts, uploads, shortcuts, and UI coverage
-5. **Mention/subscriber notification E2E** - Close notification correctness gaps
+2. **Notification delivery channels** - Email, push, schedules, and delivery preferences
+3. **Composer completion** - Preview, uploads, server-side drafts, shortcuts, and UI coverage
+4. **Category watch/mute UI** - Complete route, UI, and coverage for category notification levels
+5. **Tag management** - Tag groups, required tags, and admin/bulk management
 
 ### Medium Priority (Nice to have)
 6. Polls
-7. Category watch/mute UI
-8. Tag browsing and management UI
+7. Saved searches
+8. User directory and groups
 9. Activity feed
 10. User badges
 
@@ -300,6 +301,6 @@ The audit found several rows that were stale in either direction:
 15. Advanced moderation (IP bans, etc.)
 
 ---
-**Last Updated**: August 17, 2026
+**Last Updated**: August 27, 2026
 **Purpose**: Feature comparison and roadmap planning
 **Status**: Living document
