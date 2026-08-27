@@ -22,9 +22,17 @@ defmodule UrielmWeb.UserProfileLiveTest do
   describe "viewing a profile" do
     test "anonymous user can view public profile", %{conn: conn, owner: owner} do
       {:ok, live, _html} = live(conn, "/u/#{owner.username}")
-      html = render(profile_child(live))
+      child = profile_child(live)
+      html = render(child)
+
       assert html =~ owner.display_name
       assert html =~ owner.username
+      assert has_element?(child, "#public-profile-page.ui-page-shell")
+      assert has_element?(child, "#profile-overview.ui-card")
+      assert has_element?(child, "#profile-stats.ui-card")
+      assert has_element?(child, "#profile-activity.ui-card")
+      assert has_element?(child, "#profile-threads-tab[aria-selected='true']")
+      assert has_element?(child, "#profile-comments-tab[aria-selected='false']")
     end
 
     test "shows thread count in stats", %{conn: conn, owner: owner} do
@@ -49,8 +57,32 @@ defmodule UrielmWeb.UserProfileLiveTest do
   describe "viewing own profile" do
     test "shows username on own profile", %{conn: conn, owner: owner} do
       {:ok, live, _html} = live(log_in_user(conn, owner), "/u/#{owner.username}")
-      html = render(profile_child(live))
+      child = profile_child(live)
+      html = render(child)
+
       assert html =~ owner.username
+      assert has_element?(child, "#profile-account-settings.ui-card")
+      assert has_element?(child, "#profile-public-settings.ui-card")
+      assert has_element?(child, "#profile-danger-zone.ui-card")
+      assert has_element?(child, "#username-edit")
+      assert has_element?(child, "#display-name-edit")
+      assert has_element?(child, "#profile-save")
+      assert has_element?(child, "#profile-delete-open")
+    end
+
+    test "delete confirmation uses the shared modal state", %{conn: conn, owner: owner} do
+      {:ok, live, _html} = live(log_in_user(conn, owner), "/u/#{owner.username}")
+      child = profile_child(live)
+
+      child |> element("#profile-delete-open") |> render_click()
+
+      assert has_element?(child, "#profile-delete-modal.modal-open[role='dialog']")
+
+      child
+      |> element("#profile-delete-modal [phx-click='cancel_delete']", "Cancel")
+      |> render_click()
+
+      refute has_element?(child, "#profile-delete-modal")
     end
   end
 
@@ -105,8 +137,10 @@ defmodule UrielmWeb.UserProfileLiveTest do
       {:ok, live, _html} = live(conn, "/u/#{owner.username}")
       child = profile_child(live)
 
-      html = render_click(child, "switch_tab", %{"tab" => "comments"})
-      assert html =~ owner.display_name
+      render_click(child, "switch_tab", %{"tab" => "comments"})
+
+      assert has_element?(child, "#profile-comments-tab[aria-selected='true']")
+      assert has_element?(child, "#profile-threads-tab[aria-selected='false']")
     end
   end
 
