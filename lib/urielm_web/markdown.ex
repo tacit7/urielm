@@ -12,13 +12,21 @@ defmodule UrielmWeb.Markdown do
   end
 
   defp sanitize_and_wrap(html) do
-    # Earmark passes raw inline HTML straight through, so a regex that only
-    # strips <script> is not a sanitizer. Run the output through
-    # html_sanitize_ex's markdown scrubber, which allowlists safe tags and
-    # attributes (including `class` on <code> for syntax highlighting) and
-    # drops event handlers, javascript: URLs, iframes, and inline SVG.
+    # Real sanitization is HtmlSanitizeEx.markdown_html/1: it allowlists safe
+    # tags/attributes (including `class` on <code> for syntax highlighting) and
+    # drops event handlers, javascript: URLs, <iframe>, inline SVG, etc. Earmark
+    # passes raw inline HTML straight through, so this is what actually protects
+    # the Phoenix.HTML.raw/1 call downstream.
     html
+    |> strip_script_and_style_blocks()
     |> HtmlSanitizeEx.markdown_html()
     |> Phoenix.HTML.raw()
+  end
+
+  # Pre-pass only: an HTML parser treats <script>/<style> contents as raw text,
+  # so the scrubber removes the tags but leaves the JS/CSS source behind as
+  # visible text. Not an XSS vector, but undesirable in rendered content.
+  defp strip_script_and_style_blocks(html) do
+    Regex.replace(~r{<(script|style)\b[^>]*>.*?</\s*\1\s*>}is, html, "")
   end
 end
