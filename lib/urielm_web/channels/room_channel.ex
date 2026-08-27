@@ -37,7 +37,7 @@ defmodule UrielmWeb.RoomChannel do
     user = socket.assigns[:current_user]
     room_id = socket.assigns[:room_id]
 
-    Logger.info("Creating message: user=#{user.id}, room=#{room_id}, body=#{body}")
+    Logger.info("Creating message: user=#{user.id}, room=#{room_id}")
 
     case Chat.create_message(%{
            body: body,

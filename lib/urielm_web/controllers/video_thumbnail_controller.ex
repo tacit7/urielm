@@ -6,6 +6,11 @@ defmodule UrielmWeb.VideoThumbnailController do
 
   @cache_control "public, max-age=3600"
 
+  # The thumbnail URL comes from TikTok's oembed response, i.e. it is not fully
+  # trusted. Do not follow redirects (constrained SSRF) and cap how many bytes
+  # we buffer into memory.
+  @max_thumbnail_bytes 5 * 1024 * 1024
+
   def show(conn, %{"id" => id}) do
     with {:ok, video_id} <- Ecto.UUID.cast(id),
          %Video{} = video <- Content.get_video(video_id),
@@ -31,14 +36,30 @@ defmodule UrielmWeb.VideoThumbnailController do
 
   defp fetch_tiktok_thumbnail(tiktok_url) do
     with {:ok, thumbnail_url} <- fetch_thumbnail_url(tiktok_url),
-         {:ok, %{status: 200, body: body} = response} when is_binary(body) <-
-           Req.get(thumbnail_url, receive_timeout: 10_000),
+         {:ok, %{status: 200} = response} <- fetch_capped_image(thumbnail_url),
+         body when is_binary(body) and byte_size(body) <= @max_thumbnail_bytes <- response.body,
          [content_type | _] <- Req.Response.get_header(response, "content-type"),
          true <- String.starts_with?(content_type, "image/") do
       {:ok, body, content_type}
     else
       _ -> {:error, :thumbnail_unavailable}
     end
+  end
+
+  defp fetch_capped_image(thumbnail_url) do
+    Req.get(thumbnail_url,
+      receive_timeout: 10_000,
+      redirect: false,
+      into: fn {:data, data}, {req, resp} ->
+        resp = update_in(resp.body, &(&1 <> data))
+
+        if byte_size(resp.body) > @max_thumbnail_bytes do
+          {:halt, {req, resp}}
+        else
+          {:cont, {req, resp}}
+        end
+      end
+    )
   end
 
   defp fetch_thumbnail_url(tiktok_url) do

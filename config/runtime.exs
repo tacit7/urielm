@@ -102,7 +102,14 @@ if config_env() == :prod do
       "https://#{host}",
       "https://www.#{host}"
     ],
+    # Redirect all http traffic to https and emit HSTS. TLS is terminated by the
+    # reverse proxy, so trust its X-Forwarded-Proto header.
+    force_ssl: [rewrite_on: [:x_forwarded_proto], hsts: true],
     server: true
+
+  # Mark the session cookie Secure in production (served over HTTPS only).
+  # Left unset in dev/test so local development over http keeps working.
+  config :urielm, :secure_session_cookie, true
 
   # ## SSL Support
   #

@@ -25,6 +25,33 @@ defmodule UrielmWeb.MarkdownTest do
       refute html =~ "<script"
     end
 
+    test "drops img onerror payloads and javascript: hrefs (SEC-4)" do
+      markdown = """
+      Look at this: <img src="https://example.com/x.png" onerror="stealCookies">
+
+      [click me](javascript:stealCookies)
+      """
+
+      {:safe, html} = Markdown.to_html(markdown)
+
+      refute html =~ "onerror"
+      refute html =~ "javascript:"
+      refute html =~ "stealCookies"
+    end
+
+    test "drops raw inline svg and iframe" do
+      markdown = """
+      <svg onload="stealCookies"></svg>
+      <iframe src="https://evil.example"></iframe>
+      """
+
+      {:safe, html} = Markdown.to_html(markdown)
+
+      refute html =~ "onload"
+      refute html =~ "<svg"
+      refute html =~ "<iframe"
+    end
+
     test "renders standard markdown" do
       markdown = "# Title\n\n**bold** and *italic*"
       {:safe, html} = Markdown.to_html(markdown)

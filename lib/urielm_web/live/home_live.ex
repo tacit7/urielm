@@ -32,10 +32,16 @@ defmodule UrielmWeb.HomeLive do
     {:ok, socket}
   end
 
+  @prompt_variants %{"before" => :before, "improved" => :improved}
+
   @impl true
   def handle_event("show_prompt_variant", %{"variant" => variant}, socket)
-      when variant in ["before", "improved"] do
-    {:noreply, assign(socket, :prompt_variant, String.to_existing_atom(variant))}
+      when is_map_key(@prompt_variants, variant) do
+    {:noreply, assign(socket, :prompt_variant, Map.fetch!(@prompt_variants, variant))}
+  end
+
+  def handle_event("show_prompt_variant", _params, socket) do
+    {:noreply, socket}
   end
 
   @impl true

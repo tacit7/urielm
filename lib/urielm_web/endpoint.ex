@@ -11,13 +11,25 @@ defmodule UrielmWeb.Endpoint do
     same_site: "Lax"
   ]
 
+  # The `secure` flag on the session cookie is driven from config
+  # (`config :urielm, :secure_session_cookie`) so it is enabled in production
+  # (HTTPS) but stays off in dev/test where local development runs over http.
+  # Resolved at request time so `config/runtime.exs` takes effect for releases.
+  def session_options do
+    Keyword.put(
+      @session_options,
+      :secure,
+      Application.get_env(:urielm, :secure_session_cookie, false)
+    )
+  end
+
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: [connect_info: [session: {__MODULE__, :session_options, []}]],
+    longpoll: [connect_info: [session: {__MODULE__, :session_options, []}]]
 
   socket "/socket", UrielmWeb.UserSocket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: [connect_info: [session: {__MODULE__, :session_options, []}]],
+    longpoll: [connect_info: [session: {__MODULE__, :session_options, []}]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -52,6 +64,11 @@ defmodule UrielmWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, @session_options
+  plug :session
+
+  defp session(conn, _opts) do
+    Plug.Session.call(conn, Plug.Session.init(session_options()))
+  end
+
   plug UrielmWeb.Router
 end
