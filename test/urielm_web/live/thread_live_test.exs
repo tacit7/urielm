@@ -26,11 +26,11 @@ defmodule UrielmWeb.ThreadLiveTest do
       {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
 
       assert has_element?(view, "#thread-reading-view")
-      assert has_element?(view, "#thread-topic")
+      assert has_element?(view, "#thread-topic.ui-card")
       assert has_element?(view, "#thread-author")
       assert has_element?(view, "#thread-actions")
       assert has_element?(view, "#thread-replies")
-      assert has_element?(view, "#comment-form")
+      assert has_element?(view, "#comment-form.ui-card")
       assert has_element?(view, "#comment-form textarea[name='body']")
     end
 
@@ -38,7 +38,7 @@ defmodule UrielmWeb.ThreadLiveTest do
       {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
 
       refute has_element?(view, "#comment-form")
-      assert has_element?(view, "#thread-sign-in-to-reply a[href='/signin']")
+      assert has_element?(view, "#thread-sign-in-to-reply.ui-card a[href='/signin']")
     end
 
     test "locked topics replace the composer with a status panel", %{
@@ -57,7 +57,7 @@ defmodule UrielmWeb.ThreadLiveTest do
       {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
 
       refute has_element?(view, "#comment-form")
-      assert has_element?(view, "#thread-locked-state")
+      assert has_element?(view, "#thread-locked-state.alert-warning")
     end
   end
 

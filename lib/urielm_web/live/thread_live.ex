@@ -614,7 +614,7 @@ defmodule UrielmWeb.ThreadLive do
       <main id="thread-reading-view" class="mx-auto max-w-4xl pb-12">
         <.link
           navigate={~p"/forum/b/#{@thread.board_slug}"}
-          class="group mb-5 inline-flex items-center gap-2 text-sm font-medium text-base-content/45 transition-colors hover:text-secondary"
+          class="btn btn-ghost btn-sm -ml-2 mb-5 gap-2 text-base-content/55 hover:text-secondary"
         >
           <.um_icon
             name="arrow_left"
@@ -625,12 +625,12 @@ defmodule UrielmWeb.ThreadLive do
 
         <article
           id="thread-topic"
-          class="rounded-2xl border border-base-300/60 bg-base-200/35 p-5 sm:p-7 lg:p-8"
+          class="ui-card h-auto overflow-visible p-5 sm:p-7 lg:p-8"
         >
-          <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.12em]">
+          <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase">
             <.link
               navigate={~p"/forum/b/#{@thread.board_slug}"}
-              class="rounded-full bg-secondary/10 px-3 py-1.5 text-secondary transition-colors hover:bg-secondary/15"
+              class="badge badge-secondary badge-outline h-auto py-1"
             >
               {@thread.board_name}
             </.link>
@@ -645,7 +645,7 @@ defmodule UrielmWeb.ThreadLive do
             </span>
           </div>
 
-          <h1 class="mt-4 max-w-3xl text-3xl font-black leading-tight tracking-[-0.04em] text-base-content sm:text-4xl lg:text-5xl">
+          <h1 class="mt-4 max-w-3xl text-3xl font-black leading-tight text-base-content sm:text-4xl">
             {@thread.title}
           </h1>
 
@@ -711,7 +711,7 @@ defmodule UrielmWeb.ThreadLive do
             <a
               :if={!@thread.is_locked && @current_user}
               href="#comment-form"
-              class="btn btn-sm border-0 bg-secondary/10 text-secondary hover:bg-secondary/20"
+              class="btn btn-secondary btn-sm"
             >
               <.um_icon name="reply" class="size-4" />
               <span class="hidden sm:inline">Reply</span>
@@ -764,7 +764,7 @@ defmodule UrielmWeb.ThreadLive do
                 >
                   <.um_icon name="ellipsis_horizontal" class="size-5" />
                 </button>
-                <ul class="dropdown-content menu z-10 mt-2 w-56 rounded-2xl border border-base-300 bg-base-100 p-2 shadow-xl">
+                <ul class="dropdown-content menu z-10 mt-2 w-56 rounded-lg border border-base-300 bg-base-100 p-2 shadow-xl">
                   <li class="menu-title">Notifications</li>
                   <li>
                     <button
@@ -834,7 +834,7 @@ defmodule UrielmWeb.ThreadLive do
 
         <section class="mt-10" aria-labelledby="join-discussion-title">
           <div class="mb-4 flex items-end justify-between gap-4 px-1">
-            <h2 id="join-discussion-title" class="text-xl font-bold tracking-tight text-base-content">
+            <h2 id="join-discussion-title" class="text-xl font-bold text-base-content">
               Join the discussion
             </h2>
             <span class="hidden text-xs text-base-content/35 sm:inline">Markdown supported</span>
@@ -844,7 +844,7 @@ defmodule UrielmWeb.ThreadLive do
             <% @thread.is_locked -> %>
               <div
                 id="thread-locked-state"
-                class="flex items-start gap-3 rounded-2xl border border-warning/25 bg-warning/8 p-5 text-sm"
+                class="alert alert-warning items-start text-sm"
               >
                 <.um_icon name="lock_closed" class="mt-0.5 size-5 shrink-0 text-warning" />
                 <div>
@@ -857,7 +857,7 @@ defmodule UrielmWeb.ThreadLive do
                 for={@comment_form}
                 id="comment-form"
                 phx-submit="create_comment"
-                class="rounded-2xl border border-base-300/70 bg-base-200/45 p-4 sm:p-5"
+                class="ui-card h-auto p-4 sm:p-5"
               >
                 <.input
                   field={@comment_form[:body]}
@@ -865,14 +865,14 @@ defmodule UrielmWeb.ThreadLive do
                   label="Your reply"
                   placeholder="Share a useful answer or ask a follow-up…"
                   required
-                  class="textarea min-h-28 w-full resize-y rounded-xl border-base-300 bg-base-100/65 text-base-content placeholder:text-base-content/30 focus:border-secondary focus:outline-none"
+                  class="textarea min-h-28 w-full resize-y rounded-lg border-base-300 bg-base-100/65 text-base-content placeholder:text-base-content/30 focus:border-secondary focus:outline-none"
                 />
                 <div class="mt-3 flex items-center justify-between gap-3 border-t border-base-300/50 pt-4">
                   <p class="text-xs text-base-content/40">Be specific, kind, and useful.</p>
                   <button
                     id="comment-submit"
                     type="submit"
-                    class="btn btn-sm border-0 bg-secondary text-secondary-content hover:bg-secondary/85"
+                    class="btn btn-secondary btn-sm"
                     phx-disable-with="Posting…"
                   >
                     Post reply
@@ -882,7 +882,7 @@ defmodule UrielmWeb.ThreadLive do
             <% true -> %>
               <div
                 id="thread-sign-in-to-reply"
-                class="flex flex-col items-start justify-between gap-4 rounded-2xl border border-base-300/60 bg-base-200/35 p-5 sm:flex-row sm:items-center"
+                class="ui-card ui-card-compact flex h-auto flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center"
               >
                 <div>
                   <p class="font-semibold text-base-content">Have something useful to add?</p>
@@ -899,7 +899,7 @@ defmodule UrielmWeb.ThreadLive do
 
         <section id="thread-replies" class="mt-10" aria-labelledby="thread-replies-title">
           <div class="mb-4 flex items-end justify-between gap-4 px-1">
-            <h2 id="thread-replies-title" class="text-xl font-bold tracking-tight text-base-content">
+            <h2 id="thread-replies-title" class="text-xl font-bold text-base-content">
               {pluralize(@thread.comment_count, "reply")}
             </h2>
             <span class="text-xs text-base-content/35">Oldest first</span>
@@ -920,8 +920,8 @@ defmodule UrielmWeb.ThreadLive do
           />
         </section>
       </main>
-      
-    <!-- Report Modal -->
+
+      <%!-- Report modal --%>
       <.report_modal
         id="report_thread_modal"
         title="Report this thread"
@@ -933,8 +933,8 @@ defmodule UrielmWeb.ThreadLive do
         bg_class="bg-base-300"
         data-testid="report-modal"
       />
-      
-    <!-- Comment Report Modal (Single Reusable) -->
+
+      <%!-- Reusable comment report modal --%>
       <.report_modal
         id="report_comment_modal"
         title="Report Comment"
