@@ -290,12 +290,17 @@ defmodule Urielm.Forum do
       {:error, :board_locked}
     else
       user = Repo.get!(Urielm.Accounts.User, author_id)
-      config = TrustLevel.get_config(user.trust_level)
-      max_topics_per_day = config.max_new_topics_per_day
 
-      with_rate_limit(author_id, "create_thread", max_topics_per_day, 86_400, fn ->
-        insert_thread(board_id, author_id, attrs)
-      end)
+      if Urielm.Accounts.User.silenced?(user) do
+        {:error, :silenced}
+      else
+        config = TrustLevel.get_config(user.trust_level)
+        max_topics_per_day = config.max_new_topics_per_day
+
+        with_rate_limit(author_id, "create_thread", max_topics_per_day, 86_400, fn ->
+          insert_thread(board_id, author_id, attrs)
+        end)
+      end
     end
   end
 
@@ -303,7 +308,7 @@ defmodule Urielm.Forum do
     attrs = Urielm.Params.normalize(attrs)
 
     case %Thread{}
-         |> Thread.changeset(
+         |> Thread.create_changeset(
            Map.merge(attrs, %{"board_id" => board_id, "author_id" => author_id})
          )
          |> Repo.insert() do
@@ -319,11 +324,16 @@ defmodule Urielm.Forum do
     end
   end
 
+  @doc """
+  Applies a privileged moderation/state change to a thread. Only casts
+  moderation fields via `Thread.moderation_changeset/2`; callers are responsible
+  for authorization.
+  """
   def update_thread(%Thread{} = thread, attrs) do
     attrs = Urielm.Params.normalize(attrs)
 
     thread
-    |> Thread.changeset(attrs)
+    |> Thread.moderation_changeset(attrs)
     |> Repo.update()
   end
 
@@ -331,7 +341,10 @@ defmodule Urielm.Forum do
     if authorized?(user, thread.author_id) do
       # Save revision before updating
       save_revision("thread", thread.id, user.id, thread.body, body, thread.title, thread.title)
-      update_thread(thread, %{body: body, edited_at: DateTime.utc_now()})
+
+      thread
+      |> Thread.edit_changeset(%{body: body, edited_at: DateTime.utc_now()})
+      |> Repo.update()
     else
       {:error, :unauthorized}
     end
@@ -346,15 +359,30 @@ defmodule Urielm.Forum do
   end
 
   def mark_as_solved(%Thread{} = thread, comment_id, %{id: user_id} = user) do
-    if authorized?(user, thread.author_id) do
-      update_thread(thread, %{
-        is_solved: true,
-        solved_comment_id: comment_id,
-        solved_at: DateTime.utc_now(),
-        solved_by_id: user_id
-      })
-    else
-      {:error, :unauthorized}
+    cond do
+      not authorized?(user, thread.author_id) ->
+        {:error, :unauthorized}
+
+      not comment_belongs_to_thread?(comment_id, thread.id) ->
+        {:error, :invalid_comment}
+
+      true ->
+        update_thread(thread, %{
+          is_solved: true,
+          solved_comment_id: comment_id,
+          solved_at: DateTime.utc_now(),
+          solved_by_id: user_id
+        })
+    end
+  end
+
+  defp comment_belongs_to_thread?(comment_id, thread_id) do
+    case Ecto.UUID.cast(comment_id) do
+      {:ok, id} ->
+        Repo.exists?(from(c in Comment, where: c.id == ^id and c.thread_id == ^thread_id))
+
+      :error ->
+        false
     end
   end
 
@@ -482,40 +510,50 @@ defmodule Urielm.Forum do
       {:error, :thread_locked}
     else
       user = Repo.get!(Urielm.Accounts.User, author_id)
-      config = TrustLevel.get_config(user.trust_level)
-      max_posts_per_minute = config.max_posts_per_minute
 
-      parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
-
-      with :ok <- validate_parent_thread(parent_id, thread_id),
-           :ok <- validate_comment_depth(parent_id) do
-        with_rate_limit(author_id, "create_comment", max_posts_per_minute, 60, fn ->
-          %Comment{}
-          |> Comment.changeset(
-            Map.merge(Urielm.Params.normalize(attrs), %{
-              "thread_id" => thread_id,
-              "author_id" => author_id
-            })
-          )
-          |> Repo.insert()
-          |> case do
-            {:ok, comment} ->
-              update_thread_comment_count(thread_id)
-              # Process mentions
-              body = Map.get(attrs, "body", "")
-              MentionParser.process_mentions(body, author_id, "comment", comment.id)
-              notify_mentions(body, author_id, thread, comment.id)
-              notify_comment_recipients(thread, comment, user)
-              {:ok, comment}
-
-            error ->
-              error
-          end
-        end)
+      if Urielm.Accounts.User.silenced?(user) do
+        {:error, :silenced}
       else
-        {:error, :invalid_parent} -> {:error, :invalid_parent}
-        {:error, :max_depth_exceeded} -> {:error, :max_depth_exceeded}
+        create_comment_for_user(thread, user, author_id, attrs)
       end
+    end
+  end
+
+  defp create_comment_for_user(thread, user, author_id, attrs) do
+    thread_id = thread.id
+    config = TrustLevel.get_config(user.trust_level)
+    max_posts_per_minute = config.max_posts_per_minute
+
+    parent_id = Map.get(attrs, "parent_id") || Map.get(attrs, :parent_id)
+
+    with :ok <- validate_parent_thread(parent_id, thread_id),
+         :ok <- validate_comment_depth(parent_id) do
+      with_rate_limit(author_id, "create_comment", max_posts_per_minute, 60, fn ->
+        %Comment{}
+        |> Comment.changeset(
+          Map.merge(Urielm.Params.normalize(attrs), %{
+            "thread_id" => thread_id,
+            "author_id" => author_id
+          })
+        )
+        |> Repo.insert()
+        |> case do
+          {:ok, comment} ->
+            update_thread_comment_count(thread_id)
+            # Process mentions
+            body = Map.get(attrs, "body", "")
+            MentionParser.process_mentions(body, author_id, "comment", comment.id)
+            notify_mentions(body, author_id, thread, comment.id)
+            notify_comment_recipients(thread, comment, user)
+            {:ok, comment}
+
+          error ->
+            error
+        end
+      end)
+    else
+      {:error, :invalid_parent} -> {:error, :invalid_parent}
+      {:error, :max_depth_exceeded} -> {:error, :max_depth_exceeded}
     end
   end
 

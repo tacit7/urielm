@@ -67,30 +67,33 @@ defmodule Urielm.Forum.Thread do
   #   ]
   # end
 
-  @doc false
-  def changeset(thread, attrs) do
+  # Fields a user is allowed to set when creating or editing their own thread.
+  @user_fields [:board_id, :author_id, :title, :slug, :body, :kind]
+
+  # Moderation/state fields that only privileged Forum context functions may set.
+  @moderation_fields [
+    :is_locked,
+    :is_removed,
+    :removed_by_id,
+    :is_solved,
+    :solved_comment_id,
+    :solved_at,
+    :solved_by_id,
+    :is_pinned,
+    :pinned_at,
+    :pinned_by_id,
+    :close_at,
+    :close_timer_set_by_id
+  ]
+
+  @doc """
+  Changeset for user-facing thread creation. Only casts `@user_fields`, so a
+  client cannot mass-assign moderation fields (`is_pinned`, `is_locked`,
+  `pinned_by_id`, ...) through the create path.
+  """
+  def create_changeset(thread, attrs) do
     thread
-    |> cast(attrs, [
-      :board_id,
-      :author_id,
-      :title,
-      :slug,
-      :body,
-      :kind,
-      :is_locked,
-      :is_removed,
-      :removed_by_id,
-      :edited_at,
-      :is_solved,
-      :solved_comment_id,
-      :solved_at,
-      :solved_by_id,
-      :is_pinned,
-      :pinned_at,
-      :pinned_by_id,
-      :close_at,
-      :close_timer_set_by_id
-    ])
+    |> cast(attrs, @user_fields)
     |> validate_required([:board_id, :author_id, :title, :slug, :body])
     |> validate_inclusion(:kind, ["forum", "video"])
     |> validate_length(:title, min: 3, max: 300)
@@ -98,9 +101,34 @@ defmodule Urielm.Forum.Thread do
     |> sanitize_body()
     |> foreign_key_constraint(:board_id)
     |> foreign_key_constraint(:author_id)
+  end
+
+  @doc """
+  Changeset for a user editing their own thread. Only title/body/edited_at are
+  writable; moderation fields are unreachable.
+  """
+  def edit_changeset(thread, attrs) do
+    thread
+    |> cast(attrs, [:title, :body, :edited_at])
+    |> validate_required([:title, :body])
+    |> validate_length(:title, min: 3, max: 300)
+    |> validate_length(:body, min: 10, max: 10_000)
+    |> sanitize_body()
+  end
+
+  @doc """
+  Changeset for privileged moderation/state transitions (lock, pin, solve,
+  remove, close timer). Never fed raw client params — callers in `Urielm.Forum`
+  build the attrs explicitly after an authorization check.
+  """
+  def moderation_changeset(thread, attrs) do
+    thread
+    |> cast(attrs, @moderation_fields)
     |> foreign_key_constraint(:removed_by_id)
     |> foreign_key_constraint(:solved_comment_id)
     |> foreign_key_constraint(:solved_by_id)
+    |> foreign_key_constraint(:pinned_by_id)
+    |> foreign_key_constraint(:close_timer_set_by_id)
   end
 
   defp sanitize_body(changeset) do
