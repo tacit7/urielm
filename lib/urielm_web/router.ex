@@ -17,6 +17,10 @@ defmodule UrielmWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :require_auth do
+    plug UrielmWeb.Plugs.Auth, :require_authenticated_user
+  end
+
   # OAuth authentication routes
   scope "/auth", UrielmWeb do
     pipe_through :browser

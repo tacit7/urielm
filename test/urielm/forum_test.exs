@@ -1268,7 +1268,7 @@ defmodule Urielm.ForumTest do
 
   describe "tag management and groups" do
     test "updates and deletes tags without leaving thread associations" do
-      thread = Fixtures.thread_fixture()
+      thread = thread_fixture()
       {:ok, tag} = Forum.create_tag(%{name: "Needs review", slug: "needs-review"})
       {:ok, _thread_tag} = Forum.add_tag_to_thread(thread.id, tag.id)
 

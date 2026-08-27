@@ -24,13 +24,13 @@ Comprehensive list of Discourse features for comparison and implementation track
 - ⚠️ **Rich text editor** - Tiptap pieces exist; forum composer integration and coverage need verification
 - ✅ **Markdown support** - Full markdown syntax
 - ❌ **BBCode support** - Alternative markup
-- ⚠️ **Composer** - Bottom-anchored reply composer and local reply drafts exist; full preview/upload flow remains partial
-- ⚠️ **Grippie** - Resize behavior appears partial and lacks UI coverage
+- ✅ **Composer** - Bottom-anchored reply composer supports split preview, uploads, local drafts, submit/discard, and reply-event coverage
+- ✅ **Grippie** - Reply composer resize/fullscreen behavior is implemented
 - ⚠️ **Draft system** - LocalStorage reply drafts persist per thread/user and clear on submit/discard; no server-side draft system
 - ❌ **Draft sequences** - Multiple drafts per user
-- ⚠️ **Preview** - Preview/renderer pieces exist; composer preview flow lacks end-to-end coverage
-- ⚠️ **Side-by-side** - Preview-side styling exists, but split editor/preview UI is not fully verified
-- ⚠️ **Uploads** - Generic upload library with R2 is backend complete; composer UI remains pending
+- ✅ **Preview** - Composer renders a live Markdown preview
+- ✅ **Side-by-side** - Reply composer uses split editor/preview UI on larger screens
+- ✅ **Uploads** - Generic R2 upload library plus authenticated composer upload route/UI are implemented
 - ❌ **Drag-drop** - Drag files into composer
 - ⚠️ **Keyboard shortcuts** - Some shortcuts and reply submit shortcut coverage exist; broader shortcut coverage is incomplete
 
@@ -243,13 +243,13 @@ Comprehensive list of Discourse features for comparison and implementation track
 ## Implementation Status Summary
 
 **Tracked Feature Rows**: 195
-**Implemented**: 54 (28%)
-**Partial / Needs Verification**: 29 (15%)
+**Implemented**: 59 (30%)
+**Partial / Needs Verification**: 24 (12%)
 **Missing**: 112 (57%)
 **Core Features Implemented or Partial**: ~83%
 **Advanced Features Implemented or Partial**: ~10%
 
-**Recent Addition**: Category notification controls with watch/track/mute behavior, topic-level precedence, and unread suppression coverage.
+**Recent Addition**: Composer preview/uploads, category notification controls, and tag management/tag groups.
 **Previous Addition**: Generic file upload library (Cloudflare R2, polymorphic, UUID v7)
 
 ## Audit Notes
@@ -266,7 +266,7 @@ The audit found several rows that were stale in either direction:
 ### Test Coverage Gaps
 
 - Tag management UI tests beyond browse/detail/tag-badge coverage
-- Composer preview, side-by-side, upload, and broader shortcut UI tests
+- Server-side drafts, drag/drop uploads, and broader shortcut UI tests
 - Auto-close timer UI/live tests
 - Email/push notification delivery tests
 - Resume-position tests for last read position
@@ -279,18 +279,18 @@ The audit found several rows that were stale in either direction:
 ## Feature Priority for Remaining Work
 
 ### High Priority (User-facing, high value)
-1. **Fix compile warnings-as-errors** - Required for reliable verification
-2. **Notification delivery channels** - Email, push, schedules, and delivery preferences
-3. **Composer completion** - Preview, uploads, server-side drafts, shortcuts, and UI coverage
-4. **Notification preference management** - Broader consolidated management UI beyond category and topic pages
-5. **Tag management** - Tag groups, required tags, and admin/bulk management
+1. **Notification delivery channels** - Email, push, schedules, and delivery preferences
+2. **Server-side drafts and upload polish** - Draft sequences, drag-drop uploads, and broader shortcut coverage
+3. **Notification preference management** - Broader consolidated management UI beyond category and topic pages
+4. **Tag rules** - Required tags, category-specific allowed tags, parent tags, and one-per-topic constraints
+5. **Saved searches** - Persistent search queries and alerting hooks
 
 ### Medium Priority (Nice to have)
 6. Polls
-7. Saved searches
-8. User directory and groups
-9. Activity feed
-10. User badges
+7. User directory and groups
+8. Activity feed
+9. User badges
+10. RSS feeds
 
 ### Low Priority (Advanced/Enterprise)
 11. SSO/SAML
