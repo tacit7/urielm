@@ -50,6 +50,7 @@
   function handleSubmit() {
     if (onSubmit && replyText.trim()) {
       onSubmit(replyText)
+      clearDraft()
     }
   }
 

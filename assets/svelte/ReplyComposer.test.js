@@ -12,6 +12,18 @@ test("reply composer persists and restores drafts from localStorage", () => {
   assert.match(replyComposer, /draftHydrated/)
 })
 
+test("reply composer clears persisted drafts after submit is accepted", () => {
+  const handleSubmitStart = replyComposer.indexOf("function handleSubmit()")
+  const handleDiscardStart = replyComposer.indexOf("function handleDiscard()")
+  const handleSubmitBlock = replyComposer.slice(handleSubmitStart, handleDiscardStart)
+
+  assert.notEqual(handleSubmitStart, -1)
+  assert.notEqual(handleDiscardStart, -1)
+  assert.match(handleSubmitBlock, /onSubmit\(replyText\)/)
+  assert.match(handleSubmitBlock, /clearDraft\(\)/)
+  assert.ok(handleSubmitBlock.indexOf("clearDraft()") > handleSubmitBlock.indexOf("onSubmit(replyText)"))
+})
+
 test("reply composer keeps the existing keyboard shortcut affordance", () => {
   assert.match(replyComposer, /Cmd<\/kbd>\+<kbd class="kbd kbd-sm">Enter/)
 })
