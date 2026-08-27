@@ -42,6 +42,29 @@ defmodule Urielm.RateLimiter do
     end
   end
 
+  @doc """
+  Check several rate-limit keys at once.
+
+  Takes a list of `{key, action, opts}` tuples (same shape as `check_limit/3`)
+  and returns `:ok` only when every key is within its limit, otherwise
+  `{:error, :rate_limited}`.
+
+  Keys are evaluated in order and each evaluation records a hit, so a later key
+  tripping still consumes budget on the earlier keys. That is acceptable for the
+  auth endpoints: the windows are short (60s) and the only effect is that a host
+  under attack is throttled slightly sooner.
+
+  Respects the `:rate_limit_bypass` env flag via `check_limit/3`.
+  """
+  def check_all(checks) when is_list(checks) do
+    Enum.reduce_while(checks, :ok, fn {key, action, opts}, _acc ->
+      case check_limit(key, action, opts) do
+        {:ok, _remaining} -> {:cont, :ok}
+        {:error, :rate_limited} -> {:halt, {:error, :rate_limited}}
+      end
+    end)
+  end
+
   @impl true
   def handle_call({:check_limit, user_key, action, max_requests, window_seconds}, _from, state) do
     key = "#{user_key}:#{action}"
