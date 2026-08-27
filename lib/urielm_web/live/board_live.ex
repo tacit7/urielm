@@ -101,7 +101,8 @@ defmodule UrielmWeb.BoardLive do
                     %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
                 end
 
-              flop_params = Map.merge(%{page: page, page_size: LiveHelpers.page_size()}, flop_order)
+              flop_params =
+                Map.merge(%{page: page, page_size: LiveHelpers.page_size()}, flop_order)
 
               case Forum.paginate_threads(board.id, flop_params) do
                 {:ok, {data, meta}} -> {data, meta}
@@ -185,86 +186,81 @@ defmodule UrielmWeb.BoardLive do
       unread_notification_count={@unread_notification_count}
       current_board={@board.slug}
     >
-      <!-- Breadcrumb -->
-      <nav class="font-mono text-xs text-base-content/40 mb-3 flex items-center gap-1">
-        <a href={~p"/forum/categories"} class="hover:text-base-content transition-colors">
-          Categories
-        </a>
-        <span>/</span>
-        <a href={~p"/forum/categories"} class="hover:text-base-content transition-colors">
-          {@board.category.name}
-        </a>
-        <span>/</span>
-        <span class="text-base-content/60">{@board.name}</span>
+      <nav id="board-breadcrumbs" class="breadcrumbs mb-4 text-sm text-base-content/50">
+        <ul>
+          <li><.link navigate={~p"/forum/categories"}>Categories</.link></li>
+          <li><.link navigate={~p"/forum/categories"}>{@board.category.name}</.link></li>
+          <li>{@board.name}</li>
+        </ul>
       </nav>
 
-      <div class="mb-4">
-        <h1 class="text-3xl font-black tracking-tight text-base-content leading-none">
-          {@board.name}
-        </h1>
-        <p :if={@board.description} class="text-sm text-base-content/50 mt-1">{@board.description}</p>
-      </div>
-      
-    <!-- Locked notice -->
-      <div :if={@board.is_locked} class="alert alert-warning mb-4 py-2 text-sm">
+      <header id="board-header" class="ui-page-header mb-6">
+        <p class="ui-eyebrow">Community board</p>
+        <h1 class="ui-section-title">{@board.name}</h1>
+        <p :if={@board.description} class="ui-section-copy">{@board.description}</p>
+      </header>
+
+      <%!-- Locked notice --%>
+      <div
+        :if={@board.is_locked}
+        id="board-locked-notice"
+        class="alert alert-warning mb-5 py-3 text-sm"
+      >
         <.um_icon name="lock_closed" class="w-4 h-4" />
         <span>This board is locked and not accepting new threads.</span>
       </div>
-      
-    <!-- Header -->
-      <div class="mb-6">
-        <!-- Tabs + New Topic button inline -->
-        <div class="flex items-center justify-between border-b border-base-300">
-          <div class="flex items-center overflow-x-auto">
-            <.tab_link
-              href={~p"/forum/b/#{@board.slug}"}
-              active={@filter == "all" && @sort != "top"}
-              label="Latest"
-            />
-            <.tab_link
-              href={~p"/forum/b/#{@board.slug}?sort=top"}
-              active={@sort == "top"}
-              label="Top"
-            />
-            <.tab_link
-              href={~p"/forum/b/#{@board.slug}?filter=new"}
-              active={@filter == "new"}
-              label="New"
-            />
-            <%= if @current_user do %>
-              <.tab_link
-                href={~p"/forum/b/#{@board.slug}?filter=unread"}
-                active={@filter == "unread"}
-                label="Unread"
-              />
-            <% end %>
-            <.tab_link
-              href={~p"/forum/b/#{@board.slug}?filter=solved"}
-              active={@filter == "solved"}
-              label="Solved"
-            />
-            <.tab_link
-              href={~p"/forum/b/#{@board.slug}?filter=unsolved"}
-              active={@filter == "unsolved"}
-              label="Unsolved"
-            />
-          </div>
 
-          <%= if @current_user && !@board.is_locked do %>
-            <a
-              href={~p"/forum/b/#{@board.slug}/new"}
-              class="btn btn-primary btn-sm rounded-full px-4 mb-1 flex-shrink-0"
-            >
-              + New Topic
-            </a>
+      <%!-- Filters and primary action --%>
+      <div class="mb-6 flex items-end justify-between gap-3 border-b border-base-300">
+        <nav id="board-filter-tabs" class="tabs tabs-border min-w-0 overflow-x-auto">
+          <.tab_link
+            href={~p"/forum/b/#{@board.slug}"}
+            active={@filter == "all" && @sort != "top"}
+            label="Latest"
+          />
+          <.tab_link
+            href={~p"/forum/b/#{@board.slug}?sort=top"}
+            active={@sort == "top"}
+            label="Top"
+          />
+          <.tab_link
+            href={~p"/forum/b/#{@board.slug}?filter=new"}
+            active={@filter == "new"}
+            label="New"
+          />
+          <%= if @current_user do %>
+            <.tab_link
+              href={~p"/forum/b/#{@board.slug}?filter=unread"}
+              active={@filter == "unread"}
+              label="Unread"
+            />
           <% end %>
-        </div>
+          <.tab_link
+            href={~p"/forum/b/#{@board.slug}?filter=solved"}
+            active={@filter == "solved"}
+            label="Solved"
+          />
+          <.tab_link
+            href={~p"/forum/b/#{@board.slug}?filter=unsolved"}
+            active={@filter == "unsolved"}
+            label="Unsolved"
+          />
+        </nav>
+
+        <.link
+          :if={@current_user && !@board.is_locked}
+          id="board-new-topic-link"
+          navigate={~p"/forum/b/#{@board.slug}/new"}
+          class="btn btn-primary btn-sm mb-1 shrink-0"
+        >
+          <.um_icon name="hero-plus" class="size-4" /> New topic
+        </.link>
       </div>
-      
-    <!-- Threads table -->
-      <div class="rounded-xl border border-base-300/60 overflow-hidden">
-        <!-- Column headers -->
-        <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
+
+      <%!-- Threads table --%>
+      <div id="board-discussions-surface" class="ui-card ui-card-compact h-auto">
+        <%!-- Column headers --%>
+        <div class="hidden items-center gap-x-4 border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[auto_1fr_56px_56px_72px]">
           <div class="w-2" />
           <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
           <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
@@ -277,36 +273,25 @@ defmodule UrielmWeb.BoardLive do
             Activity
           </span>
         </div>
-        
-    <!-- Threads stream -->
+
+        <%!-- Threads stream --%>
         <div id="threads" phx-update="stream">
-          <div id="empty-state" class="hidden only:flex justify-center py-16">
-            <div class="text-center">
-              <p class="font-mono font-black text-6xl text-base-content/10 mb-3">0</p>
-              <p class="font-mono text-xs tracking-widest uppercase text-base-content/30">
-                <%= case @filter do %>
-                  <% "solved" -> %>
-                    No solved topics
-                  <% "unsolved" -> %>
-                    No unsolved topics
-                  <% "unread" -> %>
-                    All caught up
-                  <% "new" -> %>
-                    No new topics
-                  <% _ -> %>
-                    No topics yet
-                <% end %>
-              </p>
-            </div>
-          </div>
+          <.empty_state
+            id="empty-state"
+            title={empty_title(@filter)}
+            description="Try another filter or start a new discussion."
+            icon="hero-chat-bubble-left-right"
+            compact
+            class="hidden only:grid rounded-none border-0 bg-transparent"
+          />
           <div :for={{id, thread} <- @streams.threads} id={id}>
             <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
           </div>
         </div>
       </div>
-      
-    <!-- Pager -->
-      <div class="flex items-center justify-center gap-2 mt-8">
+
+      <%!-- Pager --%>
+      <div class="mt-8 flex items-center justify-center gap-2">
         <%= if @meta do %>
           <.pagination
             meta={@meta}
@@ -330,15 +315,19 @@ defmodule UrielmWeb.BoardLive do
     <.link
       navigate={@href}
       class={[
-        "px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
-        if(@active,
-          do: "border-primary text-primary",
-          else: "border-transparent text-base-content/50 hover:text-base-content"
-        )
+        "tab h-11 shrink-0 px-4 text-sm font-semibold",
+        @active && "tab-active"
       ]}
+      aria-current={if(@active, do: "page", else: nil)}
     >
       {@label}
     </.link>
     """
   end
+
+  defp empty_title("solved"), do: "No solved topics"
+  defp empty_title("unsolved"), do: "No unsolved topics"
+  defp empty_title("unread"), do: "All caught up"
+  defp empty_title("new"), do: "No new topics"
+  defp empty_title(_filter), do: "No topics yet"
 end

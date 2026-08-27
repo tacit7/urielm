@@ -59,6 +59,8 @@ defmodule UrielmWeb.ForumLiveTest do
       assert has_element?(view, "#community-discovery-header.ui-page-header")
       assert has_element?(view, "#forum-search-link.ui-card[href='/forum/search']")
       assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Latest")
+      assert has_element?(view, "#latest-discussions-surface.ui-card")
+      assert has_element?(view, "#threads[phx-update='stream']")
     end
 
     test "updates the signed-in user's unread badge without a reload", %{
@@ -129,10 +131,14 @@ defmodule UrielmWeb.ForumLiveTest do
     end
 
     test "displays sort tabs", %{board: board} do
-      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
+      {:ok, view, _html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
 
-      assert html =~ "New"
-      assert html =~ "Top"
+      assert has_element?(view, "#board-header.ui-page-header")
+      assert has_element?(view, "#board-filter-tabs.tabs")
+      assert has_element?(view, "#board-filter-tabs a[aria-current='page']", "Latest")
+      assert has_element?(view, "#board-filter-tabs", "Top")
+      assert has_element?(view, "#board-filter-tabs", "New")
+      assert has_element?(view, "#board-discussions-surface.ui-card")
     end
 
     test "shows new thread button for authenticated users", %{board: board, user: user} do

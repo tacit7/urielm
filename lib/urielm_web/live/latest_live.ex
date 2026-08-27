@@ -102,20 +102,17 @@ defmodule UrielmWeb.LatestLive do
       current_path="/forum"
     >
       <UrielmWeb.Components.ForumLayout.discovery_header active_view="latest" />
-      
-    <!-- Thread table -->
-      <section aria-labelledby="latest-discussions-title">
+
+      <%!-- Thread table --%>
+      <section id="latest-discussions" aria-labelledby="latest-discussions-title">
         <div class="mb-3 flex items-center justify-between">
-          <h2
-            id="latest-discussions-title"
-            class="text-xs font-bold uppercase tracking-[0.15em] text-base-content/55"
-          >
+          <h2 id="latest-discussions-title" class="ui-eyebrow text-base-content/55">
             Latest discussions
           </h2>
         </div>
-        <div class="rounded-2xl border border-base-300/60 overflow-hidden bg-base-100">
-          <!-- Column headers -->
-          <div class="hidden md:grid md:grid-cols-[auto_1fr_56px_56px_72px] items-center gap-x-4 px-4 py-2 bg-base-200/60 border-b border-base-300/40">
+        <div id="latest-discussions-surface" class="ui-card ui-card-compact h-auto">
+          <%!-- Column headers --%>
+          <div class="hidden items-center gap-x-4 border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[auto_1fr_56px_56px_72px]">
             <div class="w-2" />
             <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
             <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
@@ -129,25 +126,25 @@ defmodule UrielmWeb.LatestLive do
             </span>
           </div>
 
-    <!-- Threads -->
+          <%!-- Threads --%>
           <div id="threads" phx-update="stream">
-            <div id="empty-state" class="hidden only:flex justify-center py-16">
-              <div class="text-center">
-                <p class="font-mono font-black text-6xl text-base-content/10 mb-3">0</p>
-                <p class="font-mono text-xs tracking-widest uppercase text-base-content/30">
-                  No topics yet
-                </p>
-              </div>
-            </div>
+            <.empty_state
+              id="empty-state"
+              title="No topics yet"
+              description="New community discussions will appear here."
+              icon="hero-chat-bubble-left-right"
+              compact
+              class="hidden only:grid rounded-none border-0 bg-transparent"
+            />
             <div :for={{id, thread} <- @streams.threads} id={id}>
               <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
             </div>
           </div>
         </div>
       </section>
-      
-    <!-- Pagination -->
-      <div class="flex items-center justify-center gap-2 mt-8">
+
+      <%!-- Pagination --%>
+      <div class="mt-8 flex items-center justify-center gap-2">
         <%= if @meta do %>
           <.pagination
             meta={@meta}
