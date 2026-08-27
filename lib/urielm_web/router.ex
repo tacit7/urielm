@@ -39,6 +39,12 @@ defmodule UrielmWeb.Router do
     get "/check-handle", AuthController, :check_handle
   end
 
+  scope "/forum", UrielmWeb do
+    pipe_through [:browser, :require_auth]
+
+    post "/t/:thread_id/uploads", ComposerUploadController, :create
+  end
+
   scope "/", UrielmWeb do
     pipe_through :browser
 

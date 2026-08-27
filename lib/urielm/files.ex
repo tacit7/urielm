@@ -105,4 +105,7 @@ defmodule Urielm.Files do
   Check if a file is a document.
   """
   def document?(%File{content_type: content_type}), do: Upload.document?(content_type)
+
+  @doc "Returns the public URL for a stored file attachment."
+  def public_url(%File{storage_key: storage_key}), do: Upload.public_url(storage_key)
 end

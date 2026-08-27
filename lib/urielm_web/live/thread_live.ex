@@ -108,6 +108,39 @@ defmodule UrielmWeb.ThreadLive do
   end
 
   @impl true
+  def handle_event("create_composer_reply", %{"body" => body} = params, socket) do
+    %{current_user: user, thread: thread_data} = socket.assigns
+
+    cond do
+      is_nil(user) ->
+        {:reply, %{ok: false}, put_flash(socket, :error, "Sign in to comment")}
+
+      is_nil(user.username) ->
+        {:reply, %{ok: false},
+         socket
+         |> put_flash(:info, "Please set a username before commenting")
+         |> redirect(to: ~p"/signup/set-handle")}
+
+      true ->
+        parent_id = Map.get(params, "parent_id")
+
+        case CommentHandlers.create(thread_data, body, parent_id, user) do
+          {:ok, _comment} ->
+            {:reply, %{ok: true},
+             socket
+             |> refresh_thread(user)
+             |> put_flash(:info, "Comment posted")}
+
+          {:error, :thread_locked} ->
+            {:reply, %{ok: false}, put_flash(socket, :error, "This thread is locked")}
+
+          {:error, _} ->
+            {:reply, %{ok: false}, put_flash(socket, :error, "Failed to post comment")}
+        end
+    end
+  end
+
+  @impl true
   def handle_event(
         "vote",
         %{"target_type" => "comment", "target_id" => target_id, "value" => value},
@@ -938,7 +971,8 @@ defmodule UrielmWeb.ThreadLive do
                   if(@current_user,
                     do: "forum:thread-reply:#{@thread.id}:#{@current_user.id}",
                     else: nil
-                  )
+                  ),
+                reply_upload_url: if(@current_user, do: ~p"/forum/t/#{@thread.id}/uploads", else: nil)
               }
             }
             socket={@socket}

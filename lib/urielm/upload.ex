@@ -38,7 +38,7 @@ defmodule Urielm.Upload do
          :ok <- upload_to_r2(key, file_binary, file.content_type) do
       {:ok,
        %{
-         url: build_public_url(key),
+         url: public_url(key),
          filename: file.filename,
          content_type: file.content_type,
          size: File.stat!(file.path).size,
@@ -133,7 +133,8 @@ defmodule Urielm.Upload do
     end
   end
 
-  defp build_public_url(key) do
+  @doc "Returns the configured public URL for a stored upload key."
+  def public_url(key) when is_binary(key) do
     public_url = Application.get_env(:urielm, :uploads)[:public_url]
     "#{public_url}/#{key}"
   end

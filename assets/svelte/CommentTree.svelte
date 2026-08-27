@@ -13,6 +13,7 @@
     thread_author_id = null,
     solved_comment_id = null,
     reply_draft_key = null,
+    reply_upload_url = null,
     depth = 0,
     live
   } = $props()
@@ -69,18 +70,27 @@
   }
 
   function submitReply(text) {
-    if (!text.trim()) return
+    if (!text.trim() || !live) return false
 
-    if (live) {
-      live.pushEvent("create_comment", {
-        body: text,
-        parent_id: composerParentId
-      })
-    }
-
-    isComposerOpen = false
-    composerParentId = null
-    replyText = ""
+    return new Promise((resolve) => {
+      live.pushEvent(
+        "create_composer_reply",
+        {
+          body: text,
+          parent_id: composerParentId
+        },
+        (response) => {
+          if (response?.ok) {
+            isComposerOpen = false
+            composerParentId = null
+            replyText = ""
+            resolve(true)
+          } else {
+            resolve(false)
+          }
+        }
+      )
+    })
   }
 
   function startEdit(commentId, body) {
@@ -240,6 +250,8 @@
                 current_user_is_admin={current_user_is_admin}
                 thread_author_id={thread_author_id}
                 solved_comment_id={solved_comment_id}
+                reply_draft_key={reply_draft_key}
+                reply_upload_url={reply_upload_url}
                 {live}
                 depth={depth + 1}
               />
@@ -261,6 +273,7 @@
   bind:replyText={replyText}
   placeholder="Write your reply... (Markdown supported)"
   draftKey={reply_draft_key}
+  uploadUrl={reply_upload_url}
   onSubmit={submitReply}
   onDiscard={cancelReply}
 />

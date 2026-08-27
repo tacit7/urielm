@@ -48,6 +48,11 @@ defmodule UrielmWeb.ThreadLiveTest do
                view,
                ~s([data-name="CommentTree"][data-props*="forum:thread-reply:#{thread.id}:#{author.id}"])
              )
+
+      assert has_element?(
+               view,
+               ~s([data-name="CommentTree"][data-props*="/forum/t/#{thread.id}/uploads"])
+             )
     end
 
     test "shows a clear sign-in state instead of the reply form", %{conn: conn, thread: thread} do
@@ -74,6 +79,26 @@ defmodule UrielmWeb.ThreadLiveTest do
 
       refute has_element?(view, "#comment-form")
       assert has_element?(view, "#thread-locked-state.alert-warning")
+    end
+
+    test "accepts a reply from the interactive composer", %{
+      conn: conn,
+      author: author,
+      thread: thread
+    } do
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      render_hook(view, "create_composer_reply", %{
+        "body" => "A reply from the preview composer",
+        "parent_id" => nil
+      })
+
+      assert %Urielm.Forum.Comment{} =
+               Repo.get_by(Urielm.Forum.Comment,
+                 thread_id: thread.id,
+                 body: "A reply from the preview composer"
+               )
     end
   end
 

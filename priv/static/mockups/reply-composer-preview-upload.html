@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" data-theme="tokyo-night">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reply composer preview and uploads</title>
+    <style>
+      :root { color-scheme:dark; --bg:#16161e; --surface:#1f2335; --surface2:#24283b; --border:#3b4261; --primary:#7dcfff; --accent:#73daca; --text:#c0caf5; --muted:#737aa2; --error:#f7768e; }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 Inter,ui-sans-serif,system-ui,sans-serif; } button,textarea { font:inherit; }
+      .tabs { position:sticky; top:0; z-index:3; display:flex; gap:6px; padding:10px 16px; border-bottom:1px solid var(--border); background:#16161eee; }
+      .tabs button { border:1px solid transparent; border-radius:999px; padding:7px 12px; color:var(--muted); background:transparent; }
+      .tabs .active { border-color:var(--border); color:var(--primary); background:var(--surface2); }
+      .app { min-height:calc(100vh - 55px); display:grid; grid-template-columns:240px 1fr; }
+      .sidebar { padding:24px 18px; border-right:1px solid var(--border); background:#1a1b26; } .brand { font-size:18px; font-weight:850; } .nav { display:grid; gap:7px; margin-top:28px; color:var(--muted); } .nav span { padding:9px 11px; border-radius:10px; } .nav .active { color:var(--primary); background:#7dcfff12; }
+      .thread { width:min(820px,calc(100% - 40px)); margin:40px auto 390px; } .topic { padding:26px; border:1px solid var(--border); border-radius:20px; background:#1f233566; } h1 { margin:0 0 14px; font-size:32px; letter-spacing:-.04em; } .topic p { color:#a9b1d6; }
+      .composer { position:fixed; right:0; bottom:0; left:240px; width:min(900px,calc(100% - 272px)); height:350px; margin:auto; border:1px solid var(--border); border-bottom:0; border-radius:18px 18px 0 0; background:var(--surface); box-shadow:0 -24px 70px #090a0eaa; }
+      .grip { width:34px; height:4px; margin:9px auto 4px; border-radius:99px; background:var(--border); } .head,.foot { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; } .head { border-bottom:1px solid #3b426166; } .head strong { font-size:13px; } .head span,.shortcut { color:var(--muted); font-size:11px; }
+      .body { height:230px; display:grid; grid-template-columns:1fr 1fr; } .editor,.preview { min-width:0; padding:15px 16px; } .editor { border-right:1px solid #3b426166; } textarea { width:100%; height:100%; resize:none; border:0; outline:0; color:var(--text); background:transparent; line-height:1.65; } .eyebrow { margin:0 0 12px; color:var(--primary); font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; } .preview p { color:#a9b1d6; }
+      .upload { display:flex; align-items:center; gap:8px; color:var(--accent); font-size:12px; } .upload i { width:7px; height:7px; border-radius:99px; background:var(--accent); } .actions { display:flex; align-items:center; gap:7px; } .btn { border:0; border-radius:10px; padding:8px 11px; color:var(--muted); background:transparent; font-weight:700; } .btn.attach { color:var(--primary); background:#7dcfff0c; } .btn.primary { color:#16161e; background:var(--primary); }
+      .annotation { position:fixed; top:78px; right:20px; width:250px; padding:14px; border:1px dashed #73daca55; border-radius:14px; color:#a9b1d6; background:#1f2335ee; font-size:12px; }
+      body[data-view="upload-error"] .upload { color:var(--error); } body[data-view="upload-error"] .upload i { background:var(--error); } body[data-view="upload-error"] .upload-label::after { content:"File type not allowed"; } body:not([data-view="upload-error"]) .upload-label::after { content:"diagram.png ready"; }
+      @media(max-width:760px) { .app { display:block; } .sidebar { display:none; } .thread { width:calc(100% - 28px); margin-top:24px; } .composer { left:0; width:100%; height:100vh; border-radius:0; } .body { height:calc(100vh - 132px); display:block; } .editor,.preview { height:50%; } .editor { border-right:0; border-bottom:1px solid #3b426166; } .annotation { display:none; } .shortcut { display:none; } }
+    </style>
+  </head>
+  <body data-view="desktop">
+    <div class="tabs"><button class="active" data-target="desktop">Desktop</button><button data-target="mobile">Mobile</button><button data-target="upload-error">Upload error</button></div>
+    <div class="app"><aside class="sidebar"><div class="brand">Urielm</div><div class="nav"><span>Latest</span><span>Categories</span><span class="active">Building with AI</span></div></aside><main class="thread"><article class="topic"><h1>How should a composer handle uploaded diagrams?</h1><p>Reply with a preview of the markdown and attach a supporting file without losing the local draft.</p></article></main></div>
+    <section class="composer" aria-label="Reply composer"><div class="grip"></div><header class="head"><strong>Replying to the discussion</strong><span>Draft saved on this device</span></header><div class="body"><div class="editor"><textarea>Here is the architecture diagram.
+
+It shows the upload path and failure state.</textarea></div><div class="preview"><p class="eyebrow">Preview</p><p>Here is the architecture diagram.</p><p>It shows the upload path and failure state.</p></div></div><footer class="foot"><div class="upload"><i></i><span class="upload-label"></span></div><div class="actions"><span class="shortcut">⌘ Enter</span><button class="btn attach">Attach file</button><button class="btn">Discard</button><button class="btn primary">Reply</button></div></footer></section>
+    <aside class="annotation"><strong>Behavior:</strong> preview updates beside the editor on desktop and stacks on mobile. Selected files show progress or a validation error. Posting creates the reply, attaches successful uploads, then clears the local draft; discarding clears both the draft and pending selection.</aside>
+    <script>document.querySelectorAll("[data-target]").forEach((button) => button.addEventListener("click", () => { document.body.dataset.view = button.dataset.target; document.querySelectorAll("[data-target]").forEach((item) => item.classList.toggle("active", item === button)); }));</script>
+  </body>
+</html>
