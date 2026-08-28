@@ -1,5 +1,7 @@
 <script>
   import { onMount } from 'svelte'
+  import UMIcon from './UMIcon.svelte'
+
   let {
     isOpen = false,
     replyText = $bindable(""),
@@ -12,7 +14,7 @@
 
   let textareaRef = $state(null)
   let isMobile = $state(false)
-  let composerHeight = $state(300)
+  let composerHeight = $state(260)
   let isFullscreen = $state(false)
   let isDragging = $state(false)
   let draftTimer = null
@@ -83,7 +85,7 @@
 
     function onMove(e) {
       const delta = startY - e.clientY
-      composerHeight = Math.max(200, Math.min(window.innerHeight - 100, startHeight + delta))
+      composerHeight = Math.max(180, Math.min(window.innerHeight - 100, startHeight + delta))
     }
 
     function onUp() {
@@ -136,57 +138,59 @@
 <div
   class:open={isOpen}
   class:fullscreen={isFullscreen}
-  class="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-3xl z-40 transition-all duration-200 flex flex-col"
+  class="reply-composer fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-[45] mx-auto flex w-full max-w-3xl flex-col transition-all duration-200 md:bottom-0"
   class:hidden={!isOpen}
   style:height={isFullscreen ? '100vh' : isOpen ? `${composerHeight}px` : '0'}
 >
   {#if isOpen && !isMobile}
     <button
       type="button"
-      class="grippie cursor-row-resize bg-primary rounded-t-2xl w-full"
+      class="grippie w-full cursor-row-resize rounded-t-2xl bg-primary"
       onmousedown={startDrag}
       aria-label="Resize composer"
     ></button>
   {/if}
 
-  <div class="card bg-base-200 shadow-2xl h-full rounded-none md:rounded-t-2xl">
-    <div class="card-body p-4 flex flex-col h-full gap-2">
-      <!-- Header -->
-      <div class="flex items-center justify-between">
-        <span class="text-sm text-base-content/70">Replying...</span>
-        <div class="flex gap-2">
+  <div class="h-full rounded-none border border-base-300/70 bg-base-200 shadow-2xl md:rounded-t-2xl">
+    <div class="flex h-full flex-col gap-2 p-3 sm:p-4">
+      <div class="flex items-center justify-between gap-3 border-b border-base-300/60 pb-2">
+        <div class="min-w-0">
+          <p class="text-sm font-bold text-base-content">Reply</p>
+          <p class="truncate text-xs text-base-content/40">Markdown supported. Drafts stay on this device.</p>
+        </div>
+        <div class="flex shrink-0 gap-1">
           {#if !isMobile}
             <button
               type="button"
               onclick={toggleFullscreen}
-              class="btn btn-ghost btn-xs btn-circle tooltip tooltip-left"
+              class="btn btn-ghost btn-xs btn-circle tooltip tooltip-left text-base-content/55 hover:text-base-content"
               data-tip={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
               {#if isFullscreen}
-                <span class="hero hero-chevron-down"></span>
+                <UMIcon name="hero-chevron-down" className="size-4" />
               {:else}
-                <span class="hero hero-arrows-pointing-out"></span>
+                <UMIcon name="hero-arrows-pointing-out" className="size-4" />
               {/if}
             </button>
           {/if}
           <button
             type="button"
             onclick={handleDiscard}
-            class="btn btn-ghost btn-xs btn-circle"
+            class="btn btn-ghost btn-xs btn-circle text-base-content/55 hover:text-base-content"
             aria-label="Close"
           >
-            <span class="hero hero-x-mark"></span>
+            <UMIcon name="hero-x-mark" className="size-4" />
           </button>
         </div>
       </div>
 
-      <!-- Editor -->
-      <div class="form-control flex-1 min-h-0">
+      <div class="min-h-0 flex-1">
         <textarea
           bind:this={textareaRef}
           bind:value={replyText}
           {placeholder}
-          class="textarea textarea-ghost w-full h-full resize-none text-base leading-relaxed"
+          class="textarea min-h-full w-full resize-none rounded-xl border border-base-300/70 bg-base-100/80 px-3 py-2.5 text-sm leading-7 text-base-content placeholder:text-base-content/35 focus:border-secondary focus:outline-none"
           onkeydown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               handleSubmit()
@@ -195,16 +199,20 @@
         ></textarea>
       </div>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-between pt-2 border-t border-base-300">
-        <div class="text-xs text-base-content/60">
-          Press <kbd class="kbd kbd-sm">Cmd</kbd>+<kbd class="kbd kbd-sm">Enter</kbd> to submit
+      <div class="flex items-center justify-between gap-3 border-t border-base-300/60 pt-2">
+        <div class="min-w-0 truncate text-xs text-base-content/45">
+          <span class="hidden sm:inline">Press </span><kbd class="kbd kbd-sm">Cmd</kbd>+<kbd class="kbd kbd-sm">Enter</kbd>
         </div>
-        <div class="flex gap-2">
-          <button type="button" onclick={handleDiscard} class="btn btn-ghost btn-sm">
+        <div class="flex shrink-0 gap-2">
+          <button type="button" onclick={handleDiscard} class="btn btn-ghost btn-sm h-9 min-h-9 rounded-full px-3">
             Discard
           </button>
-          <button type="button" onclick={handleSubmit} disabled={!replyText.trim()} class="btn btn-primary btn-sm">
+          <button
+            type="button"
+            onclick={handleSubmit}
+            disabled={!replyText.trim()}
+            class="btn btn-primary btn-sm h-9 min-h-9 rounded-full px-4"
+          >
             {submitLabel}
           </button>
         </div>
@@ -224,8 +232,12 @@
   }
 
   @media (max-width: 768px) {
-    .fixed.bottom-0.open:not(.fullscreen) {
-      height: 100vh !important;
+    .reply-composer.open:not(.fullscreen) {
+      height: min(72dvh, 34rem) !important;
+    }
+
+    .reply-composer.fullscreen {
+      bottom: 0;
     }
 
     .grippie {

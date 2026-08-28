@@ -126,6 +126,7 @@ defmodule UrielmWeb.LiveHelpers do
         username: thread.author.username
       },
       created_at: thread.inserted_at,
+      updated_at: thread.updated_at,
       user_vote: if(current_user, do: Map.get(bulk_state.votes, thread.id), else: nil),
       is_saved: MapSet.member?(bulk_state.saved, thread.id),
       is_subscribed: MapSet.member?(bulk_state.subscribed, thread.id),

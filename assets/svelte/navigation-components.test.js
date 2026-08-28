@@ -5,6 +5,10 @@ import { readFileSync } from "node:fs"
 const navbar = readFileSync(new URL("./Navbar.svelte", import.meta.url), "utf8")
 const userMenu = readFileSync(new URL("./UserMenu.svelte", import.meta.url), "utf8")
 
+function classForId(source, id) {
+  return source.match(new RegExp(`id="${id}"[\\s\\S]*?class="([^"]+)"`))?.[1] || ""
+}
+
 test("mobile navigation exposes controlled menu semantics", () => {
   assert.match(navbar, /aria-expanded=\{isMenuOpen\}/)
   assert.match(navbar, /aria-controls="mobile-nav"/)
@@ -27,9 +31,19 @@ test("account menu uses the shared icon system and controlled state", () => {
   assert.match(userMenu, /id="account-menu"/)
 })
 
+test("notification menu exposes compact unread and empty states", () => {
+  assert.match(navbar, /aria-expanded=\{isNotificationsOpen\}/)
+  assert.match(navbar, /aria-controls="notification-menu"/)
+  assert.match(navbar, /id="notification-menu"/)
+  assert.match(navbar, /id="notification-menu-unread"/)
+  assert.match(navbar, /id="notification-menu-empty"/)
+  assert.match(navbar, /id="notification-menu-all"/)
+})
+
 test("navigation dropdowns use a distinct elevated surface", () => {
-  assert.match(navbar, /id="mobile-nav"[\s\S]*?bg-base-200/)
-  assert.match(userMenu, /id="account-menu"[\s\S]*?bg-base-200/)
-  assert.doesNotMatch(navbar, /id="mobile-nav"[\s\S]*?bg-base-100/)
-  assert.doesNotMatch(userMenu, /id="account-menu"[\s\S]*?bg-base-100/)
+  assert.match(classForId(navbar, "mobile-nav"), /bg-base-200/)
+  assert.match(classForId(navbar, "notification-menu"), /bg-base-200/)
+  assert.match(classForId(userMenu, "account-menu"), /bg-base-200/)
+  assert.doesNotMatch(classForId(navbar, "mobile-nav"), /bg-base-100/)
+  assert.doesNotMatch(classForId(userMenu, "account-menu"), /bg-base-100/)
 })

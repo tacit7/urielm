@@ -74,7 +74,7 @@ defmodule UrielmWeb.ChatLive do
     >
       <div
         id="chat-page"
-        class="grid h-[calc(100dvh-7.75rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-base-100 sm:h-[calc(100dvh-4.25rem)] sm:grid-cols-[16rem_minmax(0,1fr)] sm:grid-rows-1"
+        class="grid h-[calc(100dvh-7rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-base-100 sm:h-[calc(100dvh-3.5rem)] sm:grid-cols-[16rem_minmax(0,1fr)] sm:grid-rows-1"
       >
         <dialog id="create_room_modal" class="modal">
           <div class="modal-box max-w-lg rounded-lg border border-base-300 p-6 shadow-xl">

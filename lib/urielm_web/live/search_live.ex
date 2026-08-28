@@ -151,54 +151,57 @@ defmodule UrielmWeb.SearchLive do
       unread_notification_count={@unread_notification_count}
       current_path="/forum/search"
     >
-      <div id="forum-search-page" class="mx-auto w-full max-w-3xl">
-        <header id="forum-search-header" class="ui-page-header ui-page-heading">
-          <h1 class="ui-section-title">Search discussions</h1>
-          <p class="ui-section-copy">
-            Find useful conversations by topic, phrase, or tag.
-          </p>
+      <div id="forum-search-page" class="mx-auto w-full max-w-5xl">
+        <header
+          id="forum-search-header"
+          class="mb-4 flex flex-col gap-2 px-1 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <h1 class="text-2xl font-bold leading-tight text-base-content sm:text-3xl">
+              Search discussions
+            </h1>
+            <p class="mt-1 text-sm text-base-content/50">
+              Find conversations by topic, phrase, author, or date.
+            </p>
+          </div>
+          <span
+            :if={@search_active}
+            id="forum-search-result-meta"
+            class="text-xs font-semibold tabular-nums text-base-content/45"
+          >
+            Page {@page}
+          </span>
         </header>
 
-        <section id="forum-search-surface" class="ui-card h-auto p-4 sm:p-5">
+        <section
+          id="forum-search-surface"
+          class="rounded-xl border border-base-300/70 bg-base-200/45 p-3 shadow-sm shadow-base-300/10"
+        >
           <.form
             for={@search_form}
             id="forum-search-form"
             phx-submit="search"
-            class="space-y-4"
+            class="space-y-3"
           >
-            <div class="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_auto]">
+            <div
+              id="forum-search-tools"
+              class="grid gap-2 lg:grid-cols-[minmax(0,1.5fr)_11rem_8rem_8rem_8rem_auto] lg:items-end"
+            >
               <.input
                 field={@search_form[:query]}
                 id="forum-search-query"
                 type="search"
                 label="Search discussions"
-                placeholder="Search threads by title, content, or tags..."
-                class="input input-bordered min-h-11 w-full"
+                placeholder="Topic, phrase, or tag"
+                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
               />
-
-              <div class="flex items-end">
-                <.button
-                  id="forum-search-submit"
-                  type="submit"
-                  loading_label="Searching…"
-                  class="btn btn-primary min-h-11 w-full lg:w-auto"
-                >
-                  <.icon name="hero-magnifying-glass" class="size-5" /> Search
-                </.button>
-              </div>
-            </div>
-
-            <div
-              id="forum-search-advanced-row"
-              class="grid gap-3 rounded-2xl border border-base-300/70 bg-base-200/40 p-3 sm:grid-cols-2 xl:grid-cols-4"
-            >
               <.input
                 field={@search_form[:author]}
                 id="forum-search-author"
                 type="search"
                 label="Author"
-                placeholder="Search by username"
-                class="input input-bordered min-h-11 w-full"
+                placeholder="Username"
+                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
               />
               <.input
                 field={@search_form[:category_id]}
@@ -206,22 +209,33 @@ defmodule UrielmWeb.SearchLive do
                 type="select"
                 label="Category"
                 options={@category_options}
-                class="select select-bordered min-h-11 w-full"
+                class="select select-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
               />
               <.input
                 field={@search_form[:from_date]}
                 id="forum-search-from-date"
                 type="date"
                 label="From"
-                class="input input-bordered min-h-11 w-full"
+                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
               />
               <.input
                 field={@search_form[:to_date]}
                 id="forum-search-to-date"
                 type="date"
                 label="To"
-                class="input input-bordered min-h-11 w-full"
+                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
               />
+
+              <div class="flex">
+                <.button
+                  id="forum-search-submit"
+                  type="submit"
+                  loading_label="Searching…"
+                  class="btn btn-primary h-10 min-h-10 w-full gap-2 rounded-lg px-4 text-sm lg:w-auto"
+                >
+                  <.um_icon name="search" class="size-4" /> Search
+                </.button>
+              </div>
             </div>
           </.form>
         </section>
@@ -230,30 +244,43 @@ defmodule UrielmWeb.SearchLive do
           <.empty_state
             id="search-start-state"
             title="Search the community"
-            description="Enter a topic, phrase, or tag to find relevant discussions."
+            description="Enter a phrase or use the filters to find relevant discussions."
             icon="hero-magnifying-glass"
             compact
             class="mt-6"
           />
         <% else %>
-          <div id="results" phx-update="stream" class="mt-6 space-y-4">
-            <.empty_state
-              id="search-empty-state"
-              title="No matching discussions"
-              description="Try a broader phrase, check the spelling, or search for another tag."
-              icon="hero-magnifying-glass"
-              compact
-              class="hidden only:grid"
-            />
-            <div :for={{id, result} <- @streams.results} id={id}>
-              <.svelte
-                name="ThreadCard"
-                props={result}
-                socket={@socket}
-                ssr={false}
-              />
+          <section id="forum-search-results" class="mt-6" aria-labelledby="search-results-heading">
+            <div class="mb-2 grid grid-cols-[minmax(0,1fr)_64px_64px_92px] items-center px-4 text-xs font-semibold text-base-content/35 max-md:hidden">
+              <h2 id="search-results-heading">Topic</h2>
+              <span class="text-center">Replies</span>
+              <span class="text-center">Views</span>
+              <span class="text-right">Activity</span>
             </div>
-          </div>
+
+            <div
+              id="results"
+              phx-update="stream"
+              class="divide-y divide-base-300/45 border-y border-base-300/55"
+            >
+              <.empty_state
+                id="search-empty-state"
+                title="No matching discussions"
+                description="Try a broader phrase, remove a filter, or search another tag."
+                icon="hero-magnifying-glass"
+                compact
+                class="hidden only:grid"
+              />
+              <div :for={{id, result} <- @streams.results} id={id}>
+                <.svelte
+                  name="ThreadCard"
+                  props={result}
+                  socket={@socket}
+                  ssr={false}
+                />
+              </div>
+            </div>
+          </section>
 
           <div class="mt-8 flex items-center justify-center gap-2">
             <%= if @meta do %>

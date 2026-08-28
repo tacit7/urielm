@@ -112,7 +112,7 @@ defmodule UrielmWeb.NewThreadLive do
       current_board={@board.slug}
     >
       <div id="new-thread-page">
-        <header id="new-thread-header" class="ui-page-header ui-page-heading">
+        <header id="new-thread-header" class="ui-page-header mb-5">
           <.link
             id="new-thread-back-link"
             navigate={~p"/forum/b/#{@board.slug}"}
@@ -124,15 +124,17 @@ defmodule UrielmWeb.NewThreadLive do
             /> Back to {@board.name}
           </.link>
 
-          <h1 class="ui-section-title mt-7">Start a discussion</h1>
-          <p class="ui-section-copy">
+          <h1 class="mt-5 text-2xl font-bold tracking-tight text-base-content sm:text-3xl">
+            Start a discussion
+          </h1>
+          <p class="mt-1 max-w-2xl text-sm text-base-content/55">
             Share a clear question, useful idea, or practical lesson with the community.
           </p>
         </header>
 
         <section
           id="new-thread-board-context"
-          class="ui-card ui-card-compact mb-5 flex h-auto items-center gap-3 px-4 py-3.5 sm:px-5"
+          class="ui-card ui-card-compact mb-4 flex h-auto items-center gap-3 px-4 py-3"
           aria-label="Publishing destination"
         >
           <span class={[
@@ -148,7 +150,7 @@ defmodule UrielmWeb.NewThreadLive do
           <.um_icon name="hero-check-circle" class="ml-auto size-5 shrink-0 text-accent" />
         </section>
 
-        <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.7fr)]">
+        <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(16rem,0.62fr)]">
           <section id="new-thread-composer" class="ui-card h-auto">
             <.form
               for={@thread_form}
@@ -157,7 +159,7 @@ defmodule UrielmWeb.NewThreadLive do
               phx-submit="save"
               phx-hook="DiscussionDraft"
               data-draft-key={"forum:new-thread:#{@board.id}:#{@current_user.id}"}
-              class="p-5 sm:p-7"
+              class="p-4 sm:p-5"
             >
               <div>
                 <div class="mb-2 flex items-center justify-between gap-4">
@@ -173,7 +175,7 @@ defmodule UrielmWeb.NewThreadLive do
                   id="new-thread-title"
                   type="text"
                   placeholder="Summarize the discussion in one clear sentence"
-                  class="input input-bordered input-lg w-full border-base-300 bg-base-100/75 text-base shadow-none transition focus:border-secondary focus:outline-none"
+                  class="input input-bordered h-11 min-h-11 w-full border-base-300 bg-base-100/75 text-base shadow-none transition focus:border-secondary focus:outline-none"
                   error_class="input-error"
                   maxlength="300"
                   phx-debounce="250"
@@ -184,7 +186,7 @@ defmodule UrielmWeb.NewThreadLive do
                 </p>
               </div>
 
-              <div class="mt-6">
+              <div class="mt-5">
                 <div class="mb-2 flex items-center justify-between gap-4">
                   <label for="new-thread-body" class="text-sm font-bold text-base-content">
                     Discussion
@@ -198,7 +200,7 @@ defmodule UrielmWeb.NewThreadLive do
                   id="new-thread-body"
                   type="textarea"
                   placeholder="Add context, what you tried, and what kind of response would help…"
-                  class="textarea textarea-bordered min-h-72 w-full resize-y border-base-300 bg-base-100/75 px-4 py-3 text-base leading-7 shadow-none transition focus:border-secondary focus:outline-none sm:min-h-80"
+                  class="textarea textarea-bordered min-h-56 w-full resize-y border-base-300 bg-base-100/75 px-3.5 py-3 text-sm leading-7 shadow-none transition focus:border-secondary focus:outline-none sm:min-h-64"
                   error_class="textarea-error"
                   maxlength="10000"
                   phx-debounce="250"
@@ -210,7 +212,7 @@ defmodule UrielmWeb.NewThreadLive do
                 </div>
               </div>
 
-              <div class="mt-7 flex flex-col-reverse gap-3 border-t border-base-300/50 pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <div class="mt-5 flex flex-col-reverse gap-3 border-t border-base-300/50 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <p class="flex items-center gap-2 text-xs text-base-content/40">
                   <.um_icon name="hero-check-circle" class="size-4 text-accent" />
                   Drafts are kept on this device.
@@ -218,7 +220,7 @@ defmodule UrielmWeb.NewThreadLive do
                 <div class="grid grid-cols-2 gap-2 sm:flex">
                   <.link
                     navigate={~p"/forum/b/#{@board.slug}"}
-                    class="btn btn-ghost"
+                    class="btn btn-ghost btn-sm rounded-full px-4"
                   >
                     Cancel
                   </.link>
@@ -226,7 +228,7 @@ defmodule UrielmWeb.NewThreadLive do
                     id="new-thread-submit"
                     type="submit"
                     loading_label="Publishing…"
-                    class="btn btn-primary px-5"
+                    class="btn btn-primary btn-sm rounded-full px-5"
                   >
                     Publish discussion
                   </.button>
@@ -235,22 +237,22 @@ defmodule UrielmWeb.NewThreadLive do
             </.form>
           </section>
 
-          <aside class="grid gap-4 lg:sticky lg:top-8">
+          <aside class="grid gap-3 lg:sticky lg:top-20">
             <section
               id="new-thread-preview"
-              class="ui-card h-auto p-5 sm:p-6"
+              class="ui-card h-auto p-4 sm:p-5"
               aria-labelledby="new-thread-preview-label"
             >
               <p id="new-thread-preview-label" class="ui-eyebrow">Live preview</p>
               <h2
                 id="new-thread-preview-title"
-                class="mt-3 break-words text-lg font-bold leading-snug text-base-content"
+                class="mt-3 break-words text-base font-bold leading-snug text-base-content"
               >
                 {if @draft_title == "", do: "Your title will appear here", else: @draft_title}
               </h2>
               <div
                 id="new-thread-preview-body"
-                class="mt-3 min-h-16 break-words text-sm leading-6 text-base-content/60"
+                class="mt-3 min-h-14 break-words text-sm leading-6 text-base-content/60"
               >
                 <%= if @draft_body == "" do %>
                   <p>Your formatted discussion will appear here as you write.</p>
@@ -267,7 +269,7 @@ defmodule UrielmWeb.NewThreadLive do
 
             <section
               id="new-thread-guidance"
-              class="ui-card h-auto p-5 sm:p-6"
+              class="ui-card h-auto p-4 sm:p-5"
               aria-labelledby="new-thread-guidance-title"
             >
               <div class="flex items-center gap-2 text-secondary">
@@ -276,7 +278,7 @@ defmodule UrielmWeb.NewThreadLive do
                   A useful discussion
                 </h2>
               </div>
-              <ul class="mt-4 space-y-3 text-sm leading-5 text-base-content/55">
+              <ul class="mt-3 space-y-2.5 text-sm leading-5 text-base-content/55">
                 <li class="flex gap-3">
                   <span class="mt-2 size-1.5 shrink-0 rounded-full bg-secondary"></span>
                   Lead with the goal or question.

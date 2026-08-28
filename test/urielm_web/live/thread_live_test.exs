@@ -75,6 +75,45 @@ defmodule UrielmWeb.ThreadLiveTest do
       refute has_element?(view, "#comment-form")
       assert has_element?(view, "#thread-locked-state.alert-warning")
     end
+
+    test "renders compact related threads from the same board", %{
+      conn: conn,
+      author: author,
+      board: board,
+      thread: thread
+    } do
+      related_thread =
+        Fixtures.thread_fixture(%{
+          board_id: board.id,
+          title: "Related topic from this board",
+          comment_count: 3,
+          view_count: 42
+        })
+
+      unrelated_board = Fixtures.board_fixture()
+      unrelated_thread = Fixtures.thread_fixture(%{board_id: unrelated_board.id})
+
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      assert has_element?(view, "#related-threads")
+      assert has_element?(view, "#related-threads-title")
+      assert has_element?(view, "#related-threads-board-link[href='/forum/b/#{board.slug}']")
+      assert has_element?(view, "#related-thread-#{related_thread.id}")
+      refute has_element?(view, "#related-thread-#{thread.id}")
+      refute has_element?(view, "#related-thread-#{unrelated_thread.id}")
+    end
+
+    test "omits related threads section when no candidates exist", %{
+      conn: conn,
+      author: author,
+      thread: thread
+    } do
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      refute has_element?(view, "#related-threads")
+    end
   end
 
   describe "thread reporting" do

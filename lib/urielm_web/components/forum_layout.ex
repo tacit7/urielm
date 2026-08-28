@@ -2,6 +2,7 @@ defmodule UrielmWeb.Components.ForumLayout do
   @moduledoc false
 
   use UrielmWeb, :html
+  use LiveSvelte.Components
 
   import UrielmWeb.Layouts, only: [flash_group: 1]
 
@@ -10,6 +11,11 @@ defmodule UrielmWeb.Components.ForumLayout do
   attr :categories, :list, default: [], doc: "list of forum categories with boards"
   attr :current_path, :string, default: "/forum", doc: "current request path for active state"
   attr :current_board, :string, default: nil, doc: "current board slug for active state"
+
+  attr :new_topic_path, :string,
+    default: nil,
+    doc: "path for creating a topic in the current board"
+
   attr :unread_notification_count, :integer, default: 0
   slot :inner_block, required: true
 
@@ -20,34 +26,19 @@ defmodule UrielmWeb.Components.ForumLayout do
 
       <%!-- Main content --%>
       <div class="drawer-content flex min-h-screen flex-col bg-base-100">
-        <%!-- Mobile navbar --%>
-        <header
-          id="forum-mobile-header"
-          class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-base-300/60 bg-base-100/90 px-4 backdrop-blur-xl lg:hidden"
-        >
-          <label
-            for="forum-drawer"
-            class="btn btn-ghost btn-sm btn-square rounded-lg"
-            aria-label="Open sidebar"
-            role="button"
-            tabindex="0"
-          >
-            <.um_icon name="bars_3" class="w-5 h-5" />
-          </label>
-          <.link navigate={~p"/forum"} class="font-bold tracking-tight text-base-content">
-            Community
-          </.link>
-          <.link
-            navigate={~p"/forum/search"}
-            class="btn btn-ghost btn-sm btn-square ml-auto rounded-lg"
-            aria-label="Search the community"
-          >
-            <.um_icon name="search" class="size-5" />
-          </.link>
-        </header>
+        <div id="forum-navbar-container" phx-update="ignore">
+          <.Navbar
+            currentPage="community"
+            currentUser={serialize_user(@current_user)}
+            unreadNotificationCount={@unread_notification_count}
+            showNavLinks={false}
+            newTopicPath={if(@current_user, do: @new_topic_path, else: nil)}
+            drawerId="forum-drawer"
+          />
+        </div>
 
         <%!-- Page content --%>
-        <main class="flex-1 overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+        <main class="flex-1 overflow-y-auto pt-14 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0">
           <div id="forum-page-shell" class="ui-page-shell max-w-5xl py-7 lg:py-12">
             {render_slot(@inner_block)}
           </div>
@@ -61,7 +52,7 @@ defmodule UrielmWeb.Components.ForumLayout do
       </div>
 
       <%!-- Sidebar --%>
-      <aside class="drawer-side z-40">
+      <aside class="drawer-side z-40 pt-14">
         <label
           for="forum-drawer"
           class="drawer-overlay"
@@ -72,22 +63,11 @@ defmodule UrielmWeb.Components.ForumLayout do
         <nav
           id="forum-sidebar-nav"
           aria-label="Community navigation"
-          class="w-64 min-h-screen border-r border-base-300/60 bg-base-200/80"
+          class="w-56 min-h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-base-300/60 bg-base-200/80"
         >
-          <div class="p-4 lg:sticky lg:top-0">
-            <%!-- Logo/home --%>
-            <.link
-              navigate={~p"/"}
-              class="group mb-7 flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-base-300/60"
-            >
-              <div class="flex size-9 items-center justify-center rounded-lg bg-secondary font-black text-secondary-content shadow-sm transition-transform group-hover:-translate-y-0.5">
-                U
-              </div>
-              <span class="font-bold tracking-tight text-base-content">Urielm</span>
-            </.link>
-
+          <div class="p-3 lg:sticky lg:top-0">
             <%!-- Main navigation --%>
-            <div class="space-y-1 mb-8" aria-label="Forum views">
+            <div class="space-y-0.5 mb-5" aria-label="Forum views">
               <.nav_link
                 href="/forum"
                 icon="topics"
@@ -122,11 +102,11 @@ defmodule UrielmWeb.Components.ForumLayout do
             </div>
 
             <%!-- Categories --%>
-            <div class="mb-6">
-              <h3 class="text-[0.65rem] font-bold text-base-content/45 uppercase tracking-[0.16em] px-3 mb-3">
+            <div class="mb-4">
+              <h3 class="text-[0.65rem] font-bold text-base-content/45 uppercase tracking-[0.16em] px-2.5 mb-2">
                 Explore
               </h3>
-              <div class="space-y-1">
+              <div class="space-y-0.5">
                 <%= for category <- @categories do %>
                   <.category_group category={category} current_board={@current_board} />
                 <% end %>
@@ -134,7 +114,7 @@ defmodule UrielmWeb.Components.ForumLayout do
             </div>
 
             <%!-- More links --%>
-            <div class="space-y-1 pt-5 border-t border-base-300/60">
+            <div class="space-y-0.5 pt-3 border-t border-base-300/60">
               <.nav_link
                 href="/forum/search"
                 icon="search"
@@ -161,6 +141,22 @@ defmodule UrielmWeb.Components.ForumLayout do
     """
   end
 
+  defp serialize_user(nil), do: nil
+
+  defp serialize_user(%{avatarUrl: _} = user), do: user
+  defp serialize_user(%{"avatarUrl" => _} = user), do: user
+
+  defp serialize_user(user) do
+    %{
+      id: to_string(user.id),
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      avatarUrl: user.avatar_url,
+      isAdmin: user.is_admin || false
+    }
+  end
+
   attr :href, :string, required: true
   attr :icon, :string, required: true
   attr :label, :string, required: true
@@ -173,19 +169,19 @@ defmodule UrielmWeb.Components.ForumLayout do
       <a
         href={@href}
         class={[
-          "flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          "flex min-h-8 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
           if(@active,
             do: "bg-secondary/10 text-secondary font-semibold",
             else: "text-base-content/65 hover:text-base-content hover:bg-base-300/60"
           )
         ]}
       >
-        <.um_icon name={@icon} class="w-4 h-4" />
+        <.um_icon name={@icon} class="size-3.5" />
         <span>{@label}</span>
         <span
           :if={@badge_count > 0}
           id="forum-notification-badge"
-          class="badge badge-info badge-sm ml-auto min-w-6 border-0 bg-info/15 px-1.5 font-bold text-info"
+          class="badge badge-info badge-xs ml-auto min-w-5 border-0 bg-info/15 px-1 font-bold text-info"
           aria-label={"#{@badge_count} unread notifications"}
         >
           {if(@badge_count > 99, do: "99+", else: @badge_count)}
@@ -200,8 +196,8 @@ defmodule UrielmWeb.Components.ForumLayout do
 
   def category_group(assigns) do
     ~H"""
-    <div class="mb-2">
-      <div class="px-3 py-1 text-[0.65rem] font-semibold text-base-content/40 uppercase tracking-wide">
+    <div class="mb-1.5">
+      <div class="px-2.5 py-1 text-[0.65rem] font-semibold text-base-content/40 uppercase tracking-wide">
         {@category.name}
       </div>
       <%= for board <- @category.boards || [] do %>
@@ -222,7 +218,7 @@ defmodule UrielmWeb.Components.ForumLayout do
       <a
         href={~p"/forum/b/#{@board.slug}"}
         class={[
-          "flex min-h-9 items-center gap-2 rounded-lg px-3 py-2 text-sm transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          "flex min-h-8 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
           if(@active,
             do: "bg-secondary/10 text-secondary font-semibold",
             else: "text-base-content/60 hover:text-base-content hover:bg-base-300/60"

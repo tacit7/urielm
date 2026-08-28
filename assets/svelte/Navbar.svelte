@@ -1,10 +1,16 @@
 <script>
-  import ThemeToggle from './ThemeToggle.svelte'
   import UMIcon from './UMIcon.svelte'
   import UserMenu from './UserMenu.svelte'
   import { mobileMoreItems, pageForPath, primaryNavItems } from '../js/navigation.js'
 
-  let { currentPage = '', currentUser = null, unreadNotificationCount = 0 } = $props()
+  let {
+    currentPage = '',
+    currentUser = null,
+    unreadNotificationCount = 0,
+    showNavLinks = true,
+    newTopicPath = null,
+    drawerId = null,
+  } = $props()
 
   let browserPage = $state(null)
   let activePage = $derived(browserPage || currentPage || 'home')
@@ -16,9 +22,12 @@
   )
   let isScrolled = $state(false)
   let isMenuOpen = $state(false)
+  let isNotificationsOpen = $state(false)
   let hideNavbar = $state(false)
-  let mobileMenuRef
-  let mobileTriggerRef
+  let mobileMenuRef = $state()
+  let mobileTriggerRef = $state()
+  let notificationsMenuRef = $state()
+  let notificationsTriggerRef = $state()
 
   function syncPage() {
     browserPage = pageForPath(window.location.pathname)
@@ -38,6 +47,21 @@
     isMenuOpen = false
   }
 
+  function toggleNotifications(event) {
+    event.stopPropagation()
+    isNotificationsOpen = !isNotificationsOpen
+    isMenuOpen = false
+  }
+
+  function closeNotifications() {
+    isNotificationsOpen = false
+  }
+
+  function closeNotificationsAndRestoreFocus() {
+    closeNotifications()
+    requestAnimationFrame(() => notificationsTriggerRef?.focus())
+  }
+
   function closeMenuAndRestoreFocus() {
     closeMenu()
     requestAnimationFrame(() => mobileTriggerRef?.focus())
@@ -45,10 +69,16 @@
 
   function handleClickOutside(event) {
     if (isMenuOpen && mobileMenuRef && !mobileMenuRef.contains(event.target)) closeMenu()
+    if (
+      isNotificationsOpen &&
+      notificationsMenuRef &&
+      !notificationsMenuRef.contains(event.target)
+    ) closeNotifications()
   }
 
   function handleKeydown(event) {
     if (event.key === 'Escape' && isMenuOpen) closeMenuAndRestoreFocus()
+    if (event.key === 'Escape' && isNotificationsOpen) closeNotificationsAndRestoreFocus()
   }
 
   function syncUnreadCount(event) {
@@ -102,8 +132,19 @@
       : 'border-transparent bg-base-100/55 backdrop-blur-md'
   } ${hideNavbar ? '-translate-y-full' : ''}`}
 >
-  <nav class="navbar relative mx-auto min-h-[4.25rem] max-w-7xl gap-2 px-4 sm:px-6 lg:px-8" aria-label="Primary navigation">
-    <div class="navbar-start w-auto shrink-0">
+  <nav class="navbar relative mx-auto min-h-14 max-w-7xl gap-2 px-4 py-1 sm:px-6 lg:px-8" aria-label="Primary navigation">
+    <div class="navbar-start w-auto shrink-0 gap-1.5">
+      {#if drawerId}
+        <label
+          id="forum-sidebar-toggle"
+          for={drawerId}
+          class="btn btn-ghost btn-circle size-11 text-base-content/70 transition hover:bg-primary/10 hover:text-primary lg:hidden"
+          aria-label="Open community navigation"
+        >
+          <UMIcon name="bars_3" className="size-5" />
+        </label>
+      {/if}
+
       <a
         id="nav-brand"
         href="/"
@@ -116,6 +157,7 @@
       </a>
     </div>
 
+    {#if showNavLinks}
     <div class="navbar-center absolute left-1/2 hidden -translate-x-1/2 lg:flex">
       <ul id="desktop-nav-links" class="menu menu-horizontal flex-nowrap gap-0.5 p-0">
         {#each primaryNavItems as item}
@@ -134,8 +176,22 @@
         {/each}
       </ul>
     </div>
+    {/if}
 
     <div class="navbar-end ml-auto w-auto gap-1 sm:gap-1.5">
+      {#if newTopicPath}
+        <a
+          id="nav-new-topic"
+          href={newTopicPath}
+          data-phx-link="redirect"
+          data-phx-link-state="push"
+          class="btn btn-primary btn-sm h-9 min-h-9 rounded-full px-3 text-xs font-black shadow-sm shadow-primary/15 sm:px-4"
+        >
+          <UMIcon name="hero-plus" className="size-4" />
+          <span class="hidden sm:inline">New topic</span>
+        </a>
+      {/if}
+
       <a
         id="nav-search"
         href="/forum/search"
@@ -147,38 +203,114 @@
       </a>
 
       {#if currentUser}
-        <a
-          id="nav-notifications"
-          href="/notifications"
-          class="btn btn-ghost btn-circle relative hidden size-11 text-base-content/60 transition hover:bg-info/10 hover:text-info lg:inline-flex"
-          aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
-          title="Notifications"
+        <div
+          class={`dropdown dropdown-end relative ${showNavLinks ? 'hidden lg:block' : 'block'}`}
+          class:dropdown-open={isNotificationsOpen}
+          bind:this={notificationsMenuRef}
         >
-          <UMIcon name="bell" className="size-4" />
-          {#if unreadCount > 0}
-            <span
-              id="nav-notification-badge"
-              class="badge badge-info absolute -right-1 -top-1 h-5 min-w-5 border-2 border-base-100 px-1 text-[0.625rem] font-black text-info-content"
+          <button
+            id="nav-notifications"
+            bind:this={notificationsTriggerRef}
+            type="button"
+            onclick={toggleNotifications}
+            class={`btn btn-ghost btn-circle relative size-11 text-base-content/60 transition hover:bg-info/10 hover:text-info ${isNotificationsOpen ? 'bg-info/10 text-info' : ''}`}
+            aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+            aria-expanded={isNotificationsOpen}
+            aria-controls="notification-menu"
+            title="Notifications"
+          >
+            <UMIcon name="bell" className="size-4" />
+            {#if unreadCount > 0}
+              <span
+                id="nav-notification-badge"
+                class="badge badge-info absolute -right-1 -top-1 h-5 min-w-5 border-2 border-base-100 px-1 text-xs font-black text-info-content"
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            {/if}
+          </button>
+
+          {#if isNotificationsOpen}
+            <div
+              id="notification-menu"
+              class="dropdown-content absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-base-200 p-2 shadow-xl"
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
+              <div class="flex items-center justify-between gap-3 px-3 pb-2 pt-2">
+                <div>
+                  <p class="text-sm font-black text-base-content">Notifications</p>
+                  <p class="mt-0.5 text-xs font-medium text-base-content/45">
+                    {#if unreadCount > 0}
+                      {unreadCount} unread {unreadCount === 1 ? 'update' : 'updates'}
+                    {:else}
+                      All caught up
+                    {/if}
+                  </p>
+                </div>
+                <span class={`inline-flex size-8 items-center justify-center rounded-full ${unreadCount > 0 ? 'bg-info/15 text-info' : 'bg-success/15 text-success'}`}>
+                  <UMIcon name={unreadCount > 0 ? 'bell' : 'hero-check'} className="size-4" />
+                </span>
+              </div>
+
+              <div class="border-t border-base-300/60 pt-1">
+                {#if unreadCount > 0}
+                  <a
+                    id="notification-menu-unread"
+                    href="/notifications?unread=true"
+                    data-phx-link="redirect"
+                    data-phx-link-state="push"
+                    class="group flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-base-content/75 transition hover:bg-base-100/70 hover:text-base-content"
+                    onclick={closeNotifications}
+                  >
+                    <span class="inline-flex size-7 items-center justify-center rounded-full bg-info/10 text-info">
+                      <UMIcon name="bell" className="size-3.5" />
+                    </span>
+                    <span class="min-w-0 flex-1">Review unread</span>
+                    <span class="badge badge-info badge-sm min-h-5 text-xs font-black">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                  </a>
+                {:else}
+                  <div
+                    id="notification-menu-empty"
+                    class="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-base-content/55"
+                  >
+                    <span class="inline-flex size-7 items-center justify-center rounded-full bg-success/10 text-success">
+                      <UMIcon name="hero-check" className="size-3.5" />
+                    </span>
+                    <span>Nothing needs attention</span>
+                  </div>
+                {/if}
+
+                <a
+                  id="notification-menu-all"
+                  href="/notifications"
+                  data-phx-link="redirect"
+                  data-phx-link-state="push"
+                  class="group mt-1 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-base-content/70 transition hover:bg-base-100/70 hover:text-base-content"
+                  onclick={closeNotifications}
+                >
+                  <span class="inline-flex size-7 items-center justify-center rounded-full bg-base-300/70 text-base-content/60">
+                    <UMIcon name="hero-inbox" className="size-3.5" />
+                  </span>
+                  <span class="min-w-0 flex-1">View all notifications</span>
+                  <UMIcon name="hero-arrow-right" className="size-4 opacity-40 transition group-hover:translate-x-0.5 group-hover:opacity-75" />
+                </a>
+              </div>
+            </div>
           {/if}
-        </a>
+        </div>
       {/if}
 
-      <ThemeToggle />
-
       {#if currentUser}
-        <div class="hidden lg:block">
+        <div class={showNavLinks ? 'hidden lg:block' : 'block'}>
           <UserMenu {currentUser} />
         </div>
       {:else}
-        <div class="hidden items-center gap-1.5 lg:flex">
+        <div class={showNavLinks ? 'hidden items-center gap-1.5 lg:flex' : 'flex items-center gap-1.5'}>
           <a href="/signin" class="btn btn-ghost btn-sm rounded-full px-4 text-base-content/70">Sign in</a>
           <a href="/signup" class="btn btn-primary btn-sm rounded-full px-5 shadow-sm shadow-primary/15">Sign up</a>
         </div>
       {/if}
 
+      {#if showNavLinks}
       <div
         class="dropdown dropdown-end relative lg:hidden"
         class:dropdown-open={isMenuOpen}
@@ -247,6 +379,7 @@
           </div>
         {/if}
       </div>
+      {/if}
     </div>
   </nav>
 </header>
