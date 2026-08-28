@@ -53,17 +53,11 @@ defmodule UrielmWeb.TagLive do
       current_path={"/forum/tags/#{@tag.slug}"}
     >
       <div id="forum-tag-page" class="mx-auto w-full max-w-5xl">
-        <nav id="forum-tag-breadcrumbs" class="breadcrumbs mb-4 text-sm text-base-content/50">
-          <ul>
-            <li><.link navigate={~p"/forum/tags"}>Tags</.link></li>
-            <li>{@tag.name}</li>
-          </ul>
-        </nav>
-
-        <header id="forum-tag-header" class="ui-page-header ui-page-heading">
-          <p class="ui-eyebrow text-accent">Tag discussions</p>
-          <h1 class="ui-section-title">{@tag.name}</h1>
-          <p class="ui-section-copy">
+        <header id="forum-tag-header" class="ui-page-header mb-5">
+          <h1 class="text-2xl font-bold tracking-tight text-base-content sm:text-3xl">
+            {@tag.name}
+          </h1>
+          <p class="mt-1 max-w-2xl text-sm text-base-content/55">
             Browse threads grouped under this tag and jump back into the conversations that use it.
           </p>
         </header>

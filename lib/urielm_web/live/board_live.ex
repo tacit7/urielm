@@ -185,19 +185,15 @@ defmodule UrielmWeb.BoardLive do
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
       current_board={@board.slug}
+      new_topic_path={if(@board.is_locked, do: nil, else: ~p"/forum/b/#{@board.slug}/new")}
     >
-      <nav id="board-breadcrumbs" class="breadcrumbs mb-4 text-sm text-base-content/50">
-        <ul>
-          <li><.link navigate={~p"/forum/categories"}>Categories</.link></li>
-          <li><.link navigate={~p"/forum/categories"}>{@board.category.name}</.link></li>
-          <li>{@board.name}</li>
-        </ul>
-      </nav>
-
-      <header id="board-header" class="ui-page-header mb-6">
-        <p class="ui-eyebrow">Community board</p>
-        <h1 class="ui-section-title">{@board.name}</h1>
-        <p :if={@board.description} class="ui-section-copy">{@board.description}</p>
+      <header id="board-header" class="ui-page-header mb-4">
+        <h1 class="text-2xl font-bold tracking-tight text-base-content sm:text-3xl">
+          {@board.name}
+        </h1>
+        <p :if={@board.description} class="mt-1 max-w-2xl text-sm text-base-content/55">
+          {@board.description}
+        </p>
       </header>
 
       <%!-- Locked notice --%>
@@ -210,8 +206,8 @@ defmodule UrielmWeb.BoardLive do
         <span>This board is locked and not accepting new threads.</span>
       </div>
 
-      <%!-- Filters and primary action --%>
-      <div class="mb-6 flex items-end justify-between gap-3 border-b border-base-300">
+      <%!-- Filters --%>
+      <div class="mb-5 border-b border-base-300">
         <nav id="board-filter-tabs" class="tabs tabs-border min-w-0 overflow-x-auto">
           <.tab_link
             href={~p"/forum/b/#{@board.slug}"}
@@ -246,22 +242,12 @@ defmodule UrielmWeb.BoardLive do
             label="Unsolved"
           />
         </nav>
-
-        <.link
-          :if={@current_user && !@board.is_locked}
-          id="board-new-topic-link"
-          navigate={~p"/forum/b/#{@board.slug}/new"}
-          class="btn btn-primary btn-sm mb-1 shrink-0"
-        >
-          <.um_icon name="hero-plus" class="size-4" /> New topic
-        </.link>
       </div>
 
       <%!-- Threads table --%>
       <div id="board-discussions-surface" class="ui-card ui-card-compact h-auto">
         <%!-- Column headers --%>
-        <div class="hidden items-center gap-x-4 border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[auto_1fr_56px_56px_72px]">
-          <div class="w-2" />
+        <div class="hidden items-center gap-x-3 border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[minmax(0,1fr)_64px_64px_92px]">
           <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
           <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
             Replies

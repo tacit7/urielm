@@ -6,7 +6,7 @@ defmodule UrielmWeb.ThreadCardTest do
   test "thread actions stay visible and touch-friendly on mobile" do
     source = File.read!(@thread_card)
 
-    assert source =~ "opacity-100 md:opacity-0"
+    assert source =~ "opacity-100 transition-opacity md:opacity-0"
     assert source =~ "md:group-hover:opacity-100"
     assert source =~ "md:group-focus-within:opacity-100"
     assert source =~ "min-h-10 min-w-10"

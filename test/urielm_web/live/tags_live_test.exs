@@ -56,7 +56,7 @@ defmodule UrielmWeb.TagsLiveTest do
       assert has_element?(view, "#forum-tag-summary")
       assert has_element?(view, "#forum-tag-thread-count", "1")
       assert has_element?(view, "#forum-tag-management-note")
-      assert has_element?(view, "#forum-tag-breadcrumbs a[href='/forum/tags']")
+      refute has_element?(view, "#forum-tag-breadcrumbs")
       assert has_element?(view, "#tag-threads[phx-update='stream']")
       assert has_element?(view, "#tag-threads [data-thread-id='#{thread.id}']")
     end

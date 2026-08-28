@@ -266,6 +266,51 @@ defmodule Urielm.ForumTest do
       refute Enum.any?(threads, &(&1.id == thread2.id))
     end
 
+    test "list_related_threads/2 returns same-board threads and excludes current, removed, and other boards" do
+      board = board_fixture()
+      other_board = board_fixture()
+      current_thread = thread_fixture(%{board_id: board.id})
+      related_thread = thread_fixture(%{board_id: board.id})
+      removed_thread = thread_fixture(%{board_id: board.id})
+      other_board_thread = thread_fixture(%{board_id: other_board.id})
+
+      admin = admin_fixture()
+      Forum.remove_thread(removed_thread, admin)
+
+      related_threads = Forum.list_related_threads(current_thread)
+
+      assert Enum.any?(related_threads, &(&1.id == related_thread.id))
+      refute Enum.any?(related_threads, &(&1.id == current_thread.id))
+      refute Enum.any?(related_threads, &(&1.id == removed_thread.id))
+      refute Enum.any?(related_threads, &(&1.id == other_board_thread.id))
+    end
+
+    test "list_related_threads/2 orders by recent activity and respects limit" do
+      board = board_fixture()
+      current_thread = thread_fixture(%{board_id: board.id})
+      oldest_thread = thread_fixture(%{board_id: board.id})
+      newest_thread = thread_fixture(%{board_id: board.id})
+      middle_thread = thread_fixture(%{board_id: board.id})
+
+      now = DateTime.utc_now()
+
+      Repo.update_all(from(t in Thread, where: t.id == ^oldest_thread.id),
+        set: [updated_at: DateTime.add(now, -300, :second)]
+      )
+
+      Repo.update_all(from(t in Thread, where: t.id == ^middle_thread.id),
+        set: [updated_at: DateTime.add(now, -200, :second)]
+      )
+
+      Repo.update_all(from(t in Thread, where: t.id == ^newest_thread.id),
+        set: [updated_at: DateTime.add(now, -100, :second)]
+      )
+
+      related_threads = Forum.list_related_threads(current_thread, limit: 2)
+
+      assert Enum.map(related_threads, & &1.id) == [newest_thread.id, middle_thread.id]
+    end
+
     test "get_thread!/1 returns thread with preloaded metadata (no comments by default)" do
       thread = thread_fixture()
 

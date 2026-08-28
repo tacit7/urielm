@@ -3,8 +3,11 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 
 const navbar = readFileSync(new URL("./Navbar.svelte", import.meta.url), "utf8")
-const themeToggle = readFileSync(new URL("./ThemeToggle.svelte", import.meta.url), "utf8")
 const userMenu = readFileSync(new URL("./UserMenu.svelte", import.meta.url), "utf8")
+
+function classForId(source, id) {
+  return source.match(new RegExp(`id="${id}"[\\s\\S]*?class="([^"]+)"`))?.[1] || ""
+}
 
 test("mobile navigation exposes controlled menu semantics", () => {
   assert.match(navbar, /aria-expanded=\{isMenuOpen\}/)
@@ -20,18 +23,11 @@ test("desktop navigation uses the daisyUI horizontal menu structure", () => {
   assert.match(navbar, /\{#each primaryNavItems as item\}\s*<li>/)
 })
 
-test("theme control swaps aligned sun and moon icons", () => {
-  assert.match(themeToggle, /let \{ id = 'tokyo-theme-toggle' \} = \$props\(\)/)
-  assert.match(themeToggle, /id=\{id\}/)
-  assert.match(themeToggle, /class:swap-active=\{currentTheme === DARK_THEME\}/)
-  assert.match(themeToggle, /class="[^"]*swap swap-rotate[^"]*size-11[^"]*"/)
-  assert.match(themeToggle, /<UMIcon name="sun" className="swap-on size-4" \/>/)
-  assert.match(themeToggle, /<UMIcon name="moon" className="swap-off size-4" \/>/)
-})
-
-test("mobile dropdown owns the mobile theme control", () => {
-  assert.match(navbar, /<div class="hidden lg:block">\s*<ThemeToggle id="desktop-theme-toggle" \/>\s*<\/div>/)
-  assert.match(navbar, /id="mobile-nav"[\s\S]*id="mobile-theme-control"[\s\S]*Appearance[\s\S]*<ThemeToggle id="mobile-theme-toggle" \/>/)
+test("theme control lives in the account menu", () => {
+  assert.doesNotMatch(navbar, /ThemeToggle/)
+  assert.doesNotMatch(navbar, /mobile-theme-control/)
+  assert.match(userMenu, /<UMIcon name=\{themeEnabled \? 'hero-moon' : 'hero-sun'\} className="size-4" \/>/)
+  assert.match(userMenu, />\s*Theme\s*<\/button>/)
 })
 
 test("account menu uses the shared icon system and controlled state", () => {
@@ -42,9 +38,19 @@ test("account menu uses the shared icon system and controlled state", () => {
   assert.match(userMenu, /id="account-menu"/)
 })
 
+test("notification menu exposes compact unread and empty states", () => {
+  assert.match(navbar, /aria-expanded=\{isNotificationsOpen\}/)
+  assert.match(navbar, /aria-controls="notification-menu"/)
+  assert.match(navbar, /id="notification-menu"/)
+  assert.match(navbar, /id="notification-menu-unread"/)
+  assert.match(navbar, /id="notification-menu-empty"/)
+  assert.match(navbar, /id="notification-menu-all"/)
+})
+
 test("navigation dropdowns use a distinct elevated surface", () => {
-  assert.match(navbar, /id="mobile-nav"[\s\S]*?bg-base-200/)
-  assert.match(userMenu, /id="account-menu"[\s\S]*?bg-base-200/)
-  assert.doesNotMatch(navbar, /id="mobile-nav"[\s\S]*?bg-base-100/)
-  assert.doesNotMatch(userMenu, /id="account-menu"[\s\S]*?bg-base-100/)
+  assert.match(classForId(navbar, "mobile-nav"), /bg-base-200/)
+  assert.match(classForId(navbar, "notification-menu"), /bg-base-200/)
+  assert.match(classForId(userMenu, "account-menu"), /bg-base-200/)
+  assert.doesNotMatch(classForId(navbar, "mobile-nav"), /bg-base-100/)
+  assert.doesNotMatch(classForId(userMenu, "account-menu"), /bg-base-100/)
 })

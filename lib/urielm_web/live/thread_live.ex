@@ -59,6 +59,7 @@ defmodule UrielmWeb.ThreadLive do
            :thread,
            LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user)
          )
+         |> assign(:related_threads, Forum.list_related_threads(thread, limit: 5))
          |> assign(:comment_tree, comment_tree)
          |> assign(:thread_is_saved, is_saved)
          |> assign(:thread_is_subscribed, is_subscribed)
@@ -651,7 +652,7 @@ defmodule UrielmWeb.ThreadLive do
       <main id="thread-reading-view" class="mx-auto max-w-4xl pb-12">
         <.link
           navigate={~p"/forum/b/#{@thread.board_slug}"}
-          class="btn btn-ghost btn-sm -ml-2 mb-5 gap-2 text-base-content/55 hover:text-secondary"
+          class="btn btn-ghost btn-sm -ml-2 mb-3 h-9 min-h-9 gap-2 rounded-full px-3 text-base-content/55 hover:text-secondary"
         >
           <.um_icon
             name="arrow_left"
@@ -662,77 +663,89 @@ defmodule UrielmWeb.ThreadLive do
 
         <article
           id="thread-topic"
-          class="ui-card h-auto overflow-visible p-5 sm:p-7 lg:p-8"
+          class="ui-card h-auto overflow-visible p-4 sm:p-5"
         >
-          <div class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase">
+          <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
             <.link
               navigate={~p"/forum/b/#{@thread.board_slug}"}
-              class="badge badge-secondary badge-outline h-auto py-1"
+              class="inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-2.5 py-1 text-secondary transition-colors hover:bg-secondary/15"
             >
+              <.um_icon name="topics" class="size-3.5" />
               {@thread.board_name}
             </.link>
-            <span :if={@thread.is_pinned} class="badge badge-info badge-sm gap-1">
+            <span :if={@thread.is_pinned} class="badge badge-info badge-xs h-5 min-h-5 gap-1">
               <.um_icon name="bookmark" class="size-3" /> Pinned
             </span>
-            <span :if={@thread.is_locked} class="badge badge-warning badge-sm gap-1">
+            <span :if={@thread.is_locked} class="badge badge-warning badge-xs h-5 min-h-5 gap-1">
               <.um_icon name="lock_closed" class="size-3" /> Locked
             </span>
-            <span :if={@thread.solved_comment_id} class="badge badge-success badge-sm gap-1">
+            <span
+              :if={@thread.solved_comment_id}
+              class="badge badge-success badge-xs h-5 min-h-5 gap-1"
+            >
               <.um_icon name="check_circle" class="size-3" /> Solved
             </span>
+          </div>
+
+          <h1 class="mt-3 max-w-3xl text-2xl font-bold leading-tight text-base-content sm:text-3xl">
+            {@thread.title}
+          </h1>
+
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-base-300/50 pb-4">
+            <div
+              id="thread-author"
+              class="flex min-w-0 items-center gap-2.5 text-sm text-base-content/45"
+            >
+              <%= if Map.get(@thread, :author_avatar_url) do %>
+                <img
+                  src={Map.get(@thread, :author_avatar_url)}
+                  alt={Map.get(@thread, :author_username) || "User"}
+                  class="size-8 rounded-full object-cover"
+                />
+              <% else %>
+                <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-black text-accent-content">
+                  {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
+                  |> String.upcase()}
+                </div>
+              <% end %>
+              <div class="min-w-0 leading-5">
+                <span class="font-semibold text-base-content/75">
+                  {Map.get(@thread, :author_username) || "Unknown"}
+                </span>
+                <span class="block truncate text-xs">
+                  {Calendar.strftime(@thread.created_at, "%b %d, %Y")}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs text-base-content/45">
+              <span class="font-mono tabular-nums">
+                {Map.get(@thread, :view_count, 0)} views
+              </span>
+              <span class="font-mono tabular-nums">
+                {pluralize(@thread.comment_count, "reply")}
+              </span>
+            </div>
           </div>
 
           <div
             :if={Map.get(@thread, :tag_records, []) != []}
             id="thread-tags"
             aria-label="Thread tags"
-            class="mt-4 flex flex-wrap gap-2"
+            class="mt-4 flex flex-wrap gap-1.5"
           >
             <.link
               :for={tag <- Map.get(@thread, :tag_records, [])}
               id={"thread-tag-#{tag.slug}"}
               navigate={~p"/forum/tags/#{tag.slug}"}
-              class="badge badge-outline badge-secondary h-auto gap-1.5 py-1.5 text-xs font-bold normal-case transition-colors hover:bg-secondary/10"
+              class="badge badge-outline badge-secondary h-6 min-h-6 gap-1.5 px-2 text-xs font-semibold normal-case transition-colors hover:bg-secondary/10"
             >
-              <.um_icon name="hero-tag" class="size-3.5" />
+              <.um_icon name="hero-tag" class="size-3" />
               {tag.name}
             </.link>
           </div>
 
-          <h1 class="mt-4 max-w-3xl text-3xl font-black leading-tight text-base-content sm:text-4xl">
-            {@thread.title}
-          </h1>
-
-          <div class="mt-5 flex items-start justify-between gap-4">
-            <div id="thread-author" class="flex items-center gap-3 text-sm text-base-content/45">
-              <%= if Map.get(@thread, :author_avatar_url) do %>
-                <img
-                  src={Map.get(@thread, :author_avatar_url)}
-                  alt={Map.get(@thread, :author_username) || "User"}
-                  class="size-9 rounded-full object-cover"
-                />
-              <% else %>
-                <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-black text-accent-content">
-                  {String.slice(Map.get(@thread, :author_username) || "U", 0..0)
-                  |> String.upcase()}
-                </div>
-              <% end %>
-              <div class="leading-5">
-                <span class="font-semibold text-base-content/75">
-                  {Map.get(@thread, :author_username) || "Unknown"}
-                </span>
-                <span class="block text-xs">
-                  {Calendar.strftime(@thread.created_at, "%B %d, %Y")} · {Map.get(
-                    @thread,
-                    :view_count,
-                    0
-                  )} views
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="prose prose-base mt-7 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary">
+          <div class="prose prose-base mt-5 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary">
             <.svelte
               name="MarkdownRenderer"
               props={%{content: @thread.body}}
@@ -743,7 +756,7 @@ defmodule UrielmWeb.ThreadLive do
 
           <div
             id="thread-actions"
-            class="mt-7 flex flex-wrap items-center gap-2 border-t border-base-300/50 pt-5"
+            class="mt-5 flex flex-wrap items-center gap-2 border-t border-base-300/50 pt-4"
           >
             <.svelte
               name="VoteButtons"
@@ -758,14 +771,12 @@ defmodule UrielmWeb.ThreadLive do
               socket={@socket}
               ssr={false}
             />
-            <span class="mr-auto text-xs text-base-content/40">
-              {pluralize(@thread.comment_count, "reply")}
-            </span>
+            <span class="mr-auto" />
 
             <a
               :if={!@thread.is_locked && @current_user}
               href="#comment-form"
-              class="btn btn-secondary btn-sm"
+              class="btn btn-secondary btn-sm h-9 min-h-9 rounded-full px-4"
             >
               <.um_icon name="reply" class="size-4" />
               <span class="hidden sm:inline">Reply</span>
@@ -775,7 +786,7 @@ defmodule UrielmWeb.ThreadLive do
               <button
                 id="thread-save-action"
                 class={[
-                  "btn btn-sm btn-ghost",
+                  "btn btn-sm btn-ghost h-9 min-h-9 rounded-full px-3",
                   @thread_is_saved && "bg-secondary/10 text-secondary"
                 ]}
                 phx-click="save_thread"
@@ -793,7 +804,7 @@ defmodule UrielmWeb.ThreadLive do
               <button
                 id="thread-subscribe-action"
                 class={[
-                  "btn btn-sm btn-ghost",
+                  "btn btn-sm btn-ghost h-9 min-h-9 rounded-full px-3",
                   @thread_is_subscribed && "bg-secondary/10 text-secondary"
                 ]}
                 phx-click={if @thread_is_subscribed, do: "unsubscribe", else: "subscribe"}
@@ -813,7 +824,7 @@ defmodule UrielmWeb.ThreadLive do
               <div class="dropdown dropdown-end">
                 <button
                   data-testid="notification-button"
-                  class="btn btn-sm btn-ghost btn-square"
+                  class="btn btn-sm btn-ghost btn-circle h-9 min-h-9 w-9"
                   aria-label="More thread actions"
                 >
                   <.um_icon name="ellipsis_horizontal" class="size-5" />
@@ -951,33 +962,105 @@ defmodule UrielmWeb.ThreadLive do
           <% end %>
         </section>
 
-        <section id="thread-replies" class="mt-10" aria-labelledby="thread-replies-title">
-          <div class="mb-4 flex items-end justify-between gap-4 px-1">
-            <h2 id="thread-replies-title" class="text-xl font-bold text-base-content">
+        <section id="thread-replies" class="mt-8" aria-labelledby="thread-replies-title">
+          <div class="mb-3 flex items-end justify-between gap-4 px-1">
+            <h2 id="thread-replies-title" class="text-lg font-bold text-base-content">
               {pluralize(@thread.comment_count, "reply")}
             </h2>
             <span class="text-xs text-base-content/35">Oldest first</span>
           </div>
-          <.svelte
-            name="CommentTree"
-            props={
-              %{
-                comments: @comment_tree,
-                current_user_id: (@current_user && @current_user.id) || nil,
-                current_user_is_admin: (@current_user && @current_user.is_admin) || false,
-                thread_author_id: @thread.author_id,
-                solved_comment_id: @thread.solved_comment_id,
-                reply_draft_key:
-                  if(@current_user,
-                    do: "forum:thread-reply:#{@thread.id}:#{@current_user.id}",
-                    else: nil
-                  ),
-                reply_upload_url: if(@current_user, do: ~p"/forum/t/#{@thread.id}/uploads", else: nil)
+          <div id="thread-replies-surface" class="ui-card ui-card-compact h-auto p-3 sm:p-4">
+            <.svelte
+              name="CommentTree"
+              props={
+                %{
+                  comments: @comment_tree,
+                  current_user_id: (@current_user && @current_user.id) || nil,
+                  current_user_is_admin: (@current_user && @current_user.is_admin) || false,
+                  thread_author_id: @thread.author_id,
+                  solved_comment_id: @thread.solved_comment_id,
+                  reply_draft_key:
+                    if(@current_user,
+                      do: "forum:thread-reply:#{@thread.id}:#{@current_user.id}",
+                      else: nil
+                    ),
+                  reply_upload_url:
+                    if(@current_user, do: ~p"/forum/t/#{@thread.id}/uploads", else: nil)
+                }
               }
-            }
-            socket={@socket}
-            ssr={false}
-          />
+              socket={@socket}
+              ssr={false}
+            />
+          </div>
+        </section>
+
+        <section
+          :if={@related_threads != []}
+          id="related-threads"
+          class="mt-8"
+          aria-labelledby="related-threads-title"
+        >
+          <div class="mb-2 flex items-center justify-between gap-4 px-1">
+            <h2 id="related-threads-title" class="text-base font-bold text-base-content">
+              More from {@thread.board_name}
+            </h2>
+            <.link
+              id="related-threads-board-link"
+              navigate={~p"/forum/b/#{@thread.board_slug}"}
+              class="btn btn-ghost btn-xs h-8 min-h-8 rounded-full px-3 text-base-content/50 hover:text-secondary"
+            >
+              View all
+            </.link>
+          </div>
+
+          <div class="divide-y divide-base-300/55 border-y border-base-300/55">
+            <.link
+              :for={related_thread <- @related_threads}
+              id={"related-thread-#{related_thread.id}"}
+              navigate={~p"/forum/t/#{related_thread.id}"}
+              class="group grid grid-cols-1 gap-1 px-1 py-2.5 transition-colors hover:bg-base-200/45 sm:grid-cols-[minmax(0,1fr)_64px_64px_88px] sm:items-center sm:px-3"
+            >
+              <div class="min-w-0">
+                <div class="flex min-w-0 items-center gap-1.5">
+                  <span class="truncate text-sm font-semibold text-base-content transition-colors group-hover:text-secondary">
+                    {related_thread.title}
+                  </span>
+                  <span
+                    :if={related_thread.is_solved}
+                    class="badge badge-success badge-xs h-4 min-h-4 shrink-0 px-1.5 text-xs"
+                  >
+                    solved
+                  </span>
+                  <span
+                    :if={related_thread.is_locked}
+                    class="badge badge-warning badge-xs h-4 min-h-4 shrink-0 px-1.5 text-xs"
+                  >
+                    locked
+                  </span>
+                </div>
+                <div class="mt-1 flex items-center gap-3 text-[0.72rem] font-medium text-base-content/40 sm:hidden">
+                  <span>{pluralize(related_thread.comment_count, "reply")}</span>
+                  <span>{LiveHelpers.format_short(related_thread.updated_at)}</span>
+                </div>
+              </div>
+
+              <div class="hidden text-center sm:block">
+                <span class="font-mono text-xs text-base-content/60 tabular-nums">
+                  {related_thread.comment_count}
+                </span>
+              </div>
+              <div class="hidden text-center sm:block">
+                <span class="font-mono text-xs text-base-content/50 tabular-nums">
+                  {related_thread.view_count}
+                </span>
+              </div>
+              <div class="hidden text-right sm:block">
+                <span class="font-mono text-xs text-base-content/45 tabular-nums">
+                  {LiveHelpers.format_short(related_thread.updated_at)}
+                </span>
+              </div>
+            </.link>
+          </div>
         </section>
       </main>
 

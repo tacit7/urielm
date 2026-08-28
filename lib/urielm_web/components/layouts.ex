@@ -60,7 +60,7 @@ defmodule UrielmWeb.Layouts do
       <main
         id="main-content"
         tabindex="-1"
-        class="pt-[4.25rem] pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0"
+        class="pt-14 pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-0"
       >
         {if assigns[:inner_content], do: @inner_content, else: render_slot(@inner_block)}
       </main>

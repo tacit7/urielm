@@ -114,8 +114,7 @@ defmodule UrielmWeb.LatestLive do
         </div>
         <div id="latest-discussions-surface" class="ui-card ui-card-compact h-auto">
           <%!-- Column headers --%>
-          <div class="hidden items-center gap-x-4 border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[auto_1fr_56px_56px_72px]">
-            <div class="w-2" />
+          <div class="hidden items-center gap-x-3 border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[minmax(0,1fr)_64px_64px_92px]">
             <span class="text-xs font-medium text-base-content/35 tracking-wide">Topic</span>
             <span class="text-xs font-medium text-base-content/35 tracking-wide text-center">
               Replies

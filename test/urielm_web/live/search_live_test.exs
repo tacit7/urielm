@@ -30,12 +30,12 @@ defmodule UrielmWeb.SearchLiveTest do
       {:ok, view, _html} = live(conn, "/forum/search")
 
       assert has_element?(view, "#forum-search-page")
-      assert has_element?(view, "#forum-search-header.ui-page-header")
-      assert has_element?(view, "#forum-search-surface.ui-card")
+      assert has_element?(view, "#forum-search-header")
+      assert has_element?(view, "#forum-search-surface")
       assert has_element?(view, "#forum-search-form")
+      assert has_element?(view, "#forum-search-tools")
       assert has_element?(view, "#forum-search-query")
       assert has_element?(view, "#forum-search-submit[phx-disable-with='Searching…']")
-      assert has_element?(view, "#forum-search-advanced-row")
       assert has_element?(view, "#forum-search-author")
       assert has_element?(view, "#forum-search-category")
       assert has_element?(view, "#forum-search-from-date")
@@ -46,6 +46,9 @@ defmodule UrielmWeb.SearchLiveTest do
     test "loads results with ?q= param", %{conn: conn, thread: thread} do
       {:ok, view, _html} = live(conn, "/forum/search?q=sourdough")
 
+      assert has_element?(view, "#forum-search-result-meta")
+      assert has_element?(view, "#forum-search-results")
+      assert has_element?(view, "#search-results-heading")
       assert has_element?(view, result_selector(thread))
     end
 

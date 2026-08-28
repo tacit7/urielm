@@ -53,7 +53,11 @@ defmodule UrielmWeb.ForumLiveTest do
     test "renders the shared community discovery shell" do
       {:ok, view, _html} = live(build_conn(), ~p"/forum")
 
-      assert has_element?(view, "#forum-mobile-header")
+      assert has_element?(
+               view,
+               "#forum-navbar-container div[data-name='Navbar'][data-props*='showNavLinks'][data-props*='false'][data-props*='forum-drawer']"
+             )
+
       assert has_element?(view, "#forum-sidebar-nav")
       assert has_element?(view, "#forum-page-shell.ui-page-shell")
       assert has_element?(view, "#community-discovery-header.ui-page-header")
@@ -79,6 +83,11 @@ defmodule UrielmWeb.ForumLiveTest do
       {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum")
 
       refute has_element?(view, "#forum-notification-badge")
+
+      assert has_element?(
+               view,
+               "#forum-navbar-container div[data-name='Navbar'][data-props*='#{user.username}']"
+             )
 
       {:ok, _notification} = Forum.create_notification(user.id, "comment", thread.id)
 
@@ -203,15 +212,38 @@ defmodule UrielmWeb.ForumLiveTest do
     end
 
     test "shows new thread button for authenticated users", %{board: board, user: user} do
-      {:ok, _live, html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}")
+      {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum/b/#{board.slug}")
 
-      assert html =~ "/forum/b/#{board.slug}/new"
+      assert has_element?(
+               view,
+               "#forum-navbar-container div[data-name='Navbar'][data-props*='/forum/b/#{board.slug}/new']"
+             )
+
+      refute has_element?(view, "#board-new-topic-link")
     end
 
     test "hides new thread button for anonymous users", %{board: board} do
-      {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
+      {:ok, view, _html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
 
-      refute html =~ "/forum/b/#{board.slug}/new"
+      refute has_element?(
+               view,
+               "#forum-navbar-container div[data-name='Navbar'][data-props*='/new']"
+             )
+
+      refute has_element?(view, "#board-new-topic-link")
+    end
+
+    test "hides new thread button for locked boards", %{category: category, user: user} do
+      locked_board = board_fixture(%{category_id: category.id, is_locked: true})
+
+      {:ok, view, _html} = live(build_conn_with_user(user), ~p"/forum/b/#{locked_board.slug}")
+
+      refute has_element?(
+               view,
+               "#forum-navbar-container div[data-name='Navbar'][data-props*='/new']"
+             )
+
+      refute has_element?(view, "#board-new-topic-link")
     end
 
     test "handles vote event for authenticated user", %{board: board, thread: thread, user: user} do

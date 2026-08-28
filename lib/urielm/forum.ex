@@ -173,6 +173,17 @@ defmodule Urielm.Forum do
     |> Repo.all()
   end
 
+  def list_related_threads(%Thread{} = thread, opts \\ []) do
+    limit = opts |> Keyword.get(:limit, 5) |> max(1) |> min(10)
+
+    from(t in Thread,
+      where: t.board_id == ^thread.board_id and t.id != ^thread.id and t.is_removed == false,
+      order_by: [desc: t.updated_at, desc: t.id],
+      limit: ^limit
+    )
+    |> Repo.all()
+  end
+
   @doc """
   Flop-powered pagination for threads. Returns {:ok, results, meta} or {:error, meta}.
   Accepts Flop params such as page/page_size and order_by/order_directions.
