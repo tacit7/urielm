@@ -119,13 +119,15 @@ defmodule UrielmWeb.NotificationsLive do
       >
         <header
           id="notifications-header"
-          class="ui-page-header flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+          class="mb-4 flex flex-col gap-3 px-1 sm:flex-row sm:items-end sm:justify-between"
         >
           <div>
-            <h1 class="ui-section-title">Notifications</h1>
+            <h1 class="text-2xl font-bold leading-tight text-base-content sm:text-3xl">
+              Notifications
+            </h1>
             <p
               id="notifications-summary"
-              class="ui-section-copy"
+              class="mt-1 text-sm text-base-content/50"
             >
               <%= if @unread_count > 0 do %>
                 {@unread_count} {if @unread_count == 1, do: "update is", else: "updates are"} waiting for you.
@@ -140,7 +142,7 @@ defmodule UrielmWeb.NotificationsLive do
             id="notifications-mark-all"
             phx-click="mark_all_as_read"
             phx-disable-with="Marking read…"
-            class="btn btn-outline btn-sm w-full rounded-lg border-base-300 sm:w-auto"
+            class="btn btn-outline btn-sm h-9 min-h-9 w-full rounded-full border-base-300 px-3 sm:w-auto"
           >
             <.um_icon name="hero-check-circle" class="size-4" /> Mark all read
           </button>
@@ -148,7 +150,7 @@ defmodule UrielmWeb.NotificationsLive do
 
         <nav
           id="notification-filters"
-          class="tabs tabs-border flex items-center"
+          class="tabs tabs-border flex items-center border-b border-base-300/50"
           aria-label="Notification filters"
         >
           <.link
@@ -184,7 +186,11 @@ defmodule UrielmWeb.NotificationsLive do
           </span>
         </nav>
 
-        <div id="notifications" phx-update="stream" class="mt-6">
+        <div
+          id="notifications"
+          phx-update="stream"
+          class="mt-4 divide-y divide-base-300/45 border-y border-base-300/55"
+        >
           <div
             id={if(@unread_only, do: "notifications-empty-unread", else: "notifications-empty-state")}
             data-ui-state="empty"
@@ -228,17 +234,16 @@ defmodule UrielmWeb.NotificationsLive do
             <h2
               :if={notif.show_day_heading}
               data-day-heading={notif.day_label}
-              class="mb-3 mt-8 text-xs font-bold uppercase tracking-widest text-base-content/40 first:mt-0"
+              class="px-2 py-2 text-xs font-bold uppercase tracking-widest text-base-content/40"
             >
               {notif.day_label}
             </h2>
 
             <article class={[
-              "group mb-3 grid grid-cols-[2.75rem_minmax(0,1fr)_auto] gap-3 rounded-lg border p-4 transition duration-200 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:gap-4 sm:p-5",
+              "group grid grid-cols-[2.25rem_minmax(0,1fr)_auto] gap-3 px-2 py-3 transition duration-150 sm:grid-cols-[2.5rem_minmax(0,1fr)_auto] sm:px-3",
               if(notif.read_at,
-                do: "border-base-300/60 bg-base-200/35 hover:bg-base-200/60",
-                else:
-                  "border-secondary/30 bg-secondary/7 shadow-sm hover:border-secondary/45 hover:bg-secondary/10"
+                do: "bg-base-100/10 hover:bg-base-200/45",
+                else: "bg-secondary/6 hover:bg-secondary/10"
               )
             ]}>
               <div class="relative">
@@ -246,14 +251,14 @@ defmodule UrielmWeb.NotificationsLive do
                   <img
                     src={notif.actor.avatar_url}
                     alt={notif.actor.username || "Community member"}
-                    class="size-11 rounded-full object-cover sm:size-12"
+                    class="size-9 rounded-full object-cover sm:size-10"
                   />
                 <% else %>
-                  <div class="flex size-11 items-center justify-center rounded-full bg-accent/15 text-sm font-black uppercase text-accent sm:size-12">
+                  <div class="flex size-9 items-center justify-center rounded-full bg-accent/15 text-xs font-black uppercase text-accent sm:size-10">
                     {actor_initial(notif.actor)}
                   </div>
                 <% end %>
-                <span class="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full border-2 border-base-100 bg-base-300 text-base-content/65">
+                <span class="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full border border-base-100 bg-base-300 text-base-content/65">
                   <.um_icon name={notification_icon(notif.subject_type)} class="size-3" />
                 </span>
               </div>
@@ -268,7 +273,7 @@ defmodule UrielmWeb.NotificationsLive do
                     {LiveHelpers.format_relative(notif.inserted_at)}
                   </time>
                 </div>
-                <p class="mt-1.5 break-words text-sm leading-6 text-base-content/80 sm:text-base">
+                <p class="mt-1 break-words text-sm leading-6 text-base-content/80">
                   {notif.message || fallback_message(notif)}
                 </p>
                 <p :if={notif.thread_title} class="mt-1 truncate text-sm text-base-content/40">
@@ -280,7 +285,7 @@ defmodule UrielmWeb.NotificationsLive do
                   navigate={~p"/forum/t/#{notif.thread_id}"}
                   phx-click="mark_as_read"
                   phx-value-notification_id={notif.id}
-                  class="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-secondary transition-colors hover:text-secondary/75"
+                  class="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-secondary transition-colors hover:text-secondary/75"
                 >
                   View discussion <.um_icon name="hero-arrow-right" class="size-4" />
                 </.link>
@@ -303,7 +308,7 @@ defmodule UrielmWeb.NotificationsLive do
                       type="button"
                       phx-click="mark_as_read"
                       phx-value-notification_id={notif.id}
-                      class="btn btn-ghost btn-square min-h-11 min-w-11 rounded-lg text-base-content/55 hover:text-base-content"
+                      class="btn btn-ghost btn-square min-h-9 min-w-9 rounded-lg text-base-content/55 hover:text-base-content"
                       aria-label="Mark as read"
                       title="Mark as read"
                     >

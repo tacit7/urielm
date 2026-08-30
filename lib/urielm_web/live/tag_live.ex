@@ -53,39 +53,58 @@ defmodule UrielmWeb.TagLive do
       current_path={"/forum/tags/#{@tag.slug}"}
     >
       <div id="forum-tag-page" class="mx-auto w-full max-w-5xl">
-        <header id="forum-tag-header" class="ui-page-header mb-5">
-          <h1 class="text-2xl font-bold tracking-tight text-base-content sm:text-3xl">
-            {@tag.name}
-          </h1>
-          <p class="mt-1 max-w-2xl text-sm text-base-content/55">
-            Browse threads grouped under this tag and jump back into the conversations that use it.
-          </p>
+        <header
+          id="forum-tag-header"
+          class="mb-4 flex flex-col gap-2 px-1 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <h1 class="text-2xl font-bold leading-tight text-base-content sm:text-3xl">
+              {@tag.name}
+            </h1>
+            <p class="mt-1 max-w-2xl text-sm text-base-content/55">
+              Threads using this tag.
+            </p>
+          </div>
+          <.link
+            id="forum-tag-back-link"
+            navigate={~p"/forum/tags"}
+            class="btn btn-ghost btn-sm h-9 min-h-9 rounded-full px-3 text-base-content/55 hover:text-secondary"
+          >
+            All tags
+          </.link>
         </header>
 
-        <section id="forum-tag-summary" class="ui-card mb-6 h-auto p-5 sm:p-6">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <section
+          id="forum-tag-summary"
+          class="mb-4 rounded-xl border border-base-300/70 bg-base-200/35 px-4 py-3"
+        >
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p class="text-xs font-bold uppercase tracking-[0.16em] text-base-content/35">
-                Thread coverage
-              </p>
-              <p id="forum-tag-thread-count" class="mt-2 text-3xl font-black text-base-content">
-                {@thread_count}
-              </p>
-              <p class="mt-1 text-sm text-base-content/45">
-                discussions currently use this tag.
-              </p>
+              <p class="text-xs font-bold uppercase tracking-[0.14em] text-base-content/35">Tag</p>
+              <p class="mt-1 font-mono text-xs text-base-content/40">/{@tag.slug}</p>
             </div>
             <div
-              id="forum-tag-management-note"
-              class="max-w-xl rounded-xl border border-base-300/70 bg-base-200/50 px-4 py-3 text-sm text-base-content/60"
+              id="forum-tag-thread-count"
+              class="font-mono text-sm font-black tabular-nums text-base-content/70"
             >
-              Tags are attached to discussions. Use the thread list below to review what is tagged and follow a thread to adjust its tags in context.
+              {@thread_count} {if @thread_count == 1, do: "thread", else: "threads"}
             </div>
           </div>
         </section>
 
-        <section id="forum-tag-discussions" class="space-y-4">
-          <div id="tag-threads" phx-update="stream" class="space-y-4">
+        <section id="forum-tag-discussions">
+          <div class="mb-2 grid grid-cols-[minmax(0,1fr)_64px_64px_92px] items-center px-4 text-xs font-semibold text-base-content/35 max-md:hidden">
+            <span>Topic</span>
+            <span class="text-center">Replies</span>
+            <span class="text-center">Views</span>
+            <span class="text-right">Activity</span>
+          </div>
+
+          <div
+            id="tag-threads"
+            phx-update="stream"
+            class="divide-y divide-base-300/45 border-y border-base-300/55"
+          >
             <.empty_state
               id="forum-tag-empty-state"
               title="No discussions for this tag yet"
@@ -99,7 +118,7 @@ defmodule UrielmWeb.TagLive do
             </div>
           </div>
 
-          <div class="flex justify-center">
+          <div class="mt-8 flex justify-center">
             <%= if @meta do %>
               <.pagination
                 meta={@meta}

@@ -175,17 +175,17 @@ defmodule UrielmWeb.SearchLive do
 
         <section
           id="forum-search-surface"
-          class="rounded-xl border border-base-300/70 bg-base-200/45 p-3 shadow-sm shadow-base-300/10"
+          class="rounded-xl border border-base-300/70 bg-base-200/35 p-2 shadow-sm shadow-base-300/10"
         >
           <.form
             for={@search_form}
             id="forum-search-form"
             phx-submit="search"
-            class="space-y-3"
+            class="space-y-2"
           >
             <div
               id="forum-search-tools"
-              class="grid gap-2 lg:grid-cols-[minmax(0,1.5fr)_11rem_8rem_8rem_8rem_auto] lg:items-end"
+              class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
             >
               <.input
                 field={@search_form[:query]}
@@ -193,36 +193,6 @@ defmodule UrielmWeb.SearchLive do
                 type="search"
                 label="Search discussions"
                 placeholder="Topic, phrase, or tag"
-                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
-              />
-              <.input
-                field={@search_form[:author]}
-                id="forum-search-author"
-                type="search"
-                label="Author"
-                placeholder="Username"
-                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
-              />
-              <.input
-                field={@search_form[:category_id]}
-                id="forum-search-category"
-                type="select"
-                label="Category"
-                options={@category_options}
-                class="select select-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
-              />
-              <.input
-                field={@search_form[:from_date]}
-                id="forum-search-from-date"
-                type="date"
-                label="From"
-                class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
-              />
-              <.input
-                field={@search_form[:to_date]}
-                id="forum-search-to-date"
-                type="date"
-                label="To"
                 class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
               />
 
@@ -237,6 +207,52 @@ defmodule UrielmWeb.SearchLive do
                 </.button>
               </div>
             </div>
+
+            <details
+              id="forum-search-advanced"
+              class="group rounded-lg border border-base-300/50 bg-base-100/35"
+              open={advanced_filters_open?(@search_filters)}
+            >
+              <summary class="flex min-h-9 cursor-pointer list-none items-center gap-2 px-3 text-sm font-semibold text-base-content/60 transition hover:text-base-content [&::-webkit-details-marker]:hidden">
+                <.um_icon name="hero-adjustments-horizontal" class="size-4 text-secondary" /> Filters
+                <span class="ml-auto text-xs font-medium text-base-content/35">
+                  Author, category, date
+                </span>
+              </summary>
+
+              <div class="grid gap-2 border-t border-base-300/45 p-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_9rem_9rem]">
+                <.input
+                  field={@search_form[:author]}
+                  id="forum-search-author"
+                  type="search"
+                  label="Author"
+                  placeholder="Username"
+                  class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
+                />
+                <.input
+                  field={@search_form[:category_id]}
+                  id="forum-search-category"
+                  type="select"
+                  label="Category"
+                  options={@category_options}
+                  class="select select-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
+                />
+                <.input
+                  field={@search_form[:from_date]}
+                  id="forum-search-from-date"
+                  type="date"
+                  label="From"
+                  class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
+                />
+                <.input
+                  field={@search_form[:to_date]}
+                  id="forum-search-to-date"
+                  type="date"
+                  label="To"
+                  class="input input-bordered h-10 min-h-10 w-full bg-base-100/80 text-sm"
+                />
+              </div>
+            </details>
           </.form>
         </section>
 
@@ -328,6 +344,12 @@ defmodule UrielmWeb.SearchLive do
 
   defp search_active?(search_filters) do
     search_filters["query"] != "" or search_opts(search_filters) != []
+  end
+
+  defp advanced_filters_open?(search_filters) do
+    search_filters
+    |> Map.take(["author", "category_id", "from_date", "to_date"])
+    |> Enum.any?(fn {_key, value} -> value not in [nil, ""] end)
   end
 
   defp search_path(search_filters, page) do

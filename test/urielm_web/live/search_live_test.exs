@@ -34,6 +34,7 @@ defmodule UrielmWeb.SearchLiveTest do
       assert has_element?(view, "#forum-search-surface")
       assert has_element?(view, "#forum-search-form")
       assert has_element?(view, "#forum-search-tools")
+      assert has_element?(view, "#forum-search-advanced")
       assert has_element?(view, "#forum-search-query")
       assert has_element?(view, "#forum-search-submit[phx-disable-with='Searching…']")
       assert has_element?(view, "#forum-search-author")

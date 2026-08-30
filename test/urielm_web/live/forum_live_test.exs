@@ -60,11 +60,44 @@ defmodule UrielmWeb.ForumLiveTest do
 
       assert has_element?(view, "#forum-sidebar-nav")
       assert has_element?(view, "#forum-page-shell.ui-page-shell")
-      assert has_element?(view, "#community-discovery-header.ui-page-header")
-      assert has_element?(view, "#forum-search-link.ui-card[href='/forum/search']")
+      assert has_element?(view, "#community-discovery-header")
+      assert has_element?(view, "#forum-search-link[href='/forum/search']")
       assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Latest")
       assert has_element?(view, "#latest-discussions-surface.ui-card")
       assert has_element?(view, "#threads[phx-update='stream']")
+    end
+
+    test "pins start here and announcements first in the sidebar boards", %{category: category} do
+      _other_board =
+        board_fixture(%{
+          category_id: category.id,
+          name: "General Discussion",
+          slug: "general-discussion"
+        })
+
+      _announcements =
+        board_fixture(%{
+          category_id: category.id,
+          name: "Announcements",
+          slug: "announcements"
+        })
+
+      _start_here =
+        board_fixture(%{
+          category_id: category.id,
+          name: "Start Here",
+          slug: "start-here"
+        })
+
+      {:ok, view, _html} = live(build_conn(), ~p"/forum")
+      html = render(view)
+
+      start_here_index = :binary.match(html, ~s(href="/forum/b/start-here")) |> elem(0)
+      announcements_index = :binary.match(html, ~s(href="/forum/b/announcements")) |> elem(0)
+      general_index = :binary.match(html, ~s(href="/forum/b/general-discussion")) |> elem(0)
+
+      assert start_here_index < announcements_index
+      assert announcements_index < general_index
     end
 
     test "pagination patch reloads the latest discussions" do

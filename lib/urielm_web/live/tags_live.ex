@@ -36,21 +36,24 @@ defmodule UrielmWeb.TagsLive do
           count_label={"#{@tags_count} tags"}
         />
 
-        <section id="forum-tags-surface" class="ui-card h-auto overflow-hidden">
-          <div class="flex flex-col gap-2 border-b border-base-300/40 bg-base-200/60 px-5 py-4 sm:flex-row sm:items-end sm:justify-between">
+        <section
+          id="forum-tags-surface"
+          class="rounded-xl border border-base-300/70 bg-base-200/35 shadow-sm shadow-base-300/10"
+        >
+          <div class="flex flex-col gap-2 border-b border-base-300/45 px-4 py-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 class="text-sm font-black uppercase tracking-[0.14em] text-base-content/50">
+              <h2 class="text-sm font-black text-base-content">
                 Browse tags
               </h2>
               <p class="mt-1 text-sm text-base-content/45">
-                Explore the tag directory and jump straight into the relevant discussions.
+                Jump into discussions by topic.
               </p>
             </div>
             <div
               id="forum-tags-management-note"
-              class="rounded-lg border border-base-300/70 bg-base-100 px-3 py-2 text-xs text-base-content/55"
+              class="text-xs font-medium tabular-nums text-base-content/45"
             >
-              Tags are attached to threads. Browse a tag to review and manage the discussions using it.
+              {@tags_count} total
             </div>
           </div>
 
@@ -65,12 +68,8 @@ defmodule UrielmWeb.TagsLive do
           />
 
           <div :if={@tags_count > 0} id="forum-tag-directory" class="divide-y divide-base-300/60">
-            <section
-              :for={group <- @tag_groups}
-              id={"forum-tag-group-#{group_dom_slug(group)}"}
-              class="bg-base-100/20"
-            >
-              <header class="border-b border-base-300/40 bg-base-200/35 px-5 py-4">
+            <section :for={group <- @tag_groups} id={"forum-tag-group-#{group_dom_slug(group)}"}>
+              <header class="border-b border-base-300/40 bg-base-200/45 px-4 py-3">
                 <h3 class="font-black text-base-content">{group.name}</h3>
                 <p :if={group.description} class="mt-1 text-sm text-base-content/50">
                   {group.description}
@@ -84,7 +83,7 @@ defmodule UrielmWeb.TagsLive do
             <section :if={@ungrouped_tags != []} id="forum-ungrouped-tags">
               <header
                 :if={@tag_groups != []}
-                class="border-b border-base-300/40 bg-base-200/35 px-5 py-4"
+                class="border-b border-base-300/40 bg-base-200/45 px-4 py-3"
               >
                 <h3 class="font-black text-base-content">Other tags</h3>
               </header>
@@ -105,14 +104,14 @@ defmodule UrielmWeb.TagsLive do
     ~H"""
     <article
       id={"forum-tag-#{@tag.slug}"}
-      class="grid grid-cols-1 gap-3 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_8rem_10rem] sm:items-center"
+      class="grid grid-cols-1 gap-2 px-4 py-3 transition-colors hover:bg-base-200/55 sm:grid-cols-[minmax(0,1fr)_5rem_8rem] sm:items-center"
     >
       <div class="min-w-0">
         <.link
           navigate={~p"/forum/tags/#{@tag.slug}"}
           class="inline-flex items-center gap-2 font-semibold text-base-content transition-colors hover:text-secondary"
         >
-          <span class="badge badge-outline badge-secondary h-auto px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em]">
+          <span class="badge badge-outline badge-secondary h-5 min-h-5 px-1.5 text-xs font-bold uppercase">
             Tag
           </span>
           <span class="truncate">{@tag.name}</span>
@@ -121,20 +120,18 @@ defmodule UrielmWeb.TagsLive do
       </div>
 
       <div class="sm:text-center">
-        <div class="text-xs font-semibold uppercase tracking-[0.14em] text-base-content/35">
-          Discussions
-        </div>
-        <div class="mt-1 font-mono text-lg font-black text-base-content/70 tabular-nums">
+        <div class="font-mono text-sm font-black text-base-content/70 tabular-nums">
           {@tag.thread_count}
         </div>
+        <div class="text-xs font-semibold text-base-content/35">threads</div>
       </div>
 
       <div class="flex sm:justify-end">
         <.link
           navigate={~p"/forum/tags/#{@tag.slug}"}
-          class="btn btn-ghost btn-sm border border-base-300/70 bg-base-100"
+          class="btn btn-ghost btn-sm h-8 min-h-8 rounded-full px-3 text-base-content/55 hover:text-secondary"
         >
-          Browse threads
+          Browse
         </.link>
       </div>
     </article>

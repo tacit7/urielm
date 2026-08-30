@@ -9,7 +9,7 @@ defmodule UrielmWeb.ThreadCardTest do
     assert source =~ "opacity-100 transition-opacity md:opacity-0"
     assert source =~ "md:group-hover:opacity-100"
     assert source =~ "md:group-focus-within:opacity-100"
-    assert source =~ "min-h-10 min-w-10"
+    assert source =~ "min-h-9 min-w-9"
   end
 
   test "thread actions expose their state to assistive technology" do

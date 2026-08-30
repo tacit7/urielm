@@ -111,13 +111,40 @@ defmodule UrielmWeb.SavedThreadsLive do
       socket={@socket}
       unread_notification_count={@unread_notification_count}
     >
-      <div id="saved-threads-page" class="ui-page-shell max-w-4xl">
-        <header id="saved-threads-header" class="ui-page-header ui-page-heading">
-          <h1 class="ui-section-title">Saved threads</h1>
-          <p class="ui-section-copy">Discussions you've bookmarked for later.</p>
+      <div id="saved-threads-page" class="ui-page-shell max-w-5xl">
+        <header
+          id="saved-threads-header"
+          class="mb-4 flex flex-col gap-2 px-1 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <h1 class="text-2xl font-bold leading-tight text-base-content sm:text-3xl">
+              Saved threads
+            </h1>
+            <p class="mt-1 text-sm text-base-content/50">
+              Discussions you've bookmarked for later.
+            </p>
+          </div>
+          <.link
+            id="saved-threads-explore"
+            navigate={~p"/forum"}
+            class="btn btn-ghost btn-sm h-9 min-h-9 rounded-full px-3 text-base-content/55 hover:text-secondary"
+          >
+            Explore <.um_icon name="hero-arrow-right" class="size-4" />
+          </.link>
         </header>
 
-        <div id="threads" phx-update="stream" class="space-y-4">
+        <div class="mb-2 grid grid-cols-[minmax(0,1fr)_64px_64px_92px] items-center px-4 text-xs font-semibold text-base-content/35 max-md:hidden">
+          <span>Topic</span>
+          <span class="text-center">Replies</span>
+          <span class="text-center">Views</span>
+          <span class="text-right">Saved</span>
+        </div>
+
+        <div
+          id="threads"
+          phx-update="stream"
+          class="divide-y divide-base-300/45 border-y border-base-300/55"
+        >
           <.empty_state
             id="saved-threads-empty-state"
             title="No saved discussions yet"

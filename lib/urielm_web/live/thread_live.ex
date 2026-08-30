@@ -649,7 +649,7 @@ defmodule UrielmWeb.ThreadLive do
       unread_notification_count={@unread_notification_count}
       current_board={@thread.board_slug}
     >
-      <main id="thread-reading-view" class="mx-auto max-w-4xl pb-12">
+      <main id="thread-reading-view" class="mx-auto max-w-3xl pb-12">
         <.link
           navigate={~p"/forum/b/#{@thread.board_slug}"}
           class="btn btn-ghost btn-sm -ml-2 mb-3 h-9 min-h-9 gap-2 rounded-full px-3 text-base-content/55 hover:text-secondary"
@@ -663,16 +663,9 @@ defmodule UrielmWeb.ThreadLive do
 
         <article
           id="thread-topic"
-          class="ui-card h-auto overflow-visible p-4 sm:p-5"
+          class="rounded-xl border border-base-300/70 bg-base-200/35 p-4"
         >
           <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
-            <.link
-              navigate={~p"/forum/b/#{@thread.board_slug}"}
-              class="inline-flex items-center gap-1.5 rounded-full bg-secondary/10 px-2.5 py-1 text-secondary transition-colors hover:bg-secondary/15"
-            >
-              <.um_icon name="topics" class="size-3.5" />
-              {@thread.board_name}
-            </.link>
             <span :if={@thread.is_pinned} class="badge badge-info badge-xs h-5 min-h-5 gap-1">
               <.um_icon name="bookmark" class="size-3" /> Pinned
             </span>
@@ -691,7 +684,7 @@ defmodule UrielmWeb.ThreadLive do
             {@thread.title}
           </h1>
 
-          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-base-300/50 pb-4">
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-base-300/50 pb-3">
             <div
               id="thread-author"
               class="flex min-w-0 items-center gap-2.5 text-sm text-base-content/45"
@@ -718,12 +711,14 @@ defmodule UrielmWeb.ThreadLive do
               </div>
             </div>
 
-            <div class="flex items-center gap-3 text-xs text-base-content/45">
-              <span class="font-mono tabular-nums">
-                {Map.get(@thread, :view_count, 0)} views
+            <div id="thread-stats" class="flex items-center gap-1.5 text-xs text-base-content/45">
+              <span class="inline-flex items-center gap-1 rounded-full bg-base-100/45 px-2 py-1 font-mono tabular-nums">
+                <.um_icon name="hero-eye" class="size-3.5" />
+                {Map.get(@thread, :view_count, 0)}
               </span>
-              <span class="font-mono tabular-nums">
-                {pluralize(@thread.comment_count, "reply")}
+              <span class="inline-flex items-center gap-1 rounded-full bg-base-100/45 px-2 py-1 font-mono tabular-nums">
+                <.um_icon name="reply" class="size-3.5" />
+                {@thread.comment_count}
               </span>
             </div>
           </div>
@@ -745,7 +740,7 @@ defmodule UrielmWeb.ThreadLive do
             </.link>
           </div>
 
-          <div class="prose prose-base mt-5 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary">
+          <div class="prose prose-base mt-4 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary">
             <.svelte
               name="MarkdownRenderer"
               props={%{content: @thread.body}}
@@ -756,7 +751,7 @@ defmodule UrielmWeb.ThreadLive do
 
           <div
             id="thread-actions"
-            class="mt-5 flex flex-wrap items-center gap-2 border-t border-base-300/50 pt-4"
+            class="mt-4 flex flex-wrap items-center gap-2 border-t border-base-300/50 pt-3"
           >
             <.svelte
               name="VoteButtons"
@@ -897,7 +892,7 @@ defmodule UrielmWeb.ThreadLive do
           </div>
         </article>
 
-        <section class="mt-10" aria-labelledby="join-discussion-title">
+        <section class="mt-8" aria-labelledby="join-discussion-title">
           <div class="mb-4 flex items-end justify-between gap-4 px-1">
             <h2 id="join-discussion-title" class="text-xl font-bold text-base-content">
               Join the discussion
@@ -922,7 +917,7 @@ defmodule UrielmWeb.ThreadLive do
                 for={@comment_form}
                 id="comment-form"
                 phx-submit="create_comment"
-                class="ui-card h-auto p-4 sm:p-5"
+                class="rounded-xl border border-base-300/70 bg-base-200/35 p-3 sm:p-4"
               >
                 <.input
                   field={@comment_form[:body]}
@@ -932,7 +927,7 @@ defmodule UrielmWeb.ThreadLive do
                   required
                   class="textarea min-h-28 w-full resize-y rounded-lg border-base-300 bg-base-100/65 text-base-content placeholder:text-base-content/30 focus:border-secondary focus:outline-none"
                 />
-                <div class="mt-3 flex items-center justify-between gap-3 border-t border-base-300/50 pt-4">
+                <div class="mt-3 flex items-center justify-between gap-3 border-t border-base-300/50 pt-3">
                   <p class="text-xs text-base-content/40">Be specific, kind, and useful.</p>
                   <button
                     id="comment-submit"
@@ -947,7 +942,7 @@ defmodule UrielmWeb.ThreadLive do
             <% true -> %>
               <div
                 id="thread-sign-in-to-reply"
-                class="ui-card ui-card-compact flex h-auto flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center"
+                class="flex h-auto flex-col items-start justify-between gap-3 rounded-xl border border-base-300/70 bg-base-200/35 p-4 sm:flex-row sm:items-center"
               >
                 <div>
                   <p class="font-semibold text-base-content">Have something useful to add?</p>
@@ -969,7 +964,10 @@ defmodule UrielmWeb.ThreadLive do
             </h2>
             <span class="text-xs text-base-content/35">Oldest first</span>
           </div>
-          <div id="thread-replies-surface" class="ui-card ui-card-compact h-auto p-3 sm:p-4">
+          <div
+            id="thread-replies-surface"
+            class="rounded-xl border border-base-300/70 bg-base-200/25 p-2 sm:p-3"
+          >
             <.svelte
               name="CommentTree"
               props={
@@ -1119,9 +1117,12 @@ defmodule UrielmWeb.ThreadLive do
     if count == 1 do
       "1 #{singular}"
     else
-      "#{count} #{singular}s"
+      "#{count} #{plural_form(singular)}"
     end
   end
+
+  defp plural_form("reply"), do: "replies"
+  defp plural_form(singular), do: "#{singular}s"
 
   defp format_errors(changeset) do
     errors =

@@ -67,7 +67,7 @@ defmodule UrielmWeb.Components.ForumLayout do
         >
           <div class="p-3 lg:sticky lg:top-0">
             <%!-- Main navigation --%>
-            <div class="space-y-0.5 mb-5" aria-label="Forum views">
+            <div class="space-y-0.5" aria-label="Forum views">
               <.nav_link
                 href="/forum"
                 icon="topics"
@@ -99,38 +99,30 @@ defmodule UrielmWeb.Components.ForumLayout do
                 active={@current_path == "/notifications"}
                 badge_count={@unread_notification_count}
               />
-            </div>
-
-            <%!-- Categories --%>
-            <div class="mb-4">
-              <h3 class="text-[0.65rem] font-bold text-base-content/45 uppercase tracking-[0.16em] px-2.5 mb-2">
-                Explore
-              </h3>
-              <div class="space-y-0.5">
-                <%= for category <- @categories do %>
-                  <.category_group category={category} current_board={@current_board} />
-                <% end %>
-              </div>
-            </div>
-
-            <%!-- More links --%>
-            <div class="space-y-0.5 pt-3 border-t border-base-300/60">
               <.nav_link
                 href="/forum/search"
                 icon="search"
                 label="Search"
                 active={@current_path == "/forum/search"}
               />
-              <%= if @current_user do %>
-                <.nav_link
-                  href={"/u/#{@current_user.username}"}
-                  icon="user_circle"
-                  label={@current_user.username}
-                  active={false}
-                />
-              <% else %>
+              <%= unless @current_user do %>
                 <.nav_link href="/auth/signin" icon="user_circle" label="Sign in" active={false} />
               <% end %>
+            </div>
+
+            <%!-- Boards --%>
+            <div
+              id="forum-sidebar-boards"
+              class="mt-3 space-y-0.5 border-t border-base-300/60 pt-3"
+              aria-label="Forum boards"
+            >
+              <div class="space-y-0.5">
+                <.board_link
+                  :for={board <- sidebar_boards(@categories)}
+                  board={board}
+                  active={@current_board == board.slug}
+                />
+              </div>
             </div>
           </div>
         </nav>
@@ -155,6 +147,43 @@ defmodule UrielmWeb.Components.ForumLayout do
       avatarUrl: user.avatar_url,
       isAdmin: user.is_admin || false
     }
+  end
+
+  defp sidebar_boards(categories) do
+    categories
+    |> Enum.flat_map(&(&1.boards || []))
+    |> Enum.with_index()
+    |> Enum.sort_by(fn {board, index} -> {sidebar_board_rank(board.slug), index} end)
+    |> Enum.map(fn {board, _index} -> board end)
+  end
+
+  defp sidebar_board_rank("start-here"), do: 0
+  defp sidebar_board_rank("announcements"), do: 1
+  defp sidebar_board_rank(_slug), do: 2
+
+  attr :board, :map, required: true
+  attr :active, :boolean, default: false
+
+  def board_link(assigns) do
+    assigns = assign(assigns, :badge_class, UrielmWeb.ForumColors.badge_class(assigns.board.slug))
+
+    ~H"""
+    <label for="forum-drawer" class="cursor-pointer lg:cursor-default">
+      <a
+        href={~p"/forum/b/#{@board.slug}"}
+        class={[
+          "flex min-h-8 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+          if(@active,
+            do: "bg-secondary/10 text-secondary font-semibold",
+            else: "text-base-content/60 hover:text-base-content hover:bg-base-300/60"
+          )
+        ]}
+      >
+        <span class={"badge badge-xs #{@badge_class}"}></span>
+        <span class="truncate">{@board.name}</span>
+      </a>
+    </label>
+    """
   end
 
   attr :href, :string, required: true
@@ -191,72 +220,38 @@ defmodule UrielmWeb.Components.ForumLayout do
     """
   end
 
-  attr :category, :map, required: true
-  attr :current_board, :string, default: nil
-
-  def category_group(assigns) do
-    ~H"""
-    <div class="mb-1.5">
-      <div class="px-2.5 py-1 text-[0.65rem] font-semibold text-base-content/40 uppercase tracking-wide">
-        {@category.name}
-      </div>
-      <%= for board <- @category.boards || [] do %>
-        <.board_link board={board} active={@current_board == board.slug} />
-      <% end %>
-    </div>
-    """
-  end
-
-  attr :board, :map, required: true
-  attr :active, :boolean, default: false
-
-  def board_link(assigns) do
-    assigns = assign(assigns, :badge_class, UrielmWeb.ForumColors.badge_class(assigns.board.slug))
-
-    ~H"""
-    <label for="forum-drawer" class="cursor-pointer lg:cursor-default">
-      <a
-        href={~p"/forum/b/#{@board.slug}"}
-        class={[
-          "flex min-h-8 items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-          if(@active,
-            do: "bg-secondary/10 text-secondary font-semibold",
-            else: "text-base-content/60 hover:text-base-content hover:bg-base-300/60"
-          )
-        ]}
-      >
-        <span class={"badge badge-xs #{@badge_class}"}></span>
-        <span class="truncate">{@board.name}</span>
-      </a>
-    </label>
-    """
-  end
-
   attr :active_view, :string, required: true, values: ~w(latest categories tags)
   attr :count_label, :string, default: nil
 
   def discovery_header(assigns) do
     ~H"""
-    <section id="community-discovery-header" class="ui-page-header mb-8 lg:mb-10">
-      <p class="ui-eyebrow text-accent">
-        Learn · build · share
-      </p>
-      <h1 class="ui-section-title">
-        Find your next idea.
-      </h1>
-      <p class="ui-section-copy max-w-2xl">
-        Ask a thoughtful question, share what you are building, or learn alongside people turning
-        AI ideas into useful work.
-      </p>
+    <section id="community-discovery-header" class="mb-5 px-1">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold leading-tight text-base-content sm:text-3xl">
+            Community
+          </h1>
+          <p class="mt-1 max-w-2xl text-sm text-base-content/55">
+            Ask questions, share builds, and follow practical AI discussions.
+          </p>
+        </div>
+
+        <span
+          :if={@count_label}
+          class="hidden text-xs font-medium tabular-nums text-base-content/35 lg:block"
+        >
+          {@count_label}
+        </span>
+      </div>
 
       <.link
         id="forum-search-link"
         navigate={~p"/forum/search"}
-        class="ui-card ui-card-compact group mt-6 flex h-auto min-h-13 max-w-2xl items-center gap-3 px-4 text-sm text-base-content/45 transition duration-150 hover:border-secondary/45 hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        class="mt-4 flex min-h-10 max-w-2xl items-center gap-2 rounded-xl border border-base-300/70 bg-base-200/40 px-3 text-sm text-base-content/45 transition duration-150 hover:border-secondary/40 hover:bg-base-200/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        <.um_icon name="search" class="size-5 text-secondary" />
+        <.um_icon name="search" class="size-4 text-secondary" />
         <span class="flex-1">Search discussions, questions, and projects</span>
-        <span class="hidden rounded-md border border-base-300 px-2 py-0.5 font-mono text-[0.65rem] text-base-content/35 sm:inline">
+        <span class="hidden rounded-md border border-base-300 px-1.5 py-0.5 font-mono text-xs text-base-content/35 sm:inline">
           Explore
         </span>
       </.link>
@@ -264,7 +259,7 @@ defmodule UrielmWeb.Components.ForumLayout do
       <nav
         id="forum-view-tabs"
         aria-label="Community views"
-        class="tabs tabs-border mt-8 flex items-center overflow-x-auto"
+        class="tabs tabs-border mt-5 flex items-center overflow-x-auto border-b border-base-300/50"
       >
         <.view_link href={~p"/forum"} label="Latest" active={@active_view == "latest"} />
         <.view_link
@@ -273,7 +268,10 @@ defmodule UrielmWeb.Components.ForumLayout do
           active={@active_view == "categories"}
         />
         <.view_link href={~p"/forum/tags"} label="Tags" active={@active_view == "tags"} />
-        <span :if={@count_label} class="ml-auto shrink-0 text-xs text-base-content/35">
+        <span
+          :if={@count_label}
+          class="ml-auto shrink-0 text-xs font-medium tabular-nums text-base-content/35 lg:hidden"
+        >
           {@count_label}
         </span>
       </nav>
@@ -291,7 +289,7 @@ defmodule UrielmWeb.Components.ForumLayout do
       navigate={@href}
       aria-current={if(@active, do: "page", else: nil)}
       class={[
-        "tab h-11 shrink-0 px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "tab h-9 shrink-0 px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         @active && "tab-active"
       ]}
     >

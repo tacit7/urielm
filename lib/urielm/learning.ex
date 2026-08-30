@@ -22,6 +22,21 @@ defmodule Urielm.Learning do
   end
 
   @doc """
+  Returns courses with all lessons preloaded for playlist-style index displays.
+  """
+  def list_courses_for_index do
+    lessons_query =
+      from(l in Lesson,
+        order_by: [asc: l.lesson_number]
+      )
+
+    Course
+    |> order_by([c], desc: c.updated_at, desc: c.id)
+    |> preload(lessons: ^lessons_query)
+    |> Repo.all()
+  end
+
+  @doc """
   Returns the total count of courses.
   """
   def count_courses do

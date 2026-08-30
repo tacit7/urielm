@@ -24,9 +24,9 @@
   let editText = $state("")
   let isComposerOpen = $state(false)
   let composerParentId = $state(null)
-  let nestedSpacing = $derived(depth >= 2 ? "mt-3 border-l border-base-300/70 pl-1.5 sm:pl-3" : "mt-3 border-l border-base-300/70 pl-2.5 sm:pl-3")
-  let avatarClass = $derived(depth >= 2 ? "size-7" : "size-8")
-  let avatarTextClass = $derived(depth >= 2 ? "text-[0.65rem]" : "text-[0.7rem]")
+  let nestedSpacing = $derived(depth >= 2 ? "mt-2.5 border-l border-base-300/70 pl-1.5 sm:pl-2.5" : "mt-2.5 border-l border-base-300/70 pl-2 sm:pl-3")
+  let avatarClass = $derived(depth >= 2 ? "size-6" : "size-7")
+  let avatarTextClass = $derived(depth >= 2 ? "text-[0.6rem]" : "text-[0.65rem]")
 
   function formatDate(date) {
     if (!date) return ""
@@ -136,18 +136,18 @@
   }
 </script>
 
-<div class={depth === 0 ? "divide-y divide-base-300/45" : "space-y-2"} data-comment-depth={depth}>
+<div class={depth === 0 ? "divide-y divide-base-300/45" : "space-y-1.5"} data-comment-depth={depth}>
   {#if comments && comments.length > 0}
     {#each comments as comment (comment.id)}
       <article
         id="comment-{comment.id}"
         class={[
-          "group py-4 transition-colors duration-150",
-          depth === 0 ? "first:pt-0 last:pb-0" : "rounded-xl px-3 py-3 hover:bg-base-200/35",
-          solved_comment_id === comment.id && "rounded-xl bg-success/5 ring-1 ring-success/20"
+          "group py-3 transition-colors duration-150",
+          depth === 0 ? "first:pt-0 last:pb-0" : "rounded-lg px-2.5 py-2.5 hover:bg-base-200/35",
+          solved_comment_id === comment.id && "rounded-lg bg-success/5 ring-1 ring-success/20"
         ]}
       >
-        <div class="flex items-start gap-2.5">
+        <div class="flex items-start gap-2">
           <div class="shrink-0">
             {#if comment.author?.avatar_url}
               <img
@@ -173,7 +173,7 @@
                   solution
                 </span>
               {/if}
-              <span class="text-xs text-base-content/35">
+              <span class="font-mono text-[0.7rem] text-base-content/35">
                 {formatDate(comment.inserted_at)}
               </span>
               {#if comment.edited_at}
@@ -193,12 +193,12 @@
                 />
               </div>
             {:else}
-              <div class="prose prose-sm mt-2 max-w-none leading-7 text-base-content/80">
+              <div class="prose prose-sm mt-1.5 max-w-none leading-6 text-base-content/80">
                 <MarkdownRenderer content={comment.body} enableEmbeds={false} />
               </div>
             {/if}
 
-            <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <div class="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <VoteButtons
                 target_type="comment"
                 target_id={comment.id}
@@ -210,9 +210,9 @@
               {#if current_user_id && depth < MAX_DEPTH}
                 <button
                   onclick={() => startReply(comment.id)}
-                  class="btn btn-ghost btn-xs min-h-8 gap-1 px-2 text-base-content/50 hover:bg-secondary/10 hover:text-secondary"
+                  class="btn btn-ghost btn-xs h-7 min-h-7 gap-1 rounded-md px-2 text-base-content/50 hover:bg-secondary/10 hover:text-secondary"
                 >
-                  <UMIcon name="reply" className="size-4" />
+                  <UMIcon name="reply" className="size-3.5" />
                   Reply
                 </button>
               {/if}
@@ -220,9 +220,9 @@
               {#if canMarkSolved() && solved_comment_id !== comment.id}
                 <button
                   onclick={() => handleMarkSolved(comment.id)}
-                  class="btn btn-ghost btn-xs min-h-8 gap-1 px-2 text-base-content/50 hover:bg-success/10 hover:text-success"
+                  class="btn btn-ghost btn-xs h-7 min-h-7 gap-1 rounded-md px-2 text-base-content/50 hover:bg-success/10 hover:text-success"
                 >
-                  <UMIcon name="hero-check-circle" className="size-4" />
+                  <UMIcon name="hero-check-circle" className="size-3.5" />
                   Solution
                 </button>
               {/if}
@@ -231,7 +231,7 @@
                 {#if canEdit(comment.author?.id) && editingId !== comment.id}
                   <button
                     onclick={() => startEdit(comment.id, comment.body)}
-                    class="btn btn-ghost btn-xs min-h-8 px-2 text-base-content/45 hover:text-base-content"
+                    class="btn btn-ghost btn-xs h-7 min-h-7 rounded-md px-2 text-base-content/45 hover:text-base-content"
                   >
                     Edit
                   </button>
@@ -240,7 +240,7 @@
                 {#if canDelete(comment.author?.id)}
                   <button
                     onclick={() => handleDelete(comment.id)}
-                    class="btn btn-ghost btn-xs min-h-8 px-2 text-base-content/45 hover:text-error"
+                    class="btn btn-ghost btn-xs h-7 min-h-7 rounded-md px-2 text-base-content/45 hover:text-error"
                   >
                     Delete
                   </button>
@@ -249,7 +249,7 @@
                 {#if current_user_id}
                   <button
                     onclick={() => handleReport(comment.id)}
-                    class="btn btn-ghost btn-xs min-h-8 px-2 text-base-content/45 hover:text-base-content"
+                    class="btn btn-ghost btn-xs h-7 min-h-7 rounded-md px-2 text-base-content/45 hover:text-base-content"
                   >
                     Report
                   </button>
@@ -277,7 +277,7 @@
       </article>
     {/each}
   {:else}
-    <div class="rounded-2xl border border-dashed border-base-300/70 px-5 py-12 text-center">
+    <div class="rounded-xl border border-dashed border-base-300/70 px-4 py-8 text-center">
       <p class="font-semibold text-base-content/65">No replies yet</p>
       <p class="mt-1 text-sm text-base-content/40">Be the first to add something useful.</p>
     </div>

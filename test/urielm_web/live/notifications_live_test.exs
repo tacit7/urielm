@@ -26,7 +26,7 @@ defmodule UrielmWeb.NotificationsLiveTest do
       {:ok, view, _html} = live(log_in_user(conn, user), "/notifications")
 
       assert has_element?(view, "#notifications-page.ui-page-shell")
-      assert has_element?(view, "#notifications-header.ui-page-header")
+      assert has_element?(view, "#notifications-header")
       assert has_element?(view, "#notification-filters")
       assert has_element?(view, "#notification-filter-all[aria-current='page']")
       assert has_element?(view, "#notification-filter-unread")

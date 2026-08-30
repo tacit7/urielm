@@ -37,11 +37,12 @@ defmodule UrielmWeb.ThreadLiveTest do
       {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
 
       assert has_element?(view, "#thread-reading-view")
-      assert has_element?(view, "#thread-topic.ui-card")
+      assert has_element?(view, "#thread-topic")
       assert has_element?(view, "#thread-author")
+      assert has_element?(view, "#thread-stats")
       assert has_element?(view, "#thread-actions")
       assert has_element?(view, "#thread-replies")
-      assert has_element?(view, "#comment-form.ui-card")
+      assert has_element?(view, "#comment-form")
       assert has_element?(view, "#comment-form textarea[name='body']")
 
       assert has_element?(
@@ -55,11 +56,23 @@ defmodule UrielmWeb.ThreadLiveTest do
              )
     end
 
+    test "pluralizes replies correctly", %{conn: conn, author: author, board: board} do
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+      _first = Fixtures.comment_fixture(thread, author, %{body: "First reply"})
+      _second = Fixtures.comment_fixture(thread, author, %{body: "Second reply"})
+
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      assert has_element?(view, "#thread-replies-title", "2 replies")
+      refute render(view) =~ "2 replys"
+    end
+
     test "shows a clear sign-in state instead of the reply form", %{conn: conn, thread: thread} do
       {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
 
       refute has_element?(view, "#comment-form")
-      assert has_element?(view, "#thread-sign-in-to-reply.ui-card a[href='/signin']")
+      assert has_element?(view, "#thread-sign-in-to-reply a[href='/signin']")
     end
 
     test "locked topics replace the composer with a status panel", %{

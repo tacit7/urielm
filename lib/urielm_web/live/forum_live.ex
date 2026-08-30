@@ -95,44 +95,61 @@ defmodule UrielmWeb.ForumLive do
           <span class="text-xs text-base-content/30">{length(@category.boards)} boards</span>
         </div>
 
-        <.form
+        <details
           :if={@category.notification_form}
-          for={@category.notification_form}
-          id={"category-notification-form-#{@category.id}"}
-          phx-change="set_category_notification"
-          class="w-full sm:w-52"
+          id={"category-notification-disclosure-#{@category.id}"}
+          class="group w-full sm:w-52"
         >
-          <input
-            type="hidden"
-            name={@category.notification_form[:category_id].name}
-            value={@category.notification_form[:category_id].value}
-          />
-          <.input
-            field={@category.notification_form[:level]}
-            id={"category-notification-level-#{@category.id}"}
-            type="select"
-            label="Notifications"
-            options={[
-              {"Regular", "normal"},
-              {"Watching", "watching"},
-              {"Tracking", "tracking"},
-              {"Muted", "muted"}
-            ]}
-            help={notification_help(@category.notification_form[:level].value)}
-            class="select select-bordered select-sm w-full bg-base-100 transition-colors focus:border-primary"
-          />
-        </.form>
+          <summary
+            class="flex min-h-8 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-base-300/60 bg-base-100/45 px-2.5 text-xs font-semibold text-base-content/55 transition hover:text-base-content sm:px-3 [&::-webkit-details-marker]:hidden"
+            aria-label={"#{@category.name} notification settings"}
+          >
+            <.um_icon name="bell" class="size-3.5 text-base-content/45 sm:hidden" />
+            <span class="hidden sm:inline">Notifications</span>
+            <.um_icon
+              name="hero-chevron-down"
+              class="size-3.5 transition-transform group-open:rotate-180"
+            />
+          </summary>
+          <.form
+            for={@category.notification_form}
+            id={"category-notification-form-#{@category.id}"}
+            phx-change="set_category_notification"
+            class="mt-2"
+          >
+            <input
+              type="hidden"
+              name={@category.notification_form[:category_id].name}
+              value={@category.notification_form[:category_id].value}
+            />
+            <.input
+              field={@category.notification_form[:level]}
+              id={"category-notification-level-#{@category.id}"}
+              type="select"
+              label="Level"
+              options={[
+                {"Regular", "normal"},
+                {"Watching", "watching"},
+                {"Tracking", "tracking"},
+                {"Muted", "muted"}
+              ]}
+              help={notification_help(@category.notification_form[:level].value)}
+              class="select select-bordered select-sm w-full bg-base-100 transition-colors focus:border-primary"
+            />
+          </.form>
+        </details>
       </div>
 
       <%!-- Board table --%>
       <div id={"forum-category-surface-#{@category.id}"} class="ui-card ui-card-compact h-auto">
         <%!-- Column headers --%>
-        <div class="hidden border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[1fr_220px_72px]">
+        <div class="hidden border-b border-base-300/40 bg-base-200/60 px-4 py-2 md:grid md:grid-cols-[minmax(0,1fr)_220px_72px_72px]">
           <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider">Board</span>
           <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider">Latest</span>
-          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-right">
+          <span class="font-mono text-xs text-base-content/30 uppercase tracking-wider text-center">
             Topics
           </span>
+          <span class="text-right font-mono text-xs uppercase tracking-wider text-base-content/30">Posts</span>
         </div>
 
         <%!-- Board rows --%>
@@ -153,14 +170,14 @@ defmodule UrielmWeb.ForumLive do
       assign(
         assigns,
         :icon_style,
-        "background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 55%), #{hex};"
+        "background: #{hex};"
       )
 
     ~H"""
     <a
       id={"forum-board-#{@board.id}"}
       href={~p"/forum/b/#{@board.slug}"}
-      class="group grid grid-cols-1 items-center gap-x-4 gap-y-2 px-4 py-4 transition-colors duration-150 hover:bg-base-200/55 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary md:grid-cols-[1fr_220px_72px]"
+      class="group grid grid-cols-1 items-center gap-x-4 gap-y-2 px-4 py-3 transition-colors duration-150 hover:bg-base-200/55 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary md:grid-cols-[minmax(0,1fr)_220px_72px_72px]"
     >
       <%!-- Board info --%>
       <div class="flex min-w-0 items-center gap-3">
@@ -198,10 +215,18 @@ defmodule UrielmWeb.ForumLive do
       </div>
 
       <%!-- Topic count --%>
-      <div class="flex flex-col items-end justify-center">
+      <div class="flex items-center gap-4 pl-12 md:block md:pl-0 md:text-center">
         <span class="font-mono text-sm text-base-content/60 tabular-nums">
           {@board.thread_count}
         </span>
+        <span class="text-xs text-base-content/35 md:hidden">topics</span>
+      </div>
+
+      <div class="flex items-center gap-4 pl-12 md:block md:pl-0 md:text-right">
+        <span class="font-mono text-sm text-base-content/60 tabular-nums">
+          {@board.post_count}
+        </span>
+        <span class="text-xs text-base-content/35 md:hidden">posts</span>
       </div>
     </a>
     """

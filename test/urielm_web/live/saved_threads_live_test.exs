@@ -24,7 +24,8 @@ defmodule UrielmWeb.SavedThreadsLiveTest do
       {:ok, view, _html} = live(log_in_user(conn, user), "/saved")
 
       assert has_element?(view, "#saved-threads-page.ui-page-shell")
-      assert has_element?(view, "#saved-threads-header.ui-page-header")
+      assert has_element?(view, "#saved-threads-header")
+      assert has_element?(view, "#saved-threads-explore[href='/forum']")
       assert has_element?(view, "#threads[phx-update='stream']")
     end
   end
