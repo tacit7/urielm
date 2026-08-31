@@ -262,9 +262,9 @@ defmodule UrielmWeb.PrivacyLive do
                   support account security, and display the profile information you authorize.
                 </p>
                 <p class="mt-3 leading-7 text-base-content/70">
-                  We store the account information, provider identifier, OAuth credential returned
-                  during sign-in, and returned profile information with your Urielm account. We do not
-                  use this information to access unrelated Google services, build advertising
+                  We store the account information, provider identifier, and returned profile
+                  information with your Urielm account. We do not store Google access tokens, and do
+                  not use this information to access unrelated Google services, build advertising
                   profiles, or sell Google user data. We share it only with infrastructure providers
                   necessary to operate and secure Urielm, or when legally required.
                 </p>

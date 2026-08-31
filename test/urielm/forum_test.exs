@@ -369,6 +369,23 @@ defmodule Urielm.ForumTest do
       refute Enum.any?(threads, &(&1.title == "Should Fail"))
     end
 
+    test "create_thread/3 rejects unverified users" do
+      board = board_fixture()
+
+      author =
+        user_fixture()
+        |> Ecto.Changeset.change(%{email_verified: false})
+        |> Repo.update!()
+
+      attrs = %{
+        "title" => "Should Fail",
+        "slug" => "should-fail",
+        "body" => "This thread should not be created"
+      }
+
+      assert {:error, :email_unverified} = Forum.create_thread(board.id, author.id, attrs)
+    end
+
     test "get_thread!/1 does NOT increment view count (pure read)" do
       thread = thread_fixture()
 
@@ -605,6 +622,18 @@ defmodule Urielm.ForumTest do
       attrs = %{"body" => "Orphan reply", "parent_id" => fake_uuid}
       assert {:error, :invalid_parent} = Forum.create_comment(thread.id, author.id, attrs)
     end
+
+    test "create_comment/3 rejects unverified users" do
+      thread = thread_fixture()
+
+      author =
+        user_fixture()
+        |> Ecto.Changeset.change(%{email_verified: false})
+        |> Repo.update!()
+
+      assert {:error, :email_unverified} =
+               Forum.create_comment(thread.id, author.id, %{"body" => "Unverified reply"})
+    end
   end
 
   describe "votes" do
@@ -659,6 +688,18 @@ defmodule Urielm.ForumTest do
 
       {:error, changeset} = Forum.cast_vote(user.id, "thread", thread.id, 0)
       refute changeset.valid?
+    end
+
+    test "cast_vote/4 rejects silenced users" do
+      thread = thread_fixture()
+
+      user =
+        user_fixture()
+        |> Ecto.Changeset.change(%{silenced_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+        |> Repo.update!()
+
+      assert {:error, :silenced} = Forum.cast_vote(user.id, "thread", thread.id, 1)
+      assert Repo.get!(Thread, thread.id).score == 0
     end
 
     test "get_user_vote/3 retrieves user's vote" do

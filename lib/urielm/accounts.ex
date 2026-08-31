@@ -109,7 +109,6 @@ defmodule Urielm.Accounts do
         user_id: user.id,
         provider: provider,
         provider_uid: provider_uid,
-        provider_token: auth.credentials.token,
         raw_info: Map.from_struct(auth.info)
       }
 
@@ -204,6 +203,20 @@ defmodule Urielm.Accounts do
     |> User.password_changeset(attrs)
     |> Repo.update()
   end
+
+  @doc """
+  Returns whether `viewer` may view `profile_user`'s profile details.
+
+  Private profiles are visible only to their owner and moderators. Follow
+  requests/approval do not exist yet, so following alone does not grant access.
+  """
+  def can_view_profile?(%User{id: user_id}, %User{id: user_id}), do: true
+
+  def can_view_profile?(%User{is_admin: true}, %User{}), do: true
+  def can_view_profile?(%User{is_moderator: true}, %User{}), do: true
+
+  def can_view_profile?(_viewer, %User{private_profile: true}), do: false
+  def can_view_profile?(_viewer, %User{}), do: true
 
   @doc """
   Deletes a user account and all associated data.

@@ -11,7 +11,7 @@ defmodule UrielmWeb.SettingsLive do
      socket
      |> assign(:page_title, "Settings")
      |> assign(:user, user)
-     |> assign(:profile_form, to_form(Accounts.User.changeset(user, %{})))
+     |> assign(:profile_form, to_form(Accounts.change_user_profile(user)))
      |> assign(
        :password_form,
        to_form(%{"current_password" => "", "new_password" => "", "confirm_password" => ""},
@@ -32,7 +32,7 @@ defmodule UrielmWeb.SettingsLive do
          |> put_flash(:info, "Profile updated successfully")
          |> assign(:user, user)
          |> assign(:current_user, user)
-         |> assign(:profile_form, to_form(Accounts.User.changeset(user, %{})))}
+         |> assign(:profile_form, to_form(Accounts.change_user_profile(user)))}
 
       {:error, changeset} ->
         {:noreply, assign(socket, :profile_form, to_form(changeset))}
@@ -144,25 +144,29 @@ defmodule UrielmWeb.SettingsLive do
               class="space-y-4"
             >
               <.input
-                field={@profile_form[:name]}
+                field={@profile_form[:display_name]}
                 type="text"
-                label="Full name"
-                placeholder="Enter your full name"
+                label="Display name"
+                maxlength="50"
+                placeholder="Enter your display name"
               />
 
               <.input
-                field={@profile_form[:username]}
-                type="text"
-                label="Username"
-                help="3–20 characters: letters, numbers, and underscores only."
-                placeholder="Enter your username"
+                field={@profile_form[:private_profile]}
+                id="profile-private-profile"
+                type="checkbox"
+                label="Make my profile private"
+                help="Only you, admins, and moderators can view your profile details and activity."
+                class="toggle toggle-primary"
               />
 
               <.input
                 field={@profile_form[:email]}
                 type="email"
                 label="Email address"
+                help="Email changes are not supported from this form."
                 placeholder="Enter your email"
+                disabled
               />
 
               <.input

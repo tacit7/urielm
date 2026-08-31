@@ -110,22 +110,22 @@
     id="account-menu-toggle"
     bind:this={triggerRef}
     onclick={toggleMenu}
-    class={`btn btn-ghost btn-circle avatar size-11 transition ${isMenuOpen ? 'bg-primary/10 ring-2 ring-primary/30' : ''}`}
+    class={`group inline-flex size-10 items-center justify-center rounded-full border p-0 shadow-sm shadow-black/10 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+      isMenuOpen
+        ? 'border-primary/45 bg-primary/10 text-primary ring-2 ring-primary/20'
+        : 'border-base-300/70 bg-base-200/80 text-base-content/80 hover:border-primary/35 hover:bg-primary/10 hover:text-primary'
+    }`}
     aria-label={`${currentUser.name || currentUser.email} account menu`}
     aria-expanded={isMenuOpen}
     aria-controls="account-menu"
   >
-    <div class="w-10 rounded-full">
-      {#if currentUser.avatarUrl}
-        <img src={currentUser.avatarUrl} alt="" />
-      {:else}
-        <div class="avatar placeholder">
-          <div class="w-10 rounded-full bg-primary text-primary-content">
-            <span class="text-sm font-bold">{getUserInitials()}</span>
-          </div>
-        </div>
-      {/if}
-    </div>
+    {#if currentUser.avatarUrl}
+      <img src={currentUser.avatarUrl} alt="" class="size-8 rounded-full object-cover ring-1 ring-base-100/70" />
+    {:else}
+      <span class="inline-flex size-8 items-center justify-center rounded-full bg-base-300/75 text-xs font-black leading-none text-base-content shadow-inner shadow-black/10 transition group-hover:bg-primary/15 group-hover:text-primary">
+        {getUserInitials()}
+      </span>
+    {/if}
   </button>
 
   {#if isMenuOpen}
@@ -161,7 +161,7 @@
           onclick={closeMenu}
         >
           <UMIcon name="hero-user-circle" className="size-4" />
-          Profile
+          My Profile
         </a>
       </li>
       <li>

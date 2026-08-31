@@ -10,12 +10,15 @@ defmodule UrielmWeb.VideoThumbnailController do
   # trusted. Do not follow redirects (constrained SSRF) and cap how many bytes
   # we buffer into memory.
   @max_thumbnail_bytes 5 * 1024 * 1024
+  @allowed_thumbnail_content_types ~w(image/jpeg image/png image/gif image/webp)
 
+  # sobelow_skip ["XSS.SendResp", "XSS.ContentType"]
   def show(conn, %{"id" => id}) do
     with {:ok, video_id} <- Ecto.UUID.cast(id),
          %Video{} = video <- Content.get_video(video_id),
          true <- public_tiktok_video?(video),
-         {:ok, body, content_type} <- thumbnail_fetcher().(video.tiktok_url) do
+         {:ok, body, content_type} <- thumbnail_fetcher().(video.tiktok_url),
+         {:ok, content_type} <- response_content_type(content_type) do
       conn
       |> put_resp_content_type(content_type)
       |> put_resp_header("cache-control", @cache_control)
@@ -24,6 +27,13 @@ defmodule UrielmWeb.VideoThumbnailController do
       _ -> send_resp(conn, :not_found, "Not found")
     end
   end
+
+  defp response_content_type(content_type)
+       when content_type in @allowed_thumbnail_content_types do
+    {:ok, content_type}
+  end
+
+  defp response_content_type(_content_type), do: {:error, :invalid_content_type}
 
   defp public_tiktok_video?(video) do
     video.visibility == "public" and not is_nil(video.published_at) and

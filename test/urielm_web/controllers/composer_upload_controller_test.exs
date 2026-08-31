@@ -30,10 +30,10 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
       assert %{
                "filename" => "diagram.png",
                "content_type" => "image/png",
-               "url" => "https://example.test/" <> storage_key
+               "url" => "/files/" <> file_id
              } = json_response(conn, 201)
 
-      assert %File{} = file = Repo.get_by(File, storage_key: storage_key)
+      assert %File{} = file = Repo.get(File, file_id)
       assert file.entity_type == "thread"
       assert file.entity_id == thread.id
       assert file.user_id == user.id
@@ -58,6 +58,42 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
 
       assert %{"error" => error} = json_response(conn, 422)
       assert error =~ "not allowed"
+    end
+
+    test "rejects unverified users", %{conn: conn, user: user, thread: thread} do
+      user =
+        user
+        |> Ecto.Changeset.change(%{email_verified: false})
+        |> Repo.update!()
+
+      upload = upload_fixture("diagram.png", "image/png", "fake image bytes")
+
+      conn =
+        conn
+        |> log_in_user(user)
+        |> post("/forum/t/#{thread.id}/uploads", %{"file" => upload})
+
+      assert %{"error" => "Verify your email before uploading files"} = json_response(conn, 403)
+      refute Repo.get_by(File, original_filename: "diagram.png")
+    end
+
+    test "rejects silenced users", %{conn: conn, user: user, thread: thread} do
+      user =
+        user
+        |> Ecto.Changeset.change(%{silenced_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+        |> Repo.update!()
+
+      upload = upload_fixture("diagram.png", "image/png", "fake image bytes")
+
+      conn =
+        conn
+        |> log_in_user(user)
+        |> post("/forum/t/#{thread.id}/uploads", %{"file" => upload})
+
+      assert %{"error" => "Your account is silenced and cannot upload files"} =
+               json_response(conn, 403)
+
+      refute Repo.get_by(File, original_filename: "diagram.png")
     end
   end
 

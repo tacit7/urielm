@@ -4,6 +4,7 @@ defmodule UrielmWeb.AuthController do
 
   alias Urielm.Accounts
   alias Urielm.RateLimiter
+  alias UrielmWeb.Redirects
 
   # Rate limits for the email/password auth endpoints, as `{max_requests, window_seconds}`.
   #
@@ -39,7 +40,7 @@ defmodule UrielmWeb.AuthController do
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     case Accounts.find_or_create_user(auth) do
       {:ok, user} ->
-        return_to = get_session(conn, :return_to) || "/"
+        return_to = Redirects.safe_return_path(get_session(conn, :return_to))
 
         conn =
           conn
@@ -259,7 +260,7 @@ defmodule UrielmWeb.AuthController do
             conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
           user ->
-            return_to = get_session(conn, :return_to) || "/"
+            return_to = Redirects.safe_return_path(get_session(conn, :return_to))
 
             conn =
               conn

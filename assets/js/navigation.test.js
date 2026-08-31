@@ -12,6 +12,7 @@ test("maps application paths to persistent navigation sections", () => {
   assert.equal(pageForPath("/"), "home")
   assert.equal(pageForPath("/blog"), "blog")
   assert.equal(pageForPath("/blog/effective-prompts"), "blog")
+  assert.equal(pageForPath("/code-kata"), "code-kata")
   assert.equal(pageForPath("/prompts/42"), "prompts")
   assert.equal(pageForPath("/courses/liveview"), "courses")
   assert.equal(pageForPath("/videos/intro"), "videos")

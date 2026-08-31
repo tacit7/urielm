@@ -103,6 +103,18 @@ defmodule UrielmWeb.NewThreadLive do
          |> put_flash(:error, "Your account is silenced and cannot create threads")
          |> redirect(to: ~p"/forum/b/#{board.slug}")}
 
+      {:error, :email_unverified} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Verify your email before creating threads")
+         |> redirect(to: ~p"/signup/verify-email")}
+
+      {:error, :board_hidden} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "This board is not available")
+         |> redirect(to: ~p"/forum/categories")}
+
       {:error, changeset} ->
         {:noreply, assign_composer(socket, changeset, params)}
     end

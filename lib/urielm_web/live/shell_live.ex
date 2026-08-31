@@ -42,6 +42,15 @@ defmodule UrielmWeb.ShellLive do
     )
   end
 
+  defp assign_page_metadata(socket, :code_kata) do
+    assign(socket,
+      page_title: "Code Kata",
+      meta_description:
+        "Code Kata is a focused desktop app for practicing Python and JavaScript problems, tracking mastery, and reviewing what needs another pass.",
+      canonical_url: "https://urielm.dev/code-kata"
+    )
+  end
+
   defp assign_page_metadata(socket, _live_action), do: socket
 
   defp page_name_for_action(:home), do: "home"
@@ -54,6 +63,7 @@ defmodule UrielmWeb.ShellLive do
   defp page_name_for_action(:course), do: "courses"
   defp page_name_for_action(:lesson), do: "courses"
   defp page_name_for_action(:video), do: "videos"
+  defp page_name_for_action(:code_kata), do: "code-kata"
   defp page_name_for_action(:themes), do: "home"
   defp page_name_for_action(:user_profile), do: "profile"
   defp page_name_for_action(_), do: "home"
@@ -89,6 +99,7 @@ defmodule UrielmWeb.ShellLive do
   defp child_module(:course), do: UrielmWeb.CourseLive
   defp child_module(:lesson), do: UrielmWeb.LessonLive
   defp child_module(:video), do: UrielmWeb.VideoLive
+  defp child_module(:code_kata), do: UrielmWeb.CodeKataLive
   defp child_module(:themes), do: UrielmWeb.ThemesLive
   defp child_module(:user_profile), do: UrielmWeb.UserProfileLive
   defp child_module(_), do: UrielmWeb.HomeLive

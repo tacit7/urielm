@@ -25,7 +25,7 @@ defmodule UrielmWeb.MarkdownTest do
       refute html =~ "<script"
     end
 
-    # SEC-4: Earmark passes raw block-level HTML straight through to
+    # SEC-4: The Markdown renderer passes raw block-level HTML through to
     # Phoenix.HTML.raw/1. These prove the html_sanitize_ex scrubber neutralizes
     # the classic XSS vectors that the old <script>-only regex let through.
     test "drops img onerror payloads and javascript: hrefs (SEC-4)" do

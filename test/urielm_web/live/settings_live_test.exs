@@ -25,6 +25,7 @@ defmodule UrielmWeb.SettingsLiveTest do
       assert has_element?(view, "#appearance-settings-section.ui-card")
       assert has_element?(view, "#danger-settings-section.ui-card")
       assert has_element?(view, "#profile-settings-form")
+      assert has_element?(view, "#profile-private-profile[type='checkbox']")
       assert has_element?(view, "#profile-settings-submit[phx-disable-with='Saving profile…']")
       assert has_element?(view, "#password-settings-form")
 
@@ -57,6 +58,23 @@ defmodule UrielmWeb.SettingsLiveTest do
       assert has_element?(view, "#delete-account-description")
       assert has_element?(view, "#delete-account-cancel")
       assert has_element?(view, "#delete-account-confirm")
+    end
+
+    test "authenticated users can make their profile private", %{conn: conn} do
+      user = Fixtures.user_fixture()
+
+      {:ok, view, _html} = live(log_in_user(conn, user), "/settings")
+
+      view
+      |> form("#profile-settings-form", %{
+        "user" => %{
+          "display_name" => user.display_name,
+          "private_profile" => "true"
+        }
+      })
+      |> render_submit()
+
+      assert Urielm.Accounts.get_user(user.id).private_profile
     end
 
     test "settings page displays user email information", %{conn: conn} do

@@ -8,7 +8,22 @@ defmodule UrielmWeb.Router do
     plug :fetch_live_flash
     plug :put_root_layout, html: {UrielmWeb.Layouts, :root}
     plug :protect_from_forgery
-    plug :put_secure_browser_headers
+
+    plug :put_secure_browser_headers, %{
+      "content-security-policy" =>
+        "default-src 'self'; " <>
+          "base-uri 'self'; " <>
+          "connect-src 'self' ws: wss:; " <>
+          "font-src 'self' data:; " <>
+          "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; " <>
+          "img-src 'self' https: data:; " <>
+          "object-src 'none'; " <>
+          "script-src 'self'; " <>
+          "style-src 'self' 'unsafe-inline'; " <>
+          "form-action 'self'; " <>
+          "frame-ancestors 'none'"
+    }
+
     plug UrielmWeb.Plugs.Theme
     plug UrielmWeb.Plugs.Auth, :fetch_current_user
   end
@@ -27,7 +42,6 @@ defmodule UrielmWeb.Router do
 
     get "/:provider", AuthController, :request
     get "/:provider/callback", AuthController, :callback
-    post "/:provider/callback", AuthController, :callback
     delete "/logout", AuthController, :delete
     get "/post-signup/:token", AuthController, :post_signup
 
@@ -56,6 +70,7 @@ defmodule UrielmWeb.Router do
     get "/p/:id", ShortUrlController, :prompt
     get "/v/:id", ShortUrlController, :video
     get "/video-thumbnails/:id", VideoThumbnailController, :show
+    get "/files/:id", FileController, :show
 
     # Auth pages - outside shell, use their own layout
     live_session :auth do
@@ -79,6 +94,7 @@ defmodule UrielmWeb.Router do
       live "/courses/:course_slug/lessons/:lesson_slug", ShellLive, :lesson
       live "/videos", ShellLive, :videos
       live "/videos/:slug", ShellLive, :video
+      live "/code-kata", ShellLive, :code_kata
       live "/themes", ShellLive, :themes
       live "/u/:username", ShellLive, :user_profile
     end

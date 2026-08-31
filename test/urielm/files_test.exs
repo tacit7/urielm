@@ -27,6 +27,7 @@ defmodule Urielm.FilesTest do
       assert file.visibility == "public"
       assert is_binary(file.storage_key)
       assert String.starts_with?(file.storage_key, "uploads/#{user.id}/")
+      assert Files.public_url(file) == "/files/#{file.id}"
     end
 
     test "creates file with custom visibility", %{user: user, thread: thread, upload: upload} do
@@ -68,6 +69,13 @@ defmodule Urielm.FilesTest do
 
       assert {:error, error_msg} = Files.create_file(bad_upload, user.id, "thread", thread.id)
       assert error_msg =~ "not allowed"
+    end
+
+    test "rejects mismatched extension and content type", %{user: user, thread: thread} do
+      bad_upload = create_upload_fixture("photo.jpg", "application/pdf", "spoofed")
+
+      assert {:error, error_msg} = Files.create_file(bad_upload, user.id, "thread", thread.id)
+      assert error_msg =~ "does not match"
     end
   end
 
@@ -157,6 +165,21 @@ defmodule Urielm.FilesTest do
 
       assert Files.can_access_file?(owner, file)
       refute Files.can_access_file?(other_user, file)
+    end
+
+    test "does not treat participant visibility as public", %{
+      owner: owner,
+      other_user: other_user,
+      thread: thread
+    } do
+      upload = create_upload_fixture("participant.jpg", "image/jpeg")
+
+      {:ok, file} =
+        Files.create_file(upload, owner.id, "thread", thread.id, %{visibility: "participants"})
+
+      assert Files.can_access_file?(owner, file)
+      refute Files.can_access_file?(other_user, file)
+      refute Files.can_access_file?(nil, file)
     end
   end
 

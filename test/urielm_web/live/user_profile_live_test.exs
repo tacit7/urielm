@@ -52,9 +52,47 @@ defmodule UrielmWeb.UserProfileLiveTest do
     test "redirects to home for non-existent username", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/u/no_such_user_xyz123")
     end
+
+    test "anonymous user sees private profile state instead of activity", %{
+      conn: conn,
+      owner: owner
+    } do
+      {:ok, owner} = Accounts.update_user_profile(owner, %{"private_profile" => "true"})
+
+      {:ok, live, _html} = live(conn, "/u/#{owner.username}")
+      child = profile_child(live)
+
+      assert has_element?(child, "#private-profile-state")
+      refute has_element?(child, "#profile-activity")
+    end
+
+    test "unrelated signed-in user sees private profile state", %{
+      conn: conn,
+      owner: owner,
+      visitor: visitor
+    } do
+      {:ok, owner} = Accounts.update_user_profile(owner, %{"private_profile" => "true"})
+
+      {:ok, live, _html} = live(log_in_user(conn, visitor), "/u/#{owner.username}")
+      child = profile_child(live)
+
+      assert has_element?(child, "#private-profile-state")
+      refute has_element?(child, "#profile-activity")
+    end
   end
 
   describe "viewing own profile" do
+    test "owner can view their private profile", %{conn: conn, owner: owner} do
+      {:ok, owner} = Accounts.update_user_profile(owner, %{"private_profile" => "true"})
+
+      {:ok, live, _html} = live(log_in_user(conn, owner), "/u/#{owner.username}")
+      child = profile_child(live)
+
+      refute has_element?(child, "#private-profile-state")
+      assert has_element?(child, "#profile-activity.ui-card")
+      assert has_element?(child, "#profile-form-private-profile[type='checkbox']")
+    end
+
     test "shows username on own profile", %{conn: conn, owner: owner} do
       {:ok, live, _html} = live(log_in_user(conn, owner), "/u/#{owner.username}")
       child = profile_child(live)

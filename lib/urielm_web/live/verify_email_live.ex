@@ -1,10 +1,11 @@
 defmodule UrielmWeb.VerifyEmailLive do
   use UrielmWeb, :live_view
+  alias UrielmWeb.Redirects
 
   @impl true
   def mount(_params, session, socket) do
     user = socket.assigns.current_user
-    pending_redirect = Map.get(session, "pending_redirect")
+    pending_redirect = Redirects.safe_return_path(Map.get(session, "pending_redirect"))
 
     if user && user.email_verified do
       return_to = pending_redirect || "/"

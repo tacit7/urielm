@@ -15,6 +15,7 @@ defmodule Urielm.Accounts.User do
     field(:bio, :string)
     field(:location, :string)
     field(:website, :string)
+    field(:private_profile, :boolean, default: false)
     field(:email_verified, :boolean, default: false)
     field(:active, :boolean, default: true)
     field(:is_admin, :boolean, default: false)
@@ -59,6 +60,7 @@ defmodule Urielm.Accounts.User do
       :bio,
       :location,
       :website,
+      :private_profile,
       :email_verified,
       :active
     ])
@@ -85,7 +87,7 @@ defmodule Urielm.Accounts.User do
   """
   def profile_changeset(user, attrs) do
     user
-    |> cast(attrs, [:display_name, :bio, :location, :website, :avatar_url])
+    |> cast(attrs, [:display_name, :bio, :location, :website, :avatar_url, :private_profile])
     |> validate_length(:bio, max: 1000)
     |> validate_length(:location, max: 100)
     |> validate_length(:website, max: 200)

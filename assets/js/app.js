@@ -402,6 +402,141 @@ const DiscussionDraft = {
   }
 }
 
+const CodeKataDownload = {
+  mounted() {
+    this.primaryLink = this.el.querySelector("#code-kata-primary-download")
+    this.label = this.el.querySelector("#code-kata-download-label")
+    this.note = this.el.querySelector("#code-kata-download-note")
+    this.releaseTitle = this.el.querySelector("#code-kata-release-title")
+    this.releaseVersion = this.el.querySelector("#code-kata-release-version")
+    this.releasePlatform = this.el.querySelector("#code-kata-release-platform")
+    this.releaseAsset = this.el.querySelector("#code-kata-release-asset")
+    this.releaseUpdated = this.el.querySelector("#code-kata-release-updated")
+    this.releaseNotes = this.el.querySelector("#code-kata-release-notes")
+    this.sourceCode = this.el.querySelector("#code-kata-source-code")
+    this.releasePage = this.el.dataset.releasePage
+    this.releaseApi = this.el.dataset.releaseApi
+    this.sourcePage = this.el.dataset.sourcePage
+
+    const platform = detectDesktopPlatform()
+    setDownloadState(this, platform)
+    loadCodeKataRelease(this, platform)
+  }
+}
+
+function detectDesktopPlatform() {
+  const platform = `${navigator.userAgentData?.platform || navigator.platform || ""}`.toLowerCase()
+  const userAgent = `${navigator.userAgent || ""}`.toLowerCase()
+  const source = `${platform} ${userAgent}`
+
+  if (source.includes("mac")) return "macos"
+  if (source.includes("win")) return "windows"
+  if (source.includes("linux") || source.includes("x11")) return "linux"
+  return "unknown"
+}
+
+function platformLabel(platform) {
+  return {
+    macos: "macOS",
+    windows: "Windows",
+    linux: "Linux"
+  }[platform] || "your computer"
+}
+
+async function loadCodeKataRelease(hook, platform) {
+  if (!hook.releaseApi || !hook.primaryLink) return
+
+  try {
+    const response = await fetch(hook.releaseApi, {
+      headers: { Accept: "application/vnd.github+json" }
+    })
+
+    if (!response.ok) throw new Error(`GitHub release request failed: ${response.status}`)
+
+    const release = await response.json()
+    const asset = findCodeKataAsset(release.assets || [], platform)
+    setDownloadState(hook, platform, asset, release)
+  } catch (_) {
+    setDownloadState(hook, platform, null, null)
+  }
+}
+
+function findCodeKataAsset(assets, platform) {
+  const patterns = {
+    macos: [/\.dmg$/i],
+    windows: [/\.exe$/i, /\.msi$/i],
+    linux: [/\.appimage$/i, /\.deb$/i, /\.rpm$/i]
+  }[platform] || []
+
+  return patterns
+    .map(pattern => assets.find(asset => pattern.test(asset.name || "")))
+    .find(Boolean)
+}
+
+function setDownloadState(hook, platform, asset = null, release = undefined) {
+  const osLabel = platformLabel(platform)
+  const fallbackHref = hook.releasePage || "https://github.com/tacit7/code-kata/releases/latest"
+
+  setReleasePanelState(hook, platform, asset, release, fallbackHref)
+
+  if (asset?.browser_download_url) {
+    hook.primaryLink.href = asset.browser_download_url
+    hook.primaryLink.setAttribute("download", "")
+    hook.label.textContent = `Download for ${osLabel}`
+    hook.note.textContent = `Latest ${osLabel} installer from the Code Kata release. Tests stay local in the app.`
+    return
+  }
+
+  hook.primaryLink.href = fallbackHref
+  hook.primaryLink.removeAttribute("download")
+  hook.label.textContent = platform === "unknown" ? "View downloads" : `Download for ${osLabel}`
+  hook.note.textContent =
+    platform === "unknown"
+      ? "Choose the installer for your computer from the latest release."
+      : `We could not pick a ${osLabel} installer automatically, so this opens the latest release.`
+}
+
+function setReleasePanelState(hook, platform, asset, release, fallbackHref) {
+  const osLabel = platformLabel(platform)
+  const releaseUrl = release?.html_url || fallbackHref
+  const sourceUrl = hook.sourcePage || "https://github.com/tacit7/code-kata"
+
+  if (hook.releaseTitle) hook.releaseTitle.textContent = release === null ? "Latest release on GitHub" : "Latest release"
+  if (hook.releaseVersion) hook.releaseVersion.textContent = release?.tag_name || release?.name || "Latest"
+  if (hook.releasePlatform) hook.releasePlatform.textContent = osLabel
+  if (hook.releaseAsset) {
+    if (release === undefined) {
+      hook.releaseAsset.textContent = "Checking installer"
+    } else {
+      hook.releaseAsset.textContent = asset ? installerLabel(asset.name) : "Choose on GitHub"
+    }
+  }
+  if (hook.releaseUpdated) hook.releaseUpdated.textContent = releaseDateLabel(release?.published_at)
+  if (hook.releaseNotes) hook.releaseNotes.href = releaseUrl
+  if (hook.sourceCode) hook.sourceCode.href = sourceUrl
+}
+
+function installerLabel(name) {
+  if (!name) return "Installer"
+
+  const extension = name.match(/\.(dmg|exe|msi|appimage|deb|rpm)$/i)?.[1]
+  return extension ? `${extension.toUpperCase()} installer` : "Installer"
+}
+
+function releaseDateLabel(value) {
+  if (value === undefined) return "Checking GitHub"
+  if (!value) return "Latest available"
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Latest available"
+
+  return `Updated ${new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(date)}`
+}
+
 // Add custom hooks
 Hooks.InfiniteScroll = InfiniteScroll
 Hooks.CopyToClipboard = CopyToClipboard
@@ -411,6 +546,7 @@ Hooks.SigninForm = SigninForm
 Hooks.SignupForm = SignupForm
 Hooks.HighlightCode = HighlightCode
 Hooks.NavbarActiveLinks = NavbarActiveLinks
+Hooks.CodeKataDownload = CodeKataDownload
 
 // Horizontal scroll for carousels/swimlanes
 Hooks.HorizontalScroll = {

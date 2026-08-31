@@ -8,7 +8,8 @@ defmodule UrielmWeb.ComposerUploadController do
   def create(conn, %{"thread_id" => thread_id, "file" => %Plug.Upload{} = upload}) do
     user = conn.assigns.current_user
 
-    with %Thread{is_locked: false} = thread <- Forum.get_thread(thread_id),
+    with %Thread{} = thread <- Forum.get_thread(thread_id),
+         :ok <- Forum.authorize_comment(thread, user),
          {:ok, file} <- Files.create_file(upload, user.id, "thread", thread.id) do
       conn
       |> put_status(:created)
@@ -18,10 +19,30 @@ defmodule UrielmWeb.ComposerUploadController do
         url: Files.public_url(file)
       })
     else
-      %Thread{is_locked: true} ->
+      {:error, :thread_locked} ->
         conn
         |> put_status(:locked)
         |> json(%{error: "This thread is locked"})
+
+      {:error, :email_unverified} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Verify your email before uploading files"})
+
+      {:error, :silenced} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "Your account is silenced and cannot upload files"})
+
+      {:error, :board_hidden} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Thread not found"})
+
+      {:error, :thread_not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Thread not found"})
 
       nil ->
         conn

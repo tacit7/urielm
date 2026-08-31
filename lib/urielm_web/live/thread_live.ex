@@ -102,6 +102,12 @@ defmodule UrielmWeb.ThreadLive do
             {:noreply,
              put_flash(socket, :error, "Your account is silenced and cannot post comments")}
 
+          {:error, :email_unverified} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Verify your email before commenting")
+             |> redirect(to: ~p"/signup/verify-email")}
+
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to post comment")}
         end
@@ -134,6 +140,16 @@ defmodule UrielmWeb.ThreadLive do
 
           {:error, :thread_locked} ->
             {:reply, %{ok: false}, put_flash(socket, :error, "This thread is locked")}
+
+          {:error, :email_unverified} ->
+            {:reply, %{ok: false},
+             socket
+             |> put_flash(:error, "Verify your email before commenting")
+             |> redirect(to: ~p"/signup/verify-email")}
+
+          {:error, :silenced} ->
+            {:reply, %{ok: false},
+             put_flash(socket, :error, "Your account is silenced and cannot post comments")}
 
           {:error, _} ->
             {:reply, %{ok: false}, put_flash(socket, :error, "Failed to post comment")}

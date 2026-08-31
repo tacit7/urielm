@@ -1,11 +1,12 @@
 defmodule UrielmWeb.SetHandleLive do
   use UrielmWeb, :live_view
   alias Urielm.Accounts
+  alias UrielmWeb.Redirects
 
   @impl true
   def mount(_params, session, socket) do
     user = socket.assigns.current_user
-    pending_redirect = Map.get(session, "pending_redirect")
+    pending_redirect = Redirects.safe_return_path(Map.get(session, "pending_redirect"))
 
     # If user already has a username, redirect to pending page or home
     if user.username do

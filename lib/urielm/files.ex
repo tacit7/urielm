@@ -57,6 +57,13 @@ defmodule Urielm.Files do
   """
   def get_file!(id), do: Repo.get!(File, id)
 
+  def get_file(id) when is_binary(id) do
+    File
+    |> where([f], f.id == ^id)
+    |> where([f], is_nil(f.deleted_at))
+    |> Repo.one()
+  end
+
   @doc """
   Get files uploaded by a user.
   """
@@ -93,8 +100,11 @@ defmodule Urielm.Files do
 
   def can_access_file?(_, %File{visibility: "public"}), do: true
 
-  # TODO: Implement participants check - requires entity-specific membership logic
-  def can_access_file?(_, %File{visibility: "participants"}), do: true
+  def can_access_file?(%{id: user_id}, %File{user_id: file_user_id, visibility: "participants"}) do
+    user_id == file_user_id
+  end
+
+  def can_access_file?(_, %File{}), do: false
 
   @doc """
   Check if a file is an image.
@@ -107,5 +117,7 @@ defmodule Urielm.Files do
   def document?(%File{content_type: content_type}), do: Upload.document?(content_type)
 
   @doc "Returns the public URL for a stored file attachment."
-  def public_url(%File{storage_key: storage_key}), do: Upload.public_url(storage_key)
+  def public_url(%File{id: id}), do: "/files/#{id}"
+
+  def download_file(%File{storage_key: storage_key}), do: Upload.download_file(storage_key)
 end

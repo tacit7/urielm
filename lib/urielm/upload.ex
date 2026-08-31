@@ -31,6 +31,7 @@ defmodule Urielm.Upload do
   - `{:ok, %{url: url, filename: filename, content_type: content_type, size: size}}`
   - `{:error, reason}`
   """
+  # sobelow_skip ["Traversal.FileModule"]
   def upload_file(%Plug.Upload{} = file, user_id) do
     with :ok <- validate_file(file),
          {:ok, key} <- generate_key(file.filename, user_id),
@@ -44,6 +45,16 @@ defmodule Urielm.Upload do
          size: File.stat!(file.path).size,
          key: key
        }}
+    end
+  end
+
+  @doc """
+  Download a stored file from the configured storage backend.
+  """
+  def download_file(key) when is_binary(key) do
+    case storage_adapter() do
+      :r2 -> download_from_r2(key)
+      :noop -> {:error, :not_found}
     end
   end
 
@@ -62,6 +73,7 @@ defmodule Urielm.Upload do
   defp validate_file(%Plug.Upload{} = file) do
     with :ok <- validate_extension(file.filename),
          :ok <- validate_mime_type(file.content_type),
+         :ok <- validate_extension_matches_mime_type(file.filename, file.content_type),
          :ok <- validate_size(File.stat!(file.path).size) do
       :ok
     end
@@ -82,6 +94,29 @@ defmodule Urielm.Upload do
       :ok
     else
       {:error, "Content type not allowed"}
+    end
+  end
+
+  defp validate_extension_matches_mime_type(filename, content_type) do
+    ext = Path.extname(filename) |> String.downcase()
+
+    allowed =
+      case ext do
+        ext when ext in [".jpg", ".jpeg"] -> ["image/jpeg"]
+        ".png" -> ["image/png"]
+        ".gif" -> ["image/gif"]
+        ".webp" -> ["image/webp"]
+        ".pdf" -> ["application/pdf"]
+        ".doc" -> ["application/msword"]
+        ".docx" -> ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+        ".txt" -> ["text/plain"]
+        _ -> []
+      end
+
+    if content_type in allowed do
+      :ok
+    else
+      {:error, "File extension does not match content type"}
     end
   end
 
@@ -122,14 +157,22 @@ defmodule Urielm.Upload do
   defp do_upload_to_r2(key, file_binary, content_type) do
     bucket = Application.get_env(:urielm, :uploads)[:bucket]
 
-    S3.put_object(bucket, key, file_binary,
-      content_type: content_type,
-      acl: :public_read
-    )
+    S3.put_object(bucket, key, file_binary, content_type: content_type)
     |> ExAws.request()
     |> case do
       {:ok, _} -> :ok
       {:error, reason} -> {:error, "Upload failed: #{inspect(reason)}"}
+    end
+  end
+
+  defp download_from_r2(key) do
+    bucket = Application.get_env(:urielm, :uploads)[:bucket]
+
+    S3.get_object(bucket, key)
+    |> ExAws.request()
+    |> case do
+      {:ok, %{body: body}} -> {:ok, body}
+      {:error, _reason} -> {:error, :not_found}
     end
   end
 

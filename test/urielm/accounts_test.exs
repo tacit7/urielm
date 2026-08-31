@@ -2,6 +2,8 @@ defmodule Urielm.AccountsTest do
   use Urielm.DataCase
 
   alias Urielm.Accounts
+  alias Urielm.Accounts.OAuthIdentity
+  alias Urielm.Repo
 
   describe "user registration with handle and display_name" do
     test "register_user/1 creates a user with handle and display_name" do
@@ -388,6 +390,27 @@ defmodule Urielm.AccountsTest do
     end
   end
 
+  describe "OAuth identity creation" do
+    test "does not persist provider access tokens" do
+      auth = %Ueberauth.Auth{
+        provider: :google,
+        uid: "google-user-1",
+        info: %Ueberauth.Auth.Info{
+          email: "oauth@example.com",
+          name: "OAuth User",
+          image: "https://example.com/avatar.png"
+        },
+        credentials: %Ueberauth.Auth.Credentials{token: "provider-access-token"}
+      }
+
+      assert {:ok, user} = Accounts.find_or_create_user(auth)
+      identity = Repo.get_by!(OAuthIdentity, user_id: user.id, provider: "google")
+
+      assert identity.provider_uid == "google-user-1"
+      assert is_nil(identity.provider_token)
+    end
+  end
+
   describe "prompt_liked?/2" do
     setup do
       import Urielm.Fixtures
@@ -468,13 +491,53 @@ defmodule Urielm.AccountsTest do
           "display_name" => "New Name",
           "location" => "Berlin",
           "website" => "https://example.com",
-          "avatar_url" => "https://example.com/a.png"
+          "avatar_url" => "https://example.com/a.png",
+          "private_profile" => "true"
         })
 
       assert updated.display_name == "New Name"
       assert updated.location == "Berlin"
       assert updated.website == "https://example.com"
       assert updated.avatar_url == "https://example.com/a.png"
+      assert updated.private_profile == true
+    end
+  end
+
+  describe "can_view_profile?/2" do
+    setup do
+      import Urielm.Fixtures
+
+      owner = user_fixture()
+      {:ok, owner} = Accounts.update_user_profile(owner, %{"private_profile" => "true"})
+
+      %{
+        owner: owner,
+        visitor: user_fixture(),
+        admin: admin_fixture()
+      }
+    end
+
+    test "allows everyone to view public profiles", %{visitor: visitor} do
+      public_user = Urielm.Fixtures.user_fixture()
+
+      assert Accounts.can_view_profile?(nil, public_user)
+      assert Accounts.can_view_profile?(visitor, public_user)
+    end
+
+    test "hides private profiles from anonymous and unrelated users", %{
+      owner: owner,
+      visitor: visitor
+    } do
+      refute Accounts.can_view_profile?(nil, owner)
+      refute Accounts.can_view_profile?(visitor, owner)
+    end
+
+    test "allows owners and admins to view private profiles", %{
+      owner: owner,
+      admin: admin
+    } do
+      assert Accounts.can_view_profile?(owner, owner)
+      assert Accounts.can_view_profile?(admin, owner)
     end
   end
 

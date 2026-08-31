@@ -38,6 +38,12 @@ test("account menu uses the shared icon system and controlled state", () => {
   assert.match(userMenu, /id="account-menu"/)
 })
 
+test("account menu trigger uses a compact custom avatar treatment", () => {
+  assert.match(userMenu, /id="account-menu-toggle"[\s\S]*?class=\{`[\s\S]*?size-10/)
+  assert.match(userMenu, /size-8 items-center justify-center rounded-full bg-base-300\/75/)
+  assert.doesNotMatch(userMenu, /avatar placeholder/)
+})
+
 test("notification menu exposes compact unread and empty states", () => {
   assert.match(navbar, /aria-expanded=\{isNotificationsOpen\}/)
   assert.match(navbar, /aria-controls="notification-menu"/)

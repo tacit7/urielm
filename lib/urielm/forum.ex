@@ -299,23 +299,30 @@ defmodule Urielm.Forum do
 
   def create_thread(board_id, author_id, attrs \\ %{}) do
     board = Repo.get!(Board, board_id)
+    user = Repo.get!(Urielm.Accounts.User, author_id)
 
-    if board.is_locked do
-      {:error, :board_locked}
-    else
-      user = Repo.get!(Urielm.Accounts.User, author_id)
-
-      if Urielm.Accounts.User.silenced?(user) do
-        {:error, :silenced}
-      else
+    case authorize_thread_creation(board, user) do
+      :ok ->
         config = TrustLevel.get_config(user.trust_level)
         max_topics_per_day = config.max_new_topics_per_day
 
         with_rate_limit(author_id, "create_thread", max_topics_per_day, 86_400, fn ->
           insert_thread(board, user, attrs)
         end)
-      end
+
+      error ->
+        error
     end
+  end
+
+  defp authorize_thread_creation(%Board{is_hidden: true}, _user), do: {:error, :board_hidden}
+  defp authorize_thread_creation(%Board{is_locked: true}, _user), do: {:error, :board_locked}
+
+  defp authorize_thread_creation(_board, %{email_verified: false}),
+    do: {:error, :email_unverified}
+
+  defp authorize_thread_creation(_board, user) do
+    if Urielm.Accounts.User.silenced?(user), do: {:error, :silenced}, else: :ok
   end
 
   defp insert_thread(board, user, attrs) do
@@ -520,17 +527,24 @@ defmodule Urielm.Forum do
 
   def create_comment(thread_id, author_id, attrs \\ %{}) do
     thread = Repo.get!(Thread, thread_id)
+    user = Repo.get!(Urielm.Accounts.User, author_id)
 
-    if thread.is_locked do
-      {:error, :thread_locked}
-    else
-      user = Repo.get!(Urielm.Accounts.User, author_id)
+    case authorize_comment(thread, user) do
+      :ok -> create_comment_for_user(thread, user, author_id, attrs)
+      error -> error
+    end
+  end
 
-      if Urielm.Accounts.User.silenced?(user) do
-        {:error, :silenced}
-      else
-        create_comment_for_user(thread, user, author_id, attrs)
-      end
+  def authorize_comment(%Thread{} = thread, user) do
+    thread = Repo.preload(thread, :board)
+
+    cond do
+      thread.is_removed -> {:error, :thread_not_found}
+      thread.is_locked -> {:error, :thread_locked}
+      thread.board && thread.board.is_hidden -> {:error, :board_hidden}
+      user.email_verified == false -> {:error, :email_unverified}
+      Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
+      true -> :ok
     end
   end
 
@@ -641,6 +655,27 @@ defmodule Urielm.Forum do
 
   def cast_vote(user_id, target_type, target_id, value)
       when is_integer(value) and value in [-1, 1] do
+    case Repo.get(Urielm.Accounts.User, user_id) do
+      nil ->
+        {:error, :unauthorized}
+
+      user ->
+        if Urielm.Accounts.User.silenced?(user) do
+          {:error, :silenced}
+        else
+          do_cast_vote(user_id, target_type, target_id, value)
+        end
+    end
+  end
+
+  def cast_vote(_user_id, _target_type, _target_id, _value) do
+    changeset =
+      Vote.changeset(%Vote{}, %{user_id: nil, target_type: "", target_id: nil, value: 0})
+
+    {:error, changeset}
+  end
+
+  defp do_cast_vote(user_id, target_type, target_id, value) do
     Repo.transaction(fn ->
       # Fetch existing vote if any
       existing_vote =
@@ -679,13 +714,6 @@ defmodule Urielm.Forum do
 
       result
     end)
-  end
-
-  def cast_vote(_user_id, _target_type, _target_id, _value) do
-    changeset =
-      Vote.changeset(%Vote{}, %{user_id: nil, target_type: "", target_id: nil, value: 0})
-
-    {:error, changeset}
   end
 
   def unvote(user_id, target_type, target_id) do
