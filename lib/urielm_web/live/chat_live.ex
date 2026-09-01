@@ -9,7 +9,7 @@ defmodule UrielmWeb.ChatLive do
     unless user do
       {:ok, redirect(socket, to: ~p"/")}
     else
-      rooms = Chat.list_rooms()
+      rooms = Chat.list_rooms_for_user(user.id)
 
       {:ok,
        socket
@@ -40,15 +40,10 @@ defmodule UrielmWeb.ChatLive do
                |> assign(:selected_room, room)
                |> assign(:messages, messages)}
             else
-              # Auto-join if not a member
-              Chat.add_member(user.id, id)
-
-              messages = Chat.list_room_messages(id)
-
               {:noreply,
                socket
-               |> assign(:selected_room, room)
-               |> assign(:messages, messages)}
+               |> put_flash(:error, "Chat room not found")
+               |> push_patch(to: ~p"/chat")}
             end
         end
 
@@ -227,7 +222,7 @@ defmodule UrielmWeb.ChatLive do
 
           {:noreply,
            socket
-           |> assign(:rooms, Chat.list_rooms())
+           |> assign(:rooms, Chat.list_rooms_for_user(user.id))
            |> assign(:room_form, room_form())
            |> push_navigate(to: ~p"/chat?room_id=#{room.id}")}
 

@@ -7,6 +7,7 @@ defmodule Urielm.Files do
   import Ecto.Query
   alias Urielm.Repo
   alias Urielm.File
+  alias Urielm.Forum
   alias Urielm.Upload
 
   @doc """
@@ -100,11 +101,25 @@ defmodule Urielm.Files do
 
   def can_access_file?(_, %File{visibility: "public"}), do: true
 
-  def can_access_file?(%{id: user_id}, %File{user_id: file_user_id, visibility: "participants"}) do
-    user_id == file_user_id
+  def can_access_file?(user, %File{visibility: "participants"} = file) do
+    participant_can_access_file?(user, file)
   end
 
   def can_access_file?(_, %File{}), do: false
+
+  defp participant_can_access_file?(%{id: user_id}, %File{user_id: user_id}), do: true
+
+  defp participant_can_access_file?(%{is_admin: true}, %File{}), do: true
+
+  defp participant_can_access_file?(_user, %File{entity_type: "thread", entity_id: thread_id}) do
+    case Forum.get_thread(thread_id) do
+      nil -> false
+      %{board: %{is_hidden: true}} -> false
+      _thread -> true
+    end
+  end
+
+  defp participant_can_access_file?(_user, %File{}), do: false
 
   @doc """
   Check if a file is an image.

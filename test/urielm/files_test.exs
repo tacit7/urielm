@@ -10,7 +10,7 @@ defmodule Urielm.FilesTest do
     setup do
       user = user_fixture()
       thread = thread_fixture(%{author_id: user.id})
-      upload = create_upload_fixture("test.jpg", "image/jpeg", "fake image data")
+      upload = create_upload_fixture("test.jpg", "image/jpeg")
 
       %{user: user, thread: thread, upload: upload}
     end
@@ -24,7 +24,7 @@ defmodule Urielm.FilesTest do
       assert file.user_id == user.id
       assert file.original_filename == "test.jpg"
       assert file.content_type == "image/jpeg"
-      assert file.visibility == "public"
+      assert file.visibility == "participants"
       assert is_binary(file.storage_key)
       assert String.starts_with?(file.storage_key, "uploads/#{user.id}/")
       assert Files.public_url(file) == "/files/#{file.id}"
@@ -57,7 +57,7 @@ defmodule Urielm.FilesTest do
     end
 
     test "rejects files over size limit", %{user: user, thread: thread} do
-      large_content = String.duplicate("x", 11_000_000)
+      large_content = fixture_content("image/jpeg") <> String.duplicate("x", 11_000_000)
       large_upload = create_upload_fixture("large.jpg", "image/jpeg", large_content)
 
       assert {:error, error_msg} = Files.create_file(large_upload, user.id, "thread", thread.id)
@@ -72,10 +72,20 @@ defmodule Urielm.FilesTest do
     end
 
     test "rejects mismatched extension and content type", %{user: user, thread: thread} do
-      bad_upload = create_upload_fixture("photo.jpg", "application/pdf", "spoofed")
+      bad_upload = create_upload_fixture("photo.jpg", "application/pdf")
 
       assert {:error, error_msg} = Files.create_file(bad_upload, user.id, "thread", thread.id)
       assert error_msg =~ "does not match"
+    end
+
+    test "rejects spoofed content even when extension and metadata match", %{
+      user: user,
+      thread: thread
+    } do
+      bad_upload = create_upload_fixture("photo.jpg", "image/jpeg", "not an image")
+
+      assert {:error, error_msg} = Files.create_file(bad_upload, user.id, "thread", thread.id)
+      assert error_msg =~ "do not match"
     end
   end
 
@@ -167,7 +177,7 @@ defmodule Urielm.FilesTest do
       refute Files.can_access_file?(other_user, file)
     end
 
-    test "does not treat participant visibility as public", %{
+    test "does not expose participant files from removed threads", %{
       owner: owner,
       other_user: other_user,
       thread: thread
@@ -177,9 +187,25 @@ defmodule Urielm.FilesTest do
       {:ok, file} =
         Files.create_file(upload, owner.id, "thread", thread.id, %{visibility: "participants"})
 
+      {:ok, _thread} = Urielm.Forum.remove_thread(thread, owner)
+
       assert Files.can_access_file?(owner, file)
       refute Files.can_access_file?(other_user, file)
       refute Files.can_access_file?(nil, file)
+    end
+
+    test "allows participant access to visible thread attachments", %{
+      owner: owner,
+      other_user: other_user,
+      thread: thread
+    } do
+      upload = create_upload_fixture("participant.txt", "text/plain", "hello")
+
+      {:ok, file} = Files.create_file(upload, owner.id, "thread", thread.id)
+
+      assert Files.can_access_file?(owner, file)
+      assert Files.can_access_file?(other_user, file)
+      assert Files.can_access_file?(nil, file)
     end
   end
 
@@ -199,13 +225,29 @@ defmodule Urielm.FilesTest do
 
   # Test helpers
 
+  defp fixture_content("image/jpeg"), do: <<0xFF, 0xD8, 0xFF, 0xE0, "JFIF", 0x00>>
+  defp fixture_content("image/png"), do: <<0x89, "PNG\r\n", 0x1A, "\n", "data">>
+  defp fixture_content("image/gif"), do: "GIF89a"
+  defp fixture_content("image/webp"), do: <<"RIFF", 4::little-32, "WEBP">>
+  defp fixture_content("application/pdf"), do: "%PDF-1.7\n"
+
+  defp fixture_content("application/msword"),
+    do: <<0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1>>
+
+  defp fixture_content("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+    do: <<"PK", 0x03, 0x04, "docx">>
+
+  defp fixture_content("text/plain"), do: "test content"
+  defp fixture_content(_content_type), do: "test content"
+
   defp create_test_file(filename, content) do
     path = Path.join(System.tmp_dir!(), filename)
     :ok = :file.write_file(path, content)
     path
   end
 
-  defp create_upload_fixture(filename, content_type, content \\ "test content") do
+  defp create_upload_fixture(filename, content_type, content \\ nil) do
+    content = content || fixture_content(content_type)
     path = create_test_file(filename, content)
     {:ok, stat} = :file.read_file_info(path)
     size = elem(stat, 1)

@@ -14,6 +14,6 @@ defmodule Urielm.Chat.Message do
   def changeset(message, attrs) do
     message
     |> cast(attrs, [:body, :user_id, :room_id])
-    |> validate_required([:body, :room_id])
+    |> validate_required([:body, :user_id, :room_id])
   end
 end

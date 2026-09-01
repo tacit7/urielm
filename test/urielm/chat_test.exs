@@ -21,6 +21,21 @@ defmodule Urielm.ChatTest do
       assert Enum.any?(rooms, &(&1.id == room2.id))
     end
 
+    test "list_rooms_for_user/1 only returns rooms the user belongs to" do
+      user = Fixtures.user_fixture()
+      other_user = Fixtures.user_fixture()
+      member_room = create_room(%{name: "member-room"})
+      other_room = create_room(%{name: "other-room"})
+
+      Chat.add_member(user.id, member_room.id)
+      Chat.add_member(other_user.id, other_room.id)
+
+      rooms = Chat.list_rooms_for_user(user.id)
+
+      assert Enum.any?(rooms, &(&1.id == member_room.id))
+      refute Enum.any?(rooms, &(&1.id == other_room.id))
+    end
+
     test "get_room!/1 returns room by id" do
       room = create_room(%{name: "general"})
 
@@ -279,15 +294,14 @@ defmodule Urielm.ChatTest do
       assert changeset.errors[:room_id]
     end
 
-    test "create_message/1 allows nil user_id (anonymous messages)" do
+    test "create_message/1 requires user_id" do
       room = create_room(%{name: "anon-room"})
 
       attrs = %{body: "anonymous message", room_id: room.id}
 
-      {:ok, message} = Chat.create_message(attrs)
+      {:error, changeset} = Chat.create_message(attrs)
 
-      assert message.body == "anonymous message"
-      assert is_nil(message.user_id)
+      assert changeset.errors[:user_id]
     end
 
     test "get_message!/1 returns message by id", %{room: room, user: user} do

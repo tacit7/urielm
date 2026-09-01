@@ -19,6 +19,31 @@ defmodule UrielmWeb.ChatLiveTest do
     refute has_element?(view, "#create-room-button")
   end
 
+  test "only lists rooms the signed-in user belongs to", %{conn: conn} do
+    user = user_fixture()
+    other_user = user_fixture()
+    visible_room = room_fixture(%{name: "visible-room"})
+    hidden_room = room_fixture(%{name: "hidden-room"})
+
+    Chat.add_member(user.id, visible_room.id)
+    Chat.add_member(other_user.id, hidden_room.id)
+
+    {:ok, view, _html} = live(log_in_user(conn, user), ~p"/chat")
+
+    assert has_element?(view, "#chat-room-#{visible_room.id}")
+    refute has_element?(view, "#chat-room-#{hidden_room.id}")
+  end
+
+  test "does not auto-join a user from direct room navigation", %{conn: conn} do
+    user = user_fixture()
+    room = room_fixture(%{name: "private-room"})
+
+    assert {:error, {:live_redirect, %{to: "/chat", flash: %{"error" => "Chat room not found"}}}} =
+             live(log_in_user(conn, user), ~p"/chat?room_id=#{room.id}")
+
+    refute Chat.member?(user.id, room.id)
+  end
+
   test "renders the shared create-room form for an admin", %{conn: conn} do
     admin = admin_fixture()
 
@@ -44,5 +69,10 @@ defmodule UrielmWeb.ChatLiveTest do
 
     assert room
     assert_redirect(view, ~p"/chat?room_id=#{room.id}")
+  end
+
+  defp room_fixture(attrs) do
+    {:ok, room} = Chat.create_room(attrs)
+    room
   end
 end

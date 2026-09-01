@@ -13,6 +13,14 @@ defmodule Urielm.Chat do
     Repo.all(Room)
   end
 
+  def list_rooms_for_user(user_id) do
+    Room
+    |> join(:inner, [r], m in RoomMembership, on: m.room_id == r.id)
+    |> where([_r, m], m.user_id == ^user_id)
+    |> order_by([r], asc: r.name)
+    |> Repo.all()
+  end
+
   def get_room(id) do
     Repo.get(Room, id)
   end

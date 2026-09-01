@@ -20,7 +20,7 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
       user: user,
       thread: thread
     } do
-      upload = upload_fixture("diagram.png", "image/png", "fake image bytes")
+      upload = upload_fixture("diagram.png", "image/png", <<0x89, "PNG\r\n", 0x1A, "\n", "data">>)
 
       conn =
         conn
@@ -40,7 +40,7 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
     end
 
     test "requires an authenticated user", %{conn: conn, thread: thread} do
-      upload = upload_fixture("diagram.png", "image/png", "fake image bytes")
+      upload = upload_fixture("diagram.png", "image/png", <<0x89, "PNG\r\n", 0x1A, "\n", "data">>)
 
       conn = post(conn, "/forum/t/#{thread.id}/uploads", %{"file" => upload})
 
@@ -66,7 +66,7 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
         |> Ecto.Changeset.change(%{email_verified: false})
         |> Repo.update!()
 
-      upload = upload_fixture("diagram.png", "image/png", "fake image bytes")
+      upload = upload_fixture("diagram.png", "image/png", <<0x89, "PNG\r\n", 0x1A, "\n", "data">>)
 
       conn =
         conn
@@ -83,7 +83,7 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
         |> Ecto.Changeset.change(%{silenced_at: DateTime.utc_now() |> DateTime.truncate(:second)})
         |> Repo.update!()
 
-      upload = upload_fixture("diagram.png", "image/png", "fake image bytes")
+      upload = upload_fixture("diagram.png", "image/png", <<0x89, "PNG\r\n", 0x1A, "\n", "data">>)
 
       conn =
         conn

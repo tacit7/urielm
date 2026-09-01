@@ -205,19 +205,6 @@ defmodule UrielmWeb.BlogLive do
             <% end %>
           </nav>
         </div>
-
-        <script type="application/ld+json">
-          {raw(Jason.encode!(%{
-            "@context" => "https://schema.org",
-            "@type" => "BlogPosting",
-            "headline" => @post.title,
-            "description" => @meta_description,
-            "url" => "https://urielm.dev/blog/#{@post.slug}",
-            "datePublished" => if(@post.published_at, do: DateTime.to_iso8601(@post.published_at), else: nil),
-            "image" => @post.hero_image,
-            "author" => %{"@type" => "Person", "name" => "Uriel Maldonado"}
-          }) |> String.replace("<", "\\u003c"))}
-        </script>
       </div>
     <% else %>
       <div id="blog-index" class="flex min-h-screen flex-col overflow-hidden bg-base-100">

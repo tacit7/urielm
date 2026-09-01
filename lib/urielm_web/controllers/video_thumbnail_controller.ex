@@ -11,6 +11,7 @@ defmodule UrielmWeb.VideoThumbnailController do
   # we buffer into memory.
   @max_thumbnail_bytes 5 * 1024 * 1024
   @allowed_thumbnail_content_types ~w(image/jpeg image/png image/gif image/webp)
+  @allowed_thumbnail_host_suffixes ~w(tiktok.com tiktokcdn.com tiktokcdn-us.com)
 
   # sobelow_skip ["XSS.SendResp", "XSS.ContentType"]
   def show(conn, %{"id" => id}) do
@@ -79,10 +80,63 @@ defmodule UrielmWeb.VideoThumbnailController do
     case Req.get(request_url, receive_timeout: 10_000) do
       {:ok, %{status: 200, body: %{"thumbnail_url" => url}}}
       when is_binary(url) and url != "" ->
-        {:ok, url}
+        if safe_thumbnail_url?(url), do: {:ok, url}, else: {:error, :unsafe_thumbnail_url}
 
       _ ->
         {:error, :oembed_unavailable}
     end
   end
+
+  @doc false
+  def safe_thumbnail_url?(url) when is_binary(url) do
+    with %URI{scheme: scheme, host: host, userinfo: nil} when scheme in ["http", "https"] <-
+           URI.parse(url),
+         false <- is_nil(host),
+         true <- allowed_thumbnail_host?(host),
+         false <- private_or_local_host?(host) do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  def safe_thumbnail_url?(_url), do: false
+
+  defp allowed_thumbnail_host?(host) do
+    host = String.trim_trailing(host, ".") |> String.downcase()
+
+    Enum.any?(@allowed_thumbnail_host_suffixes, fn suffix ->
+      host == suffix or String.ends_with?(host, ".#{suffix}")
+    end)
+  end
+
+  defp private_or_local_host?(host) do
+    host = String.trim_trailing(host, ".") |> String.downcase()
+
+    cond do
+      host in ["localhost", "0.0.0.0"] -> true
+      String.ends_with?(host, ".localhost") -> true
+      ip = parse_ip(host) -> private_or_local_ip?(ip)
+      true -> false
+    end
+  end
+
+  defp parse_ip(host) do
+    host
+    |> String.to_charlist()
+    |> :inet.parse_address()
+    |> case do
+      {:ok, ip} -> ip
+      {:error, _} -> nil
+    end
+  end
+
+  defp private_or_local_ip?({10, _, _, _}), do: true
+  defp private_or_local_ip?({127, _, _, _}), do: true
+  defp private_or_local_ip?({169, 254, _, _}), do: true
+  defp private_or_local_ip?({172, second, _, _}) when second in 16..31, do: true
+  defp private_or_local_ip?({192, 168, _, _}), do: true
+  defp private_or_local_ip?({0, _, _, _}), do: true
+  defp private_or_local_ip?({_, _, _, _}), do: false
+  defp private_or_local_ip?(_ip), do: true
 end

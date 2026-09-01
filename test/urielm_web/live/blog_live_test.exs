@@ -24,6 +24,7 @@ defmodule UrielmWeb.BlogLiveTest do
     assert has_element?(view, "#blog-reading-time", "3 min read")
     assert has_element?(view, "#blog-article")
     assert has_element?(view, "#blog-article-footer a[href='/blog']")
+    refute has_element?(view, "script[type='application/ld+json']")
   end
 
   test "blog index exposes a stable post collection and cards" do

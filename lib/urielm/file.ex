@@ -17,7 +17,7 @@ defmodule Urielm.File do
     field(:byte_size, :integer)
 
     # Optional metadata
-    field(:visibility, :string, default: "public")
+    field(:visibility, :string, default: "participants")
     field(:checksum_sha256, :binary)
     field(:width, :integer)
     field(:height, :integer)

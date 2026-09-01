@@ -444,6 +444,7 @@ defmodule UrielmWeb.PromptsLive do
                       }
                     }
                     socket={@socket}
+                    ssr={false}
                   >
                     <button
                       id="copy-prompt-btn"

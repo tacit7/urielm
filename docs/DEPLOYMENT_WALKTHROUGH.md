@@ -246,7 +246,7 @@ MIX_ENV=prod mix phx.digest
 ```bash
 # Generate secret key base
 mix phx.gen.secret
-# Save this output: vkCOKHuTvSwwCFmy850/ZedDh0L+IP/qarxxmy1s46rLVoUP52en+WWuDs48goJX
+# Save this output securely; do not commit the generated value.
 ```
 
 Create production secrets (optional, but good practice):
@@ -257,7 +257,7 @@ nano config/prod.secret.exs
 ```elixir
 import Config
 
-secret_key_base = "vkCOKHuTvSwwCFmy850/ZedDh0L+IP/qarxxmy1s46rLVoUP52en+WWuDs48goJX"
+secret_key_base = System.fetch_env!("SECRET_KEY_BASE")
 
 config :urielm, UrielmWeb.Endpoint,
   secret_key_base: secret_key_base,
@@ -286,7 +286,7 @@ Group=deploy
 WorkingDirectory=/home/deploy/urielm
 Environment=MIX_ENV=prod
 Environment=PORT=4000
-Environment=SECRET_KEY_BASE="vkCOKHuTvSwwCFmy850/ZedDh0L+IP/qarxxmy1s46rLVoUP52en+WWuDs48goJX"
+Environment=SECRET_KEY_BASE="<generated-with-mix-phx.gen.secret>"
 Environment=PHX_HOST="urielm.dev"
 ExecStart=/usr/bin/mix phx.server
 Restart=on-failure

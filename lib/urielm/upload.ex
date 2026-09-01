@@ -74,7 +74,8 @@ defmodule Urielm.Upload do
     with :ok <- validate_extension(file.filename),
          :ok <- validate_mime_type(file.content_type),
          :ok <- validate_extension_matches_mime_type(file.filename, file.content_type),
-         :ok <- validate_size(File.stat!(file.path).size) do
+         :ok <- validate_size(File.stat!(file.path).size),
+         :ok <- validate_file_signature(file.path, file.content_type) do
       :ok
     end
   end
@@ -119,6 +120,44 @@ defmodule Urielm.Upload do
       {:error, "File extension does not match content type"}
     end
   end
+
+  # sobelow_skip ["Traversal.FileModule"]
+  defp validate_file_signature(path, content_type) do
+    with {:ok, bytes} <- File.read(path),
+         true <- content_matches_type?(bytes, content_type) do
+      :ok
+    else
+      _ -> {:error, "File contents do not match content type"}
+    end
+  end
+
+  defp content_matches_type?(<<0xFF, 0xD8, 0xFF, _rest::binary>>, "image/jpeg"), do: true
+
+  defp content_matches_type?(<<0x89, "PNG\r\n", 0x1A, "\n", _rest::binary>>, "image/png"),
+    do: true
+
+  defp content_matches_type?(<<"GIF87a", _rest::binary>>, "image/gif"), do: true
+  defp content_matches_type?(<<"GIF89a", _rest::binary>>, "image/gif"), do: true
+
+  defp content_matches_type?(<<"RIFF", _size::little-32, "WEBP", _rest::binary>>, "image/webp"),
+    do: true
+
+  defp content_matches_type?(<<"%PDF-", _rest::binary>>, "application/pdf"), do: true
+
+  defp content_matches_type?(
+         <<0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1, _rest::binary>>,
+         "application/msword"
+       ),
+       do: true
+
+  defp content_matches_type?(
+         <<"PK", 0x03, 0x04, _rest::binary>>,
+         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+       ),
+       do: true
+
+  defp content_matches_type?(bytes, "text/plain"), do: String.valid?(bytes)
+  defp content_matches_type?(_bytes, _content_type), do: false
 
   defp validate_size(size) do
     max_size = Application.get_env(:urielm, :uploads)[:max_file_size]
