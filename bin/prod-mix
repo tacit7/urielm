@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""
+Run a Mix task with the same environment configured for the urielm systemd service.
+
+This avoids copying production secrets into shell history or relying on an
+interactive shell environment that may not match the running service.
+"""
+
+import os
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SERVICE = os.environ.get("URIELM_SERVICE", "urielm")
+
+
+def usage() -> int:
+    print("Usage: bin/prod-mix MIX_TASK [ARGS...]", file=sys.stderr)
+    print('Example: bin/prod-mix videos.add "https://www.youtube.com/watch?v=..."', file=sys.stderr)
+    return 2
+
+
+def service_environment() -> dict[str, str]:
+    raw = subprocess.check_output(
+        ["systemctl", "show", SERVICE, "-p", "Environment", "--value"],
+        text=True,
+    )
+
+    env = os.environ.copy()
+
+    for item in shlex.split(raw):
+        key, separator, value = item.partition("=")
+        if separator:
+            env[key] = value
+
+    env["MIX_ENV"] = "prod"
+    return env
+
+
+def main() -> int:
+    if len(sys.argv) < 2:
+        return usage()
+
+    return subprocess.run(["mix", *sys.argv[1:]], cwd=ROOT, env=service_environment()).returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

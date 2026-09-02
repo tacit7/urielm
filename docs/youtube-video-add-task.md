@@ -25,6 +25,33 @@ Videos are public and published by default. `--draft` stores `published_at: nil`
 transaction. Re-running the same URL is idempotent: it prints the existing video path
 without changing its tags or other metadata.
 
+## Add a one-video course
+
+Use `courses.add_video` when the YouTube video should live under `/courses`
+instead of `/videos`:
+
+```bash
+mix courses.add_video "https://www.youtube.com/watch?v=DJZISqryDfw"
+```
+
+The task fetches public YouTube oEmbed metadata, creates a course, creates the
+first lesson, stores the YouTube video ID on the lesson, and prints the resulting
+`/courses/:course_slug/lessons/:lesson_slug` path. Re-running the same YouTube
+URL is idempotent and prints the existing course/lesson path.
+
+Useful options:
+
+```bash
+mix courses.add_video URL --title "Custom Course"
+mix courses.add_video URL --slug "custom-course"
+mix courses.add_video URL --lesson-title "Custom Lesson"
+mix courses.add_video URL --lesson-slug "custom-lesson"
+mix courses.add_video URL --description-file description.md
+mix courses.add_video URL --notes-file notes.md
+mix courses.add_video URL --resources-file resources.md
+mix courses.add_video URL --timestamps-file timestamps.md
+```
+
 ## Replace tags
 
 Use the dedicated task to replace a video's complete tag set:
@@ -80,12 +107,14 @@ The task validates timestamp order and converts each timestamp into a local
 
 ## Production
 
-Production runs with `MIX_ENV=prod`, so run the task with the same environment
-used by the systemd service:
+Use `bin/prod-mix` for production tasks. It runs Mix with `MIX_ENV=prod` and
+loads the same environment configured on the `urielm` systemd service without
+printing secret values:
 
 ```bash
-MIX_ENV=prod mix videos.add "https://www.youtube.com/watch?v=g5oEAoKdrdw"
+bin/prod-mix videos.add "https://www.youtube.com/watch?v=g5oEAoKdrdw"
+bin/prod-mix videos.chapters video-slug --file chapters.txt
+bin/prod-mix courses.add_video "https://www.youtube.com/watch?v=DJZISqryDfw"
 ```
 
-Do not print or hardcode production secrets. If invoking manually over SSH, use
-the service environment rather than copying secret values into shell history.
+Do not print or hardcode production secrets.
