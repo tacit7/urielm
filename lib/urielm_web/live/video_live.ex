@@ -638,7 +638,12 @@ defmodule UrielmWeb.VideoLive do
               >
                 <.svelte
                   name="MarkdownRenderer"
-                  props={%{content: @video.description_md}}
+                  props={
+                    %{
+                      content: @video.description_md,
+                      localTimestampVideoId: extract_youtube_id(@video.youtube_url)
+                    }
+                  }
                   socket={@socket}
                   ssr={false}
                 />

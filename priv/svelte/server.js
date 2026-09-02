@@ -94762,7 +94762,12 @@ var $$css2 = {
 function MarkdownRenderer($$renderer, $$props) {
   $$renderer.global.css.add($$css2);
   $$renderer.component(($$renderer2) => {
-    let { content = "", enableEmbeds = false } = $$props;
+    let {
+      content = "",
+      enableEmbeds = false,
+      localTimestampVideoId = null
+    } = $$props;
+    let container = void 0;
     const purifyConfig = {
       ALLOWED_TAGS: [
         "h1",
@@ -94843,6 +94848,78 @@ function MarkdownRenderer($$renderer, $$props) {
       }
       return purify.sanitize(rendered, purifyConfig);
     });
+    function parseTimestampValue(value) {
+      if (!value) return null;
+      const timestamp = value.replace(/^t=/, "").replace(/s$/, "");
+      if (/^\d+$/.test(timestamp)) {
+        return Number.parseInt(timestamp, 10);
+      }
+      const parts = timestamp.split(":").map((part) => Number.parseInt(part, 10));
+      if (parts.some((part) => Number.isNaN(part))) return null;
+      if (parts.length === 2) {
+        const [minutes, seconds] = parts;
+        if (seconds >= 60) return null;
+        return minutes * 60 + seconds;
+      }
+      if (parts.length === 3) {
+        const [hours, minutes, seconds] = parts;
+        if (minutes >= 60 || seconds >= 60) return null;
+        return hours * 3600 + minutes * 60 + seconds;
+      }
+      return null;
+    }
+    function parseTimestampLink(anchor) {
+      const href = anchor.getAttribute("href") || "";
+      if (href.startsWith("#t=")) {
+        return {
+          videoId: localTimestampVideoId,
+          seconds: parseTimestampValue(href.slice(1))
+        };
+      }
+      try {
+        const url = new URL(href, window.location.href);
+        const host = url.hostname.replace(/^www\./, "");
+        let videoId = null;
+        if (host === "youtube.com" && url.pathname === "/watch") {
+          videoId = url.searchParams.get("v");
+        } else if (host === "youtu.be") {
+          videoId = url.pathname.split("/").filter(Boolean)[0] || null;
+        }
+        if (!videoId || localTimestampVideoId && videoId !== localTimestampVideoId) {
+          return null;
+        }
+        return {
+          videoId,
+          seconds: parseTimestampValue(url.searchParams.get("t") || url.hash.replace(/^#/, ""))
+        };
+      } catch (_) {
+        return null;
+      }
+    }
+    function handleClick2(event2) {
+      if (!localTimestampVideoId) return;
+      const anchor = event2.target?.closest?.("a");
+      if (!anchor || !container?.contains(anchor)) return;
+      const timestamp = parseTimestampLink(anchor);
+      if (!timestamp || timestamp.seconds === null) return;
+      event2.preventDefault();
+      document.dispatchEvent(new CustomEvent("urielm:video-seek", {
+        detail: {
+          videoId: timestamp.videoId || localTimestampVideoId,
+          seconds: timestamp.seconds,
+          play: true,
+          scroll: true
+        }
+      }));
+    }
+    function timestampLinks(node) {
+      node.addEventListener("click", handleClick2);
+      return {
+        destroy() {
+          node.removeEventListener("click", handleClick2);
+        }
+      };
+    }
     $$renderer2.push(`<div class="prose prose-sm md:prose-base max-w-none prose-code:bg-base-300 prose-code:text-base-content prose-code:px-2 prose-code:py-1 prose-code:rounded prose-pre:bg-base-300 prose-pre:border prose-pre:border-base-200">${html(html4())}</div>`);
   });
 }
@@ -117669,7 +117746,8 @@ function YouTubePlayer($$renderer, $$props) {
       onEnded = null,
       onError = null
     } = $$props;
-    let container;
+    let container = void 0;
+    let playerShell = void 0;
     let player;
     let playerReady = false;
     const playerId = `yt-player-${Math.random().toString(36).substr(2, 9)}`;
@@ -117756,13 +117834,25 @@ function YouTubePlayer($$renderer, $$props) {
         return null;
       }
     }
+    function handleExternalSeek(event2) {
+      var _a2;
+      const detail = event2.detail || {};
+      if (detail.videoId && detail.videoId !== videoId) return;
+      if (typeof detail.seconds !== "number" || Number.isNaN(detail.seconds)) return;
+      if (detail.scroll) {
+        (_a2 = playerShell === null || playerShell === void 0 ? void 0 : playerShell.scrollIntoView) === null || _a2 === void 0 ? void 0 : _a2.call(playerShell, { behavior: "smooth", block: "center" });
+      }
+      if (!playerReady) return;
+      player.seekTo(detail.seconds, true);
+      if (detail.play) player.playVideo();
+    }
     if (
       /* ignore */
       shorts
     ) {
       $$renderer2.push(`<!--[0--><div class="relative w-full" style="padding-bottom: 177.77%;"><div class="absolute inset-0"><div${attr("id", playerId)} style="width: 100%; height: 100%;"></div></div></div>`);
     } else {
-      $$renderer2.push(`<!--[-1--><div${attr("id", playerId)} style="width: 100%; height: 100%;"></div>`);
+      $$renderer2.push(`<!--[-1--><div style="width: 100%; height: 100%;"><div${attr("id", playerId)} style="width: 100%; height: 100%;"></div></div>`);
     }
     $$renderer2.push(`<!--]-->`);
   });

@@ -4,7 +4,8 @@
   import DOMPurify from 'dompurify'
   import { processEmbeds } from '../js/markdown/embeds.js'
 
-  let { content = '', enableEmbeds = false } = $props()
+  let { content = '', enableEmbeds = false, localTimestampVideoId = null } = $props()
+  let container = $state()
 
   // Configure DOMPurify to allow safe markdown tags but block XSS vectors
   const purifyConfig = {
@@ -58,9 +59,106 @@
     // Sanitize HTML to prevent XSS
     return DOMPurify.sanitize(rendered, purifyConfig)
   })
+
+  function parseTimestampValue(value) {
+    if (!value) return null
+
+    const timestamp = value.replace(/^t=/, '').replace(/s$/, '')
+
+    if (/^\d+$/.test(timestamp)) {
+      return Number.parseInt(timestamp, 10)
+    }
+
+    const parts = timestamp.split(':').map((part) => Number.parseInt(part, 10))
+    if (parts.some((part) => Number.isNaN(part))) return null
+
+    if (parts.length === 2) {
+      const [minutes, seconds] = parts
+      if (seconds >= 60) return null
+      return minutes * 60 + seconds
+    }
+
+    if (parts.length === 3) {
+      const [hours, minutes, seconds] = parts
+      if (minutes >= 60 || seconds >= 60) return null
+      return hours * 3600 + minutes * 60 + seconds
+    }
+
+    return null
+  }
+
+  function parseTimestampLink(anchor) {
+    const href = anchor.getAttribute('href') || ''
+
+    if (href.startsWith('#t=')) {
+      return {
+        videoId: localTimestampVideoId,
+        seconds: parseTimestampValue(href.slice(1))
+      }
+    }
+
+    try {
+      const url = new URL(href, window.location.href)
+      const host = url.hostname.replace(/^www\./, '')
+      let videoId = null
+
+      if (host === 'youtube.com' && url.pathname === '/watch') {
+        videoId = url.searchParams.get('v')
+      } else if (host === 'youtu.be') {
+        videoId = url.pathname.split('/').filter(Boolean)[0] || null
+      }
+
+      if (!videoId || (localTimestampVideoId && videoId !== localTimestampVideoId)) {
+        return null
+      }
+
+      return {
+        videoId,
+        seconds: parseTimestampValue(url.searchParams.get('t') || url.hash.replace(/^#/, ''))
+      }
+    } catch (_) {
+      return null
+    }
+  }
+
+  function handleClick(event) {
+    if (!localTimestampVideoId) return
+
+    const anchor = event.target?.closest?.('a')
+    if (!anchor || !container?.contains(anchor)) return
+
+    const timestamp = parseTimestampLink(anchor)
+    if (!timestamp || timestamp.seconds === null) return
+
+    event.preventDefault()
+    document.dispatchEvent(
+      new CustomEvent('urielm:video-seek', {
+        detail: {
+          videoId: timestamp.videoId || localTimestampVideoId,
+          seconds: timestamp.seconds,
+          play: true,
+          scroll: true
+        }
+      })
+    )
+  }
+
+  function timestampLinks(node) {
+    node.addEventListener('click', handleClick)
+
+    return {
+      destroy() {
+        node.removeEventListener('click', handleClick)
+      }
+    }
+  }
 </script>
 
-<div class="prose prose-sm md:prose-base max-w-none prose-code:bg-base-300 prose-code:text-base-content prose-code:px-2 prose-code:py-1 prose-code:rounded prose-pre:bg-base-300 prose-pre:border prose-pre:border-base-200">
+<div
+  bind:this={container}
+  use:timestampLinks
+  class="prose prose-sm md:prose-base max-w-none prose-code:bg-base-300 prose-code:text-base-content prose-code:px-2 prose-code:py-1 prose-code:rounded prose-pre:bg-base-300 prose-pre:border prose-pre:border-base-200"
+>
   {@html html}
 </div>
 

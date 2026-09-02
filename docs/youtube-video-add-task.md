@@ -36,6 +36,48 @@ mix videos.tags video-slug --tags ""
 
 The second form clears all tags. Both replacement and clearing are atomic.
 
+## Update fields
+
+Use `videos.update` for content-only changes to an existing video:
+
+```bash
+mix videos.update video-slug --title "Updated title"
+mix videos.update video-slug --description-file chapters.md
+mix videos.update video-slug --resources-file resources.md
+mix videos.update video-slug --visibility public
+mix videos.update video-slug --publish
+mix videos.update video-slug --unpublish
+```
+
+Supported fields include title, slug, YouTube URL, TikTok URL, format, description,
+resources, author metadata, visibility, and published state.
+
+## Update chapters
+
+Use `videos.chapters` to replace the video overview with linked YouTube chapters.
+Chapters can come from a file:
+
+```bash
+mix videos.chapters video-slug --file chapters.txt
+```
+
+or stdin:
+
+```bash
+cat chapters.txt | mix videos.chapters video-slug
+```
+
+The input format is one chapter per line:
+
+```text
+00:00 Intro
+00:26 First topic
+01:37:55 Wrap up
+```
+
+The task validates timestamp order and converts each timestamp into a local
+`#t=` link that seeks the embedded player on the video page.
+
 ## Production
 
 Production runs with `MIX_ENV=prod`, so run the task with the same environment

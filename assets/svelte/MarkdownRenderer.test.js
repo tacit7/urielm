@@ -10,3 +10,9 @@ const markdownRenderer = readFileSync(
 test("markdown renderer linkifies bare external urls", () => {
   assert.match(markdownRenderer, /linkify:\s*true/)
 })
+
+test("markdown renderer intercepts local video timestamp links", () => {
+  assert.match(markdownRenderer, /localTimestampVideoId/)
+  assert.match(markdownRenderer, /urielm:video-seek/)
+  assert.match(markdownRenderer, /href\.startsWith\('#t='\)/)
+})

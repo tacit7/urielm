@@ -41,7 +41,8 @@
     onError = null,
   }: Props = $props();
 
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement>();
+  let playerShell = $state<HTMLDivElement>();
   let player: any;
   let playerReady = $state(false);
   const playerId = `yt-player-${Math.random().toString(36).substr(2, 9)}`;
@@ -125,6 +126,21 @@
     try { return player?.getDuration ? player.getDuration() : null; } catch (_) { return null; }
   }
 
+  function handleExternalSeek(event: Event) {
+    const detail = (event as CustomEvent).detail || {};
+    if (detail.videoId && detail.videoId !== videoId) return;
+    if (typeof detail.seconds !== "number" || Number.isNaN(detail.seconds)) return;
+
+    if (detail.scroll) {
+      playerShell?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    }
+
+    if (!playerReady) return;
+
+    player.seekTo(detail.seconds, true);
+    if (detail.play) player.playVideo();
+  }
+
   $effect(() => {
     if (playerReady && playTrigger !== null) player.playVideo();
   });
@@ -139,22 +155,26 @@
 
   $effect(() => {
     let active = true;
+    document.addEventListener("urielm:video-seek", handleExternalSeek);
     ensureYouTubeScript().then(() => {
       if (active) createPlayer();
     });
     return () => {
       active = false;
+      document.removeEventListener("urielm:video-seek", handleExternalSeek);
       try { player?.destroy?.(); } catch (_) { /* ignore */ }
     };
   });
 </script>
 
 {#if shorts}
-  <div class="relative w-full" style="padding-bottom: 177.77%;">
+  <div bind:this={playerShell} class="relative w-full" style="padding-bottom: 177.77%;">
     <div class="absolute inset-0">
       <div bind:this={container} id={playerId} style="width: 100%; height: 100%;"></div>
     </div>
   </div>
 {:else}
-  <div bind:this={container} id={playerId} style="width: 100%; height: 100%;"></div>
+  <div bind:this={playerShell} style="width: 100%; height: 100%;">
+    <div bind:this={container} id={playerId} style="width: 100%; height: 100%;"></div>
+  </div>
 {/if}
