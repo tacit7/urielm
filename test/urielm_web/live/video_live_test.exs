@@ -57,6 +57,7 @@ defmodule UrielmWeb.VideoLiveTest do
       assert has_element?(view, "#standard-video-page")
       assert has_element?(view, "#video-back-link[href='/videos']")
       assert has_element?(view, "#video-player-shell[data-ui-component='learning-media-player']")
+      assert has_element?(view, "#video-player-shell.max-w-\\[960px\\]")
       assert has_element?(view, "#video-detail-header .ui-eyebrow")
       assert has_element?(view, "#video-share-button[data-text]")
 

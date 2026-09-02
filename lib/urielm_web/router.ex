@@ -18,7 +18,7 @@ defmodule UrielmWeb.Router do
           "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; " <>
           "img-src 'self' https: data:; " <>
           "object-src 'none'; " <>
-          "script-src 'self'; " <>
+          "script-src 'self' https://www.youtube.com; " <>
           "style-src 'self' 'unsafe-inline'; " <>
           "form-action 'self'; " <>
           "frame-ancestors 'none'"

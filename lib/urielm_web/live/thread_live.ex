@@ -756,13 +756,11 @@ defmodule UrielmWeb.ThreadLive do
             </.link>
           </div>
 
-          <div class="prose prose-base mt-4 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary">
-            <.svelte
-              name="MarkdownRenderer"
-              props={%{content: @thread.body}}
-              socket={@socket}
-              ssr={false}
-            />
+          <div
+            id="thread-body"
+            class="prose prose-base mt-4 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary"
+          >
+            {UrielmWeb.Markdown.to_html!(@thread.body)}
           </div>
 
           <div

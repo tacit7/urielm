@@ -8,4 +8,12 @@ defmodule UrielmWeb.EndpointTest do
     assert [content_type] = get_resp_header(conn, "content-type")
     assert content_type =~ "javascript"
   end
+
+  test "browser CSP allows YouTube video playback", %{conn: conn} do
+    conn = get(conn, "/videos")
+
+    assert [csp] = get_resp_header(conn, "content-security-policy")
+    assert csp =~ "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com"
+    assert csp =~ "script-src 'self' https://www.youtube.com"
+  end
 end

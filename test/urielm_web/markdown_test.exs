@@ -68,6 +68,25 @@ defmodule UrielmWeb.MarkdownTest do
       assert html =~ "<em>"
     end
 
+    test "linkifies bare urls" do
+      {:safe, html} = Markdown.to_html("News source: https://example.com/story")
+
+      assert html =~ ~s(<a href="https://example.com/story">https://example.com/story</a>)
+    end
+
+    test "linkifies bare domains" do
+      {:safe, html} = Markdown.to_html("News source: example.com/story")
+
+      assert html =~ ~s(<a href="https://example.com/story">example.com/story</a>)
+    end
+
+    test "does not nest existing markdown links" do
+      {:safe, html} = Markdown.to_html("[Example](https://example.com/story)")
+
+      assert html =~ ~s(<a href="https://example.com/story">Example</a>)
+      refute html =~ "<a href=\"https://example.com/story\"><a"
+    end
+
     test "handles nil gracefully" do
       {:safe, html} = Markdown.to_html(nil)
       assert html == ""

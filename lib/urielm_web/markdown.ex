@@ -1,4 +1,7 @@
 defmodule UrielmWeb.Markdown do
+  @bare_url_regex ~r"(?<![@\w])((?:https?://|www\.)[^\s<]+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/[^\s<]*)?)"i
+  @trailing_url_punctuation ~r/[.,;:!?)}\]]+$/
+
   def to_html(markdown, opts \\ []) do
     case MDEx.to_html(markdown || "", mdex_opts(opts)) do
       {:ok, html} -> sanitize_and_wrap(html)
@@ -12,8 +15,20 @@ defmodule UrielmWeb.Markdown do
   end
 
   defp mdex_opts(opts) do
+    extension =
+      opts
+      |> Keyword.get(:extension, [])
+      |> Keyword.put_new(:autolink, true)
+
+    parse =
+      opts
+      |> Keyword.get(:parse, [])
+      |> Keyword.put_new(:relaxed_autolinks, true)
+
     opts
     |> Keyword.drop([:code_class_prefix])
+    |> Keyword.put(:extension, extension)
+    |> Keyword.put(:parse, parse)
     |> Keyword.put_new(:render, unsafe_: true)
   end
 
@@ -27,6 +42,8 @@ defmodule UrielmWeb.Markdown do
     html
     |> strip_script_and_style_blocks()
     |> HtmlSanitizeEx.markdown_html()
+    |> linkify_remaining_text_urls()
+    |> HtmlSanitizeEx.markdown_html()
     |> Phoenix.HTML.raw()
   end
 
@@ -36,4 +53,52 @@ defmodule UrielmWeb.Markdown do
   defp strip_script_and_style_blocks(html) do
     Regex.replace(~r{<(script|style)\b[^>]*>.*?</\s*\1\s*>}is, html, "")
   end
+
+  defp linkify_remaining_text_urls(html) do
+    case Floki.parse_fragment(html) do
+      {:ok, tree} -> tree |> linkify_nodes() |> Floki.raw_html()
+      {:error, _reason} -> html
+    end
+  end
+
+  defp linkify_nodes(nodes) when is_list(nodes), do: Enum.flat_map(nodes, &linkify_node/1)
+
+  defp linkify_node(text) when is_binary(text), do: linkify_text(text)
+
+  defp linkify_node({tag, attrs, children}) when tag in ["a", "code", "pre"],
+    do: [{tag, attrs, children}]
+
+  defp linkify_node({tag, attrs, children}) do
+    [{tag, attrs, linkify_nodes(List.wrap(children))}]
+  end
+
+  defp linkify_node(node), do: [node]
+
+  defp linkify_text(text) do
+    @bare_url_regex
+    |> Regex.split(text, include_captures: true, trim: false)
+    |> Enum.map(fn part ->
+      if Regex.match?(@bare_url_regex, part) do
+        {url, trailing} = split_trailing_punctuation(part)
+        href = normalize_href(url)
+
+        [{"a", [{"href", href}], [url]}, trailing]
+      else
+        part
+      end
+    end)
+    |> List.flatten()
+    |> Enum.reject(&(&1 == ""))
+  end
+
+  defp split_trailing_punctuation(url) do
+    case Regex.run(@trailing_url_punctuation, url) do
+      [trailing] -> {String.replace_suffix(url, trailing, ""), trailing}
+      nil -> {url, ""}
+    end
+  end
+
+  defp normalize_href("http://" <> _ = url), do: url
+  defp normalize_href("https://" <> _ = url), do: url
+  defp normalize_href(url), do: "https://" <> url
 end

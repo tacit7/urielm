@@ -469,10 +469,10 @@ defmodule UrielmWeb.VideoLive do
           id="video-player-shell"
           label="Video player"
           class={[
-            "relative",
+            "relative mx-auto w-full",
             if(@video.format == "short",
               do: "h-[min(62dvh,38rem)] min-h-[26rem]",
-              else: "aspect-video"
+              else: "aspect-video max-w-[960px]"
             )
           ]}
         >
