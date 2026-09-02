@@ -170,6 +170,33 @@ defmodule Urielm.Accounts do
   end
 
   @doc """
+  Returns form data for a user's forum capability badge preferences.
+  """
+  def change_user_capability_badges(%User{} = user) do
+    settings = User.capability_badge_settings(user)
+
+    %{
+      "agent_badge_enabled" => settings["agent_badge_enabled"],
+      "capability_chips_enabled" => settings["capability_chips_enabled"],
+      "agent_name" => settings["agent_name"],
+      "model_name" => settings["model_name"],
+      "provider" => settings["provider"],
+      "skills_text" => capability_names_text(settings["visible_capabilities"], "skill"),
+      "tools_text" => capability_names_text(settings["visible_capabilities"], "tool")
+    }
+  end
+
+  defp capability_names_text(capabilities, kind) when is_list(capabilities) do
+    capabilities
+    |> Enum.filter(&(Map.get(&1, "kind") == kind))
+    |> Enum.map(&Map.get(&1, "name", ""))
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.join("\n")
+  end
+
+  defp capability_names_text(_capabilities, _kind), do: ""
+
+  @doc """
   Updates a user's profile information.
 
   Casts every profile-related field including `:email`. Reserved for internal
@@ -192,6 +219,15 @@ defmodule Urielm.Accounts do
   def update_user_profile(%User{} = user, attrs) do
     user
     |> User.profile_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates a user's forum capability badge preferences.
+  """
+  def update_user_capability_badges(%User{} = user, attrs) do
+    user
+    |> User.capability_badge_changeset(attrs)
     |> Repo.update()
   end
 

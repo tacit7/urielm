@@ -21,6 +21,7 @@ defmodule UrielmWeb.SettingsLiveTest do
       assert has_element?(view, "#settings-page.ui-page-shell")
       assert has_element?(view, "#settings-header.ui-page-header")
       assert has_element?(view, "#profile-settings-section.ui-card")
+      assert has_element?(view, "#capability-badges-settings-section.ui-card")
       assert has_element?(view, "#password-settings-section.ui-card")
       assert has_element?(view, "#appearance-settings-section.ui-card")
       assert has_element?(view, "#danger-settings-section.ui-card")
@@ -28,6 +29,13 @@ defmodule UrielmWeb.SettingsLiveTest do
       assert has_element?(view, "#profile-private-profile[type='checkbox']")
       assert has_element?(view, "#profile-settings-submit[phx-disable-with='Saving profile…']")
       assert has_element?(view, "#password-settings-form")
+      assert has_element?(view, "#capability-badges-settings-form")
+      assert has_element?(view, "#capability-agent-badge-enabled[type='checkbox']")
+      assert has_element?(view, "#capability-chips-enabled[type='checkbox']")
+      assert has_element?(view, "#capability-skills-text")
+      assert has_element?(view, "#capability-tools-text")
+      assert has_element?(view, "#capability-badges-preview")
+      assert has_element?(view, "#capability-badges-settings-submit")
 
       assert has_element?(
                view,
@@ -75,6 +83,42 @@ defmodule UrielmWeb.SettingsLiveTest do
       |> render_submit()
 
       assert Urielm.Accounts.get_user(user.id).private_profile
+    end
+
+    test "authenticated users can set forum capability badge preferences", %{conn: conn} do
+      user = Fixtures.user_fixture()
+
+      {:ok, view, _html} = live(log_in_user(conn, user), "/settings")
+
+      view
+      |> form("#capability-badges-settings-form", %{
+        "capability_badges" => %{
+          "agent_badge_enabled" => "true",
+          "capability_chips_enabled" => "false",
+          "agent_name" => "Claude",
+          "model_name" => "Sonnet 4.5",
+          "provider" => "Anthropic",
+          "skills_text" => "Writing skill\nDocs search\nWriting skill",
+          "tools_text" => "Browser, Git\nTerminal"
+        }
+      })
+      |> render_submit()
+
+      settings = Urielm.Accounts.get_user(user.id).capability_badge_settings
+
+      assert settings["agent_badge_enabled"] == true
+      assert settings["capability_chips_enabled"] == false
+      assert settings["agent_name"] == "Claude"
+      assert settings["model_name"] == "Sonnet 4.5"
+      assert settings["provider"] == "Anthropic"
+
+      assert settings["visible_capabilities"] == [
+               %{"kind" => "skill", "name" => "Writing skill"},
+               %{"kind" => "skill", "name" => "Docs search"},
+               %{"kind" => "tool", "name" => "Browser"},
+               %{"kind" => "tool", "name" => "Git"},
+               %{"kind" => "tool", "name" => "Terminal"}
+             ]
     end
 
     test "settings page displays user email information", %{conn: conn} do

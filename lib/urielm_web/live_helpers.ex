@@ -148,6 +148,7 @@ defmodule UrielmWeb.LiveHelpers do
       author_id: thread.author_id,
       author_username: thread.author.username,
       author_avatar_url: thread.author.avatar_url,
+      author_capability_badge_settings: User.capability_badge_settings(thread.author),
       board_name: thread.board.name,
       board_slug: thread.board.slug,
       tag_records:

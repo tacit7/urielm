@@ -51,13 +51,15 @@ defmodule UrielmWeb.ThreadLive do
             else: "watching"
 
         all_categories = Forum.list_categories_with_boards()
+        serialized_thread = LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user)
 
         {:ok,
          socket
          |> assign(:page_title, thread.title)
+         |> assign(:thread, serialized_thread)
          |> assign(
-           :thread,
-           LiveHelpers.serialize_thread_full(thread, socket.assigns.current_user)
+           :thread_capability_disclosure,
+           thread_capability_disclosure(serialized_thread)
          )
          |> assign(:related_threads, Forum.list_related_threads(thread, limit: 5))
          |> assign(:comment_tree, comment_tree)
@@ -694,6 +696,13 @@ defmodule UrielmWeb.ThreadLive do
             >
               <.um_icon name="check_circle" class="size-3" /> Solved
             </span>
+            <span
+              :if={@thread_capability_disclosure.agent_badge_enabled}
+              id="thread-agent-assisted-badge"
+              class="badge h-5 min-h-5 gap-1 border-primary/25 bg-primary/10 px-2 text-xs font-bold text-primary"
+            >
+              <.um_icon name="hero-sparkles" class="size-3" /> Agent-assisted
+            </span>
           </div>
 
           <h1 class="mt-3 max-w-3xl text-2xl font-bold leading-tight text-base-content sm:text-3xl">
@@ -718,9 +727,15 @@ defmodule UrielmWeb.ThreadLive do
                 </div>
               <% end %>
               <div class="min-w-0 leading-5">
-                <span class="font-semibold text-base-content/75">
-                  {Map.get(@thread, :author_username) || "Unknown"}
-                </span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="font-semibold text-base-content/75">
+                    {Map.get(@thread, :author_username) || "Unknown"}
+                  </span>
+                  <.capability_agent_badge
+                    :if={@thread_capability_disclosure.agent_badge_enabled}
+                    agent={@thread_capability_disclosure.agent}
+                  />
+                </div>
                 <span class="block truncate text-xs">
                   {Calendar.strftime(@thread.created_at, "%b %d, %Y")}
                 </span>
@@ -761,6 +776,79 @@ defmodule UrielmWeb.ThreadLive do
             class="prose prose-base mt-4 max-w-none text-base-content/85 prose-headings:text-base-content prose-a:text-secondary"
           >
             {UrielmWeb.Markdown.to_html!(@thread.body)}
+          </div>
+
+          <div
+            :if={@thread_capability_disclosure.capability_chips_enabled}
+            id="thread-capability-disclosure"
+            class="mt-4 flex flex-col gap-3 border-t border-base-300/50 pt-3 sm:flex-row sm:items-start sm:justify-between"
+          >
+            <div>
+              <div
+                id="thread-capability-chips"
+                class="flex flex-wrap gap-1.5"
+                aria-label="Capabilities used for this post"
+              >
+                <.capability_chip
+                  :for={capability <- @thread_capability_disclosure.visible_capabilities}
+                  capability={capability}
+                />
+                <span
+                  :if={@thread_capability_disclosure.hidden_count > 0}
+                  id="thread-capability-more-count"
+                  class="badge h-6 min-h-6 border-warning/25 bg-warning/10 px-2 text-xs font-semibold text-warning"
+                >
+                  +{@thread_capability_disclosure.hidden_count}
+                </span>
+              </div>
+              <p class="mt-2 text-xs leading-5 text-base-content/45">
+                Shown from the post's runtime snapshot, not the author's current settings.
+              </p>
+            </div>
+
+            <details id="thread-capability-details" class="group relative w-full sm:w-auto">
+              <summary class="btn btn-ghost btn-xs min-h-8 w-full list-none rounded-full border border-base-300/70 bg-base-100/45 px-3 text-base-content/60 transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary sm:w-auto [&::-webkit-details-marker]:hidden">
+                <.um_icon name="hero-information-circle" class="size-3.5" /> Capability details
+                <.um_icon
+                  name="hero-chevron-down"
+                  class="size-3.5 transition-transform group-open:rotate-180"
+                />
+              </summary>
+              <div class="absolute right-0 z-20 mt-2 w-full min-w-72 rounded-xl border border-base-300 bg-base-100 p-4 text-sm shadow-xl sm:w-80">
+                <h3 class="text-sm font-black text-base-content">Used by this post</h3>
+                <p class="mt-1 text-xs leading-5 text-base-content/55">
+                  Runtime usage is stored as a snapshot so older discussions stay readable when
+                  models, skills, or tools are renamed.
+                </p>
+
+                <dl class="mt-3 space-y-3">
+                  <div>
+                    <dt class="text-xs font-bold text-base-content/45">Assistant</dt>
+                    <dd class="mt-1 text-xs text-base-content/80">
+                      {@thread_capability_disclosure.agent.name} · {@thread_capability_disclosure.agent.model}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-bold text-base-content/45">Skills</dt>
+                    <dd class="mt-1 flex flex-wrap gap-1.5">
+                      <.capability_chip
+                        :for={capability <- @thread_capability_disclosure.skills}
+                        capability={capability}
+                      />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-bold text-base-content/45">Tools</dt>
+                    <dd class="mt-1 flex flex-wrap gap-1.5">
+                      <.capability_chip
+                        :for={capability <- @thread_capability_disclosure.tools}
+                        capability={capability}
+                      />
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </details>
           </div>
 
           <div
@@ -1118,14 +1206,92 @@ defmodule UrielmWeb.ThreadLive do
 
       thread ->
         comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)
+        serialized_thread = LiveHelpers.serialize_thread_full(thread, current_user)
 
         socket
-        |> assign(:thread, LiveHelpers.serialize_thread_full(thread, current_user))
+        |> assign(:thread, serialized_thread)
+        |> assign(:thread_capability_disclosure, thread_capability_disclosure(serialized_thread))
         |> assign(:comment_tree, comment_tree)
     end
   end
 
   # comment tree handled by LiveHelpers.build_comment_tree/2
+
+  defp thread_capability_disclosure(thread) do
+    settings = Map.get(thread, :author_capability_badge_settings, %{})
+
+    capabilities =
+      settings
+      |> Map.get("visible_capabilities", [])
+      |> Enum.map(&normalize_capability/1)
+      |> Enum.reject(&is_nil/1)
+
+    skills = Enum.filter(capabilities, &(&1.kind == :skill))
+    tools = Enum.filter(capabilities, &(&1.kind == :tool))
+
+    visible_capabilities = Enum.take(capabilities, 3)
+
+    %{
+      agent: %{
+        name: Map.get(settings, "agent_name", "Codex"),
+        model: Map.get(settings, "model_name", "GPT-5"),
+        provider: Map.get(settings, "provider", "OpenAI")
+      },
+      agent_badge_enabled: Map.get(settings, "agent_badge_enabled", true),
+      capability_chips_enabled: Map.get(settings, "capability_chips_enabled", true),
+      skills: skills,
+      tools: tools,
+      visible_capabilities: visible_capabilities,
+      hidden_count: length(capabilities) - length(visible_capabilities)
+    }
+  end
+
+  defp normalize_capability(%{"kind" => kind, "name" => name}) when is_binary(name) do
+    %{kind: normalize_capability_kind(kind), name: name}
+  end
+
+  defp normalize_capability(_capability), do: nil
+
+  defp normalize_capability_kind("skill"), do: :skill
+  defp normalize_capability_kind("tool"), do: :tool
+  defp normalize_capability_kind(_kind), do: :capability
+
+  attr :agent, :map, required: true
+
+  defp capability_agent_badge(assigns) do
+    ~H"""
+    <span
+      id="thread-author-agent-badge"
+      class="inline-flex min-h-5 items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 text-[0.68rem] font-black leading-none text-primary"
+      title={"#{@agent.provider} #{@agent.model}"}
+    >
+      <span class="size-1.5 rounded-full bg-current"></span>
+      {@agent.name} · {@agent.model}
+    </span>
+    """
+  end
+
+  attr :capability, :map, required: true
+
+  defp capability_chip(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :chip_class,
+        case assigns.capability.kind do
+          :skill -> "border-primary/25 bg-primary/10 text-primary"
+          :tool -> "border-accent/25 bg-accent/10 text-accent"
+          _ -> "border-base-300 bg-base-200 text-base-content/60"
+        end
+      )
+
+    ~H"""
+    <span class={"badge h-6 min-h-6 gap-1 border px-2 text-xs font-semibold #{@chip_class}"}>
+      <span class="size-1.5 rounded-full bg-current"></span>
+      {@capability.name}
+    </span>
+    """
+  end
 
   defp pluralize(count, singular) do
     if count == 1 do

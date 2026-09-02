@@ -13,6 +13,10 @@ defmodule UrielmWeb.SettingsLive do
      |> assign(:user, user)
      |> assign(:profile_form, to_form(Accounts.change_user_profile(user)))
      |> assign(
+       :capability_badges_form,
+       to_form(Accounts.change_user_capability_badges(user), as: :capability_badges)
+     )
+     |> assign(
        :password_form,
        to_form(%{"current_password" => "", "new_password" => "", "confirm_password" => ""},
          as: :password
@@ -75,6 +79,25 @@ defmodule UrielmWeb.SettingsLive do
           {:error, _changeset} ->
             {:noreply, put_flash(socket, :error, "Failed to change password")}
         end
+    end
+  end
+
+  @impl true
+  def handle_event("update_capability_badges", %{"capability_badges" => badge_params}, socket) do
+    case Accounts.update_user_capability_badges(socket.assigns.current_user, badge_params) do
+      {:ok, user} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Capability badges updated successfully")
+         |> assign(:user, user)
+         |> assign(:current_user, user)
+         |> assign(
+           :capability_badges_form,
+           to_form(Accounts.change_user_capability_badges(user), as: :capability_badges)
+         )}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to update capability badges")}
     end
   end
 
@@ -199,6 +222,135 @@ defmodule UrielmWeb.SettingsLive do
                   class="btn btn-primary"
                 >
                   Save profile
+                </.button>
+              </div>
+            </.form>
+          </section>
+
+          <section id="capability-badges-settings-section" class="ui-card h-auto p-5 sm:p-7">
+            <h2 class="text-xl font-black text-base-content">Capability badges</h2>
+            <p class="text-sm text-base-content/70">
+              Choose how your assisted forum posts disclose agent, skill, and tool usage.
+            </p>
+
+            <div class="divider my-6"></div>
+
+            <.form
+              for={@capability_badges_form}
+              id="capability-badges-settings-form"
+              phx-submit="update_capability_badges"
+              class="space-y-5"
+            >
+              <div class="grid gap-4 sm:grid-cols-2">
+                <.input
+                  field={@capability_badges_form[:agent_name]}
+                  type="select"
+                  label="Agent badge"
+                  options={[
+                    {"Codex", "Codex"},
+                    {"Claude", "Claude"},
+                    {"Grok", "Grok"},
+                    {"Custom", "Custom"}
+                  ]}
+                />
+
+                <.input
+                  field={@capability_badges_form[:model_name]}
+                  type="text"
+                  label="Model label"
+                  maxlength="40"
+                  placeholder="GPT-5"
+                />
+              </div>
+
+              <.input
+                field={@capability_badges_form[:provider]}
+                type="text"
+                label="Provider"
+                maxlength="40"
+                placeholder="OpenAI"
+              />
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <.input
+                  field={@capability_badges_form[:skills_text]}
+                  id="capability-skills-text"
+                  type="textarea"
+                  label="Skills"
+                  help="One skill per line. These appear as skill chips on assisted forum posts."
+                  placeholder="Phoenix skill\nUI craft\nDocs search"
+                  class="textarea min-h-32 w-full resize-y rounded-lg border-base-300 bg-base-100/65 text-base-content placeholder:text-base-content/30 focus:border-secondary focus:outline-none"
+                />
+
+                <.input
+                  field={@capability_badges_form[:tools_text]}
+                  id="capability-tools-text"
+                  type="textarea"
+                  label="Tools"
+                  help="One tool per line. Commas also work for quick entry."
+                  placeholder="Terminal\nGit\nBrowser"
+                  class="textarea min-h-32 w-full resize-y rounded-lg border-base-300 bg-base-100/65 text-base-content placeholder:text-base-content/30 focus:border-secondary focus:outline-none"
+                />
+              </div>
+
+              <div class="space-y-3 rounded-xl border border-base-300/70 bg-base-100/45 p-4">
+                <.input
+                  field={@capability_badges_form[:agent_badge_enabled]}
+                  id="capability-agent-badge-enabled"
+                  type="checkbox"
+                  label="Show agent badge beside my forum name"
+                  help="Example: Codex · GPT-5"
+                  class="toggle toggle-primary"
+                />
+
+                <.input
+                  field={@capability_badges_form[:capability_chips_enabled]}
+                  id="capability-chips-enabled"
+                  type="checkbox"
+                  label="Show skills and tools used on assisted posts"
+                  help="Forum posts show up to three chips, then collapse extras into a count."
+                  class="toggle toggle-primary"
+                />
+              </div>
+
+              <div
+                id="capability-badges-preview"
+                class="rounded-xl border border-primary/25 bg-primary/6 p-4"
+              >
+                <p class="text-xs font-bold text-base-content/50">Forum preview</p>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  <span class="font-semibold text-base-content">yourname</span>
+                  <span class="badge h-5 min-h-5 gap-1 border-primary/25 bg-primary/10 px-2 text-xs font-bold text-primary">
+                    <span class="size-1.5 rounded-full bg-current"></span>
+                    {@capability_badges_form[:agent_name].value} · {@capability_badges_form[
+                      :model_name
+                    ].value}
+                  </span>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  <span class="badge h-6 min-h-6 border-primary/25 bg-primary/10 px-2 text-xs font-semibold text-primary">
+                    Phoenix skill
+                  </span>
+                  <span class="badge h-6 min-h-6 border-accent/25 bg-accent/10 px-2 text-xs font-semibold text-accent">
+                    Terminal
+                  </span>
+                  <span class="badge h-6 min-h-6 border-accent/25 bg-accent/10 px-2 text-xs font-semibold text-accent">
+                    Git
+                  </span>
+                  <span class="badge h-6 min-h-6 border-warning/25 bg-warning/10 px-2 text-xs font-semibold text-warning">
+                    +2
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <.button
+                  id="capability-badges-settings-submit"
+                  type="submit"
+                  loading_label="Saving badges…"
+                  class="btn btn-primary"
+                >
+                  Save capability badges
                 </.button>
               </div>
             </.form>

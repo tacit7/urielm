@@ -24,6 +24,7 @@ defmodule Urielm.Accounts.User do
     field(:password, :string, virtual: true)
     field(:trust_level, :integer, default: 0)
     field(:trust_level_locked, :boolean, default: false)
+    field(:capability_badge_settings, :map, default: %{})
 
     # Suspension (cannot login)
     field(:suspended_at, :utc_datetime)
@@ -92,6 +93,103 @@ defmodule Urielm.Accounts.User do
     |> validate_length(:location, max: 100)
     |> validate_length(:website, max: 200)
     |> validate_display_name()
+  end
+
+  @doc """
+  Changeset for forum capability badge preferences.
+
+  The public UI edits a small stable subset today, but the stored JSON shape is
+  intentionally open so later skill, tool, connector, and plugin metadata can be
+  added without another user-table migration.
+  """
+  def capability_badge_changeset(user, attrs) do
+    settings =
+      user
+      |> capability_badge_settings()
+      |> Map.merge(normalize_capability_badge_attrs(attrs))
+
+    user
+    |> change()
+    |> put_change(:capability_badge_settings, settings)
+  end
+
+  def capability_badge_settings(%__MODULE__{capability_badge_settings: settings})
+      when is_map(settings) do
+    Map.merge(default_capability_badge_settings(), settings)
+  end
+
+  def capability_badge_settings(_user), do: default_capability_badge_settings()
+
+  def default_capability_badge_settings do
+    %{
+      "agent_badge_enabled" => true,
+      "capability_chips_enabled" => true,
+      "agent_name" => "Codex",
+      "model_name" => "GPT-5",
+      "provider" => "OpenAI",
+      "visible_capabilities" => [
+        %{"kind" => "skill", "name" => "Phoenix skill"},
+        %{"kind" => "skill", "name" => "UI craft"},
+        %{"kind" => "tool", "name" => "Terminal"},
+        %{"kind" => "tool", "name" => "Git"},
+        %{"kind" => "tool", "name" => "Browser"}
+      ]
+    }
+  end
+
+  defp normalize_capability_badge_attrs(attrs) when is_map(attrs) do
+    %{
+      "agent_badge_enabled" => truthy?(Map.get(attrs, "agent_badge_enabled")),
+      "capability_chips_enabled" => truthy?(Map.get(attrs, "capability_chips_enabled")),
+      "agent_name" =>
+        clean_choice(Map.get(attrs, "agent_name"), ~w(Codex Claude Grok Custom), "Codex"),
+      "model_name" => clean_text(Map.get(attrs, "model_name"), "GPT-5", 40),
+      "provider" => clean_text(Map.get(attrs, "provider"), "OpenAI", 40),
+      "visible_capabilities" => typed_capabilities(attrs)
+    }
+  end
+
+  defp normalize_capability_badge_attrs(_attrs), do: %{}
+
+  defp truthy?(value), do: value in [true, "true", "on", "1", 1]
+
+  defp clean_choice(value, allowed, default) when is_binary(value) do
+    if value in allowed, do: value, else: default
+  end
+
+  defp clean_choice(_value, _allowed, default), do: default
+
+  defp clean_text(value, default, max_length) when is_binary(value) do
+    case String.trim(value) do
+      "" -> default
+      value -> String.slice(value, 0, max_length)
+    end
+  end
+
+  defp clean_text(_value, default, _max_length), do: default
+
+  defp typed_capabilities(attrs) do
+    parse_capability_lines(Map.get(attrs, "skills_text"), "skill") ++
+      parse_capability_lines(Map.get(attrs, "tools_text"), "tool")
+  end
+
+  defp parse_capability_lines(value, kind) when is_binary(value) do
+    value
+    |> String.split(~r/[\n,]/)
+    |> Enum.map(&clean_capability_name/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.uniq_by(&String.downcase/1)
+    |> Enum.take(12)
+    |> Enum.map(fn name -> %{"kind" => kind, "name" => name} end)
+  end
+
+  defp parse_capability_lines(_value, _kind), do: []
+
+  defp clean_capability_name(value) do
+    value
+    |> String.trim()
+    |> String.replace(~r/\s+/, " ")
+    |> String.slice(0, 48)
   end
 
   defp validate_display_name(changeset) do

@@ -39,6 +39,16 @@ defmodule UrielmWeb.ThreadLiveTest do
       assert has_element?(view, "#thread-reading-view")
       assert has_element?(view, "#thread-topic")
       assert has_element?(view, "#thread-author")
+      assert has_element?(view, "#thread-agent-assisted-badge")
+      assert has_element?(view, "#thread-author-agent-badge")
+      assert has_element?(view, "#thread-capability-disclosure")
+
+      assert has_element?(
+               view,
+               "#thread-capability-chips[aria-label='Capabilities used for this post']"
+             )
+
+      assert has_element?(view, "#thread-capability-details")
       assert has_element?(view, "#thread-stats")
       assert has_element?(view, "#thread-actions")
       assert has_element?(view, "#thread-replies")
@@ -54,6 +64,58 @@ defmodule UrielmWeb.ThreadLiveTest do
                view,
                ~s([data-name="CommentTree"][data-props*="/forum/t/#{thread.id}/uploads"])
              )
+    end
+
+    test "respects author forum capability badge visibility preferences", %{
+      conn: conn,
+      author: author,
+      board: board
+    } do
+      {:ok, author} =
+        Urielm.Accounts.update_user_capability_badges(author, %{
+          "agent_badge_enabled" => "false",
+          "capability_chips_enabled" => "false",
+          "agent_name" => "Claude",
+          "model_name" => "Sonnet 4.5",
+          "provider" => "Anthropic"
+        })
+
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      refute has_element?(view, "#thread-agent-assisted-badge")
+      refute has_element?(view, "#thread-author-agent-badge")
+      refute has_element?(view, "#thread-capability-disclosure")
+    end
+
+    test "renders author typed skill and tool capabilities", %{
+      conn: conn,
+      author: author,
+      board: board
+    } do
+      {:ok, author} =
+        Urielm.Accounts.update_user_capability_badges(author, %{
+          "agent_badge_enabled" => "true",
+          "capability_chips_enabled" => "true",
+          "agent_name" => "Grok",
+          "model_name" => "Grok 4",
+          "provider" => "xAI",
+          "skills_text" => "Prompt review\nCourse planning",
+          "tools_text" => "Web\nNotebook"
+        })
+
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+
+      conn = log_in_user(conn, author)
+      {:ok, view, _html} = live(conn, "/forum/t/#{thread.id}")
+
+      assert has_element?(view, "#thread-author-agent-badge", "Grok · Grok 4")
+      assert has_element?(view, "#thread-capability-chips", "Prompt review")
+      assert has_element?(view, "#thread-capability-chips", "Course planning")
+      assert has_element?(view, "#thread-capability-chips", "Web")
+      assert has_element?(view, "#thread-capability-more-count", "+1")
     end
 
     test "pluralizes replies correctly", %{conn: conn, author: author, board: board} do
