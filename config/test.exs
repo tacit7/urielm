@@ -11,7 +11,9 @@ config :urielm, Urielm.Repo,
   hostname: "localhost",
   database: "urielm_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
+  pool_size: max(System.schedulers_online() * 2, 10),
+  ownership_timeout: 600_000,
+  queue_target: 5_000
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

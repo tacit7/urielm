@@ -56,9 +56,6 @@ defmodule Mix.Tasks.NewsBot.Backfill do
         end
 
         result
-
-      {:error, reason} ->
-        Mix.raise("Could not discover news candidates: #{inspect(reason)}")
     end
   end
 
