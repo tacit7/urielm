@@ -52,6 +52,38 @@ mix courses.add_video URL --resources-file resources.md
 mix courses.add_video URL --timestamps-file timestamps.md
 ```
 
+## Add a playlist course
+
+Use `courses.add_playlist` when several YouTube videos should become lessons in
+one course:
+
+```bash
+mix courses.add_playlist "PLcGFJNFn5qEB1Va8whwT5VGGQvggDBJ4U" \
+  uv0p9dpLH2I \
+  f3TO_dm5Agc \
+  hoBKAH7ePBs
+```
+
+The task fetches public YouTube oEmbed metadata for the playlist and each video,
+creates one course with `youtube_playlist_id`, and creates lessons in the order
+provided. Re-running the same playlist is idempotent: existing lessons are reused
+and only missing videos are appended.
+
+The playlist argument may be either a playlist ID or playlist URL. Longer video
+lists can come from a file:
+
+```bash
+mix courses.add_playlist "PLcGFJNFn5qEB1Va8whwT5VGGQvggDBJ4U" --videos-file videos.txt
+```
+
+Useful options:
+
+```bash
+mix courses.add_playlist PLAYLIST --title "Custom Course"
+mix courses.add_playlist PLAYLIST --slug "custom-course"
+mix courses.add_playlist PLAYLIST --description-file description.md
+```
+
 ## Replace tags
 
 Use the dedicated task to replace a video's complete tag set:
@@ -115,6 +147,7 @@ printing secret values:
 bin/prod-mix videos.add "https://www.youtube.com/watch?v=g5oEAoKdrdw"
 bin/prod-mix videos.chapters video-slug --file chapters.txt
 bin/prod-mix courses.add_video "https://www.youtube.com/watch?v=DJZISqryDfw"
+bin/prod-mix courses.add_playlist "PLcGFJNFn5qEB1Va8whwT5VGGQvggDBJ4U" --videos-file videos.txt
 ```
 
 Do not print or hardcode production secrets.
