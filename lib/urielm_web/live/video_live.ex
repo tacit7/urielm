@@ -19,28 +19,7 @@ defmodule UrielmWeb.VideoLive do
 
     slug = child_params["slug"]
 
-    if not connected?(socket) do
-      {:ok,
-       socket
-       |> assign(:page_title, "Loading...")
-       |> assign(:video, nil)
-       |> assign(:completed, false)
-       |> assign(:thread, nil)
-       |> assign(:comment_tree, [])
-       |> assign(:comment_form, to_form(%{"body" => ""}))
-       |> assign(:nav_items, [])
-       |> assign(:active_section, "description")
-       |> assign(:next_video, nil)
-       |> assign(:reporting_comment_id, nil)
-       |> assign(:upvotes, 0)
-       |> assign(:downvotes, 0)
-       |> assign(:user_vote, nil)
-       |> assign(:meta_description, "")
-       |> assign(:canonical_url, "")
-       |> assign(:og_title, "")
-       |> assign(:og_type, "video.other")
-       |> assign(:og_image, nil)}
-    else
+    if connected?(socket) do
       video = Content.get_video_by_slug(slug, preload_tags: true)
 
       if is_nil(video) do
@@ -93,6 +72,54 @@ defmodule UrielmWeb.VideoLive do
              |> assign_meta_tags(video, slug)}
           end
         end
+      end
+    else
+      video = Content.get_video_by_slug(slug, preload_tags: true)
+
+      if video && Content.video_published?(video) && Content.can_view_video?(nil, video) do
+        {thread, comment_tree} = load_thread_and_comments(video, nil)
+        nav_items = build_nav_items(video, thread)
+        default_section = (List.first(nav_items) || %{key: "description"}).key
+        next_video = next_accessible_video(video, nil)
+        {upvotes, downvotes, _score} = Engagement.get_vote_counts("video", video.id)
+
+        {:ok,
+         socket
+         |> assign(:page_title, video.title)
+         |> assign(:video, video)
+         |> assign(:completed, false)
+         |> assign(:thread, thread)
+         |> assign(:comment_tree, comment_tree)
+         |> assign(:comment_form, to_form(%{"body" => ""}))
+         |> assign(:nav_items, nav_items)
+         |> assign(:active_section, default_section)
+         |> assign(:next_video, next_video)
+         |> assign(:reporting_comment_id, nil)
+         |> assign(:upvotes, upvotes)
+         |> assign(:downvotes, downvotes)
+         |> assign(:user_vote, nil)
+         |> assign_meta_tags(video, slug)}
+      else
+        {:ok,
+         socket
+         |> assign(:page_title, "Loading...")
+         |> assign(:video, nil)
+         |> assign(:completed, false)
+         |> assign(:thread, nil)
+         |> assign(:comment_tree, [])
+         |> assign(:comment_form, to_form(%{"body" => ""}))
+         |> assign(:nav_items, [])
+         |> assign(:active_section, "description")
+         |> assign(:next_video, nil)
+         |> assign(:reporting_comment_id, nil)
+         |> assign(:upvotes, 0)
+         |> assign(:downvotes, 0)
+         |> assign(:user_vote, nil)
+         |> assign(:meta_description, "")
+         |> assign(:canonical_url, "")
+         |> assign(:og_title, "")
+         |> assign(:og_type, "video.other")
+         |> assign(:og_image, nil)}
       end
     end
   end
@@ -647,6 +674,9 @@ defmodule UrielmWeb.VideoLive do
                   socket={@socket}
                   ssr={false}
                 />
+                <div :if={!connected?(@socket)} id="video-description-fallback">
+                  {UrielmWeb.Markdown.to_html!(@video.description_md)}
+                </div>
               </div>
               <.empty_state
                 :if={is_nil(@video.description_md) or @video.description_md == ""}
@@ -672,6 +702,9 @@ defmodule UrielmWeb.VideoLive do
                   socket={@socket}
                   ssr={false}
                 />
+                <div :if={!connected?(@socket)} id="video-resources-fallback">
+                  {UrielmWeb.Markdown.to_html!(@video.resources_md)}
+                </div>
               </div>
             </section>
 
@@ -825,6 +858,9 @@ defmodule UrielmWeb.VideoLive do
                     socket={@socket}
                     ssr={false}
                   />
+                  <div :if={!connected?(@socket)} id="video-author-bio-fallback">
+                    {UrielmWeb.Markdown.to_html!(@video.author_bio_md)}
+                  </div>
                 </div>
                 <a
                   :if={@video.author_url}

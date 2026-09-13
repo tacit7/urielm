@@ -7,27 +7,14 @@ defmodule UrielmWeb.HomeLive do
   @impl true
   def mount(_params, _session, socket) do
     socket =
-      socket
-      |> assign(:prompt_variant, :before)
-      |> then(fn socket ->
-        if connected?(socket) do
-          assign(socket,
-            page_title: "Home",
-            courses: Learning.list_courses() |> Enum.take(3),
-            posts: Content.list_published_posts(limit: 4),
-            prompts: Content.list_prompts(limit: 6),
-            shorts: Content.list_published_shorts(limit: 5)
-          )
-        else
-          assign(socket,
-            page_title: "Home",
-            courses: [],
-            posts: [],
-            prompts: [],
-            shorts: []
-          )
-        end
-      end)
+      assign(socket,
+        prompt_variant: :before,
+        page_title: "Home",
+        courses: Learning.list_courses() |> Enum.take(3),
+        posts: Content.list_published_posts(limit: 4),
+        prompts: Content.list_prompts(limit: 6),
+        shorts: Content.list_published_shorts(limit: 5)
+      )
 
     {:ok, socket}
   end

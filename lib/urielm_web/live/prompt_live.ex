@@ -30,40 +30,47 @@ defmodule UrielmWeb.PromptLive do
         {:ok, socket |> put_flash(:error, "Invalid prompt") |> redirect(to: ~p"/prompts")}
 
       prompt_id ->
-        if connected?(socket) do
-          case Content.get_prompt_with_comments(prompt_id) do
-            nil ->
+        case Content.get_prompt_with_comments(prompt_id) do
+          nil ->
+            socket =
+              socket
+              |> assign(:prompt, nil)
+              |> assign(:comment_form, nil)
+              |> assign(:upvotes, 0)
+              |> assign(:downvotes, 0)
+              |> assign(:user_vote, nil)
+              |> assign(:user_saved, nil)
+
+            if connected?(socket) do
               {:ok, socket |> put_flash(:error, "Prompt not found") |> redirect(to: ~p"/prompts")}
+            else
+              {:ok, socket}
+            end
 
-            prompt ->
-              %{current_user: user} = socket.assigns
-              target_id = to_string(prompt.id)
-              {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
+          prompt ->
+            %{current_user: user} = socket.assigns
+            target_id = to_string(prompt.id)
+            {upvotes, downvotes, _score} = Engagement.get_vote_counts("prompt", target_id)
 
-              user_vote =
-                if user, do: Engagement.get_vote(user.id, "prompt", target_id), else: nil
+            user_vote =
+              if connected?(socket) && user,
+                do: Engagement.get_vote(user.id, "prompt", target_id),
+                else: nil
 
-              user_saved = if user, do: Content.user_saved_prompt?(user.id, prompt.id), else: nil
+            user_saved =
+              if connected?(socket) && user,
+                do: Content.user_saved_prompt?(user.id, prompt.id),
+                else: nil
 
-              {:ok,
-               socket
-               |> assign(:page_title, prompt.title)
-               |> assign(:prompt, prompt)
-               |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
-               |> assign(:upvotes, upvotes)
-               |> assign(:downvotes, downvotes)
-               |> assign(:user_vote, user_vote && user_vote.value)
-               |> assign(:user_saved, user_saved)}
-          end
-        else
-          {:ok,
-           socket
-           |> assign(:prompt, nil)
-           |> assign(:comment_form, nil)
-           |> assign(:upvotes, 0)
-           |> assign(:downvotes, 0)
-           |> assign(:user_vote, nil)
-           |> assign(:user_saved, nil)}
+            {:ok,
+             socket
+             |> assign(:page_title, prompt.title)
+             |> assign(:prompt, prompt)
+             |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)
+             |> assign(:user_saved, user_saved)}
         end
     end
   end
@@ -244,6 +251,9 @@ defmodule UrielmWeb.PromptLive do
               socket={@socket}
               ssr={false}
             />
+            <div :if={!connected?(@socket)} id="prompt-content-fallback">
+              {UrielmWeb.Markdown.to_html!(@prompt.prompt)}
+            </div>
           </div>
 
           <div class="mt-6 flex items-center justify-between gap-3 border-t border-base-300/60 pt-4">
