@@ -1,4 +1,5 @@
 import {normalizeTheme} from "./theme.js"
+import {SEOHead} from "./seo_metadata.js"
 
 // Theme management: keep the Tokyo pair in sync with localStorage and cookies.
 (() => {
@@ -538,6 +539,7 @@ function releaseDateLabel(value) {
 }
 
 // Add custom hooks
+Hooks.SEOHead = SEOHead
 Hooks.InfiniteScroll = InfiniteScroll
 Hooks.CopyToClipboard = CopyToClipboard
 Hooks.ExpandingTextarea = ExpandingTextarea

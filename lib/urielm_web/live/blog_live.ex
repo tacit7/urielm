@@ -46,7 +46,6 @@ defmodule UrielmWeb.BlogLive do
             |> assign(:posts, nil)
             |> assign(:prev_post, prev_post)
             |> assign(:next_post, next_post)
-            |> assign(:page_title, post.title)
             |> assign(:meta_description, post.excerpt || truncate_body(post.body, 160))
             |> assign(:og_title, post.title)
             |> assign(:og_type, "article")
@@ -64,7 +63,6 @@ defmodule UrielmWeb.BlogLive do
         |> assign(:post, nil)
         |> assign(:prev_post, nil)
         |> assign(:next_post, nil)
-        |> assign(:page_title, "Blog")
         |> assign(:og_title, "Blog")
         |> assign(:canonical_url, "https://urielm.dev/blog")
       end

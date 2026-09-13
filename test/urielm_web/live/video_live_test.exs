@@ -242,7 +242,7 @@ defmodule UrielmWeb.VideoLiveTest do
     end
 
     test "nonexistent video returns 404", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/videos/nonexistent-slug")
+      assert conn |> get(~p"/videos/nonexistent-slug") |> response(404)
     end
 
     test "video with thread shows comments section", %{conn: conn} do

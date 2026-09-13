@@ -56,7 +56,6 @@ defmodule UrielmWeb.VideoLive do
 
             {:ok,
              socket
-             |> assign(:page_title, video.title)
              |> assign(:video, video)
              |> assign(:completed, completed)
              |> assign(:thread, thread)
@@ -85,7 +84,6 @@ defmodule UrielmWeb.VideoLive do
 
         {:ok,
          socket
-         |> assign(:page_title, video.title)
          |> assign(:video, video)
          |> assign(:completed, false)
          |> assign(:thread, thread)
@@ -102,7 +100,6 @@ defmodule UrielmWeb.VideoLive do
       else
         {:ok,
          socket
-         |> assign(:page_title, "Loading...")
          |> assign(:video, nil)
          |> assign(:completed, false)
          |> assign(:thread, nil)

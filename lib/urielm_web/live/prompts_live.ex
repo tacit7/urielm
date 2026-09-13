@@ -42,7 +42,6 @@ defmodule UrielmWeb.PromptsLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Prompts")
      |> assign(:search_query, "")
      |> assign(:current_filter, initial_filter)
      |> assign(:categories, categories)

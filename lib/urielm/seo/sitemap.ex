@@ -141,13 +141,22 @@ defmodule Urielm.SEO.Sitemap do
     do: entry("/blog/#{segment(post.slug)}", newest_datetime(post.published_at, post.updated_at))
 
   defp content_entry("videos", video),
-    do: entry("/videos/#{segment(video.slug)}", newest_datetime(video.published_at, video.updated_at))
+    do:
+      entry(
+        "/videos/#{segment(video.slug)}",
+        newest_datetime(video.published_at, video.updated_at)
+      )
 
   defp content_entry("prompts", prompt), do: entry("/prompts/#{prompt.id}", prompt.updated_at)
-  defp content_entry("courses", course), do: entry("/courses/#{segment(course.slug)}", course.updated_at)
+
+  defp content_entry("courses", course),
+    do: entry("/courses/#{segment(course.slug)}", course.updated_at)
 
   defp content_entry("lessons", lesson) do
-    entry("/courses/#{segment(lesson.course.slug)}/lessons/#{segment(lesson.slug)}", lesson.updated_at)
+    entry(
+      "/courses/#{segment(lesson.course.slug)}/lessons/#{segment(lesson.slug)}",
+      lesson.updated_at
+    )
   end
 
   defp content_entry("threads", thread), do: entry("/forum/t/#{thread.id}", thread.updated_at)

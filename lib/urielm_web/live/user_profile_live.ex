@@ -30,7 +30,6 @@ defmodule UrielmWeb.UserProfileLive do
         if not Accounts.can_view_profile?(socket.assigns.current_user, user) do
           {:ok,
            socket
-           |> assign(:page_title, "@#{user.username}")
            |> assign(:user, user)
            |> assign(:profile_private, true)
            |> assign(:stats, %{
@@ -62,7 +61,6 @@ defmodule UrielmWeb.UserProfileLive do
 
           socket =
             socket
-            |> assign(:page_title, "@#{user.username}")
             |> assign(:user, user)
             |> assign(:profile_private, false)
             |> assign(:active_tab, tab)

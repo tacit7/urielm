@@ -296,7 +296,7 @@ defmodule UrielmWeb.SearchLive do
                     ssr={false}
                   />
                 <% else %>
-                  <.thread_card_fallback thread={result} />
+                  <UrielmWeb.SEOComponents.thread_card thread={result} />
                 <% end %>
               </div>
             </div>
@@ -369,36 +369,4 @@ defmodule UrielmWeb.SearchLive do
   end
 
   # serialization and vote lookups now live in LiveHelpers
-
-  attr :thread, :map, required: true
-
-  defp thread_card_fallback(assigns) do
-    ~H"""
-    <article class="group grid gap-2 px-4 py-4 md:grid-cols-[minmax(0,1fr)_64px_64px_92px] md:items-center">
-      <div class="min-w-0">
-        <.link
-          navigate={~p"/forum/t/#{@thread.id}"}
-          class="font-semibold text-base-content transition-colors hover:text-primary"
-        >
-          {@thread.title}
-        </.link>
-        <p :if={@thread.body} class="mt-1 line-clamp-2 text-sm text-base-content/55">
-          {@thread.body}
-        </p>
-        <p class="mt-2 text-xs text-base-content/40">
-          {@thread.author.username}
-        </p>
-      </div>
-      <span class="font-mono text-sm text-base-content/55 md:text-center">
-        {@thread.comment_count}
-      </span>
-      <span class="font-mono text-sm text-base-content/55 md:text-center">
-        {@thread.view_count}
-      </span>
-      <span class="text-xs text-base-content/40 md:text-right">
-        {LiveHelpers.format_short(@thread.updated_at)}
-      </span>
-    </article>
-    """
-  end
 end

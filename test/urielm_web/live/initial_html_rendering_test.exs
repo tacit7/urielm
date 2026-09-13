@@ -21,12 +21,8 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
       assert_present(document, "#blog-article p")
     end
 
-    test "blog missing slug does not crash the disconnected render", %{conn: conn} do
-      document = conn |> get(~p"/blog/not-a-real-post") |> document()
-
-      assert_present(document, "#blog-index")
-      assert_present(document, "#blog-empty-state")
-      refute_present(document, "#blog-reading-shell")
+    test "blog missing slug returns an HTTP 404", %{conn: conn} do
+      assert conn |> get(~p"/blog/not-a-real-post") |> response(404)
     end
 
     test "prompt index cards expose crawlable detail links", %{conn: conn} do

@@ -8,6 +8,14 @@ defmodule UrielmWeb.SitemapControllerTest do
   alias Urielm.Learning
   alias Urielm.Repo
 
+  test "accepts XML requests for the index and child sitemaps" do
+    for path <- ["/sitemap.xml", "/sitemaps/pages/1"] do
+      conn = build_conn() |> put_req_header("accept", "application/xml") |> get(path)
+      assert response_content_type(conn, :xml) =~ "application/xml"
+      assert response(conn, 200) |> xml_doc()
+    end
+  end
+
   test "serves valid XML with public fixed and canonical content URLs", %{conn: conn} do
     post = published_post!(%{slug: "ai-tools-&-teams"})
     video = video_fixture(%{slug: "public-video", published_at: ~U[2026-08-26 12:00:00Z]})
@@ -33,6 +41,7 @@ defmodule UrielmWeb.SitemapControllerTest do
 
     posts = build_conn() |> get("/sitemaps/posts/1") |> response(200) |> xml_doc()
     assert xpath(posts, ~x"count(//*[local-name()='lastmod'])"f) >= 1
+
     assert xpath(posts, ~x"//*[local-name()='lastmod']/text()"ls) ==
              [DateTime.to_iso8601(post.updated_at)]
   end
@@ -95,12 +104,21 @@ defmodule UrielmWeb.SitemapControllerTest do
     {:ok, second} = Urielm.SEO.Sitemap.entries("posts", 2, page_size: 2)
     assert length(first) == 2
     assert length(second) == 1
-    assert Enum.map(first ++ second, & &1.loc) == Enum.map(posts, &"https://urielm.dev/blog/#{&1.slug}")
+
+    assert Enum.map(first ++ second, & &1.loc) ==
+             Enum.map(posts, &"https://urielm.dev/blog/#{&1.slug}")
+
     assert :not_found = Urielm.SEO.Sitemap.entries("posts", 3, page_size: 2)
   end
 
   test "invalid sitemap collections and pages return 404", %{conn: conn} do
-    for path <- ["/sitemaps/private/1", "/sitemaps/posts/0", "/sitemaps/posts/nope", "/sitemaps/posts/999999999999999999999999", "/sitemaps/pages/2"] do
+    for path <- [
+          "/sitemaps/private/1",
+          "/sitemaps/posts/0",
+          "/sitemaps/posts/nope",
+          "/sitemaps/posts/999999999999999999999999",
+          "/sitemaps/pages/2"
+        ] do
       assert conn |> get(path) |> response(404) == "Not found"
     end
   end

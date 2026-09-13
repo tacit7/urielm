@@ -64,7 +64,6 @@ defmodule UrielmWeb.LessonLive do
              |> assign(:comment_changeset, changeset)
              |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))
              |> assign(:current_page, "courses")
-             |> assign(:page_title, lesson.title)
              |> assign(:dock_tab, "home")
              |> assign(:active_section, "home")
              |> assign(:nav_items, nav_items)

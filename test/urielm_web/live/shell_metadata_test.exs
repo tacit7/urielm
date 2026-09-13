@@ -2,6 +2,7 @@ defmodule UrielmWeb.ShellMetadataTest do
   use UrielmWeb.ConnCase
 
   import Urielm.Fixtures
+  import Phoenix.LiveViewTest
 
   alias Urielm.Accounts.User
   alias Urielm.Content
@@ -99,7 +100,8 @@ defmodule UrielmWeb.ShellMetadataTest do
       "meta[name='description'][content^='Urielm is a public learning platform']"
     )
 
-    assert_present(document, "link[rel='canonical'][href='https://urielm.dev/']")
+    refute_present(document, "link[rel='canonical']")
+    assert_present(document, "meta[name='robots'][content='noindex']")
 
     refute_present(document, "meta[property='og:title'][content='Members only roadmap']")
   end
@@ -120,7 +122,8 @@ defmodule UrielmWeb.ShellMetadataTest do
     html = html_response(conn, 200)
     document = LazyHTML.from_fragment(html)
 
-    assert_present(document, "link[rel='canonical'][href='https://urielm.dev/']")
+    refute_present(document, "link[rel='canonical']")
+    assert_present(document, "meta[name='robots'][content='noindex']")
 
     refute_present(document, "meta[name='description'][content='Protected biography']")
     refute_present(document, "meta[property='og:title'][content='Private User (@privateuser)']")
@@ -130,6 +133,75 @@ defmodule UrielmWeb.ShellMetadataTest do
     assert conn |> get(~p"/blog/not-published") |> response(404)
 
     assert conn |> get(~p"/prompts/not-an-id") |> response(404)
+
+    for path <- [
+          "/prompts/999999999999999999999999",
+          "/videos/missing-video",
+          "/courses/missing-course",
+          "/courses/missing-course/lessons/missing-lesson"
+        ] do
+      assert conn |> get(path) |> response(404)
+    end
+  end
+
+  test "default sharing image and live head payload match the initial head", %{conn: conn} do
+    document = conn |> get(~p"/") |> html_response(200) |> LazyHTML.from_document()
+    [encoded] = document |> LazyHTML.query("#page-seo") |> LazyHTML.attribute("data-seo")
+    metadata = Jason.decode!(encoded)
+
+    assert metadata["page_title"] == "Practical AI Learning"
+    assert metadata["canonical_url"] == "https://urielm.dev/"
+    assert metadata["og_image"] == "https://urielm.dev/images/social-card.png"
+
+    assert document
+           |> LazyHTML.query("meta[property='og:image']")
+           |> LazyHTML.attribute("content") == [metadata["og_image"]]
+  end
+
+  test "live navigation replaces article metadata and renders missing pages safely", %{conn: conn} do
+    post = published_post!(%{})
+    {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
+    assert has_element?(view, "#page-seo[phx-hook='SEOHead']")
+
+    render_patch(view, ~p"/courses")
+
+    [encoded] =
+      view
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#page-seo")
+      |> LazyHTML.attribute("data-seo")
+
+    metadata = Jason.decode!(encoded)
+    assert metadata["page_title"] == "Courses"
+    assert metadata["canonical_url"] == "https://urielm.dev/courses"
+    assert metadata["json_ld"] == []
+
+    render_patch(view, ~p"/blog/does-not-exist")
+    assert has_element?(view, "#page-not-found")
+    refute has_element?(view, "#blog-reading-shell")
+  end
+
+  test "structured data escapes script delimiters and preserves the actual headline", %{
+    conn: conn
+  } do
+    title = "SEO </script><script>alert(1)</script>"
+    post = published_post!(%{title: title})
+
+    document =
+      conn |> get(~p"/blog/#{post.slug}") |> html_response(200) |> LazyHTML.from_document()
+
+    schemas =
+      document
+      |> LazyHTML.query("script[type='application/ld+json']")
+      |> Enum.map(&(LazyHTML.text(&1) |> Jason.decode!()))
+
+    article = Enum.find(schemas, &(&1["@type"] == "Article"))
+    assert article["headline"] == title
+
+    assert document
+           |> LazyHTML.query("head script:not([src]):not([type='application/ld+json'])")
+           |> Enum.empty?()
   end
 
   defp published_post!(overrides) do

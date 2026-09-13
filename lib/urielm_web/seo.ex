@@ -17,6 +17,12 @@ defmodule UrielmWeb.SEO do
   @site_url "https://urielm.dev"
   @default_description "Urielm is a public learning platform with practical AI tutorials, structured courses, reusable prompts, and developer community discussions."
   @code_kata_image "/images/code-kata/hero-editor-results.png"
+  @default_image "/images/social-card.png"
+  @head_keys ~w(page_title meta_description canonical_url robots og_title og_description og_url og_type og_site_name og_image twitter_card twitter_title twitter_description twitter_image json_ld)a
+
+  def head_payload(assigns), do: Map.take(assigns, @head_keys)
+
+  defp segment(value), do: URI.encode(value, &URI.char_unreserved?/1)
 
   def site_name, do: @site_name
   def default_description, do: @default_description
@@ -67,7 +73,7 @@ defmodule UrielmWeb.SEO do
         ok(
           title: post.title,
           description: description,
-          path: "/blog/#{post.slug}",
+          path: "/blog/#{segment(post.slug)}",
           type: "article",
           image: image,
           structured_data: [
@@ -75,7 +81,7 @@ defmodule UrielmWeb.SEO do
             breadcrumb([
               {"Home", "/"},
               {"Blog", "/blog"},
-              {post.title, "/blog/#{post.slug}"}
+              {post.title, "/blog/#{segment(post.slug)}"}
             ])
           ]
         )
@@ -134,7 +140,8 @@ defmodule UrielmWeb.SEO do
   def metadata(:video, %{"slug" => slug}, _viewer) when is_binary(slug) do
     case Content.get_video_by_slug(slug, preload_tags: true) do
       %Video{visibility: "public"} = video ->
-        if Content.video_published?(video) do
+        if Content.video_published?(video) and
+             DateTime.compare(video.published_at, DateTime.utc_now()) != :gt do
           description =
             first_present([plain_text(video.description_md), "Watch #{video.title} on Urielm."])
 
@@ -143,7 +150,7 @@ defmodule UrielmWeb.SEO do
           ok(
             title: video.title,
             description: description,
-            path: "/videos/#{video.slug}",
+            path: "/videos/#{segment(video.slug)}",
             type: "video.other",
             image: image,
             structured_data: [
@@ -151,7 +158,7 @@ defmodule UrielmWeb.SEO do
               breadcrumb([
                 {"Home", "/"},
                 {"Videos", "/videos"},
-                {video.title, "/videos/#{video.slug}"}
+                {video.title, "/videos/#{segment(video.slug)}"}
               ])
             ]
           )
@@ -163,7 +170,7 @@ defmodule UrielmWeb.SEO do
         protected()
 
       nil ->
-        protected()
+        not_found()
     end
   end
 
@@ -189,13 +196,13 @@ defmodule UrielmWeb.SEO do
               course.description,
               "Learn #{course.title} with a focused Urielm course."
             ]),
-          path: "/courses/#{course.slug}",
+          path: "/courses/#{segment(course.slug)}",
           type: "website",
           structured_data: [
             breadcrumb([
               {"Home", "/"},
               {"Courses", "/courses"},
-              {course.title, "/courses/#{course.slug}"}
+              {course.title, "/courses/#{segment(course.slug)}"}
             ])
           ]
         )
@@ -218,16 +225,15 @@ defmodule UrielmWeb.SEO do
             plain_text(lesson.notes_md),
             "Watch #{lesson.title} from #{course.title}."
           ]),
-        path: "/courses/#{course.slug}/lessons/#{lesson.slug}",
+        path: "/courses/#{segment(course.slug)}/lessons/#{segment(lesson.slug)}",
         type: "video.other",
         image: lesson_image(lesson),
         structured_data: [
-          lesson_video_object(lesson, course),
           breadcrumb([
             {"Home", "/"},
             {"Courses", "/courses"},
-            {course.title, "/courses/#{course.slug}"},
-            {lesson.title, "/courses/#{course.slug}/lessons/#{lesson.slug}"}
+            {course.title, "/courses/#{segment(course.slug)}"},
+            {lesson.title, "/courses/#{segment(course.slug)}/lessons/#{segment(lesson.slug)}"}
           ])
         ]
       )
@@ -255,7 +261,8 @@ defmodule UrielmWeb.SEO do
       description:
         "Preview Urielm's theme system and interface components across supported color palettes.",
       path: "/themes",
-      type: "website"
+      type: "website",
+      robots: "noindex"
     )
   end
 
@@ -268,13 +275,14 @@ defmodule UrielmWeb.SEO do
         protected()
 
       user ->
-        if Accounts.can_view_profile?(viewer, user) do
-          display_name = first_present([user.display_name, user.name, "@#{user.username}"])
+        if Accounts.can_view_profile?(nil, user) and Accounts.can_view_profile?(viewer, user) do
+          display_name =
+            first_present([user.display_name, user.name, "@#{segment(user.username)}"])
 
           ok(
-            title: "#{display_name} (@#{user.username})",
+            title: "#{display_name} (@#{segment(user.username)})",
             description: first_present([user.bio, "#{display_name}'s public Urielm profile."]),
-            path: "/u/#{user.username}",
+            path: "/u/#{segment(user.username)}",
             type: "profile"
           )
         else
@@ -320,8 +328,9 @@ defmodule UrielmWeb.SEO do
      normalize_metadata(%{
        title: "Urielm",
        description: @default_description,
-       path: "/",
+       path: nil,
        type: "website",
+       robots: "noindex",
        protected?: true
      })}
   end
@@ -331,7 +340,8 @@ defmodule UrielmWeb.SEO do
      normalize_metadata(%{
        title: "Not Found",
        description: "The requested Urielm page could not be found.",
-       path: "/",
+       path: nil,
+       robots: "noindex",
        type: "website"
      })}
   end
@@ -339,20 +349,21 @@ defmodule UrielmWeb.SEO do
   defp normalize_metadata(metadata) do
     title = clean_text(Map.get(metadata, :title), "Urielm", 90)
     description = clean_text(Map.get(metadata, :description), @default_description, 180)
-    canonical_url = absolute_url(Map.get(metadata, :path, "/"))
-    image = Map.get(metadata, :image)
+    canonical_url = if path = Map.get(metadata, :path), do: absolute_url(path)
+    image = Map.get(metadata, :image) || absolute_url(@default_image)
 
     %{
       page_title: title,
       meta_description: description,
       canonical_url: canonical_url,
+      robots: Map.get(metadata, :robots),
       og_title: title,
       og_description: description,
       og_url: canonical_url,
       og_type: Map.get(metadata, :type, "website"),
       og_site_name: @site_name,
       og_image: image,
-      twitter_card: if(image, do: "summary_large_image", else: "summary"),
+      twitter_card: "summary_large_image",
       twitter_title: title,
       twitter_description: description,
       twitter_image: image,
@@ -367,7 +378,7 @@ defmodule UrielmWeb.SEO do
       "@type" => "Article",
       "headline" => post.title,
       "description" => description,
-      "url" => absolute_url("/blog/#{post.slug}"),
+      "url" => absolute_url("/blog/#{segment(post.slug)}"),
       "datePublished" => iso8601(post.published_at),
       "dateModified" => iso8601(post.updated_at),
       "image" => image
@@ -375,33 +386,18 @@ defmodule UrielmWeb.SEO do
     |> compact()
   end
 
+  defp video_object(_video, _description, nil), do: nil
+
   defp video_object(%Video{} = video, description, image) do
     %{
       "@context" => "https://schema.org",
       "@type" => "VideoObject",
       "name" => video.title,
       "description" => description,
-      "url" => absolute_url("/videos/#{video.slug}"),
+      "url" => absolute_url("/videos/#{segment(video.slug)}"),
       "uploadDate" => iso8601(video.published_at),
       "thumbnailUrl" => image,
       "embedUrl" => youtube_embed_url(video.youtube_url)
-    }
-    |> compact()
-  end
-
-  defp lesson_video_object(%Lesson{} = lesson, %Course{} = course) do
-    %{
-      "@context" => "https://schema.org",
-      "@type" => "VideoObject",
-      "name" => lesson.title,
-      "description" =>
-        first_present([
-          plain_text(lesson.notes_md),
-          "Watch #{lesson.title} from #{course.title}."
-        ]),
-      "url" => absolute_url("/courses/#{course.slug}/lessons/#{lesson.slug}"),
-      "thumbnailUrl" => lesson_image(lesson),
-      "embedUrl" => youtube_video_url(lesson.youtube_video_id)
     }
     |> compact()
   end
@@ -453,12 +449,15 @@ defmodule UrielmWeb.SEO do
 
   defp parse_positive_integer(value) when is_binary(value) do
     case Integer.parse(value) do
-      {id, ""} when id > 0 -> {:ok, id}
+      {id, ""} when id > 0 and id <= 9_223_372_036_854_775_807 -> {:ok, id}
       _ -> :error
     end
   end
 
-  defp parse_positive_integer(value) when is_integer(value) and value > 0, do: {:ok, value}
+  defp parse_positive_integer(value)
+       when is_integer(value) and value > 0 and value <= 9_223_372_036_854_775_807,
+       do: {:ok, value}
+
   defp parse_positive_integer(_value), do: :error
 
   defp plain_text(nil), do: nil
@@ -538,30 +537,36 @@ defmodule UrielmWeb.SEO do
     end
   end
 
-  defp youtube_video_url(id) when is_binary(id) and id != "" do
-    "https://www.youtube.com/embed/#{id}"
-  end
-
-  defp youtube_video_url(_id), do: nil
-
   defp youtube_id(url) when is_binary(url) do
     uri = URI.parse(url)
-    host = uri.host || ""
+    host = String.downcase(uri.host || "")
 
-    cond do
-      String.contains?(host, "youtu.be") ->
-        uri.path && String.trim_leading(uri.path, "/")
+    id =
+      cond do
+        uri.scheme not in ["http", "https"] ->
+          nil
 
-      String.contains?(host, "youtube.com") ->
-        uri.query
-        |> URI.decode_query()
-        |> Map.get("v")
+        host in ["youtu.be", "www.youtu.be"] ->
+          String.trim_leading(uri.path || "", "/")
 
-      true ->
-        nil
-    end
-  rescue
-    _ -> nil
+        host in [
+          "youtube.com",
+          "www.youtube.com",
+          "m.youtube.com",
+          "youtube-nocookie.com",
+          "www.youtube-nocookie.com"
+        ] ->
+          case String.split(uri.path || "", "/", trim: true) do
+            ["watch"] -> URI.decode_query(uri.query || "")["v"]
+            [kind, id] when kind in ["embed", "shorts", "live"] -> id
+            _ -> nil
+          end
+
+        true ->
+          nil
+      end
+
+    if is_binary(id) and Regex.match?(~r/^[a-zA-Z0-9_-]{11}$/, id), do: id
   end
 
   defp youtube_id(_url), do: nil

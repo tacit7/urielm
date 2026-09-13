@@ -16,6 +16,8 @@
       <link rel="canonical" href={@canonical_url} />
     <% end %>
 
+    <meta :if={assigns[:robots]} name="robots" content={@robots} />
+
     <%= if assigns[:og_title] do %>
       <meta property="og:title" content={@og_title} />
       <meta
@@ -45,7 +47,7 @@
     <%!-- Inert crawler metadata only. UrielmWeb.SEO escapes JSON-LD to prevent script breakout. --%>
     <%= for json <- assigns[:json_ld] || [] do %>
       <script type="application/ld+json">
-        {Phoenix.HTML.raw(json)}
+        <%= Phoenix.HTML.raw(json) %>
       </script>
     <% end %>
 

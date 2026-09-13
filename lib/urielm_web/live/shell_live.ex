@@ -50,6 +50,8 @@ defmodule UrielmWeb.ShellLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Layouts.app
       flash={@flash}
@@ -57,14 +59,23 @@ defmodule UrielmWeb.ShellLive do
       current_page={@current_page}
       socket={@socket}
       unread_notification_count={@unread_notification_count}
+      seo={@seo_head}
     >
-      {live_render(@socket, child_module(@live_action),
-        id: "page-#{@live_action}",
-        session: %{
-          "current_user_id" => current_user_id(@current_user),
-          "child_params" => @child_params
-        }
-      )}
+      <%= if @not_found? do %>
+        <section id="page-not-found" class="ui-page-shell py-16">
+          <h1 class="ui-section-title">Page not found</h1>
+          <p class="mt-4 text-base-content/65">This page is unavailable or has been removed.</p>
+          <.link id="not-found-home" navigate={~p"/"} class="btn btn-primary mt-6">Go home</.link>
+        </section>
+      <% else %>
+        {live_render(@socket, child_module(@live_action),
+          id: "page-#{@live_action}",
+          session: %{
+            "current_user_id" => current_user_id(@current_user),
+            "child_params" => @child_params
+          }
+        )}
+      <% end %>
     </UrielmWeb.Layouts.app>
     """
   end

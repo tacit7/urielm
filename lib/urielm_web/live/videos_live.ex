@@ -43,7 +43,6 @@ defmodule UrielmWeb.VideosLive do
      socket
      |> stream_configure(:standard_videos, dom_id: &"video-card-#{&1.id}")
      |> stream_configure(:short_videos, dom_id: &"short-card-#{&1.id}")
-     |> assign(:page_title, "Videos")
      |> assign(:query, query)
      |> assign(:current_format, format)
      |> assign(:tag_slugs, tag_slugs)

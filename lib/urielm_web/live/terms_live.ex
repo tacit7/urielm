@@ -45,6 +45,9 @@ defmodule UrielmWeb.TermsLive do
       current_page="terms"
       socket={@socket}
       unread_notification_count={@unread_notification_count}
+      seo={
+        %{page_title: @page_title, meta_description: @meta_description, canonical_url: @canonical_url}
+      }
     >
       <div id="terms-page" class="ui-page-shell max-w-6xl">
         <header class="ui-page-header">

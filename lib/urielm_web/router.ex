@@ -33,6 +33,17 @@ defmodule UrielmWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :sitemap do
+    plug :accepts, ["xml"]
+  end
+
+  scope "/", UrielmWeb do
+    pipe_through :sitemap
+
+    get "/sitemap.xml", SitemapController, :index
+    get "/sitemaps/:collection/:page", SitemapController, :show
+  end
+
   pipeline :require_auth do
     plug UrielmWeb.Plugs.Auth, :require_authenticated_user
   end
@@ -72,8 +83,6 @@ defmodule UrielmWeb.Router do
     get "/v/:id", ShortUrlController, :video
     get "/video-thumbnails/:id", VideoThumbnailController, :show
     get "/files/:id", FileController, :show
-    get "/sitemap.xml", SitemapController, :index
-    get "/sitemaps/:collection/:page", SitemapController, :show
 
     # Auth pages - outside shell, use their own layout
     live_session :auth do

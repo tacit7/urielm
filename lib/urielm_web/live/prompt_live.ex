@@ -64,7 +64,6 @@ defmodule UrielmWeb.PromptLive do
 
             {:ok,
              socket
-             |> assign(:page_title, prompt.title)
              |> assign(:prompt, prompt)
              |> assign(:comment_form, to_form(Content.change_comment(%Comment{})))
              |> assign(:upvotes, upvotes)

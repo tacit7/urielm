@@ -9,7 +9,6 @@ defmodule UrielmWeb.HomeLive do
     socket =
       assign(socket,
         prompt_variant: :before,
-        page_title: "Home",
         courses: Learning.list_courses() |> Enum.take(3),
         posts: Content.list_published_posts(limit: 4),
         prompts: Content.list_prompts(limit: 6),

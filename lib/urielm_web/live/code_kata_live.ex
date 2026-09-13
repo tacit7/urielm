@@ -3,7 +3,7 @@ defmodule UrielmWeb.CodeKataLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :page_title, "Code Kata")}
+    {:ok, socket}
   end
 
   @impl true
