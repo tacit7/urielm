@@ -18,13 +18,35 @@
 
     <%= if assigns[:og_title] do %>
       <meta property="og:title" content={@og_title} />
-      <meta property="og:description" content={@meta_description || "Urielm"} />
-      <meta property="og:url" content={@canonical_url || ""} />
+      <meta
+        property="og:description"
+        content={assigns[:og_description] || @meta_description || "Urielm"}
+      />
+      <meta property="og:url" content={assigns[:og_url] || @canonical_url || ""} />
       <meta property="og:type" content={assigns[:og_type] || "website"} />
-      <meta property="og:site_name" content="Urielm" />
+      <meta property="og:site_name" content={assigns[:og_site_name] || "Urielm"} />
       <%= if assigns[:og_image] do %>
         <meta property="og:image" content={@og_image} />
       <% end %>
+    <% end %>
+
+    <%= if assigns[:twitter_title] do %>
+      <meta name="twitter:card" content={assigns[:twitter_card] || "summary"} />
+      <meta name="twitter:title" content={@twitter_title} />
+      <meta
+        name="twitter:description"
+        content={assigns[:twitter_description] || @meta_description || "Urielm"}
+      />
+      <%= if assigns[:twitter_image] do %>
+        <meta name="twitter:image" content={@twitter_image} />
+      <% end %>
+    <% end %>
+
+    <%!-- Inert crawler metadata only. UrielmWeb.SEO escapes JSON-LD to prevent script breakout. --%>
+    <%= for json <- assigns[:json_ld] || [] do %>
+      <script type="application/ld+json">
+        {Phoenix.HTML.raw(json)}
+      </script>
     <% end %>
 
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />

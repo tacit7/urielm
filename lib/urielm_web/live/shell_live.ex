@@ -6,6 +6,8 @@ defmodule UrielmWeb.ShellLive do
   use UrielmWeb, :live_view
   use LiveSvelte.Components
 
+  alias UrielmWeb.SEO
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -13,45 +15,23 @@ defmodule UrielmWeb.ShellLive do
 
   @impl true
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    socket = apply_action(socket, socket.assigns.live_action, params)
+
+    maybe_raise_not_found!(socket)
+    {:noreply, socket}
   end
 
   defp apply_action(socket, live_action, params) do
+    {status, metadata} = SEO.metadata(live_action, params, socket.assigns[:current_user])
+
     socket
     |> assign(:live_action, live_action)
     |> assign(:current_page, page_name_for_action(live_action))
     |> assign(:child_params, params)
-    |> assign_page_metadata(live_action)
+    |> assign(:not_found?, status == :not_found)
+    |> assign(metadata)
+    |> assign(:json_ld, SEO.json_ld(metadata))
   end
-
-  defp assign_page_metadata(socket, :home) do
-    assign(socket,
-      page_title: "Practical AI Learning",
-      meta_description:
-        "Urielm is a public learning platform with practical AI tutorials, structured courses, reusable prompts, and developer community discussions.",
-      canonical_url: "https://urielm.dev/"
-    )
-  end
-
-  defp assign_page_metadata(socket, :videos) do
-    assign(socket,
-      page_title: "Videos",
-      meta_description:
-        "Watch practical AI walkthroughs, developer tutorials, and quick videos from Urielm.",
-      canonical_url: "https://urielm.dev/videos"
-    )
-  end
-
-  defp assign_page_metadata(socket, :code_kata) do
-    assign(socket,
-      page_title: "Code Kata",
-      meta_description:
-        "Code Kata is a focused desktop app for practicing Python and JavaScript problems, tracking mastery, and reviewing what needs another pass.",
-      canonical_url: "https://urielm.dev/code-kata"
-    )
-  end
-
-  defp assign_page_metadata(socket, _live_action), do: socket
 
   defp page_name_for_action(:home), do: "home"
   defp page_name_for_action(:blog_index), do: "blog"
@@ -106,4 +86,14 @@ defmodule UrielmWeb.ShellLive do
 
   defp current_user_id(nil), do: nil
   defp current_user_id(user), do: user.id
+
+  defp maybe_raise_not_found!(%{assigns: %{not_found?: true}} = socket) do
+    unless connected?(socket) do
+      raise Phoenix.Router.NoRouteError,
+        conn: socket.private.connect_info,
+        router: UrielmWeb.Router
+    end
+  end
+
+  defp maybe_raise_not_found!(_socket), do: :ok
 end
