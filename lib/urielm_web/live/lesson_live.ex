@@ -18,81 +18,62 @@ defmodule UrielmWeb.LessonLive do
     course_slug = child_params["course_slug"]
     lesson_slug = child_params["lesson_slug"]
 
-    if connected?(socket) do
-      case Learning.get_course_by_slug(course_slug) do
-        nil ->
-          {:ok,
-           socket
-           |> put_flash(:error, "Course not found")
-           |> push_navigate(to: ~p"/")}
+    case Learning.get_course_by_slug(course_slug) do
+      nil ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Course not found")
+         |> push_navigate(to: ~p"/")}
 
-        course ->
-          case Learning.get_lesson_with_comments(course.id, lesson_slug) do
-            nil ->
-              {:ok,
-               socket
-               |> put_flash(:error, "Lesson not found")
-               |> push_navigate(to: ~p"/")}
+      course ->
+        case Learning.get_lesson_with_comments(course.id, lesson_slug) do
+          nil ->
+            {:ok,
+             socket
+             |> put_flash(:error, "Lesson not found")
+             |> push_navigate(to: ~p"/")}
 
-            lesson ->
-              lessons = Learning.list_lessons(course.id)
-              changeset = Learning.change_lesson_comment(%LessonComment{})
-              nav_items = build_nav_items(lesson, course)
-              current_index = Enum.find_index(lessons, &(&1.id == lesson.id))
+          lesson ->
+            lessons = Learning.list_lessons(course.id)
+            changeset = Learning.change_lesson_comment(%LessonComment{})
+            nav_items = build_nav_items(lesson, course)
+            current_index = Enum.find_index(lessons, &(&1.id == lesson.id))
 
-              prev_lesson =
-                if current_index && current_index > 0,
-                  do: Enum.at(lessons, current_index - 1),
-                  else: nil
+            prev_lesson =
+              if current_index && current_index > 0,
+                do: Enum.at(lessons, current_index - 1),
+                else: nil
 
-              next_lesson = if current_index, do: Enum.at(lessons, current_index + 1), else: nil
+            next_lesson = if current_index, do: Enum.at(lessons, current_index + 1), else: nil
 
-              %{current_user: user} = socket.assigns
+            %{current_user: user} = socket.assigns
 
-              {upvotes, downvotes, _score} =
-                Engagement.get_vote_counts("lesson", to_string(lesson.id))
+            {upvotes, downvotes, _score} =
+              Engagement.get_vote_counts("lesson", to_string(lesson.id))
 
-              user_vote =
-                if user,
-                  do: Engagement.get_vote(user.id, "lesson", to_string(lesson.id)),
-                  else: nil
+            user_vote =
+              if user,
+                do: Engagement.get_vote(user.id, "lesson", to_string(lesson.id)),
+                else: nil
 
-              {:ok,
-               socket
-               |> assign(:course, course)
-               |> assign(:lesson, lesson)
-               |> assign(:lessons, lessons)
-               |> assign(:comment_changeset, changeset)
-               |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))
-               |> assign(:current_page, "courses")
-               |> assign(:page_title, lesson.title)
-               |> assign(:dock_tab, "home")
-               |> assign(:active_section, "home")
-               |> assign(:nav_items, nav_items)
-               |> assign(:upvotes, upvotes)
-               |> assign(:downvotes, downvotes)
-               |> assign(:user_vote, user_vote && user_vote.value)
-               |> assign(:prev_lesson, prev_lesson)
-               |> assign(:next_lesson, next_lesson)}
-          end
-      end
-    else
-      {:ok,
-       socket
-       |> assign(:course, nil)
-       |> assign(:lesson, nil)
-       |> assign(:lessons, [])
-       |> assign(:comment_changeset, nil)
-       |> assign(:comment_form, nil)
-       |> assign(:current_page, "courses")
-       |> assign(:dock_tab, "home")
-       |> assign(:active_section, "home")
-       |> assign(:nav_items, [])
-       |> assign(:upvotes, 0)
-       |> assign(:downvotes, 0)
-       |> assign(:user_vote, nil)
-       |> assign(:prev_lesson, nil)
-       |> assign(:next_lesson, nil)}
+            {:ok,
+             socket
+             |> assign(:course, course)
+             |> assign(:lesson, lesson)
+             |> assign(:lessons, lessons)
+             |> assign(:comment_changeset, changeset)
+             |> assign(:comment_form, Phoenix.Component.to_form(changeset, as: :comment))
+             |> assign(:current_page, "courses")
+             |> assign(:page_title, lesson.title)
+             |> assign(:dock_tab, "home")
+             |> assign(:active_section, "home")
+             |> assign(:nav_items, nav_items)
+             |> assign(:upvotes, upvotes)
+             |> assign(:downvotes, downvotes)
+             |> assign(:user_vote, user_vote && user_vote.value)
+             |> assign(:prev_lesson, prev_lesson)
+             |> assign(:next_lesson, next_lesson)}
+        end
     end
   end
 
@@ -328,12 +309,7 @@ defmodule UrielmWeb.LessonLive do
                       Lesson notes
                     </h2>
                     <div :if={@lesson.notes_md} class="prose prose-sm max-w-none sm:prose-base">
-                      <.svelte
-                        name="MarkdownRenderer"
-                        props={%{content: @lesson.notes_md}}
-                        socket={@socket}
-                        ssr={false}
-                      />
+                      {UrielmWeb.Markdown.to_html(@lesson.notes_md)}
                     </div>
                     <.empty_state
                       :if={!@lesson.notes_md}
@@ -357,12 +333,7 @@ defmodule UrielmWeb.LessonLive do
                       Resources
                     </h2>
                     <div :if={@lesson.resources_md} class="prose prose-sm max-w-none sm:prose-base">
-                      <.svelte
-                        name="MarkdownRenderer"
-                        props={%{content: @lesson.resources_md}}
-                        socket={@socket}
-                        ssr={false}
-                      />
+                      {UrielmWeb.Markdown.to_html(@lesson.resources_md)}
                     </div>
                     <.empty_state
                       :if={!@lesson.resources_md}
@@ -386,12 +357,7 @@ defmodule UrielmWeb.LessonLive do
                       Timestamps
                     </h2>
                     <div :if={@lesson.timestamps_md} class="prose prose-sm max-w-none sm:prose-base">
-                      <.svelte
-                        name="MarkdownRenderer"
-                        props={%{content: @lesson.timestamps_md}}
-                        socket={@socket}
-                        ssr={false}
-                      />
+                      {UrielmWeb.Markdown.to_html(@lesson.timestamps_md)}
                     </div>
                     <.empty_state
                       :if={!@lesson.timestamps_md}

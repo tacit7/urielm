@@ -49,6 +49,28 @@ defmodule UrielmWeb.LessonLiveTest do
            )
   end
 
+  test "initial HTTP response includes lesson content and crawlable resource links" do
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+
+    document =
+      build_conn()
+      |> get(~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert document |> LazyHTML.query("#lesson-header h1") |> LazyHTML.text() =~ lesson.title
+
+    assert document |> LazyHTML.query("#lesson-notes") |> LazyHTML.text() =~
+             "A practical note for lesson 2."
+
+    assert document
+           |> LazyHTML.query("#lesson-resources a")
+           |> LazyHTML.attribute("href") == ["https://example.com"]
+
+    assert document |> LazyHTML.query("#lesson-timestamps") |> LazyHTML.text() =~
+             "00:00 Introduction"
+  end
+
   test "mobile lesson navigation switches the visible supporting section" do
     {course, [_first, lesson, _third]} = course_with_lessons!()
 
