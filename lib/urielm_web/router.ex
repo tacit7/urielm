@@ -26,6 +26,7 @@ defmodule UrielmWeb.Router do
 
     plug UrielmWeb.Plugs.Theme
     plug UrielmWeb.Plugs.Auth, :fetch_current_user
+    plug UrielmWeb.Plugs.IndexingControl
   end
 
   pipeline :api do
@@ -71,6 +72,7 @@ defmodule UrielmWeb.Router do
     get "/v/:id", ShortUrlController, :video
     get "/video-thumbnails/:id", VideoThumbnailController, :show
     get "/files/:id", FileController, :show
+    get "/sitemap.xml", SitemapController, :index
 
     # Auth pages - outside shell, use their own layout
     live_session :auth do
