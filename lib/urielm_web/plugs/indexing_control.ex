@@ -7,7 +7,7 @@ defmodule UrielmWeb.Plugs.IndexingControl do
 
   @behaviour Plug
 
-  @header_value "noindex, nofollow"
+  @header_value "noindex"
 
   @impl true
   def init(opts), do: opts

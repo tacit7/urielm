@@ -5,7 +5,7 @@ defmodule UrielmWeb.Plugs.IndexingControlTest do
     conn = get(conn, ~p"/signin")
     document = LazyHTML.from_fragment(html_response(conn, 200))
 
-    assert get_resp_header(conn, "x-robots-tag") == ["noindex, nofollow"]
+    assert get_resp_header(conn, "x-robots-tag") == ["noindex"]
     assert LazyHTML.filter(document, "#signin-form") != []
   end
 
@@ -21,7 +21,7 @@ defmodule UrielmWeb.Plugs.IndexingControlTest do
     search_conn = get(conn, ~p"/forum/search")
     theme_conn = build_conn() |> get(~p"/themes")
 
-    assert get_resp_header(search_conn, "x-robots-tag") == ["noindex, nofollow"]
-    assert get_resp_header(theme_conn, "x-robots-tag") == ["noindex, nofollow"]
+    assert get_resp_header(search_conn, "x-robots-tag") == ["noindex"]
+    assert get_resp_header(theme_conn, "x-robots-tag") == ["noindex"]
   end
 end

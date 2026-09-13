@@ -73,6 +73,7 @@ defmodule UrielmWeb.Router do
     get "/video-thumbnails/:id", VideoThumbnailController, :show
     get "/files/:id", FileController, :show
     get "/sitemap.xml", SitemapController, :index
+    get "/sitemaps/:collection/:page", SitemapController, :show
 
     # Auth pages - outside shell, use their own layout
     live_session :auth do

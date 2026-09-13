@@ -11,8 +11,8 @@ defmodule Urielm.SEO.Sitemap do
   alias Urielm.Repo
 
   @host "https://urielm.dev"
-  @default_limit 5_000
-  @max_limit 45_000
+  @page_size 1_000
+  @collections ~w(posts videos prompts courses lessons threads)
 
   @fixed_paths [
     "/",
@@ -28,20 +28,57 @@ defmodule Urielm.SEO.Sitemap do
     "/terms"
   ]
 
-  @doc """
-  Returns bounded sitemap entries for public canonical pages.
-  """
-  def entries(opts \\ []) do
-    limit = opts |> Keyword.get(:limit, @default_limit) |> clamp_limit()
+  @doc "Returns sitemap index entries for every page of eligible public content."
+  def index_entries(opts \\ []) do
+    size = page_size(opts)
     now = Keyword.get(opts, :now, DateTime.utc_now())
 
-    fixed_entries() ++
-      post_entries(limit, now) ++
-      video_entries(limit, now) ++
-      prompt_entries(limit) ++
-      course_entries(limit) ++
-      lesson_entries(limit) ++
-      thread_entries(limit)
+    [entry("/sitemaps/pages/1", nil)] ++
+      Enum.flat_map(@collections, fn collection ->
+        count = Repo.aggregate(query(collection, now), :count)
+        pages = div(count + size - 1, size)
+
+        if pages == 0 do
+          []
+        else
+          Enum.map(1..pages, &entry("/sitemaps/#{collection}/#{&1}", nil))
+        end
+      end)
+  end
+
+  @doc "Returns a bounded page of sitemap entries, or :not_found for an invalid page."
+  def entries(collection, page, opts \\ [])
+
+  def entries("pages", 1, _opts), do: {:ok, fixed_entries()}
+
+  def entries(collection, page, opts)
+      when collection in @collections and is_integer(page) and page > 0 do
+    size = page_size(opts)
+    query = query(collection, Keyword.get(opts, :now, DateTime.utc_now()))
+    count = Repo.aggregate(query, :count)
+
+    if page > max(div(count + size - 1, size), 1) do
+      :not_found
+    else
+      entries =
+        query
+        |> order_by([row], asc: row.id)
+        |> limit(^size)
+        |> offset(^((page - 1) * size))
+        |> Repo.all()
+        |> Enum.map(&content_entry(collection, &1))
+
+      {:ok, entries}
+    end
+  end
+
+  def entries(_collection, _page, _opts), do: :not_found
+
+  def index_xml(entries) do
+    body = Enum.map_join(entries, "", &"<sitemap><loc>#{xml_escape(&1.loc)}</loc></sitemap>")
+
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" <>
+      "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">#{body}</sitemapindex>"
   end
 
   @doc """
@@ -67,71 +104,56 @@ defmodule Urielm.SEO.Sitemap do
     Enum.map(@fixed_paths, &entry(&1, nil))
   end
 
-  defp post_entries(limit, now) do
+  defp query("posts", now) do
     from(p in Post,
-      where: p.status == "published" and not is_nil(p.published_at) and p.published_at <= ^now,
-      order_by: [desc: p.published_at, desc: p.id],
-      limit: ^limit
+      where: p.status == "published" and not is_nil(p.published_at) and p.published_at <= ^now
     )
-    |> Repo.all()
-    |> Enum.map(&entry("/blog/#{&1.slug}", newest_datetime(&1.published_at, &1.updated_at)))
   end
 
-  defp video_entries(limit, now) do
+  defp query("videos", now) do
     from(v in Video,
-      where: v.visibility == "public" and not is_nil(v.published_at) and v.published_at <= ^now,
-      order_by: [desc: v.published_at, desc: v.id],
-      limit: ^limit
+      where: v.visibility == "public" and not is_nil(v.published_at) and v.published_at <= ^now
     )
-    |> Repo.all()
-    |> Enum.map(&entry("/videos/#{&1.slug}", newest_datetime(&1.published_at, &1.updated_at)))
   end
 
-  defp prompt_entries(limit) do
-    from(p in Prompt,
-      order_by: [desc: p.updated_at, desc: p.id],
-      limit: ^limit
-    )
-    |> Repo.all()
-    |> Enum.map(&entry("/prompts/#{&1.id}", &1.updated_at))
-  end
+  defp query("prompts", _now), do: Prompt
+  defp query("courses", _now), do: Course
 
-  defp course_entries(limit) do
-    from(c in Course,
-      order_by: [desc: c.updated_at, desc: c.id],
-      limit: ^limit
-    )
-    |> Repo.all()
-    |> Enum.map(&entry("/courses/#{&1.slug}", &1.updated_at))
-  end
-
-  defp lesson_entries(limit) do
+  defp query("lessons", _now) do
     from(l in Lesson,
       join: c in assoc(l, :course),
       where: not is_nil(l.slug) and not is_nil(c.slug),
-      order_by: [desc: l.updated_at, desc: l.id],
-      limit: ^limit,
-      select: {l, c.slug}
+      preload: [course: c]
     )
-    |> Repo.all()
-    |> Enum.map(fn {lesson, course_slug} ->
-      entry("/courses/#{course_slug}/lessons/#{lesson.slug}", lesson.updated_at)
-    end)
   end
 
-  defp thread_entries(limit) do
+  defp query("threads", _now) do
     from(t in Thread,
       join: b in Board,
       on: b.id == t.board_id,
       join: c in Category,
       on: c.id == b.category_id,
-      where: t.is_removed == false and b.is_hidden == false and c.is_hidden == false,
-      order_by: [desc: t.updated_at, desc: t.id],
-      limit: ^limit
+      where: t.is_removed == false and b.is_hidden == false and c.is_hidden == false
     )
-    |> Repo.all()
-    |> Enum.map(&entry("/forum/t/#{&1.id}", &1.updated_at))
   end
+
+  defp content_entry("posts", post),
+    do: entry("/blog/#{segment(post.slug)}", newest_datetime(post.published_at, post.updated_at))
+
+  defp content_entry("videos", video),
+    do: entry("/videos/#{segment(video.slug)}", newest_datetime(video.published_at, video.updated_at))
+
+  defp content_entry("prompts", prompt), do: entry("/prompts/#{prompt.id}", prompt.updated_at)
+  defp content_entry("courses", course), do: entry("/courses/#{segment(course.slug)}", course.updated_at)
+
+  defp content_entry("lessons", lesson) do
+    entry("/courses/#{segment(lesson.course.slug)}/lessons/#{segment(lesson.slug)}", lesson.updated_at)
+  end
+
+  defp content_entry("threads", thread), do: entry("/forum/t/#{thread.id}", thread.updated_at)
+
+  defp segment(value), do: URI.encode(value, &URI.char_unreserved?/1)
+  defp page_size(opts), do: opts |> Keyword.get(:page_size, @page_size) |> max(1) |> min(10_000)
 
   defp entry(path, lastmod) do
     %{loc: absolute_url(path), lastmod: format_lastmod(lastmod)}
@@ -165,9 +187,6 @@ defmodule Urielm.SEO.Sitemap do
   defp newest_datetime(%DateTime{} = left, %DateTime{} = right) do
     if DateTime.compare(left, right) == :gt, do: left, else: right
   end
-
-  defp clamp_limit(limit) when is_integer(limit), do: limit |> max(1) |> min(@max_limit)
-  defp clamp_limit(_limit), do: @default_limit
 
   defp xml_escape(value) do
     value

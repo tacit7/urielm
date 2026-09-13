@@ -20,20 +20,21 @@ defmodule UrielmWeb.SitemapControllerTest do
     assert response_content_type(conn, :xml) =~ "application/xml"
     assert get_resp_header(conn, "cache-control") == ["public, max-age=3600"]
 
-    doc = conn.resp_body |> to_charlist() |> :xmerl_scan.string() |> elem(0)
-    urls = xpath(doc, ~x"//*[local-name()='loc']/text()"ls)
+    urls = content_urls(conn)
 
     assert "https://urielm.dev/" in urls
     assert "https://urielm.dev/privacy" in urls
-    assert "https://urielm.dev/blog/#{post.slug}" in urls
+    assert "https://urielm.dev/blog/#{URI.encode(post.slug, &URI.char_unreserved?/1)}" in urls
     assert "https://urielm.dev/videos/#{video.slug}" in urls
     assert "https://urielm.dev/prompts/#{prompt.id}" in urls
     assert "https://urielm.dev/courses/#{course.slug}" in urls
     assert "https://urielm.dev/courses/#{course.slug}/lessons/#{lesson.slug}" in urls
     assert "https://urielm.dev/forum/t/#{thread.id}" in urls
 
-    assert xpath(doc, ~x"count(//*[local-name()='lastmod'])"f) >= 5
-    assert conn.resp_body =~ "https://urielm.dev/blog/ai-tools-&amp;-teams"
+    posts = build_conn() |> get("/sitemaps/posts/1") |> response(200) |> xml_doc()
+    assert xpath(posts, ~x"count(//*[local-name()='lastmod'])"f) >= 1
+    assert xpath(posts, ~x"//*[local-name()='lastmod']/text()"ls) ==
+             [DateTime.to_iso8601(post.updated_at)]
   end
 
   test "excludes draft, scheduled, gated, and hidden content", %{conn: conn} do
@@ -65,8 +66,7 @@ defmodule UrielmWeb.SitemapControllerTest do
     hide_board!(hidden_board_thread.board_id)
 
     conn = get(conn, ~p"/sitemap.xml")
-    doc = conn.resp_body |> to_charlist() |> :xmerl_scan.string() |> elem(0)
-    urls = xpath(doc, ~x"//*[local-name()='loc']/text()"ls)
+    urls = content_urls(conn)
 
     refute "https://urielm.dev/blog/#{draft.slug}" in urls
     refute "https://urielm.dev/blog/#{future_post.slug}" in urls
@@ -85,6 +85,46 @@ defmodule UrielmWeb.SitemapControllerTest do
     assert response(conn, 200) =~ "Sitemap: https://urielm.dev/sitemap.xml"
     refute conn.resp_body =~ "Disallow: /assets"
   end
+
+  test "sitemap pagination includes older content without truncation" do
+    posts = for index <- 1..3, do: published_post!(%{slug: "paged-post-#{index}"})
+    index = Urielm.SEO.Sitemap.index_entries(page_size: 2)
+    assert Enum.any?(index, &(&1.loc == "https://urielm.dev/sitemaps/posts/2"))
+
+    {:ok, first} = Urielm.SEO.Sitemap.entries("posts", 1, page_size: 2)
+    {:ok, second} = Urielm.SEO.Sitemap.entries("posts", 2, page_size: 2)
+    assert length(first) == 2
+    assert length(second) == 1
+    assert Enum.map(first ++ second, & &1.loc) == Enum.map(posts, &"https://urielm.dev/blog/#{&1.slug}")
+    assert :not_found = Urielm.SEO.Sitemap.entries("posts", 3, page_size: 2)
+  end
+
+  test "invalid sitemap collections and pages return 404", %{conn: conn} do
+    for path <- ["/sitemaps/private/1", "/sitemaps/posts/0", "/sitemaps/posts/nope", "/sitemaps/posts/999999999999999999999999", "/sitemaps/pages/2"] do
+      assert conn |> get(path) |> response(404) == "Not found"
+    end
+  end
+
+  test "XML escaping preserves URL values" do
+    url = "https://urielm.dev/videos?q=AI&format=shorts"
+    doc = Urielm.SEO.Sitemap.to_xml([%{loc: url, lastmod: nil}]) |> xml_doc()
+    assert xpath(doc, ~x"//*[local-name()='loc']/text()"ls) == [url]
+  end
+
+  defp content_urls(conn) do
+    conn.resp_body
+    |> xml_doc()
+    |> xpath(~x"//*[local-name()='loc']/text()"ls)
+    |> Enum.flat_map(fn url ->
+      build_conn()
+      |> get(URI.parse(url).path)
+      |> response(200)
+      |> xml_doc()
+      |> xpath(~x"//*[local-name()='loc']/text()"ls)
+    end)
+  end
+
+  defp xml_doc(xml), do: xml |> to_charlist() |> :xmerl_scan.string() |> elem(0)
 
   defp published_post!(attrs) do
     attrs
