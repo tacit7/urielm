@@ -6,7 +6,7 @@ defmodule UrielmWeb.Plugs.IndexingControlTest do
     document = LazyHTML.from_fragment(html_response(conn, 200))
 
     assert get_resp_header(conn, "x-robots-tag") == ["noindex"]
-    assert LazyHTML.filter(document, "#signin-form") != []
+    assert document |> LazyHTML.query("#signin-form") |> Enum.count() == 1
   end
 
   test "leaves privacy policy indexable", %{conn: conn} do
@@ -14,7 +14,7 @@ defmodule UrielmWeb.Plugs.IndexingControlTest do
     document = LazyHTML.from_fragment(html_response(conn, 200))
 
     assert get_resp_header(conn, "x-robots-tag") == []
-    assert LazyHTML.filter(document, "#privacy-policy-page") != []
+    assert document |> LazyHTML.query("#privacy-policy-page") |> Enum.count() == 1
   end
 
   test "marks internal search and theme utility routes noindex", %{conn: conn} do
