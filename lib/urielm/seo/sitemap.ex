@@ -32,7 +32,7 @@ defmodule Urielm.SEO.Sitemap do
     size = page_size(opts)
     now = Keyword.get(opts, :now, DateTime.utc_now())
 
-    [entry("/sitemaps/pages/1", nil)] ++
+    [entry(child_sitemap_path("pages", 1), nil)] ++
       Enum.flat_map(@collections, fn collection ->
         count = Repo.aggregate(query(collection, now), :count)
         pages = div(count + size - 1, size)
@@ -40,7 +40,7 @@ defmodule Urielm.SEO.Sitemap do
         if pages == 0 do
           []
         else
-          Enum.map(1..pages, &entry("/sitemaps/#{collection}/#{&1}", nil))
+          Enum.map(1..pages, &entry(child_sitemap_path(collection, &1), nil))
         end
       end)
   end
@@ -102,6 +102,8 @@ defmodule Urielm.SEO.Sitemap do
   defp fixed_entries do
     Enum.map(@fixed_paths, &entry(&1, nil))
   end
+
+  defp child_sitemap_path(collection, page), do: "/sitemap-#{collection}-#{page}.xml"
 
   defp query("posts", now) do
     from(p in Post,

@@ -8,8 +8,17 @@ defmodule UrielmWeb.SitemapControllerTest do
   alias Urielm.Learning
   alias Urielm.Repo
 
+  test "missing HTML paths return 404 outside sitemap routes" do
+    conn =
+      build_conn()
+      |> put_req_header("accept", "text/html")
+      |> get("/missing-page")
+
+    assert response(conn, 404)
+  end
+
   test "accepts XML requests for the index and child sitemaps" do
-    for path <- ["/sitemap.xml", "/sitemaps/pages/1"] do
+    for path <- ["/sitemap.xml", "/sitemap-pages-1.xml"] do
       conn = build_conn() |> put_req_header("accept", "application/xml") |> get(path)
       assert response_content_type(conn, :xml) =~ "application/xml"
       assert response(conn, 200) |> xml_doc()
@@ -39,11 +48,40 @@ defmodule UrielmWeb.SitemapControllerTest do
     assert "https://urielm.dev/courses/#{course.slug}/lessons/#{lesson.slug}" in urls
     assert "https://urielm.dev/forum/t/#{thread.id}" in urls
 
-    posts = build_conn() |> get("/sitemaps/posts/1") |> response(200) |> xml_doc()
+    posts = build_conn() |> get("/sitemap-posts-1.xml") |> response(200) |> xml_doc()
     assert xpath(posts, ~x"count(//*[local-name()='lastmod'])"f) >= 1
 
     assert xpath(posts, ~x"//*[local-name()='lastmod']/text()"ls) ==
              [DateTime.to_iso8601(post.updated_at)]
+  end
+
+  test "child sitemap URLs remain within each child sitemap URL scope", %{conn: conn} do
+    published_post!(%{slug: "scoped-post"})
+    index = conn |> get(~p"/sitemap.xml") |> response(200) |> xml_doc()
+
+    child_sitemap_urls = xpath(index, ~x"//*[local-name()='loc']/text()"ls)
+
+    assert child_sitemap_urls != []
+
+    for child_sitemap_url <- child_sitemap_urls do
+      child_uri = URI.parse(child_sitemap_url)
+      child_path = child_uri.path
+      child_scope = sitemap_url_scope(child_path)
+
+      child_doc =
+        build_conn()
+        |> get(child_path)
+        |> response(200)
+        |> xml_doc()
+
+      child_urls = xpath(child_doc, ~x"//*[local-name()='loc']/text()"ls)
+      assert child_urls != []
+
+      assert Enum.all?(child_urls, fn child_url ->
+               child_url |> URI.parse() |> Map.fetch!(:path) |> String.starts_with?(child_scope)
+             end),
+             "#{child_sitemap_url} listed URLs outside #{child_scope}: #{inspect(child_urls)}"
+    end
   end
 
   test "excludes draft, scheduled, gated, and hidden content", %{conn: conn} do
@@ -98,7 +136,7 @@ defmodule UrielmWeb.SitemapControllerTest do
   test "sitemap pagination includes older content without truncation" do
     posts = for index <- 1..3, do: published_post!(%{slug: "paged-post-#{index}"})
     index = Urielm.SEO.Sitemap.index_entries(page_size: 2)
-    assert Enum.any?(index, &(&1.loc == "https://urielm.dev/sitemaps/posts/2"))
+    assert Enum.any?(index, &(&1.loc == "https://urielm.dev/sitemap-posts-2.xml"))
 
     {:ok, first} = Urielm.SEO.Sitemap.entries("posts", 1, page_size: 2)
     {:ok, second} = Urielm.SEO.Sitemap.entries("posts", 2, page_size: 2)
@@ -113,11 +151,11 @@ defmodule UrielmWeb.SitemapControllerTest do
 
   test "invalid sitemap collections and pages return 404", %{conn: conn} do
     for path <- [
-          "/sitemaps/private/1",
-          "/sitemaps/posts/0",
-          "/sitemaps/posts/nope",
-          "/sitemaps/posts/999999999999999999999999",
-          "/sitemaps/pages/2"
+          "/sitemap-private-1.xml",
+          "/sitemap-posts-0.xml",
+          "/sitemap-posts-nope.xml",
+          "/sitemap-posts-999999999999999999999999.xml",
+          "/sitemap-pages-2.xml"
         ] do
       assert conn |> get(path) |> response(404) == "Not found"
     end
@@ -143,6 +181,15 @@ defmodule UrielmWeb.SitemapControllerTest do
   end
 
   defp xml_doc(xml), do: xml |> to_charlist() |> :xmerl_scan.string() |> elem(0)
+
+  defp sitemap_url_scope(path) do
+    path
+    |> Path.dirname()
+    |> then(fn
+      "/" -> "/"
+      dirname -> dirname <> "/"
+    end)
+  end
 
   defp published_post!(attrs) do
     attrs

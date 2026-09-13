@@ -41,7 +41,6 @@ defmodule UrielmWeb.Router do
     pipe_through :sitemap
 
     get "/sitemap.xml", SitemapController, :index
-    get "/sitemaps/:collection/:page", SitemapController, :show
   end
 
   pipeline :require_auth do
@@ -145,6 +144,12 @@ defmodule UrielmWeb.Router do
       live "/admin/users", Admin.UserManagementLive
       live "/admin/users/:id", Admin.UserDetailLive
     end
+  end
+
+  scope "/", UrielmWeb do
+    pipe_through :sitemap
+
+    get "/sitemap-:sitemap", SitemapController, :show
   end
 
   # Other scopes may use custom stacks.
