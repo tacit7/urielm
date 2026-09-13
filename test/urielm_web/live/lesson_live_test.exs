@@ -71,6 +71,35 @@ defmodule UrielmWeb.LessonLiveTest do
              "00:00 Introduction"
   end
 
+  test "lesson Markdown renders tables and strikethrough in initial and connected HTML" do
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+
+    {:ok, lesson} =
+      Learning.update_lesson(lesson, %{
+        notes_md: markdown_with_table_and_strikethrough("Notes"),
+        resources_md: markdown_with_table_and_strikethrough("Resources"),
+        timestamps_md: markdown_with_table_and_strikethrough("Timestamps")
+      })
+
+    initial_document =
+      build_conn()
+      |> get(~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+      |> html_response(200)
+      |> LazyHTML.from_document()
+
+    assert_rendered_markdown_extensions(initial_document)
+
+    {:ok, view, _html} = live(build_conn(), ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+
+    connected_document =
+      view
+      |> find_live_child("page-lesson")
+      |> render()
+      |> LazyHTML.from_fragment()
+
+    assert_rendered_markdown_extensions(connected_document)
+  end
+
   test "mobile lesson navigation switches the visible supporting section" do
     {course, [_first, lesson, _third]} = course_with_lessons!()
 
@@ -153,5 +182,23 @@ defmodule UrielmWeb.LessonLiveTest do
       end
 
     {course, lessons}
+  end
+
+  defp markdown_with_table_and_strikethrough(label) do
+    """
+    | Section | Status |
+    | --- | --- |
+    | #{label} | ~~outdated~~ |
+    """
+  end
+
+  defp assert_rendered_markdown_extensions(document) do
+    for section_id <- ["lesson-notes", "lesson-resources", "lesson-timestamps"] do
+      section = LazyHTML.query(document, "##{section_id}")
+
+      refute section |> LazyHTML.query("table") |> Enum.empty?()
+      assert section |> LazyHTML.query("del") |> LazyHTML.text() =~ "outdated"
+      refute section |> LazyHTML.text() =~ "~~outdated~~"
+    end
   end
 end

@@ -308,7 +308,9 @@ defmodule UrielmWeb.LessonLive do
                       Lesson notes
                     </h2>
                     <div :if={@lesson.notes_md} class="prose prose-sm max-w-none sm:prose-base">
-                      {UrielmWeb.Markdown.to_html(@lesson.notes_md)}
+                      {UrielmWeb.Markdown.to_html(@lesson.notes_md,
+                        extension: [table: true, strikethrough: true]
+                      )}
                     </div>
                     <.empty_state
                       :if={!@lesson.notes_md}
@@ -332,7 +334,9 @@ defmodule UrielmWeb.LessonLive do
                       Resources
                     </h2>
                     <div :if={@lesson.resources_md} class="prose prose-sm max-w-none sm:prose-base">
-                      {UrielmWeb.Markdown.to_html(@lesson.resources_md)}
+                      {UrielmWeb.Markdown.to_html(@lesson.resources_md,
+                        extension: [table: true, strikethrough: true]
+                      )}
                     </div>
                     <.empty_state
                       :if={!@lesson.resources_md}
@@ -356,7 +360,9 @@ defmodule UrielmWeb.LessonLive do
                       Timestamps
                     </h2>
                     <div :if={@lesson.timestamps_md} class="prose prose-sm max-w-none sm:prose-base">
-                      {UrielmWeb.Markdown.to_html(@lesson.timestamps_md)}
+                      {UrielmWeb.Markdown.to_html(@lesson.timestamps_md,
+                        extension: [table: true, strikethrough: true]
+                      )}
                     </div>
                     <.empty_state
                       :if={!@lesson.timestamps_md}
