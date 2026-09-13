@@ -10,7 +10,6 @@ defmodule Urielm.SEO.Sitemap do
   alias Urielm.Learning.{Course, Lesson}
   alias Urielm.Repo
 
-  @host "https://urielm.dev"
   @page_size 1_000
   @collections ~w(posts videos prompts courses lessons threads)
 
@@ -96,8 +95,8 @@ defmodule Urielm.SEO.Sitemap do
     """
   end
 
-  def absolute_url(path) when is_binary(path) do
-    @host <> path
+  defp absolute_url(path) when is_binary(path) do
+    UrielmWeb.SEO.absolute_url(path)
   end
 
   defp fixed_entries do
