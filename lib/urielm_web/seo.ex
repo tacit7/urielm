@@ -126,14 +126,16 @@ defmodule UrielmWeb.SEO do
   end
 
   def metadata(:videos, params, _viewer) do
-    path = videos_canonical_path(params)
+    query = params |> video_search_query()
+    search? = not is_nil(query)
 
     ok(
       title: "Videos",
       description:
         "Watch practical AI walkthroughs, developer tutorials, and quick videos from Urielm.",
-      path: path,
-      type: "website"
+      path: if(search?, do: "/videos", else: videos_canonical_path(params)),
+      type: "website",
+      robots: if(search?, do: "noindex")
     )
   end
 
@@ -439,6 +441,9 @@ defmodule UrielmWeb.SEO do
 
   defp known_format(format) when format in ["standard", "short"], do: format
   defp known_format(_format), do: nil
+
+  defp video_search_query(params) when is_map(params), do: clean_param(params["q"])
+  defp video_search_query(_params), do: nil
 
   defp clean_param(value) when is_binary(value) do
     value = String.trim(value)

@@ -72,14 +72,36 @@ defmodule UrielmWeb.ShellMetadataTest do
     assert_present(document, "script[type='application/ld+json']")
   end
 
-  test "videos canonical keeps real filters and drops tracking params", %{conn: conn} do
-    conn = get(conn, "/videos?q=agents&format=short&tag=ai&utm_source=newsletter")
+  test "videos canonical keeps tag and format filters and drops tracking params", %{conn: conn} do
+    conn = get(conn, "/videos?format=short&tag=ai,agents&utm_source=newsletter")
     document = conn |> html_response(200) |> LazyHTML.from_fragment()
 
     assert_present(
       document,
-      "link[rel='canonical'][href='https://urielm.dev/videos?q=agents&format=short&tag=ai']"
+      "link[rel='canonical'][href='https://urielm.dev/videos?format=short&tag=ai%2Cagents']"
     )
+
+    refute_present(document, "meta[name='robots'][content='noindex']")
+  end
+
+  test "videos search queries are noindexed with the library canonical", %{conn: conn} do
+    conn = get(conn, "/videos?q=agents&format=short&tag=ai&utm_source=newsletter")
+    document = conn |> html_response(200) |> LazyHTML.from_fragment()
+
+    assert_present(document, "link[rel='canonical'][href='https://urielm.dev/videos']")
+    assert_present(document, "meta[name='robots'][content='noindex']")
+  end
+
+  test "blank video search query keeps ordinary filter metadata indexable", %{conn: conn} do
+    conn = get(conn, "/videos?q=%20%20&format=short&tag=ai,agents")
+    document = conn |> html_response(200) |> LazyHTML.from_fragment()
+
+    assert_present(
+      document,
+      "link[rel='canonical'][href='https://urielm.dev/videos?format=short&tag=ai%2Cagents']"
+    )
+
+    refute_present(document, "meta[name='robots'][content='noindex']")
   end
 
   test "protected video metadata does not expose the protected title", %{conn: conn} do
@@ -186,6 +208,26 @@ defmodule UrielmWeb.ShellMetadataTest do
     refute has_element?(view, "#blog-reading-shell")
   end
 
+  test "live video search metadata resets after leaving search", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/videos?q=agents")
+
+    metadata = page_metadata(view)
+    assert metadata["canonical_url"] == "https://urielm.dev/videos"
+    assert metadata["robots"] == "noindex"
+
+    render_patch(view, ~p"/videos?tag=ai,agents")
+
+    metadata = page_metadata(view)
+    assert metadata["canonical_url"] == "https://urielm.dev/videos?tag=ai%2Cagents"
+    assert is_nil(metadata["robots"])
+
+    render_patch(view, ~p"/videos")
+
+    metadata = page_metadata(view)
+    assert metadata["canonical_url"] == "https://urielm.dev/videos"
+    assert is_nil(metadata["robots"])
+  end
+
   test "structured data escapes script delimiters and preserves the actual headline", %{
     conn: conn
   } do
@@ -234,5 +276,16 @@ defmodule UrielmWeb.ShellMetadataTest do
 
   defp refute_present(document, selector) do
     assert document |> LazyHTML.filter(selector) |> Enum.empty?()
+  end
+
+  defp page_metadata(view) do
+    [encoded] =
+      view
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#page-seo")
+      |> LazyHTML.attribute("data-seo")
+
+    Jason.decode!(encoded)
   end
 end
