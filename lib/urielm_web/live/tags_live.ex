@@ -2,6 +2,7 @@ defmodule UrielmWeb.TagsLive do
   use UrielmWeb, :live_view
 
   alias Urielm.Forum
+  alias UrielmWeb.SEO
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +14,7 @@ defmodule UrielmWeb.TagsLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Tags")
+     |> assign(SEO.forum_metadata(:tags, nil))
      |> assign(:all_categories, categories)
      |> assign(:tag_groups, directory.groups)
      |> assign(:ungrouped_tags, directory.ungrouped)
@@ -22,6 +23,8 @@ defmodule UrielmWeb.TagsLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
@@ -29,6 +32,7 @@ defmodule UrielmWeb.TagsLive do
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
       current_path="/forum/tags"
+      seo={@seo_head}
     >
       <div id="forum-tags-page" class="mx-auto w-full max-w-5xl">
         <UrielmWeb.Components.ForumLayout.discovery_header

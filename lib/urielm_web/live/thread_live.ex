@@ -5,6 +5,7 @@ defmodule UrielmWeb.ThreadLive do
   alias Urielm.Forum
   alias UrielmWeb.CommentHandlers
   alias UrielmWeb.LiveHelpers
+  alias UrielmWeb.SEO
 
   @impl true
   def mount(params, _session, socket) do
@@ -55,7 +56,7 @@ defmodule UrielmWeb.ThreadLive do
 
         {:ok,
          socket
-         |> assign(:page_title, thread.title)
+         |> assign(SEO.forum_metadata(:thread, thread))
          |> assign(:thread, serialized_thread)
          |> assign(
            :thread_capability_disclosure,
@@ -659,6 +660,8 @@ defmodule UrielmWeb.ThreadLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
@@ -666,6 +669,7 @@ defmodule UrielmWeb.ThreadLive do
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
       current_board={@thread.board_slug}
+      seo={@seo_head}
     >
       <main id="thread-reading-view" class="mx-auto max-w-3xl pb-12">
         <.link
@@ -1209,6 +1213,7 @@ defmodule UrielmWeb.ThreadLive do
         serialized_thread = LiveHelpers.serialize_thread_full(thread, current_user)
 
         socket
+        |> assign(SEO.forum_metadata(:thread, thread))
         |> assign(:thread, serialized_thread)
         |> assign(:thread_capability_disclosure, thread_capability_disclosure(serialized_thread))
         |> assign(:comment_tree, comment_tree)

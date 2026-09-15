@@ -4,6 +4,7 @@ defmodule UrielmWeb.LatestLive do
 
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
+  alias UrielmWeb.SEO
 
   @impl true
   def mount(params, _session, socket) do
@@ -11,9 +12,9 @@ defmodule UrielmWeb.LatestLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Latest")
      |> assign(:all_categories, [])
      |> assign(:page, page)
+     |> assign(SEO.forum_metadata(:latest, nil, page: page))
      |> assign(:meta, nil)
      |> stream(:threads, [])}
   end
@@ -42,6 +43,7 @@ defmodule UrielmWeb.LatestLive do
      socket
      |> assign(:all_categories, categories)
      |> assign(:page, page)
+     |> assign(SEO.forum_metadata(:latest, nil, page: page))
      |> assign(:meta, meta)
      |> stream(:threads, serialize_threads(threads, user), reset: true)}
   end
@@ -95,6 +97,8 @@ defmodule UrielmWeb.LatestLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
@@ -102,6 +106,7 @@ defmodule UrielmWeb.LatestLive do
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
       current_path="/forum"
+      seo={@seo_head}
     >
       <UrielmWeb.Components.ForumLayout.discovery_header active_view="latest" />
 

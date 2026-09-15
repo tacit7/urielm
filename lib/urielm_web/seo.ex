@@ -10,8 +10,11 @@ defmodule UrielmWeb.SEO do
   alias Urielm.Accounts
   alias Urielm.Content
   alias Urielm.Content.{Post, Prompt, Video}
+  alias Urielm.Forum.{Board, Category, Tag, Thread}
   alias Urielm.Learning
   alias Urielm.Learning.{Course, Lesson}
+  alias Urielm.Repo
+  alias UrielmWeb.Markdown
 
   @site_name "Urielm"
   @site_url "https://urielm.dev"
@@ -26,6 +29,154 @@ defmodule UrielmWeb.SEO do
 
   def site_name, do: @site_name
   def default_description, do: @default_description
+
+  def forum_metadata(kind, resource, opts \\ [])
+
+  def forum_metadata(:latest, nil, opts) do
+    page = normalized_page(opts)
+
+    forum_assigns(
+      title: forum_page_title("Community", page),
+      description:
+        forum_page_description(
+          "Latest community discussions about practical AI, developer workflows, prompts, and learning on Urielm.",
+          page
+        ),
+      path: paged_path("/forum", page),
+      type: "website",
+      structured_data: [
+        breadcrumb([
+          {"Home", "/"},
+          {"Forum", paged_path("/forum", page)}
+        ])
+      ]
+    )
+  end
+
+  def forum_metadata(:categories, nil, _opts) do
+    forum_assigns(
+      title: "Forum Categories",
+      description:
+        "Browse public Urielm forum categories for AI learning, developer tools, and community discussion.",
+      path: "/forum/categories",
+      type: "website",
+      structured_data: forum_breadcrumb("Categories", "/forum/categories")
+    )
+  end
+
+  def forum_metadata(:tags, nil, _opts) do
+    forum_assigns(
+      title: "Forum Tags",
+      description:
+        "Explore public Urielm forum topics by tag, from AI workflows to developer practice.",
+      path: "/forum/tags",
+      type: "website",
+      structured_data: forum_breadcrumb("Tags", "/forum/tags")
+    )
+  end
+
+  def forum_metadata(:tag, %Tag{} = tag, opts) do
+    page = normalized_page(opts)
+    path = paged_path("/forum/tags/#{segment(tag.slug)}", page)
+
+    forum_assigns(
+      title: forum_page_title("#{tag.name} Forum Topics", page),
+      description:
+        forum_page_description(
+          "Read Urielm community discussions tagged #{tag.name}.",
+          page
+        ),
+      path: path,
+      type: "website",
+      structured_data: [
+        breadcrumb([
+          {"Home", "/"},
+          {"Forum", "/forum"},
+          {"Tags", "/forum/tags"},
+          {tag.name, path}
+        ])
+      ]
+    )
+  end
+
+  def forum_metadata(:board, %Board{} = board, opts) do
+    page = normalized_page(opts)
+    board = ensure_loaded(board, :category)
+
+    if public_board?(board) do
+      base_path = "/forum/b/#{segment(board.slug)}"
+      path = paged_path(base_path, page)
+      noindex? = board_noindex?(opts)
+
+      forum_assigns(
+        title: forum_page_title(board.name, page),
+        description:
+          forum_page_description(
+            first_present([
+              forum_plain_text(board.description),
+              "Discuss #{board.name} on Urielm."
+            ]),
+            page
+          ),
+        path: path,
+        type: "website",
+        robots: if(noindex?, do: "noindex"),
+        structured_data: [
+          breadcrumb([
+            {"Home", "/"},
+            {"Forum", "/forum"},
+            {board.category.name, "/forum/categories"},
+            {board.name, path}
+          ])
+        ]
+      )
+    else
+      forum_protected()
+    end
+  end
+
+  def forum_metadata(:thread, %Thread{} = thread, _opts) do
+    thread = ensure_thread_board_category(thread)
+
+    if public_thread?(thread) do
+      description =
+        first_present([
+          forum_plain_text(thread.body),
+          "Read #{thread.title} in the Urielm community forum."
+        ])
+
+      path = "/forum/t/#{thread.id}"
+
+      forum_assigns(
+        title: thread.title,
+        description: description,
+        path: path,
+        type: "article",
+        structured_data: [
+          breadcrumb([
+            {"Home", "/"},
+            {"Forum", "/forum"},
+            {thread.board.name, "/forum/b/#{segment(thread.board.slug)}"},
+            {thread.title, path}
+          ])
+        ]
+      )
+    else
+      forum_protected()
+    end
+  end
+
+  def forum_metadata(:search, nil, _opts) do
+    forum_assigns(
+      title: "Search Forum",
+      description: "Search the Urielm community forum.",
+      path: nil,
+      type: "website",
+      robots: "noindex"
+    )
+  end
+
+  def forum_metadata(_kind, _resource, _opts), do: forum_protected()
 
   def absolute_url(path) when is_binary(path) do
     path =
@@ -337,6 +488,17 @@ defmodule UrielmWeb.SEO do
      })}
   end
 
+  defp forum_protected do
+    forum_assigns(
+      title: "Urielm",
+      description: @default_description,
+      path: nil,
+      type: "website",
+      robots: "noindex",
+      protected?: true
+    )
+  end
+
   defp not_found do
     {:not_found,
      normalize_metadata(%{
@@ -372,6 +534,92 @@ defmodule UrielmWeb.SEO do
       structured_data: Map.get(metadata, :structured_data, []),
       protected?: Map.get(metadata, :protected?, false)
     }
+  end
+
+  defp forum_assigns(opts) do
+    metadata =
+      opts
+      |> Map.new()
+      |> normalize_metadata()
+
+    Map.put(metadata, :json_ld, json_ld(metadata))
+  end
+
+  defp forum_breadcrumb(label, path) do
+    [
+      breadcrumb([
+        {"Home", "/"},
+        {"Forum", "/forum"},
+        {label, path}
+      ])
+    ]
+  end
+
+  defp normalized_page(opts) do
+    opts
+    |> Keyword.get(:page, 1)
+    |> case do
+      page when is_integer(page) -> page
+      page when is_binary(page) -> page |> Integer.parse() |> parsed_page()
+      _other -> 1
+    end
+    |> max(1)
+  end
+
+  defp parsed_page({page, ""}), do: page
+  defp parsed_page(_other), do: 1
+
+  defp paged_path(path, 1), do: path
+  defp paged_path(path, page), do: path <> "?" <> URI.encode_query(page: page)
+
+  defp forum_page_title(title, 1), do: title
+
+  defp forum_page_title(title, page) do
+    suffix = " - Page #{page}"
+    clean_text(title, "Urielm", 90 - String.length(suffix)) <> suffix
+  end
+
+  defp forum_page_description(description, 1), do: description
+
+  defp forum_page_description(description, page) do
+    suffix = " Page #{page}."
+    clean_text(description, @default_description, 180 - String.length(suffix)) <> suffix
+  end
+
+  defp board_noindex?(opts) do
+    recognized_sort = Keyword.get(opts, :sort) in ["top", "new"]
+    recognized_filter = Keyword.get(opts, :filter) in ["new", "solved", "unsolved", "unread"]
+
+    recognized_sort or recognized_filter
+  end
+
+  defp public_board?(%Board{is_hidden: false, category: %Category{is_hidden: false}}), do: true
+  defp public_board?(_board), do: false
+
+  defp public_thread?(%Thread{is_removed: false, board: %Board{} = board}),
+    do: public_board?(board)
+
+  defp public_thread?(_thread), do: false
+
+  defp ensure_loaded(struct, association) do
+    if Ecto.assoc_loaded?(Map.get(struct, association)) do
+      struct
+    else
+      Repo.preload(struct, association)
+    end
+  end
+
+  defp ensure_thread_board_category(%Thread{} = thread) do
+    cond do
+      not Ecto.assoc_loaded?(thread.board) ->
+        Repo.preload(thread, board: :category)
+
+      match?(%Board{}, thread.board) and not Ecto.assoc_loaded?(thread.board.category) ->
+        Repo.preload(thread, board: :category)
+
+      true ->
+        thread
+    end
   end
 
   defp article(%Post{} = post, description, image) do
@@ -474,6 +722,22 @@ defmodule UrielmWeb.SEO do
     |> String.replace(~r/!\[[^\]]*\]\([^)]+\)/, " ")
     |> String.replace(~r/\[([^\]]+)\]\([^)]+\)/, "\\1")
     |> String.replace(~r/[#>*_\-]+/, " ")
+    |> String.replace(~r/\s+/, " ")
+    |> String.trim()
+  end
+
+  defp forum_plain_text(nil), do: nil
+
+  defp forum_plain_text(value) when is_binary(value) do
+    html =
+      value
+      |> Markdown.to_html!(extension: [table: true, strikethrough: true])
+      |> Phoenix.HTML.safe_to_string()
+
+    case Floki.parse_fragment(html) do
+      {:ok, tree} -> Floki.text(tree, sep: " ")
+      {:error, _reason} -> ""
+    end
     |> String.replace(~r/\s+/, " ")
     |> String.trim()
   end

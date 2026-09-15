@@ -27,3 +27,11 @@ Workers use separate worktrees. The orchestrator integrates local commits on `co
 Request-level tests parse initial HTML with LazyHTML. Verify visible article/lesson/video/prompt content, resource and collection links, page-specific metadata, escaped structured data, sitemap eligibility, indexing headers, missing content status codes, and authorization. Existing LiveView tests cover interactions after connection. Run `mix precommit` on the integrated branch and distinguish pre-existing failures from regressions.
 
 Deployment and Search Console submission are subsequent actions; this implementation does not deploy to production.
+
+## Forum metadata extension
+
+Extend the existing metadata and live head synchronization to the forum's root LiveViews: latest discussions, category and tag directories, individual tags, boards, threads, and search. A shared helper consumes already-loaded resources; thread metadata checks the board's category visibility before exposing topic details. Hidden boards/categories and removed threads receive generic noindex metadata even for administrators.
+
+Paginated latest, board, and tag pages use their own canonical URL and distinguish page numbers in titles/descriptions. Page one omits the page parameter; tracking parameters are excluded. Nondefault board filters and sorts are noindexed. Forum search supplies generic noindex metadata and clears any previous page's canonical or structured data during live navigation.
+
+EITS team `urielm-forum-seo` (751) implements the helper and integration with separate ownership. The lead validates initial HTTP metadata, pagination changes, public summaries, visibility controls, and browser head updates before running `mix precommit`. Existing routing, content access, and forum interactions remain the source of truth; this change does not redefine authorization or deploy the application.
