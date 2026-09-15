@@ -36,11 +36,20 @@ defmodule UrielmWeb.Layouts do
 
   attr :socket, :any, default: nil, doc: "LiveView socket (for LiveSvelte components)"
   attr :unread_notification_count, :integer, default: 0
+  attr :seo, :map, default: nil
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <div class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+      <div
+        :if={@seo}
+        id="page-seo"
+        phx-hook="SEOHead"
+        phx-update="ignore"
+        data-seo={Jason.encode!(@seo)}
+        hidden
+      />
       <a
         href="#main-content"
         class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-xl focus:bg-primary focus:px-4 focus:py-3 focus:font-bold focus:text-primary-content focus:outline-2 focus:outline-offset-2 focus:outline-primary"

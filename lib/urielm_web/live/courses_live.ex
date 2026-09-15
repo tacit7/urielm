@@ -16,8 +16,7 @@ defmodule UrielmWeb.CoursesLive do
     {:ok,
      socket
      |> assign(:courses, courses)
-     |> assign(:current_page, "courses")
-     |> assign(:page_title, "Courses")}
+     |> assign(:current_page, "courses")}
   end
 
   @impl true

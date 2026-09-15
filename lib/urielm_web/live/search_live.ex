@@ -4,6 +4,7 @@ defmodule UrielmWeb.SearchLive do
 
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
+  alias UrielmWeb.SEO
 
   @impl true
   def mount(_params, _session, socket) do
@@ -15,7 +16,7 @@ defmodule UrielmWeb.SearchLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Search Forum")
+     |> assign(SEO.forum_metadata(:search, nil))
      |> assign(:query, "")
      |> assign(:search_filters, default_filters)
      |> assign(:search_form, to_form(default_filters))
@@ -61,6 +62,7 @@ defmodule UrielmWeb.SearchLive do
           )
 
         socket
+        |> assign(SEO.forum_metadata(:search, nil, page: page))
         |> assign(:query, query)
         |> assign(:search_filters, search_filters)
         |> assign(:search_form, to_form(search_filters))
@@ -70,6 +72,7 @@ defmodule UrielmWeb.SearchLive do
         |> stream(:results, serialize_threads(results, socket.assigns.current_user), reset: true)
       else
         socket
+        |> assign(SEO.forum_metadata(:search, nil, page: page))
         |> assign(:query, query)
         |> assign(:search_filters, search_filters)
         |> assign(:search_form, to_form(search_filters))
@@ -143,6 +146,8 @@ defmodule UrielmWeb.SearchLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
@@ -150,6 +155,7 @@ defmodule UrielmWeb.SearchLive do
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
       current_path="/forum/search"
+      seo={@seo_head}
     >
       <div id="forum-search-page" class="mx-auto w-full max-w-5xl">
         <header
@@ -288,12 +294,16 @@ defmodule UrielmWeb.SearchLive do
                 class="hidden only:grid"
               />
               <div :for={{id, result} <- @streams.results} id={id}>
-                <.svelte
-                  name="ThreadCard"
-                  props={result}
-                  socket={@socket}
-                  ssr={false}
-                />
+                <%= if connected?(@socket) do %>
+                  <.svelte
+                    name="ThreadCard"
+                    props={result}
+                    socket={@socket}
+                    ssr={false}
+                  />
+                <% else %>
+                  <UrielmWeb.SEOComponents.thread_card thread={result} />
+                <% end %>
               </div>
             </div>
           </section>

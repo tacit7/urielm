@@ -42,7 +42,6 @@ defmodule UrielmWeb.PromptsLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Prompts")
      |> assign(:search_query, "")
      |> assign(:current_filter, initial_filter)
      |> assign(:categories, categories)
@@ -347,7 +346,12 @@ defmodule UrielmWeb.PromptsLive do
                   {prompt.category || "Prompt"}
                 </p>
                 <h2 class="card-title text-lg leading-snug text-base-content transition-colors group-hover:text-primary">
-                  {prompt.title}
+                  <.link
+                    navigate={~p"/prompts/#{prompt.id}"}
+                    class="rounded-sm outline-offset-2 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                  >
+                    {prompt.title}
+                  </.link>
                 </h2>
 
                 <%= if prompt.tags && prompt.tags != [] do %>

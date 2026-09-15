@@ -5,6 +5,7 @@ defmodule UrielmWeb.ForumLive do
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
   alias UrielmWeb.ForumColors
+  alias UrielmWeb.SEO
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +14,7 @@ defmodule UrielmWeb.ForumLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Community")
+     |> assign(SEO.forum_metadata(:categories, nil))
      |> assign(:all_categories, categories)
      |> assign(:categories, serialize_categories(categories, current_user))}
   end
@@ -46,6 +47,8 @@ defmodule UrielmWeb.ForumLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories}
@@ -53,6 +56,7 @@ defmodule UrielmWeb.ForumLive do
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
       current_path="/forum/categories"
+      seo={@seo_head}
     >
       <UrielmWeb.Components.ForumLayout.discovery_header
         active_view="categories"

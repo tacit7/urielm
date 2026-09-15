@@ -4,6 +4,7 @@ defmodule UrielmWeb.BoardLive do
 
   alias Urielm.Forum
   alias UrielmWeb.LiveHelpers
+  alias UrielmWeb.SEO
 
   @impl true
   def mount(params, _session, socket) do
@@ -112,7 +113,7 @@ defmodule UrielmWeb.BoardLive do
 
         {:ok,
          socket
-         |> assign(:page_title, board.name)
+         |> assign(SEO.forum_metadata(:board, board, page: page, sort: sort, filter: filter))
          |> assign(:board, board)
          |> assign(:all_categories, categories)
          |> assign(:sort, sort)
@@ -178,6 +179,8 @@ defmodule UrielmWeb.BoardLive do
 
   @impl true
   def render(assigns) do
+    assigns = assign(assigns, :seo_head, SEO.head_payload(assigns))
+
     ~H"""
     <UrielmWeb.Components.ForumLayout.forum_layout
       categories={@all_categories || []}
@@ -186,6 +189,7 @@ defmodule UrielmWeb.BoardLive do
       unread_notification_count={@unread_notification_count}
       current_board={@board.slug}
       new_topic_path={if(@board.is_locked, do: nil, else: ~p"/forum/b/#{@board.slug}/new")}
+      seo={@seo_head}
     >
       <header id="board-header" class="ui-page-header mb-4">
         <h1 class="text-2xl font-bold tracking-tight text-base-content sm:text-3xl">
@@ -271,7 +275,11 @@ defmodule UrielmWeb.BoardLive do
             class="hidden only:grid rounded-none border-0 bg-transparent"
           />
           <div :for={{id, thread} <- @streams.threads} id={id}>
-            <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
+            <%= if connected?(@socket) do %>
+              <.svelte name="ThreadCard" props={thread} socket={@socket} ssr={false} />
+            <% else %>
+              <UrielmWeb.SEOComponents.thread_card thread={thread} />
+            <% end %>
           </div>
         </div>
       </div>

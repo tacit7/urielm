@@ -10,7 +10,6 @@ defmodule UrielmWeb.ThemesLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Themes")
      |> assign(:daisyui_themes, @daisyui_themes)
      |> assign(:custom_themes, @custom_themes)
      |> assign(:all_themes, @all_themes)

@@ -26,10 +26,21 @@ defmodule UrielmWeb.Router do
 
     plug UrielmWeb.Plugs.Theme
     plug UrielmWeb.Plugs.Auth, :fetch_current_user
+    plug UrielmWeb.Plugs.IndexingControl
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  pipeline :sitemap do
+    plug :accepts, ["xml"]
+  end
+
+  scope "/", UrielmWeb do
+    pipe_through :sitemap
+
+    get "/sitemap.xml", SitemapController, :index
   end
 
   pipeline :require_auth do
@@ -133,6 +144,12 @@ defmodule UrielmWeb.Router do
       live "/admin/users", Admin.UserManagementLive
       live "/admin/users/:id", Admin.UserDetailLive
     end
+  end
+
+  scope "/", UrielmWeb do
+    pipe_through :sitemap
+
+    get "/sitemap-:sitemap", SitemapController, :show
   end
 
   # Other scopes may use custom stacks.

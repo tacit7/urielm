@@ -11,6 +11,7 @@ defmodule UrielmWeb.Components.ForumLayout do
   attr :categories, :list, default: [], doc: "list of forum categories with boards"
   attr :current_path, :string, default: "/forum", doc: "current request path for active state"
   attr :current_board, :string, default: nil, doc: "current board slug for active state"
+  attr :seo, :map, default: nil
 
   attr :new_topic_path, :string,
     default: nil,
@@ -22,6 +23,15 @@ defmodule UrielmWeb.Components.ForumLayout do
   def forum_layout(assigns) do
     ~H"""
     <div class="drawer min-h-screen bg-base-100 lg:drawer-open">
+      <div
+        :if={@seo}
+        id="page-seo"
+        phx-hook="SEOHead"
+        phx-update="ignore"
+        data-seo={Jason.encode!(@seo)}
+        hidden
+      />
+
       <input id="forum-drawer" type="checkbox" class="drawer-toggle" />
 
       <%!-- Main content --%>

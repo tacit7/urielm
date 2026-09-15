@@ -29,8 +29,7 @@ defmodule UrielmWeb.CourseLive do
          |> assign(:first_lesson, List.first(lessons))
          |> assign(:lesson_count, length(lessons))
          |> assign(:show_description, false)
-         |> assign(:current_page, "courses")
-         |> assign(:page_title, course.title)}
+         |> assign(:current_page, "courses")}
     end
   end
 

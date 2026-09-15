@@ -41,6 +41,9 @@ defmodule UrielmWeb.PrivacyLive do
       current_page="privacy"
       socket={@socket}
       unread_notification_count={@unread_notification_count}
+      seo={
+        %{page_title: @page_title, meta_description: @meta_description, canonical_url: @canonical_url}
+      }
     >
       <div id="privacy-policy-page" class="ui-page-shell max-w-6xl">
         <header class="ui-page-header">

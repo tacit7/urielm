@@ -48,11 +48,11 @@ defmodule Mix.Tasks.Videos.ChaptersTest do
   test "accepts chapter text on stdin" do
     video = video_fixture(%{youtube_url: "https://www.youtube.com/watch?v=WAFUMBLOjHo"})
 
-    updated =
-      capture_io("00:00 Intro\n00:10 Next\n", fn ->
-        Chapters.run([video.slug])
-      end)
+    capture_io("00:00 Intro\n00:10 Next\n", fn ->
+      Chapters.run([video.slug])
+    end)
 
+    updated = Urielm.Repo.reload!(video)
     assert updated.description_md =~ "00:00:10 Next"
   end
 
