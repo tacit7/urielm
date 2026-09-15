@@ -49,8 +49,8 @@ defmodule UrielmWeb.UserProfileLiveTest do
       assert html =~ "1"
     end
 
-    test "redirects to home for non-existent username", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/u/no_such_user_xyz123")
+    test "returns not found for non-existent username", %{conn: conn} do
+      assert conn |> get("/u/no_such_user_xyz123") |> response(404)
     end
 
     test "anonymous user sees private profile state instead of activity", %{
@@ -228,8 +228,8 @@ defmodule UrielmWeb.UserProfileLiveTest do
       assert html =~ owner.username
     end
 
-    test "unknown username redirects to home regardless of tab param", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/u/no_such_user_abc999?tab=threads")
+    test "unknown username returns not found regardless of tab param", %{conn: conn} do
+      assert conn |> get("/u/no_such_user_abc999?tab=threads") |> response(404)
     end
   end
 end

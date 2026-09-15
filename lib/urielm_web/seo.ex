@@ -272,7 +272,7 @@ defmodule UrielmWeb.SEO do
         protected()
 
       nil ->
-        protected()
+        not_found()
 
       user ->
         if Accounts.can_view_profile?(nil, user) and Accounts.can_view_profile?(viewer, user) do

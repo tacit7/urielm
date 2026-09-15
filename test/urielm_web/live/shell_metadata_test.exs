@@ -129,6 +129,10 @@ defmodule UrielmWeb.ShellMetadataTest do
     refute_present(document, "meta[property='og:title'][content='Private User (@privateuser)']")
   end
 
+  test "missing profile returns 404 metadata instead of protected metadata", %{conn: conn} do
+    assert conn |> get(~p"/u/missing-profile-user") |> response(404)
+  end
+
   test "missing and malformed public detail routes return 404", %{conn: conn} do
     assert conn |> get(~p"/blog/not-published") |> response(404)
 
