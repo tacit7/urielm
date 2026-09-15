@@ -3,6 +3,7 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
 
   alias Urielm.Content
   alias Urielm.Fixtures
+  alias UrielmWeb.VideoLive
 
   describe "public initial HTML" do
     test "blog detail includes crawlable article content", %{conn: conn} do
@@ -44,7 +45,7 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
         Content.create_prompt(%{
           title: "Plan a careful refactor",
           category: "Software Engineers",
-          prompt: "Create a phased refactor plan with risks and validation steps."
+          prompt: markdown_with_table_and_strike("Prompt detail")
         })
 
       document = conn |> get(~p"/prompts/#{prompt.id}") |> document()
@@ -52,6 +53,9 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
       assert_present(document, "#prompt-detail-page")
       assert_present(document, "#prompt-content-panel")
       assert_present(document, "#prompt-content-fallback")
+      assert_present(document, "#prompt-content-fallback table")
+      assert_present(document, "#prompt-content-fallback del")
+      refute_present(document, "#prompt-content-fallback script")
     end
 
     test "public video detail includes crawlable overview content", %{conn: conn} do
@@ -61,8 +65,10 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
           slug: "make-liveview-pages-crawlable",
           visibility: "public",
           published_at: DateTime.utc_now() |> DateTime.truncate(:second),
-          description_md: "A practical overview for rendering useful initial HTML.",
-          resources_md: "- [Checklist](https://example.com/checklist)"
+          description_md: markdown_with_table_and_strike("Video overview"),
+          resources_md: markdown_with_table_and_strike("Video resources"),
+          author_name: "Uriel Maldonado",
+          author_bio_md: markdown_with_table_and_strike("Author bio")
         })
 
       document = conn |> get(~p"/videos/#{video.slug}") |> document()
@@ -70,7 +76,36 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
       assert_present(document, "#standard-video-page")
       assert_present(document, "#video-detail-header")
       assert_present(document, "#video-description-fallback")
+      assert_present(document, "#video-description-fallback table")
+      assert_present(document, "#video-description-fallback del")
       assert_present(document, "#video-resources-card")
+      assert_present(document, "#video-author-bio-fallback")
+      assert_present(document, "#video-author-bio-fallback table")
+      assert_present(document, "#video-author-bio-fallback del")
+      refute_present(document, "#video-description-fallback script")
+      refute_present(document, "#video-author-bio-fallback script")
+    end
+
+    test "video resources fallback matches connected markdown extensions" do
+      video =
+        Fixtures.video_fixture(%{
+          title: "Render tabbed resources",
+          slug: "render-tabbed-resources",
+          visibility: "public",
+          published_at: DateTime.utc_now() |> DateTime.truncate(:second),
+          description_md: "A practical overview.",
+          resources_md: markdown_with_table_and_strike("Video resources")
+        })
+
+      document =
+        video
+        |> disconnected_video_html("resources")
+        |> LazyHTML.from_fragment()
+
+      assert_present(document, "#video-resources-fallback")
+      assert_present(document, "#video-resources-fallback table")
+      assert_present(document, "#video-resources-fallback del")
+      refute_present(document, "#video-resources-fallback script")
     end
 
     test "restricted video detail does not expose private content in initial HTML", %{conn: conn} do
@@ -120,6 +155,60 @@ defmodule UrielmWeb.InitialHTMLRenderingTest do
 
   defp refute_present(document, selector) do
     assert document |> LazyHTML.query(selector) |> Enum.empty?()
+  end
+
+  defp markdown_with_table_and_strike(label) do
+    """
+    #{label}
+
+    | Step | Status |
+    | --- | --- |
+    | Server render | Ready |
+
+    ~~outdated wording~~
+
+    <script>alert("xss")</script>
+    """
+  end
+
+  defp disconnected_video_html(video, active_section) do
+    socket = %Phoenix.LiveView.Socket{
+      endpoint: UrielmWeb.Endpoint,
+      router: UrielmWeb.Router,
+      view: VideoLive
+    }
+
+    assigns = %{
+      __changed__: %{},
+      socket: socket,
+      current_user: nil,
+      video: video,
+      completed: false,
+      thread: nil,
+      comment_tree: [],
+      comment_form: Phoenix.Component.to_form(%{"body" => ""}),
+      nav_items: [
+        %{key: "description", label: "Overview"},
+        %{key: "resources", label: "Resources"},
+        %{key: "comments", label: "Comments", count: 0}
+      ],
+      active_section: active_section,
+      next_video: nil,
+      reporting_comment_id: nil,
+      upvotes: 0,
+      downvotes: 0,
+      user_vote: nil,
+      canonical_url: "http://www.example.com/videos/#{video.slug}",
+      meta_description: "",
+      og_title: video.title,
+      og_type: "video.other",
+      og_image: nil
+    }
+
+    assigns
+    |> VideoLive.render()
+    |> Phoenix.HTML.Safe.to_iodata()
+    |> IO.iodata_to_binary()
   end
 
   defp published_post!(overrides) do

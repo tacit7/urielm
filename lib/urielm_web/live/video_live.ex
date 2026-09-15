@@ -672,7 +672,9 @@ defmodule UrielmWeb.VideoLive do
                   ssr={false}
                 />
                 <div :if={!connected?(@socket)} id="video-description-fallback">
-                  {UrielmWeb.Markdown.to_html!(@video.description_md)}
+                  {UrielmWeb.Markdown.to_html!(@video.description_md,
+                    extension: [table: true, strikethrough: true]
+                  )}
                 </div>
               </div>
               <.empty_state
@@ -700,7 +702,9 @@ defmodule UrielmWeb.VideoLive do
                   ssr={false}
                 />
                 <div :if={!connected?(@socket)} id="video-resources-fallback">
-                  {UrielmWeb.Markdown.to_html!(@video.resources_md)}
+                  {UrielmWeb.Markdown.to_html!(@video.resources_md,
+                    extension: [table: true, strikethrough: true]
+                  )}
                 </div>
               </div>
             </section>
@@ -856,7 +860,9 @@ defmodule UrielmWeb.VideoLive do
                     ssr={false}
                   />
                   <div :if={!connected?(@socket)} id="video-author-bio-fallback">
-                    {UrielmWeb.Markdown.to_html!(@video.author_bio_md)}
+                    {UrielmWeb.Markdown.to_html!(@video.author_bio_md,
+                      extension: [table: true, strikethrough: true]
+                    )}
                   </div>
                 </div>
                 <a

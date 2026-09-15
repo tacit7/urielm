@@ -251,7 +251,9 @@ defmodule UrielmWeb.PromptLive do
               ssr={false}
             />
             <div :if={!connected?(@socket)} id="prompt-content-fallback">
-              {UrielmWeb.Markdown.to_html!(@prompt.prompt)}
+              {UrielmWeb.Markdown.to_html!(@prompt.prompt,
+                extension: [table: true, strikethrough: true]
+              )}
             </div>
           </div>
 
