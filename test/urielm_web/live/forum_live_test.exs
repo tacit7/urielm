@@ -62,7 +62,7 @@ defmodule UrielmWeb.ForumLiveTest do
       assert has_element?(view, "#forum-page-shell.ui-page-shell")
       assert has_element?(view, "#community-discovery-header")
       assert has_element?(view, "#forum-search-link[href='/forum/search']")
-      assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Latest")
+      assert has_element?(view, "#forum-view-tabs a[aria-current='page']", "Discussions")
       assert has_element?(view, "#latest-discussions-surface.ui-card")
       assert has_element?(view, "#threads[phx-update='stream']")
     end

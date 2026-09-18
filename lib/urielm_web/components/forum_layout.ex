@@ -81,8 +81,14 @@ defmodule UrielmWeb.Components.ForumLayout do
               <.nav_link
                 href="/forum"
                 icon="topics"
-                label="Latest"
+                label="Discussions"
                 active={@current_path in ["/forum", "/forum/latest"]}
+              />
+              <.nav_link
+                href="/forum/news"
+                icon="hero-newspaper"
+                label="News"
+                active={@current_path == "/forum/news"}
               />
               <.nav_link
                 href="/forum/categories"
@@ -230,7 +236,7 @@ defmodule UrielmWeb.Components.ForumLayout do
     """
   end
 
-  attr :active_view, :string, required: true, values: ~w(latest categories tags)
+  attr :active_view, :string, required: true, values: ~w(latest news categories tags)
   attr :count_label, :string, default: nil
 
   def discovery_header(assigns) do
@@ -242,7 +248,9 @@ defmodule UrielmWeb.Components.ForumLayout do
             Community
           </h1>
           <p class="mt-1 max-w-2xl text-sm text-base-content/55">
-            Ask questions, share builds, and follow practical AI discussions.
+            {if @active_view == "news",
+              do: "AI news and updates, separate from member discussions.",
+              else: "Ask questions, share builds, and follow practical AI discussions."}
           </p>
         </div>
 
@@ -271,7 +279,8 @@ defmodule UrielmWeb.Components.ForumLayout do
         aria-label="Community views"
         class="tabs tabs-border mt-5 flex items-center overflow-x-auto border-b border-base-300/50"
       >
-        <.view_link href={~p"/forum"} label="Latest" active={@active_view == "latest"} />
+        <.view_link href={~p"/forum"} label="Discussions" active={@active_view == "latest"} />
+        <.view_link href={~p"/forum/news"} label="News" active={@active_view == "news"} />
         <.view_link
           href={~p"/forum/categories"}
           label="Categories"

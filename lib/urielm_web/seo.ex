@@ -53,6 +53,28 @@ defmodule UrielmWeb.SEO do
     )
   end
 
+  def forum_metadata(:news, nil, opts) do
+    page = normalized_page(opts)
+
+    forum_assigns(
+      title: forum_page_title("AI News", page),
+      description:
+        forum_page_description(
+          "AI news and updates on Urielm, separate from member discussions.",
+          page
+        ),
+      path: paged_path("/forum/news", page),
+      type: "website",
+      structured_data: [
+        breadcrumb([
+          {"Home", "/"},
+          {"Forum", "/forum"},
+          {"News", paged_path("/forum/news", page)}
+        ])
+      ]
+    )
+  end
+
   def forum_metadata(:categories, nil, _opts) do
     forum_assigns(
       title: "Forum Categories",

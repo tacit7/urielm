@@ -14,7 +14,11 @@ defmodule UrielmWeb.LatestLive do
      socket
      |> assign(:all_categories, [])
      |> assign(:page, page)
-     |> assign(SEO.forum_metadata(:latest, nil, page: page))
+     |> assign(
+       SEO.forum_metadata(if(socket.assigns.live_action == :news, do: :news, else: :latest), nil,
+         page: page
+       )
+     )
      |> assign(:meta, nil)
      |> stream(:threads, [])}
   end
@@ -23,6 +27,8 @@ defmodule UrielmWeb.LatestLive do
   def handle_params(params, _uri, socket) do
     page = parse_page(params["page"])
     user = socket.assigns[:current_user]
+    feed = socket.assigns.live_action
+    feed_path = if feed == :news, do: "/forum/news", else: "/forum"
 
     categories = Forum.list_categories_with_boards()
 
@@ -34,16 +40,22 @@ defmodule UrielmWeb.LatestLive do
     }
 
     {threads, meta} =
-      case Forum.paginate_latest_threads(flop_params) do
+      case Forum.paginate_latest_threads(flop_params, feed: feed) do
         {:ok, {data, meta}} -> {data, meta}
         {:error, _meta} -> {[], nil}
       end
 
     {:noreply,
      socket
+     |> assign(:feed_path, feed_path)
+     |> assign(:news?, feed == :news)
      |> assign(:all_categories, categories)
      |> assign(:page, page)
-     |> assign(SEO.forum_metadata(:latest, nil, page: page))
+     |> assign(
+       SEO.forum_metadata(if(socket.assigns.live_action == :news, do: :news, else: :latest), nil,
+         page: page
+       )
+     )
      |> assign(:meta, meta)
      |> stream(:threads, serialize_threads(threads, user), reset: true)}
   end
@@ -105,16 +117,18 @@ defmodule UrielmWeb.LatestLive do
       flash={@flash}
       current_user={@current_user}
       unread_notification_count={@unread_notification_count}
-      current_path="/forum"
+      current_path={@feed_path}
       seo={@seo_head}
     >
-      <UrielmWeb.Components.ForumLayout.discovery_header active_view="latest" />
+      <UrielmWeb.Components.ForumLayout.discovery_header active_view={
+        if(@news?, do: "news", else: "latest")
+      } />
 
       <%!-- Thread table --%>
       <section id="latest-discussions" aria-labelledby="latest-discussions-title">
         <div class="mb-3 flex items-center justify-between">
           <h2 id="latest-discussions-title" class="ui-eyebrow text-base-content/55">
-            Latest discussions
+            {if @news?, do: "Latest news", else: "Latest discussions"}
           </h2>
         </div>
         <div id="latest-discussions-surface" class="ui-card ui-card-compact h-auto">
@@ -136,8 +150,13 @@ defmodule UrielmWeb.LatestLive do
           <div id="threads" phx-update="stream">
             <.empty_state
               id="empty-state"
-              title="No topics yet"
-              description="New community discussions will appear here."
+              title={if(@news?, do: "No news yet", else: "No discussions yet")}
+              description={
+                if(@news?,
+                  do: "New posts from the AI News board will appear here.",
+                  else: "Choose a category to start a conversation with the community."
+                )
+              }
               icon="hero-chat-bubble-left-right"
               compact
               class="hidden only:grid rounded-none border-0 bg-transparent"
@@ -158,7 +177,7 @@ defmodule UrielmWeb.LatestLive do
         <%= if @meta do %>
           <.pagination
             meta={@meta}
-            path={fn n -> ~p"/forum?page=#{n}" end}
+            path={fn n -> if @news?, do: ~p"/forum/news?page=#{n}", else: ~p"/forum?page=#{n}" end}
           />
         <% end %>
       </div>

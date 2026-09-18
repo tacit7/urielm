@@ -112,7 +112,8 @@ defmodule UrielmWeb.Router do
 
     # Forum pages - separate layout with sidebar navigation
     live_session :forum do
-      live "/forum", LatestLive
+      live "/forum", LatestLive, :discussions
+      live "/forum/news", LatestLive, :news
       live "/forum/categories", ForumLive
       live "/forum/tags", TagsLive
       live "/forum/tags/:tag_slug", TagLive

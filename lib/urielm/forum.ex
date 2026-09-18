@@ -189,15 +189,25 @@ defmodule Urielm.Forum do
   Accepts Flop params such as page/page_size and order_by/order_directions.
 
   ## Options
-  - `:solved` - Filter by solved status: true (only solved), false (only unsolved), nil (all)
+  - `:feed` - `:discussions` (default) excludes AI News; `:news` includes only AI News.
   """
-  def paginate_latest_threads(params \\ %{}) do
+  def paginate_latest_threads(params \\ %{}, opts \\ []) do
     base =
       from(t in Thread)
       |> where([t], t.is_removed == false)
+      |> filter_latest_feed(Keyword.get(opts, :feed, :discussions))
       |> thread_preloads()
 
     Flop.validate_and_run(base, params, for: Thread, repo: Repo)
+  end
+
+  defp filter_latest_feed(query, feed) when feed in [:discussions, :news] do
+    news_boards = from(b in Board, where: b.slug == "ai-news", select: b.id)
+
+    case feed do
+      :news -> where(query, [t], t.board_id in subquery(news_boards))
+      :discussions -> where(query, [t], t.board_id not in subquery(news_boards))
+    end
   end
 
   def paginate_threads(board_id, params \\ %{}, opts \\ []) do
