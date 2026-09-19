@@ -12,7 +12,7 @@ echo "📦 Installing Elixir dependencies..."
 mix deps.get --only prod
 
 echo "📦 Installing Node dependencies..."
-cd assets && npm install && cd ..
+cd assets && npm ci && cd ..
 
 # Build assets
 echo "🎨 Building Tailwind CSS..."
