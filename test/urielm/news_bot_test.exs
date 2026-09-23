@@ -76,6 +76,24 @@ defmodule Urielm.NewsBotTest do
            """
          }}
 
+      "https://tldr.tech/api/rss/ai" ->
+        {:ok,
+         %{
+           status: 200,
+           body: """
+           <rss>
+             <channel>
+               <item>
+                 <title><![CDATA[TLDR AI update]]></title>
+                 <description><![CDATA[TLDR covered a useful AI update. It affects developers.]]></description>
+                 <link>https://tldr.tech/ai/2026-08-26</link>
+                 <pubDate>Wed, 26 Aug 2026 18:00:00 +0000</pubDate>
+               </item>
+             </channel>
+           </rss>
+           """
+         }}
+
       "https://www.anthropic.com/news" ->
         {:ok,
          %{
@@ -103,7 +121,7 @@ defmodule Urielm.NewsBotTest do
          }}
     end
 
-    assert {:ok, [openai, microsoft, anthropic]} =
+    assert {:ok, [openai, microsoft, tldr_ai, anthropic]} =
              NewsBot.discover(
                from: ~D[2026-08-22],
                to: ~D[2026-08-28],
@@ -124,6 +142,12 @@ defmodule Urielm.NewsBotTest do
     assert microsoft.url == "https://news.microsoft.com/source/features/ai/microsoft-ai-update"
     assert microsoft.published_on == ~D[2026-08-26]
     assert microsoft.summary == "Microsoft shipped an AI update. It is useful."
+
+    assert tldr_ai.title == "TLDR AI update"
+    assert tldr_ai.source == "TLDR AI"
+    assert tldr_ai.url == "https://tldr.tech/ai/2026-08-26"
+    assert tldr_ai.published_on == ~D[2026-08-26]
+    assert tldr_ai.summary == "TLDR covered a useful AI update. It affects developers."
 
     assert anthropic.title == "Anthropic AI update"
     assert anthropic.source == "Anthropic"

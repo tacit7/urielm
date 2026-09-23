@@ -21,6 +21,11 @@ defmodule Urielm.NewsBot do
       url: "https://news.microsoft.com/source/topics/ai/feed/"
     },
     %{
+      name: "TLDR AI",
+      type: :rss,
+      url: "https://tldr.tech/api/rss/ai"
+    },
+    %{
       name: "Anthropic",
       type: :anthropic_html,
       url: "https://www.anthropic.com/news",
