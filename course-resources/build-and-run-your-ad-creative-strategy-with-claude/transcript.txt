@@ -1,0 +1,1134 @@
+00:15-00:34
+
+Copy
+Just wait until we get some people joining. Hello, everybody, and welcome to today's live session. We'll get started in just a minute or two as we welcome people in. If you want to share in the chat where you are calling in from, we'd love to know your locations.
+
+00:34-00:37
+
+Copy
+It's always fun for us to see where everybody lives.
+
+00:48-01:07
+
+Copy
+And we'll just get started in about a minute or two. I'll start. Coming in from Minneapolis, Minnesota. We have Knoxville, Tennessee, Switzerland. Welcome everybody. New York.
+
+01:10-01:29
+
+Copy
+Rishi is from Orlando area. Dallas. Perfect. We'll just give it probably a few more seconds to let people trickle in before we get started. Puerto Rico.
+
+01:29-01:49
+
+Copy
+Awesome. Austin, Texas. Scotland. Everyone is from all over today. I love to see that. All right, we are going to get started in just a minute here. I'm going go through some housekeeping items.
+
+01:49-02:04
+
+Copy
+If you have any questions or comments, feel free to use the chat today to put anything in there. I will be monitoring the questions that come in. We have a Q&A section at the very end, so I will saving any question that I think are really great for the Q and A.
+
+02:05-02:21
+
+Copy
+And then if you questions during the session, that are not for Q&A, feel free to ask them there as well. And I'm happy to help with any of those. We have a survey at the very, very end that will pop up on the screen. Otherwise, we are ready to get started. So I am going to hand it over to Rishi today.
+
+02:22-02:42
+
+Copy
+Awesome. Thank you, Brooke. Hello, everyone. Super excited to be here today and exciting to see that everyone's from around the world. Our rundown team is also completely from Around the World, so super cool. But anyways, Yeah, I'm from Orlando, Florida, and I am the head of growth here at The Rundown.
+
+02:42-03:10
+
+Copy
+And today we're going to be talking about how to build and run your creative strategy with Claude. As you know, MetaAds is one of the most or the biggest marketing channels out there. If you can have success there, you create great success for your company. I was super excited to help you guys build your strategy and get started if you're just starting out or improve your So without further ado, we can get started here.
+
+03:10-03:27
+
+Copy
+A little bit about me. Before the rundown, I managed multiple seven figures and paid media budget for clients like B-Row, Klaviyo, Mercury, and Rocked. I've been in the digital marketing space for a little over three years. And this all led me to work at the run down now as the head of growth.
+
+03:28-03:45
+
+Copy
+From what I know, to my knowledge, we're the largest ad newsletter in the US at 2 million plus readers across our publications. And Meta is our primary acquisition channel where we get the majority of our subscribers. So it's very important for us to nail our creative strategy and make sure it works properly.
+
+03:47-04:05
+
+Copy
+So on top of that, I've personally scripted ads that have gotten multiple six figures of ad spend. So you can rest assured that I also spend a lot of time on creative strategy. I don't just manage people or anything like that. Actually spend time working on ads myself, scripting them, doing research on our audience and improving our processes.
+
+04:06-04:25
+
+Copy
+Um, so everything that you see today is actually how I run things here at the rundown. And I'm super excited to kind of share with you guys what I developed here. Okay, so why is creative strategy important? And why's it the biggest lever when it comes to meta ads?
+
+04:26-04:44
+
+Copy
+So creative decides where your ad goes and who responds. And that's why it's the bigger lever. If you're just starting out especially, and by the way, we did do a survey and the majority of people here are kind of just staring out and they want help with creative strategies and audience research.
+
+04:45-05:06
+
+Copy
+And that's good, because I want you guys to know that you don't need to focus too much on media buying when you're just starting out. Meta has made it very easy to get started. And while we're not going to cover how to do media-buying today, you can easily go on YouTube if you've just started out and just look up how you create a simple meta ads campaign, and you will learn everything you need know.
+
+05:07-05:34
+
+Copy
+What is more complicated and is a bigger factor when it comes to your success is creative strategy. So nowadays, what is the most important thing is how good your ads are. And that's the term creative strategies. With that being said, you can outsource production, editing, but you should not outsourced the judgment of your creative strategic because that determines ultimately the success with your meta ads.
+
+05:35-05:54
+
+Copy
+So everything we're going to do today is making you better at that judgment. And we are not going use AI to outsource our judgment, but we will use it to move faster and become better. All right, so here's today's agenda. We're first going to talk about AI intuition.
+
+05:55-06:12
+
+Copy
+Then we're going talk setting up your cloud project, then building your core avatar. And if you don't know any of these terms, we will be covering that. So don' worry. How to find ad ideas and do competitive research, producing ads, naming your concepts so that data is readable, and then analyzing the data to make better decisions.
+
+06:12-06:31
+
+Copy
+Really covering the full spectrum end-to-end from starting from scratch to analyzing data once you've actually spent money on your ads. OK, so to start out, we're going to quickly cover what you should be using AI for and when you shouldn't be careful with AI.
+
+06:32-06:46
+
+Copy
+So ultimately, I'm of the opinion that you Shouldn't Be Using AI For Everything. There's a time and a place for it. And while this webinar is about how to use Cloud for Creative Strategy, and we will go in depth on that, there's still definitely parts where we can't use cloud fully.
+
+06:46-07:04
+
+Copy
+We can use it to help us inform our decisions, but not to make our decision. And so if we look at the left side first, AI is great at research, so consolidating huge amounts of information from the web into something useful. AI's great data analysis, organizing your own data and pulling insights out of it.
+
+07:05-07:24
+
+Copy
+It's greater ideation, brainstorming ideas for ads, and then creating ideas, for hooks and angles and messaging at a big scale. If you ever get stuck in your creative process, it's good for helping you get unblocked. It's great for editing copy, so strengthening your copy catching typos and grammar and the final polish before you ship anything.
+
+07:25-07:48
+
+Copy
+Now where you want to be careful is using AI to write all of your copies from scratch, because this can usually lead to like below average or average quality that needs to You want to be careful with using AI for decision-making without oversight. So AI might not always have as much context as you, and so its judgment isn't going to always be better.
+
+07:48-08:05
+
+Copy
+And even if it does have much as context you it still might have better judgment. Ultimately, you want take responsibility for your success or failure, so you don't want AI making decisions at the end of the day. And lastly, producing ads end-to-end with no involvement.
+
+08:05-08:25
+
+Copy
+This is a no-no in my opinion. While you can use AI to make images and videos nowadays, if you want to try and use it end to end, it's going to be very hard to have a successful campaign that leads to above average results or even beating existing ads that you made yourself.
+
+08:26-08:42
+
+Copy
+And so this is kind of where I draw the line right now. And I want you guys to always keep this in mind throughout this presentation. Keep this mind when you work on your creative strategy and your meta ads. Remember that human touch is always really good when it comes to these kind things.
+
+08:43-09:07
+
+Copy
+People can smell when use AI very heavily in your ads or your marketing. And therefore, we want people to realize that we put effort into these things. And so let's draw the line and make sure we take everything slowly here and use our own judgment. All right, so as we continue, we're going to start getting into the meat of this presentation now.
+
+09:07-09:24
+
+Copy
+But before we do, a quick definition here, because I'll be referencing this term a lot throughout the presentation, is what a concept is, right? And so when it comes to creating ads, the concept it's going be made up of four variables. It's going to be our avatar or persona.
+
+09:25-09:41
+
+Copy
+We can use those words interchangeably. And that basically just means who we're targeting. It is going be your angle. So that's the argument we are making in our ad as to why someone should take us up on our offer or listen to us. It's gonna be an offer, which is how we package a value exchange.
+
+09:42-10:08
+
+Copy
+And it is gonna the format. So it how the video or image is visualized and delivered. Basically these are the four variables the main four variables that we're going to be labeling our ads with and our data with. And so therefore, after we actually spend money on ads, we can come back and see which combination of these variables are leading to the most success and the best performance.
+
+10:09-10:28
+
+Copy
+If we just place ads in our account without labeling the data, then we're not going to really have great insight into why things worked. We'll know what worked, but we won't really know why. And so that's why we want to label our concepts, and we wanted to understand that these are the key variables we have when it comes to producing ads.
+
+10:31-10:51
+
+Copy
+All right. So let's continue here. All right, so when it comes to building your cloud project, this is going to be like the meat and potatoes of everything we do today. Here's what's going go inside of our cloud projects. So we're going have our core avatars file.
+
+10:51-11:04
+
+Copy
+We're gonna build this together today, This is gonna be who we are advertising to in a format that cloud can actually work with. And so we'll cover this in a second, and I'll kind of break down the definition of a core avatar and what it consists of so you guys can understand that.
+
+11:05-11:20
+
+Copy
+This is basically going to be the foundation of everything. And this is going be like the golden context Cloud needs to really create successful ads or work within our creative strategy process successfully. Next, we have our brand guidelines and company context file.
+
+11:20-11:38
+
+Copy
+I'll show you how to build this together. This is just all the other context Cloud needs to be able to help you with your create strategy as well. We have our project instructions. This will come at the end, and then this is basically just telling Cloud how to act when it comes to working within our systems.
+
+11:38-11:58
+
+Copy
+And lastly, this isn't a file, but we're just going to need to connect Cloud to the meta MCP server so that it can access data without us having to go into meta ads and export data ourselves and drop CSVs into the chat. So we'll just let it do it on its own. I'll show you guys now quickly the Cloud project.
+
+11:59-12:08
+
+Copy
+And really quickly, if you don't know how to make a project in the desktop app of Claude, you're going to want to go over to the chat and co-work tab here. You're gonna click projects.
+
+12:14-12:30
+
+Copy
+And then you can leave this blank if you want and what you're going to want to do is just click use a folder and basically just make a blank folder for cloud is called like creative strategy and have access that way you always have your files stored locally on your computer, as well as in clouds cloud.
+
+12:32-13:06
+
+Copy
+I already have a project made for this presentation today. It's right here, it's called Rundown University Creative Strategy. And today for the presentation, and since the RUNDOWN University team told me that the audience and everyone here likes live demos a little bit more than just straight slides and presentations, we're going to be working through Claude together today to build our project build our creative strategy, build, you know, our avatars and our audience and do that research and basically do a live demo of how I would kind of build creative strategies from scratch.
+
+13:09-13:34
+
+Copy
+So, okay, with this being said, I have the project here and I'm going to quickly walk you through the next step in a second. Let me just take a sip of water. All right. As I said, in the files, we have the brand guidelines and company context file here, and we the Meta MCP.
+
+13:34-13:53
+
+Copy
+So I'll walk through these two first really quickly. When it comes to the meta MCB, if you don't have it connected yet, all you're gonna have to do is hit this plus button here. Connectors, add a connector, browse connectors. And then if we type in meta, You can see there's one called Meta Ads here.
+
+13:54-14:11
+
+Copy
+If you click onto that, there should be a button that says Connect here, mine's already connected, but once you've clicked that it should just have you log into your Metas account and then it'll be connected. Super simple and easy. The next thing is our brand context file.
+
+14:12-14:29
+
+Copy
+Yes, you can see it's already made here. I'm going to show you guys how to make your own, but since this takes quite a while, I am not going do it live. Basically, we have a prompt here, as you can see in this Google Doc. It's called Brand and Company Context Prompt.
+
+14:29-14:50
+
+Copy
+And it's a problem that will basically have Cloud interview you so that you could answer questions to give Cloud the context it needs. On top of that, before it interviews you, if you give it your website URL and your company name, it'll do research on its own to get all the contacts it need, and then basically it will interview with follow-up questions and get the additional context.
+
+14:51-15:04
+
+Copy
+So it'll split it into two phases and do the interview for you. So after you paste this prompt into Claude, basically you're just going to answer the questions. And the reason we're not doing this live is because it's like eight questions, so it can take a couple of minutes.
+
+15:05-15:24
+
+Copy
+But after do that, what you'll get back is something that looks like this. So as you can see here, it basically just breaks down what the company does. Today, as I mentioned, we're talking about the Rundown University and we are building the creative strategy for the rundown university.
+
+15:25-16:00
+
+Copy
+Category, positioning, product and offers, right? So that's important context to know what it should be advertising. The mechanism, so basically what is different about RUNDOWN University or your product? And why is it unique and why should people care? Conversion paths like what landing pages are using, what does the marketing funnel look like, social proof, testimonials, objections, and a little bit more context that will basically just help it with the messaging and copywriting when it comes to your ads and audience building.
+
+16:01-16:21
+
+Copy
+So as you can see here, everyone always talks about context is gold for AI. And this is kind of what golden context looks like, in my opinion. It's all these little details that can really make it sound as close to something that you would have written yourself or a intern on your team, maybe, or junior marketer.
+
+16:23-16:49
+
+Copy
+So basically, after you answer that prompt that I'm going to give you guys, you'll have this file. And now the next step here is going to be continuing to build the project, and that big next up is building your core avatar. And so a lot of you guys wanted to learn about audience research, And this is what great audience Research consists of, in my opinion, it's going To be building a core Avatar.
+
+16:50-17:17
+
+Copy
+So what is a Core Avatar? The avatar is a group of specific people who are most likely to buy your product. And the goal is instant relatability. They see your ad and they think that's me. And here's why that's important, especially if you're more so on the lower side of marketing budget or you are just starting out or having trouble with competitors kind of dominating the space, right?
+
+17:18-17:40
+
+Copy
+In a sophisticated market, in a market where there's a lot of competitors, everyone is going to have the broad terms covered. For example, for the Rundown University, we teach people how to use the latest AI tools at work. There might be hundreds, if not thousands, of content creators or education platforms who are advertising, learn how-to-use-Claude-co-work for your job.
+
+17:42-18:04
+
+Copy
+So if we go and make an ad like that, we're competing with the whole market. But if build our core avatar to be more specific, then we can carve out a subsection of that market for ourselves and compete with way less people. And also, which is more beneficial, is when someone sees our ad, they'll think that this is exactly for me, right?
+
+18:04-18:35
+
+Copy
+Because we are listening to their desires, their pain points, and their emotions. We talked about it in the ad. And they're not going to want to go with anyone else. They're going want go to with us because we know who they are and what they want. And so if you're someone who is building a company or a service or product or business, who's competing with a big market, you want want be super specific in your ads so that people know that your product is for them and they understand why they should actually pick you instead of a bigger player or another player, right?
+
+18:36-18:59
+
+Copy
+Now, here's what a core avatar consists of. It's going to be a desire, you know, the I want or I need statement in their words, any experiences that they've been through, and the emotions they have, in any demographics. And all of this is in context to what niche you're in or what you are selling or providing, right?
+
+18:59-19:20
+
+Copy
+So for the Renna University, for example, a desire might be, I want to learn how to use AI at work so that I can get promoted, that might a be desire. But I don't know, and that's why we have to do research. As we move on here, we're going to talk about how to build the core avatar through research.
+
+19:21-19:44
+
+Copy
+So for the research part of this process, We're gonna use perplexity computer. And the reason for that is because I believe perpectly computer is better at research than Claude. Especially Cloud Cowork. I actually tried to do a research with Cloud. And when it comes to scanning Reddit, sometimes it'll have errors.
+
+19:44-20:03
+
+Copy
+It actually won't be able to. From my experience, that's what happened. You might have had a different experience. But from my experienced, Perplexity has done me well. So that why we're going to use it in this process. And what I like to do is have privacy really focus on what people are actually saying in their words and their language.
+
+20:04-20:20
+
+Copy
+I don't want the AI to hallucinate and read things and come up with a hypothesis. It wants to just give me the raw data and the rough facts of what you are saying on the internet. And since it has this capability to scan so many sources, I want to compile that data for me.
+
+20:21-20:38
+
+Copy
+As I mentioned, coming back to our AI intuition slide that I talked about earlier, This is where AI is great. It can scan thousands of research. You know, multiple days to do in minutes, right? And that's why we're going to leverage it, leverage AI for this part of the process.
+
+20:39-20:55
+
+Copy
+So when it comes to research, this is what you're gonna do to build, start building your research for your core avatar. You are going use this prompt here that I've built. It's called Core Avatar Research. And all you have to is basically just type in what your product is.
+
+20:56-21:20
+
+Copy
+Since you already also built your brand context file, you can also even just tell Claude, or sorry, Perplexity to reference your brand-context file if you'd like, right? But in this case, I already ran this prompt, and I'm not going to do it live. And the reason for that, And I have proof and will show you, is that this prompts, it ran for 15 minutes.
+
+21:21-21:39
+
+Copy
+I don't know if it has a timestamp here, actually. But anyways, what you can see here is that it says 939 sources. So it researched 930 sources to do the research for us, right? And so anyways come back to the prompt here. Basically, I need to go through it all.
+
+21:40-21:55
+
+Copy
+What the problem does is it focuses on Reddit first. And what most people don' realize is Reddit is an anonymous channel. People don't have their names on their Reddit profiles, and so therefore they kind of say things the way they really are and the ways they feel.
+
+21:56-22:18
+
+Copy
+And why that's gold is because that allows us to then take those words and that language and reform it back into advertising, right, or back to research. We know exactly the people, the things in their heads, And so it focused on Reddit first, and it's going to pull all the data for us into kind of a structure like this.
+
+22:18-22:38
+
+Copy
+What they say, what they've been through, how they feel, all of this stuff. And it is not too long. All you have to do, as you can see here, is I just put in this one line we were advertising for the Rundown University. This is an education platform that focuses on teaching knowledge workers how to use the latest AI tools at work to improve productivity, technical capabilities, overall work efficiency.
+
+22:38-23:03
+
+Copy
+These are people who want to be seen as AI proficient. Then the rest of the prompt goes through. And then 15 minutes later and 939 sources later, I got my document. As you can see here, it's scanning Reddit, all these Reddit threads, and all the sources. It's going through reviews on TrustPilot, on Course Era, or all of these other websites on YouTube.
+
+23:05-23:25
+
+Copy
+And yeah, it came up with this document, which is going to be very valuable to us. And it's going be the foundation of everything we do going forward as well. So here's what the document looks like. The next step is now you have your documents. Let's look at it, let's review it and let make sure we are sure that we want to use this.
+
+23:25-23:50
+
+Copy
+It's telling me that basically these are the main threads I pulled from. And it's going to talk about the desires first. As we kind of said in the prompt, we wanted to structure the output like this. And so it was bringing it back like for us with real language and quotes from Reddits, anonymous users on the internet.
+
+23:50-24:03
+
+Copy
+It's saying, I want practical AI use that maps the work already in front of me. Remember, were advertising for the rundown university here. That's why we're doing research on what people are saying about AI and what they want out of AI. So that's what this research is, right?
+
+24:05-24:23
+
+Copy
+I want AI to remove repetitive work and give me time back. I Want repeatable workflows and automation. And on and on. Now, obviously, you're going to want to take your time with this and actually read this. Make sure that you kind of align with it. Even if you are not, this is just raw data at the end of the day.
+
+24:23-24:44
+
+Copy
+This is not AI coming up with its opinion or anything. It's literally just AI telling you what people are saying on these internet sources, on this website. So after you kind of go through it and make sure everything looks good to you. The next step, which is more important when it comes to judgment, this you kind of don't really have to do too much review.
+
+24:45-25:00
+
+Copy
+Next step will be more importantly. It's going to be giving Claude a training on what a core avatar is. So before we tell Claud to basically build our core, avatar that we're going be advertising to, we need to make it understands what core avatars actually is, right?
+
+25:01-25:34
+
+Copy
+And so I have a document, it's called Core Avatar Training. And basically, this is going to explain what a persona or core avatar is, and how to build it, all the things we need inside of our document to make this a proper, useful document for Cloud. As you can see here, basically what an avatar is, we have the specificity dial, which is basically saying like, you know, when an Avatar is being built, if we're too wide, then we are going to be competing with everyone.
+
+25:34-25:51
+
+Copy
+But if were too narrow, than we might be alienating people and might too specific to the point where no one is really going resonate, right? So that has to balance. We explain what core avatars and sub-avatars are. And so basically, a core avatar is the broad term, the desire, or the experience.
+
+25:51-26:09
+
+Copy
+Then a sub avatar, is going to be another tangible piece of experience or emotion that we can use to differentiate ourselves. That's where the specificity comes in, right? So for example here, someone who wants to save money, The sub-advertiser is someone who wants to save money, and they've tried a budgeting app, they stop using it.
+
+26:10-26:27
+
+Copy
+And as you can see here, if we advertise just, I want to say money. We're competing with everyone. But if you've try two budgeting apps and stop you using them, listen up. Now we're more specific and Matt is going to show it to people that have actually had this experience.
+
+26:28-26:42
+
+Copy
+And therefore, the audience is going to think we're speaking directly to them, and they're not going go with the competitors. They're going actually pay attention to us now. Hopefully, that explains the thesis of why we're building this more. And I'm not going to go through this whole document.
+
+26:42-26:59
+
+Copy
+As you can see, it's pretty lengthy. It's for Claude to read. But if you also are going through the process that I hired up in, you read it too, because it'll build your understanding on why were doing this and this theory of advertising as well and why it is important.
+
+27:00-27:25
+
+Copy
+Anyways, the next step here, after we've done our, we built our research document, as you can see here. We're going to give Claude that training and just tell Claud like, hey, can you read this? Right? And so I'm going do that now. I am going drop this document in the project files here and I was going say, Hey Clau, I dropped the document and the projects called core avatar training document.
+
+27:26-27:48
+
+Copy
+Can you please read it and let me know when you're done. Don't take any action yet. Just read it and let me know when you're done. And the reason we say that last part is just because we don't want Cloud to start building anything on its own. We want to stage our steps with Cloud so that it does it one step at a time and we can make sure we're controlling it, and it's not doing whatever it wants to do.
+
+27:48-28:11
+
+Copy
+So as you can see here, I just read the documents. And now Claude knows what a core avatar is and how to build it. So if we now tell Claud to basically look at our research documents and build the avatar, then it should be able to do so. And just to make sure it happens correctly, we're also going to use another prompt that I built here to this properly.
+
+28:12-28:29
+
+Copy
+Now, the importance of this prompt is that it's going to phase the build in a way that Claude still is not making its own decisions, you are the one making decisions. And what I mean by that is, as you can see here, there's phase one, which is propose the foundation, and phase two, we just build it.
+
+28:29-28:47
+
+Copy
+So in phase 1, basically Claud is going read the research and then come up with its hypothesis as to who your core avatar should be. And it's going to give you multiple options. And from there, you're the one who's gonna decide which one is the right one to go with.
+
+28:47-29:01
+
+Copy
+The reason that you are making the decision is because remember, as I said earlier, this is kind of where we draw the line is if you let Claude make the decisions and then things don't work out later, well, who are you gonna blame? You're gonna to blame Claud, right?
+
+29:02-29:21
+
+Copy
+And I don't think that's correct. You should be more involved with this build out process. Since you are the one who is building the company, you have more context on everything. You have better judgments on what's going on in the company. You are the one who's talking to customers and doing interviews, getting feedback, and getting reviews and comments.
+
+29:22-29:36
+
+Copy
+You understand everything much better than you. Even if you know everything about the Company much more than Claude, even if it's in your subconscious mind, you might not realize it, but you probably do. So let's use this prompt now and I'll show you guys how it works.
+
+29:43-30:03
+
+Copy
+So the only thing we have to do in this prompt is say, there's a line here that says paste the full research output here unedited. And I'm just going to say reference the AI proficiency report in the project context.
+
+30:05-30:35
+
+Copy
+I think that's what's called AI proficiency buyer research report. Okay, so let me change that. AI-proficiency-buyer-research-report. That's all we have to do. Now it's reading the research, it understands what a core avatar is, and now it is building it for us, or it building in phases for Cool, so it's reading the documents and here it goes.
+
+30:40-30:53
+
+Copy
+All right, so phase one, it's giving us three possible foundations for avatar. And remember, everything we do with our ashradji with Cloud after this is dependent on this. So it is very crucial to get this right. Or at least you take a part in the judgment here.
+
+30:54-31:15
+
+Copy
+When we make ads, that's going to make it for this avatar, right? So remember it will always come back to this, and this build out is not extensive, but very important. That's why we are using a 15-minute perplexity prompt in beginning of this scanning 1,000 resources to make sure all of this is actually based on real data, real language in the internet, and we have a good understanding of that.
+
+31:17-31:37
+
+Copy
+OK, so it's proposed here three possible foundations for our core avatar. So one is I'm thinking, remember this for the rundown university. This is, I am thinking less about becoming a machine learning engineer and more about practical career skills. Number two is I tried to learn AI ready through tutorials about a course or certificate program and it came out of it with nothing useful.
+
+31:38-32:05
+
+Copy
+Number three is I already use AI daily and I've built private rituals to keep it from going wrong, verifying, grouping, restarting, feeding a fake data. Okay, so now what happens here is you have these three options and since I'm the one in this room besides Roku who probably knows the most about running a university and no one else on the team might not be running this creative strategy, I have to make the decision, right?
+
+32:05-32:30
+
+Copy
+And so what do I think the rundown university buyer persona is and who we should be advertising to, right? Well, I don't think it's this one because this is hyper specific to machine learning engineer and building practical career skills. So this 1 is a little bit too specific, in my opinion, but it is interesting because it says it has 35 of 50 threads as the strongest data in the file.
+
+32:32-32:52
+
+Copy
+But anyways, I don't think we can really advertise to this at the end of the day, right? And then we come to B and it says, I tried to learn AI ready. I bought a course and I came out with nothing useful. And I like this one a lot because it's someone who had an experience of trying to learning AI.
+
+32:52-33:10
+
+Copy
+They had a desire to learned AI, they made an effort and they parted ways with their money. And they came out with nothing useful. So now they're in this state of like, well, like I'm very like torn between like what I should do now because I spent money. I tried doing it and it didn't work out.
+
+33:12-33:39
+
+Copy
+The Rundown University, we can come in and basically frame it in a way that has a unique mechanism that they might not have already experienced. So we could tell them, look, you bought a course. It didn't work out. But did they offer office hours to you? Because the RUNDOWN University every week, We have an in-house expert named Billy who hops on with all of our students and offers office hour where you can literally just go and ask any question you want.
+
+33:39-33:56
+
+Copy
+And he'll solve it there on the spot. So if I said that to someone who's going through this experience or has been through the experience, what do you think they might feel? They might kind of like an aha moment as to like, wow, I never have actually had that experience before or had someone offer that.
+
+33:56-34:16
+
+Copy
+To me, it's very unique. I kind of want to take him up on the offer. And on top of that, what if we frame our offer as like with a risk reversal? What if he said like, and by the way, like you can try it for free for a week or and, by way if you don't like it within the first three days, you get your money back.
+
+34:17-34:35
+
+Copy
+That's exactly, I think, what this person is looking for. They want something useful, and they want insurance that they're not going to make another mistake. So I like this one a lot. See, this is kind of a weird one. And as you can see, with AI, things can kind go stray with these kind things, like these research.
+
+34:35-34:59
+
+Copy
+But it's not making this up. It came from the data. And it's pulling a real quote, right? It's just saying like, you know, I use AI daily, but like I'm very skeptical and like it might hallucinate or it may just make things up all the time. And so like an interesting niche or sub niche, it is not something that might be great for advertising specifically.
+
+34:59-35:17
+
+Copy
+So we're going to go with B here. All we have to do now with this prompt is just tell it says waiting on your choice. We're just going say B. So now it's going to build the avatar file for us. And once it does that, we'll have our core avatar basically built out.
+
+35:18-35:38
+
+Copy
+But we will want to review it pretty extensively, because as I said earlier, this is the foundation of everything that we're doing. All right, so we're just going to have to wait for Claude to build that file. But the next step after the file is built and reviewed is starting to actually come up with ideas for ads.
+
+35:38-35:52
+
+Copy
+Because now you know your audience, you've done your research, You've built your persona that you're going target in your ads, So now, now can actually start to go ahead and work on the advertisements, the creatives themselves, right? And this is the best part and the most fun part about creative strategy.
+
+35:53-36:13
+
+Copy
+So it's built out the documents here. What I'm gonna tell Claude is to, what you're gonna wanna do as well is tell Claw to you know, it just sent this in a text chat back to me. Remember we need this stored for later reference. So you need to tell Claus to store this into project context files.
+
+36:13-36:32
+
+Copy
+And also if you want, you can store it into your local computer folder, right? So what I gonna to it is just, can you make this, Can you make this a document and store it in the project context files for reference later? Cool. While it does that, we can start going through this.
+
+36:33-36:53
+
+Copy
+We're going to do a quick review because we don't have a ton of time today. We're gonna do quick skim to understand what it built here and then we'll go ahead and get on to the next step. But remember, this is very crucial for you when you're doing this to review this very extensively and actually edit it as you want to because this the core of your advertising base going forward.
+
+36:55-37:16
+
+Copy
+All right, so it's building that document. And let's review this. So it called it the Burned Learner, and it is based on experience, right? They have already tried to learn AI through a paid course, a program, or tutorial. Sorry, built a document, And they came out the other side without a skill they can use for work, Right?
+
+37:16-37:34
+
+Copy
+So that's their pain point, that is their experience. And if we go down, it's going to talk about experiences. It's gonna give all this information. As I said, you're going want to review this very closely as you do it. My favorite section of all of this is called the second order.
+
+37:34-37:54
+
+Copy
+And so if you think about marketing, there's first order benefits, let's say, and then second-order benefit. So the first- order benefit could be something surface level. Then the 2nd order is like what they really want And so, you know, for example, when it comes to this, let's see what it's saying.
+
+37:54-38:11
+
+Copy
+It's a second order benefit. Once a structured in-depth path wants to be someone who finishes things, not someone with three abandoned courses in their account, right? So it saying the second-order benefit of having, of us offering a structure in the path is that they'll actually be able to finish it and not have abandoned course in there account.
+
+38:11-38:28
+
+Copy
+Right? It saying like you might want to say this in your ad, because if you actually want have courses that you're able finish, because they're valuable, then you could say that in an ad, right? And it kind of follows along those lines. A better example might be, let me see what the other two are.
+
+38:35-38:54
+
+Copy
+So a better example of a second order benefit might be, like, if I say, do you want to learn how to use the latest AI tools at work? That's surface level. But what's the second worker of that? Well, it's, um, Do you wanna look smarter in front of your boss? That's like the real underlying feeling that I'm going for.
+
+38:54-39:09
+
+Copy
+Like, yes, everyone wants to to how use AI tool, but like why, right? And if you ask that question, why? The answer is what you should probably say in your marketing, So I think that's a little nugget that hopefully will help you with your advertising copy as you go ahead and make your ads.
+
+39:10-39:34
+
+Copy
+And it's explaining the sub avatars here so we can say our avatar is someone who wants in-depth learning. But to get a bit more specific, we might say something around the emotion it saying here. So the confusion is the wound. So we're saying the ad argues 50 tutorials disagreeing isn't your problem and the fix is one path.
+
+39:34-39:57
+
+Copy
+So basically it's saying like, if we explain our ad that we gonna give you a structured course, then we can add a little bit more specificity as to their pain point and that could help the app reach the right person. That's kind of how the sub avatar works is adding a bit of more specifically onto your core avatar so that you don't compete with a broader market, but you're carving out a section for yourself, right?
+
+39:57-40:12
+
+Copy
+So specifically someone who wants a structured course and not just a library, right? Maybe we say that in our advertisement, and obviously you have to say things that you actually have. You can't just make things up, but that's kind of an example that might help you.
+
+40:12-40:32
+
+Copy
+And so we have our document made here. That's our core avatar document that we can reference later. And now we're going to go on to the next step of this whole process, which is actually making ads. As I said earlier, we don't have a ton of time, but I'm going give you as much value as I possibly can in this time.
+
+40:32-40:51
+
+Copy
+What I believe are the four main ways create strategies or marketers come up with ideas for ads are right here, so winning ads from competitors or other brands, trending organic content, mining customer data, feedback and surveys, or your own database of winning adds.
+
+40:52-41:11
+
+Copy
+So not everyone might have their own data base of running ads. Not everyone may have a ton of customer feedback, but you always have organic contents that you can look at and you have Facebook ad library. And if you don't know what Facebook Ad Library is, it's Basically, a library of every single ad that's live on Meta or Facebook or Instagram at this very moment.
+
+41:12-41:30
+
+Copy
+And what's really cool is you actually also kind of see in a way which ads are performing best, right? And that can help you get inspiration. So I think looking at competitor ads and other brands on Facebook ad library is actually one of the most common ways people come up with ads.
+
+41:30-41:50
+
+Copy
+That's what we're going to do today. We're gonna look at Facebook Ad Library. And if you don't know what brands or content you should be looking at yet, then I'm going to help you there as well with a prompt. So what we're going do is basically, I want to show you what Facebook ad library is.
+
+41:55-42:23
+
+Copy
+When you open up this page, you just go to Google Facebook Ad Library, we'll get to this. You're gonna want all ads here. I like to be United States. And then now you're gonna have to search for a keyword or an advertiser or brand, right? And if you don't know where to start, you can obviously just type in your niche and see what comes up, but it might not be the best results, and so what we can do is use this prompt here, it's called ad library research.
+
+42:24-42:46
+
+Copy
+And what's interesting is that the meta MCP that you connected earlier, actually also gives it access to ads library. So Claude can look at the ads, library through the MCT, And so if we use this prompt, the purpose of it is to help you understand who you should be looking at in the ad library or give you ideas or a trail to start on.
+
+42:46-43:09
+
+Copy
+And that can eventually lead to other things. All you have to do is give it context as to what your product is and who buys it. What I'm going to say is reference the brand context document to understand who we are and our products.
+
+43:13-43:31
+
+Copy
+I'm going to say information product slash description. So reference the Brand Context Segment to Understand Who We Are. Make sure it understands we're talking about university. Cool. And that should be it.
+
+43:31-43:50
+
+Copy
+So it's gonna start looking through the Meta MCP at the Facebook ad library. Now this is more so for people who don't already know who they want to get inspiration from or where to start. As I said, this will just give you a trail to star on and help you understand who your competitors are that are actually advertising at their biggest scale.
+
+43:51-44:07
+
+Copy
+Because you can see how many ads people are running at any given moment. I personally already had some inspiration for the Running University ads. I kind of know who I want to look at. And so I'll go straight to them. But as soon as this prompt is done, we'll come back and we will look it.
+
+44:10-44:31
+
+Copy
+So you can understand kind how to do it when you do this yourself. This might take like four to five minutes, I think. We'll continue on for now and then come to that. So we're doing live competitor research. And basically when we go to Facebook Ads Library, this is the competitor, or not competitor but this the brand we'll be looking at today.
+
+44:31-44:50
+
+Copy
+It's called brilliant.Org. I believe they're a app that teaches you, that makes you better at math. So like you pay a subscription, a monthly fee for an app and they'll make you basically better math and maybe it might be targeted towards college students or undergrad or high school but that's kind of what they sell.
+
+44:51-45:12
+
+Copy
+And so when it comes to competitor research or just getting inspiration for ads, you don't always have to look at people that are in your niche. So for example, let's say that you have a furniture brand. You don' have go look Wayfair, which is one of the biggest furniture brands in the world, to see what they're doing.
+
+45:12-45:24
+
+Copy
+And you can go and look other e-commerce brands and other niches. Maybe it's the beauty niche to get inspiration from ads. It doesn't have be your specific niche, And so for the rundown university here, we're looking at a completely different niche, which is math.
+
+45:25-45:46
+
+Copy
+But one thing is in common is that we are both selling education or information, right? And I would try to kind of, if you can, find these adjacent niches, Which is kind what I did here. I think Brilliant is adjacent to the university in that, like, We both sell information and we both have a subscription offer, but we were in two different nichies.
+
+45:46-46:10
+
+Copy
+They're in math, were an AI, Let's see how Claude's doing here. It's still going. OK, so quickly on the Ads Library front, what you're going to do is when you find your page that you are looking at, you want to make sure that sort by impressions here, and so you can do most recent or impressions.
+
+46:10-46:30
+
+Copy
+So if I just click most recently, It shows most recent, but if I go to impressions, now what's happening is you're seeing basically the ads in order to have the most impressions. So that, in theory, it's not 100% accurate, but you're seeing, In theory the most successful ads at the top, right?
+
+46:31-46:51
+
+Copy
+And you can see here, this one's been running for 141 days. So it started running on April 21st and today, September 9th. It's being running a long time. And so that signals to us that this is a successful ad and we can potentially get some inspiration from it and kind of figure out how we replicate it or adapt it for the renowned university.
+
+46:53-47:11
+
+Copy
+Um, so we kind of found. What ad we're going to be looking at or the ads that we'll be getting on this page. But it's never a one-shot thing. You're gonna like, I think it may be taking like four or five pages to find this one, right? That I liked and I kind of wanted to get inspiration from.
+
+47:11-47:37
+
+Copy
+I like their formats and whatnot. And so it not going be a oneshot thing, you're to want to use what you get back from this cloud prompt to kind like start going through pages and see which one makes the most sense for you to start riffing on. So while we wait on that, I'm going to play this ad here and we're going see if it makes sense to kind of get inspiration for this to make an ad for the running university.
+
+47:37-48:04
+
+Copy
+And before I do that I just want to explain a little bit more in depth that like We're going through the creative strategy process and if we zoom out, where are we right now? So we've done audience research. So let me zoom back even further. We built a document that gives cloud context on our company, our offer, pricing, funnel, what we say, don't like to say etc.
+
+48:05-48:25
+
+Copy
+We built a core avatar based on research by scanning over 1,000 resources, so real language on Reddit and other websites that explain to Claude what people are really saying in our niche about the other competitors and the offers already in the market. So we have a good understanding of what People like and don't like, and what they need, right?
+
+48:26-48:42
+
+Copy
+And now that we have our core avatar built with that prompt, we understand who we want to advertise to and who want the test. And remember, marketing is always experiments. This might not work, but it's a test, and if we do it, will get information that leads us to our next test right?
+
+48:42-49:03
+
+Copy
+It might work. It may not. But we'll see once we actually run the app, right. So now we our our avatar builds. What we're doing is trying to figure out how to make apps and what we should basically build. And instead of just starting with a blank sheet of paper, what we're doing is we are going to the marketplace and understanding what's already working for other brands in our specific niche or in other niches.
+
+49:04-49:21
+
+Copy
+In this specific case, before this presentation, I had already looked at multiple pages on MetaAds library. And since that takes time, want to do it beforehand. I came across this one that I thought was good inspiration. Let's pause there because Claude finished.
+
+49:23-49:42
+
+Copy
+When you run this prompt here to basically start figuring out what brands to look at at MetaEyes library, as I said, this is for people who need help figuring who to like at or want more like direct output to figure that out from Claude. And you'll get group A here with the prompt, which is direct competitors.
+
+49:42-50:02
+
+Copy
+These are people who are directly in the university's niche. So Coursera, Udacity, udemy, Mindstream. And then you get Group B. This is the same model. They sell information, and they might have a subscription, but unrelated niche, so Mindvalley. Headway, The Motley Fool, right?
+
+50:03-50:25
+
+Copy
+And the reason we want both is because we don't only need to look at our specific niche, we wanna look adjacent niches as well, and that's what Brilliant is, it's an adjacent niche to the Renna University. So as you go through these, you'll figure out through intuition which kind of ads you should be looking at for inspiration, Now we've come to a page that we like.
+
+50:26-50:42
+
+Copy
+And so we're going to start watching their ads, and we are going look at them. So we'll look the first one, as I said earlier, 141 days live. This is a top-performing ad, so are we going focus on this one. We're gonna watch it together. Hopefully my audio comes through.
+
+50:43-50:55
+
+Copy
+If not, Brooke, please let me know, or anyone in the chat, let us know. Let me pause it. And turn the audio up.
+
+51:04-51:20
+
+Copy
+Looks like the Audio is not working here. OK. So the Audios not Working. You guys can read it on the caption, hopefully. There's captions on this screen. Just go ahead and read this. It's only 30 seconds long. And I'll call it out when it's done.
+
+51:52-52:08
+
+Copy
+Cool, so I really like this ad, and basically what they're doing in this add is they are myth busting. So it's like some second person is saying, why are some people bad at math? And this guy, they were immediately giving him credibility because he studied physics at Caltech.
+
+52:09-52:24
+
+Copy
+He's explaining that nobody's bad math. But a lot of people were taught math poorly. And the reason I liked this and stopped on this one specifically for the Rundown University is because it clicked in my head like, oh, we can easily adapt that for The RUNDOWN University.
+
+52:25-52:45
+
+Copy
+Why don't we say, why are some people struggling to learn AI, right? And right after that, you could have someone on the screen, which is one of our in-house AI educators. We can have some type of statement that proves credibility. Nobody's bad at AI.
+
+52:46-53:01
+
+Copy
+Some people have just been taught AI incorrectly, which is exactly if you remember the core avatar that we're trying to target, right? People who had an experience that they bought something or went through a course and it wasn't worth it, and that's the exact core Avatar.
+
+53:01-53:22
+
+Copy
+So this app translates perfectly for us. And going back to the bigger picture here, the reason that we would want to invest more time and money into this idea is because it's already proven to work, right? This ad has been 141 days on meta ads and is their top performing ad in terms of impressions.
+
+53:23-53:41
+
+Copy
+So if we can kind of adapt this and replicate it a little bit for the university, there's a good chance it could succeed for us, And we're not really taking the whole thing. What we are doing is we were putting their hook and format into a template, and then taking that template and turning it into an ad for the running university.
+
+53:42-54:01
+
+Copy
+And that's the process for researching competitors, in my opinion, coming up with ideas. So it's one idea, it is one hypothesis. You're never going to find gold on your first time you go on ads library, but it takes time of looking at winning ads.
+
+54:02-54:22
+
+Copy
+And the good part about that is as you do this more and more, you're building up your intuition into what a good ad looks like, and you can go from there. So what we would do now is basically To be completely honest with you guys, as I said earlier, with AI intuition, I don't like to just blatantly like tell AI to copy this ad.
+
+54:23-54:55
+
+Copy
+What I would do is kind of write down the script of this add and then basically kind understand what made it work. And then I will try to rewrite it in my own writing for the run on university. I wouldn't really use AI that much really. But what I do do sometimes if I get stuck or if need to move really fast or I want to give you guys a process that you can really go away with today is I would use a prompt like this to kind of basically tell Claude to help me come up with ideas on how to replicate this app, right?
+
+54:55-55:00
+
+Copy
+And so this prompt is basically going to say you're a direct response copywriter for the Rendon University.
+
+55:06-55:14
+
+Copy
+And then you're going to paste the script in here. So what we're gonna do is quickly, I'm gonna quickly record it on this voice dictation tool.
+
+55:45-56:11
+
+Copy
+So it was pretty quick and easy. So you have this prompt. You're going to paste it into Cloud with the script and click Go. I'm just going reiterate the fact that I don't really do this. This is more so like, if I had to boil down, as I wrote in this slide here, I think, If I had to break this into a repeatable process, this is it.
+
+56:11-56:27
+
+Copy
+But for a good marketer, This is mostly intuition. You don't really need AI to kind of copy ads. And we're not trying to copy out. We're trying understand why it worked, break it into components, keep some components and switch the other ones and add our brand spin into it, right?
+
+56:29-56:49
+
+Copy
+Okay, so let's see what Claude says. It's asking us a question, which persona? So this is going to be the one that we built together, the burn learner. What format? We're going say UGC talking head. So the problem to make sure it clarifies that before it actually goes ahead and moves forward.
+
+57:02-57:18
+
+Copy
+And to break this down into components right we have like the format is UGC, but there's two people in it. One person's off screen asking a question. The angle is kind of like myth busting in a way it's like explaining that people aren't really bad at math, it just you were taught wrong.
+
+57:21-57:40
+
+Copy
+And yeah, so that's the main two components that we kind of want to keep. The offer and the persona, that is unique to them. So we're going to switch that out to our brand. And that kind how I'm taking inspiration from this ad. As you can see here, now the prompt is going bring us back to why the ad worked.
+
+57:42-58:01
+
+Copy
+It's breaking it down so it understands it, and then understanding how we can actually adapt it for ourselves. And it's coming up with hooks or coming out three potential ways to adapt it. So the potential folks are like, why is AI so hard to learn? It isn't. And that's the kind of taking their hook and templatizing it, as I said earlier.
+
+58:03-58:19
+
+Copy
+And it has two more ideas here. As I said earlier, we don't have enough time to actually make a script for an ad end to end together. But you can see here that we have a very good foundation built for our first ad, right? That we built with this brand new persona.
+
+58:21-58:37
+
+Copy
+All we have to do now is kind of just nail the script, right? And that's not something, as I mentioned earlier, that we want to fully use AI for, we can have AI draft script if we wanted and then rewrite it into our own words. Or you can just take the original competitor script and rewrite with your own word from scratch.
+
+58:38-58:57
+
+Copy
+Either way, you are the one who needs to judge. If the script is worth producing, right? And so after this process is done, basically, you're going to imagine we wrote the scripts together or you wrote script. I'll leave that part up to you. You could have Claude do it, as I said, if you want.
+
+58:57-59:15
+
+Copy
+Then after that, you just need to basically have a creator record it. And you can use Fiverr for this. A lot of people might not know this, but for maybe $50, You can just pay a Creator on Fivr to record this for you, right? And with simple video editing, go have your first ad done after.
+
+59:17-59:35
+
+Copy
+Otherwise, you can make ads that don't require you to film yourself or pay anyone to fill. You can literally just go onto like any website and get like stock bureau footage and then just put audio on top of it from your voice or 11 labs. Ads that don't have any audio at all.
+
+59:35-59:58
+
+Copy
+It's just like b-roll footage and text on the screen. So getting started isn't that hard. You can even make images if you want. Images work as well. And that's kind of the process of kind the adaptation from a competitor or adjacent competitor's ad. Now we're getting close to wrapping this up.
+
+59:59-1:00:21
+
+Copy
+So the last two parts of this are more about like, okay, you've built your ad, You've run it. How do you understand what happened and how do get data, right? And so what's very important now is labeling your data before you launch the ad in Meta. And what you're gonna do is, I'm going to give you this prompt called Naming Convention Prompt.
+
+1:00:21-1:00:41
+
+Copy
+And basically, every time you launch an ad, as you can see here, you're going want to label it like this. The concept name, the persona, and the launch date. And the reason we're doing this is because, as I mentioned earlier, every concept has four variables, and they're right here, persona, angle, offer, format.
+
+1:00:41-1:01:02
+
+Copy
+So if we have every ad labeled with this, when we run it on Meta, then we can have Claude and Metamcp and just tell Claud, hey, go look at the data and tell me what variables are working best or what combination of variables that are best, right? And then you understand why something is working and not just like know what is right.
+
+1:01:02-1:01:20
+
+Copy
+So you run this prompt in Claude and then all you have to do. I don't think there's anything you even have And it'll build a skill or a document for you. And then going forward, every time you have an ad that you're going to run, you just tell Cloud, hey, build the naming convention for this.
+
+1:01:20-1:01:39
+
+Copy
+Here's a script. There's the format. It'll do it for, paste that into Meta, and then launch the ad. So it's going build an aiming convention. We don't really need to wait for it to happen. But as you can see here, that's what it looks like. Um, what happens now is basically you'll run your ads in meta.
+
+1:01:39-1:01:52
+
+Copy
+As I mentioned earlier, we're not going to show you how to, to launch an ad. It's very simple nowadays. Um. There's plenty of YouTube videos on how do you create a meta ads campaign. I'll look up simplest way to do it. If you're just starting and just launch it that way.
+
+1:01:54-1:02:14
+
+Copy
+But anyways, after you run our ads, What happens is we will get data, right? And. All we have to do is use another prompt called the data flowchart prompt to basically have Claude create a flow chart like this, which lets us visualize the date very clearly and cleanly.
+
+1:02:17-1:02:35
+
+Copy
+I actually have an example in Claud of how this prompt will come out when you run it. So I can show you that. But basically what I did is I took like sample data, so fake data. And because I can't show you the rundown ad account, unfortunately, I cannot show your data but I could show examples.
+
+1:02:36-1:02:56
+
+Copy
+So let's imagine we ran ads on meta, then we run this flowchart prompt. It basically just tells meta to create a flow chart that breaks out our data like this so we can understand which variables or which combination of variables is working best. And let me show you what that looks like.
+
+1:02:59-1:03:16
+
+Copy
+And by the way, you can see here it built the ad naming convention. So if you just give cloud your script, it'll basically fill this in for you. If you ran meta ads and then now you have your data and you've ran the flow chart prompt I just showed you, this is what you'd get back.
+
+1:03:17-1:03:42
+
+Copy
+You basically split your data into personas. So this is an example with a bookkeeping software company. One persona was solo founders, and another persona with agency owners. They targeted two different personas and tested the data, or tested ads against two personas, two core avatars, which you can also do to test and see what works better.
+
+1:03:43-1:04:02
+
+Copy
+Then they tested different angles, as you see here. And offers. So one was a lead magnet, one with a free trial, and one is a demo. And you can clearly see what the winning combination is. It's going to be the one that spends the most money and has the lowest cost per lead or cost for action.
+
+1:04:04-1:04:22
+
+Copy
+You can see it was the combination of solo founder with a tax panic angle, lead magnet offer with the UGC format. They spent the Most amount of money out of all of these and have the Lowest cost-per-lead. So this is the benefit of labeling your data. On meta ads and then the way I just showed you.
+
+1:04:22-1:04:44
+
+Copy
+If you didn't label your data, you would basically just have this. You would know how much money you spent, but you wouldn't know what worked or why. Right? You wouldn' be able to have these flowcharts. You just would have video three, blah blah, and you won't even know the actual input of that ad was.
+
+1:04:46-1:05:05
+
+Copy
+And so now with your creative strategy, you know kind of where you should lean into. You know that you could focus on this angle, uh, format offer and persona more heavily until it tires out. Cause you have so much room to go so potential here, right? This is what's resonating in the market the best right now for your specific niche and your product.
+
+1:05:08-1:05:30
+
+Copy
+Um, okay. So that kind of wraps up the training. We're going to do some Q&A now and get through some questions. But anyways, with all the prompts and documents and resources I was sharing with you inside this Google Documents, if you're inside the Rundown University, you'll get access to them.
+
+1:05:31-1:05:48
+
+Copy
+And basically you will be able to run this page strategy end to end by yourself. If you have any questions, we're gonna go through those now. Perfect. Thank you, Rishi. And I put the link to become a Rundown University member. I know a few people were asking about it in the chat.
+
+1:05:48-1:06:03
+
+Copy
+So feel free to go up there. Otherwise, you can see this QR code that you could also scan if you want these resources and going to start with some Q&A. We've got a questions. If you have more questions, feel to keep submitting them and we'll get to as many as we're able to today.
+
+1:06:06-1:06:22
+
+Copy
+Okay, I'm going to put one onto the screen here. What is the minimum information Claude needs from meta or TikTok ad reports to diagnose whether poor performance is caused by the hook creative offer audience or landing page? Yeah, you don't need too much data.
+
+1:06:22-1:06:46
+
+Copy
+I'd say within the first $50 to $100 of ad spend, You'd start to understand these metrics and start be able to break it down. But your question really depends on what you're going for here in terms of what your optimizing for. When you have poor performance, you don't want to break it down into a funnel, right?
+
+1:06:47-1:07:20
+
+Copy
+So the first step is like your CPM, like how much is it costing you to reach 1000 impressions? If that's high, then that is the 1st step of the funnel that broken and you need to like fix it by making your ad better. A high CPN means like The advertising platform is charging a lot to show your ads to people, and the reason that would happen is because it's either a very high value audience, so it costs a lots to get their eyeballs, or two, people don't like watching your ad and you're getting bad engagement or people are getting negative comments and therefore the platform does not want to your show ads people and so costs lot of money.
+
+1:07:20-1:07:34
+
+Copy
+That's the first step in the funnel. After that, it kind of breaks down to like the CPM, then the watch time and like thumb stops. So if you have a bad hook, your thumb stop would be like at a back ratio, meaning like people aren't stopping to watch your ads. There's a metric called thumbstop.
+
+1:07:35-1:07:49
+
+Copy
+If you Google it, It'll show you what it means and how to define it. After the thumb stop, it's like playthrough. So how do people finish your ad? After that, its click through rate. How do you people click your app and then your conversion rate on your landing page?
+
+1:07:49-1:08:07
+
+Copy
+How many people are converting on their landing? So if you break out all those metrics, you should be able to easily see which one is performing bad. And the first one that's performing that is the one you need to fix. Awesome. Thank you. Okay. Got another one here.
+
+1:08:08-1:08:27
+
+Copy
+What engine should we be using for this? I think you're using Opus 5. They tend to be uses Sonnet 5 medium. Any thoughts on this. I use Opis 5 right now. Sonet 5 I thing is good, but like it really just depends. Like if you have like a $20 plan on cloud or free plan or like $100 or $200, right?
+
+1:08:27-1:08:48
+
+Copy
+Those are the four options. And so if you have more budget, more usage available, I personally have the $100 plan right now. So I have a good amount of usage to the point where I don't really finish it every month. And I can use a higher spend model. But if find yourself always running out of your usage, then you want to use Sonnet 5 because you get more use out your tokens.
+
+1:08:51-1:09:09
+
+Copy
+Perfect. We have a few more too about kind of usage, cloud, et cetera. I'm wondering if cloud is the best AI platform for this. IPhone chat GPT better for anything visual. Yeah, so visual, I'm guessing you mean images and I might, or if you meant data, but if he mean, images, Chachi PT is better.
+
+1:09:09-1:09:26
+
+Copy
+So I would use Chachiti PT if, if your making images it is, better when it comes to like copywriting. I found Claude to be better with the caveat that I haven't really had time to check the new model from Chacha PT, which is called Astra. And I don't know how well that does copy writing.
+
+1:09:28-1:09:53
+
+Copy
+But there could be potential for TGPT to be better now than CLAWD, depending on how good that new model is. Okay, another one about models. So what model in perplexity works best for research? I tend to use sonar. Yeah, so the cool thing about perplexity computer, which is what I used for that research prompt, is that I don't really use perlexity that much besides for like research like I just showed you.
+
+1:09:54-1:10:15
+
+Copy
+And so therefore I literally just use, I have the free plan of per-plex-ity and I was able to get like this 15 minute task to run on the Free plan. I think it used the majority of my usage, though. Now, specifically for the model, I honestly did not pay attention to it, but I it was using ChatGBT's 5.6 when I looked back at it.
+
+1:10:17-1:10:37
+
+Copy
+Perfect. Somebody asked what you can do in a free perplexity plan, so you kind of already answered that one just then, too. All right, this one is a little bit longer. What testing framework do you recommend for separating variables such as hook message format, spokesperson offer and call to action without creating an unmanageable number of ads?
+
+1:10:37-1:11:04
+
+Copy
+Yeah, so it depends on your budget, right? I think a good rule of thumb is Basically, it just varies with your budget. So the more budget you have, the variables you're allowed to test. Now the biggest variables I like to tests would probably be the angle and kind of the format.
+
+1:11:05-1:11:28
+
+Copy
+Now whenever you make an ad concept, it's very easy to make additional hooks. So I would always, whenever we make and ad, always make addition hooks, right? So for example, if you yourself were going to film an Ad or you're setting an Add to a Creator, instead of setting them an add brief or script with just one script, I always have at least three to four hooks in front of the body of that ad script.
+
+1:11:28-1:11:40
+
+Copy
+That way you can test those four hooks together. And it didn't really increase your cost of production because they were going to film for 10 minutes that day anyways, or you were gonna film it for ten minutes, it only adds an additional minute. So always test hooks.
+
+1:11:41-1:12:00
+
+Copy
+After that, I would test the format and the angle primarily. But remember, you need to focus on quality, especially if you're starting out. Lower budget tests less ads, higher time into the production. OK, awesome.
+
+1:12:02-1:12:19
+
+Copy
+So we have one person here that has a second brain that they use under cloud code. Can I run these steps in class under Cloud code or should it be done via project under a chat? Yeah, if your second Brain is connected to cloud, code and it has like continuous access, you can definitely just use the second rain.
+
+1:12:21-1:12:42
+
+Copy
+Act. Okay, what data and brand assets would cloud need to build and prioritize a 30 day creative testing plan to sell the example here 1000 premium shaving and soaps to UK men prone to razor bumps without marketplaces. It can make a testing plan, but it can't really make the ads, as I mentioned earlier.
+
+1:12:42-1:13:02
+
+Copy
+The data, you would really just need what I showed you. You need the brand context file that I've showed so you can build that with the prompt. And then you wouldn't need decor avatar. So you build out with a prompt in the research as well. Then you could literally just make it prompt yourself that just says, hey, can you built me a 30-day creative testing?
+
+1:13:02-1:13:19
+
+Copy
+This is how much money I have to test. These are the results I'm looking for. And then you'll go from there. Perfect. OK, we're going to keep going with questions. I'm going change the QR code up there to be. A survey on today's session. We always love the feedback.
+
+1:13:19-1:13:36
+
+Copy
+I put a link in the chat as well. So if you have any feedback, feel free to scan that QR code or click the link and let us know what you thought of today session, but we will continue on with some questions here. OK, so what if we want to target audiences of languages outside of English?
+
+1:13:36-1:13:56
+
+Copy
+What changes do we need to make in your prompts or are there any? You actually, so there's two ways you can do this. So you could make your ads in English, and then inside Meta ads, when you set up the ad, there is an option to have Metas AI translate your ad into whatever language you want.
+
+1:13:56-1:14:14
+
+Copy
+And you just checkbox which languages you one. It literally has AI change the audio into that specific language for you and the text on the screen and a text everywhere. So you could, in theory, make your ads in English and then just check those boxes when you set up your Ads and Meta and have AI do it.
+
+1:14:15-1:14:40
+
+Copy
+The one problem with that is I don't know how good the AI actually is across all those languages. The second option is you can just tell the prompts to write the ads and whatever language you choose and produce the ad in that specific language. Sweet. Okay, how should cloud analyze winning and losing creatives and what performance threshold or sample sizes should be reached before recommend scaling iterating or killing an ad.
+
+1:14:43-1:14:59
+
+Copy
+With Claude, as I showed you earlier, I like to break it down into the concept. So there's like the four variables. If you label your data with those four variable, you'll tell Claud to basically analyze it and then tell you which combination of variables is performing best, and you can analyze that way.
+
+1:14:59-1:15:23
+
+Copy
+In terms of the thresholds, it depends on what your target CPA is. Let's say it costs $100 to buy your product. Well, then you might want to spend $300 to $400 on a specific ad before you decide whether it's working or not, because if your products cost $ 100, it can take more ad spend to find a buyer.
+
+1:15:23-1:15:40
+
+Copy
+Now, if your product only costs $5, you might only need $50 in ad spend before you decide whether it's working or not. So maybe it is around the range of like, I don't have a specific rule in mind, but what does come to mind is maybe around a range like 3 to 5X your actual target CPA before we decide if it works or no.
+
+1:15:44-1:16:02
+
+Copy
+Okay, how do you address the target audience in Meta, specifically Facebook and its audience selections with respect to your ads? Yeah, so it depends on if you have a broad consumer product or a super specific B2B product. Broad consumer products, you don't need to do any targeting meta.
+
+1:16:02-1:16:19
+
+Copy
+The creative will do the targeting for you. So basically, if show a female in your ad who's talking about beauty, it's going to show the ad to females who are interested in buying beauty products. And you don't have to do any targeting. It's just about who you put in your ad and what you say that will show to the right person.
+
+1:16:20-1:16:42
+
+Copy
+On the other end of the spectrum, if you have a very specific B2B product that needs to be shown to executives at specific companies, what can do is create a list of those specific people in their email addresses in a software like Apollo, it's a lead scraping software, and you can upload that list to Meta and have it target those people.
+
+1:16:45-1:17:01
+
+Copy
+All right, we have one more about recommendations. So is there a connector that you recommend for ads from various platforms, i.E. AdWhisper ad or others? I'm interested in Instagram ads for the same strategy. Yes, I've heard Atria, A-T-R-I-A is the best one currently.
+
+1:17:02-1:17:32
+
+Copy
+Awesome. OK, then looks like we. Have one. More here for today. Another one, more on recommendations for short clips and images. What are the. Best tools? Images, Gemini, like Google's Gemani model is really good. ChatGBT images is good, I actually also have used Cloud Design in the past, and if you're using more text-based images, Cloud design is very good Short clips I would go with Higgs Field.
+
+1:17:34-1:17:50
+
+Copy
+In my opinion, from what I've done, they've been the best quality, so for video I'd go Higsfield. All right, lovely. It looks like those were all of our questions today. Thank you, everybody, for joining. Again, we have the surveys. There's a link to sign up for the Rundown University Pro membership.
+
+1:17:50-1:18:04
+
+Copy
+That is where you can see the recordings to all our live sessions and receive the resources from today's and, of course, other live session as well. So happy to help out with that. If you have any questions, otherwise, Rishi, anything else that you wanted to add for today?
+
+1:18:06-1:18:20
+
+Copy
+I think we're all good. I hope everyone enjoyed today's presentation. Hope you got some value out of it. Really tried to dump as much of my brain into this presentation as possible. If you have any questions, you can message me on LinkedIn. It's just my first name and last name.
+
+1:18:20-1:18:31
+
+Copy
+And I'll type my name in the chat right now. Happy to answer any more questions over LinkedIn or help you out. So yeah, thanks for joining guys. Awesome. Thanks everybody.
+
+
+
+
+Complete course

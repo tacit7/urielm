@@ -1,0 +1,749 @@
+00:00-00:29
+
+Copy
+So we're going to be talking about how to land your first consulting gig. So the goal of this talk is to help you figure out how you can make money with AI. And this main option that we are going be taking about is AI consulting. And so by the end, hopefully you'll have a good idea of both whether this is for you and very concretely, my sort of strategic advice on how to go from zero to one.
+
+00:30-00:58
+
+Copy
+And, so, probably in this hour I have with you guys, I'm only going to spend 20 or 30 minutes going through slides, maybe less, and then in a lot of it I am going go through practically what I would be doing as if like I was starting from zero. And so I'll do it with you guys and hopefully at the end as well, I'm gonna try to create a skill live that you can use to sort of help you along in this process.
+
+00:59-01:25
+
+Copy
+So a little bit about me. I'm an economist by training, and then I worked as a machine learning engineer at Zelle for six years before becoming an AI consultant so I had some experience which is relevant to my sort of business today, but as I'm going to show you, like that's useful and you should definitely bring that in if you decide to go in this direction.
+
+01:25-01:45
+
+Copy
+But you can definitely get started, make good money, very decent money without having any kind of AI specific experience. And so the reason I was getting dissatisfied was on paper was a dream job. It was remote, so I could work from anywhere in the US.
+
+01:46-02:16
+
+Copy
+And the amount of work was not that much. So I was able to get my work done pretty quickly, to be honest, and then be able do whatever I wanted on the side. But I hated it. The main reason I hate it is that they wouldn't let me use AI. To me, this was a real killer because I got into AI reasonably early and I really enjoyed it, So, I left my job before consulting replaced my entire income.
+
+02:16-02:35
+
+Copy
+And I think that that is a reasonable choice for some of you. Not all of, you is sort of like a case by case thing, but I had some clients. And so I would definitely recommend if you decide to go in this direction and you have a full time job, do it on the side, like, figure out how to do in the morning and the evening.
+
+02:36-02:58
+
+Copy
+Don't make the leap until you actually have money coming in. You might even want to wait until it's at replacement level. But you don't have to weight that long. So my AI timeline, just for some backstory, I got into Chat GPT maybe in early 2024, started enjoying it, was liking how it worked.
+
+02:59-03:19
+
+Copy
+Then in the middle of 2024, I started using cursor basically daily for all sorts of side projects, moonlighting for some startups outside of my day job, which just didn't let me use AI. And then the day that Claude code came out, started paying for it by API, even before they let it be connected to subscriptions.
+
+03:20-03:43
+
+Copy
+And so then in August, started going really deep into Codex. That's where since right around then, August of last year, I've been primarily using CodeX. In October, i started getting some consulting clients just through my network. I can talk a little bit about how and why and exactly to do that, but The consulting income did not replace my salary.
+
+03:44-04:02
+
+Copy
+One of them, pretty soon in a few months, one of my clients hired me into a role based on being happy with what I was doing for them. And now I've got sort of a specialized AI consulting practice. I work independently. This YouTube channel with 10,000 subscribers.
+
+04:03-04:22
+
+Copy
+And what I sort do kind of narrowly is teach AI to economists in agentic coding workshops and then do direct implementation for bigger clients like central banks and larger policy institutions. That's sort of the niche that I've settled on. But that's not where I started.
+
+04:22-04:41
+
+Copy
+I sort started by just taking whatever it was that could find building up a resume until, let's say, my ability to connect AI to business and find that exact match reached a point where could sort have this very specific niche and specialty.
+
+04:41-04:59
+
+Copy
+And so how should you get started from, let's say, absolute zero with AI consulting? Well, I think it helps first to break down the term AI Consulting. And you really want to start with consulting and not with A.I.
+
+05:00-05:20
+
+Copy
+So why is that? Because fundamentally, our goal is to solve people's problems. That's what consulting is. You're somebody is bringing you into their business and having you try to give a second opinion or even let's say, implement for them the solution to their problem.
+
+05:20-05:48
+
+Copy
+And if their a problem is losing them so many thousands of dollars. Like, $50,000, then you as the consultant have a reasonable claim to be able to charge $15,00 if you're able make somebody $50000. And so the degree to which you are able do that accurately, communicate that well, is what consulting is.
+
+05:49-06:18
+
+Copy
+Now, AI consulting and how I'm going to operationalize it is just using Cloud Code or Codex to solve people's problems. AI is much bigger than Cloud code or codex, but for the purposes of this talk, I am going let's say focus specifically on either those two tools or just large language models in general, though AI itself is bigger.
+
+06:19-06:40
+
+Copy
+And so you basically have to learn these two things. How do you do everything that goes into solving people's problems? And how do do that well with AI and communicate that to stakeholders. So there's tons of skills that go into consulting.
+
+06:41-07:03
+
+Copy
+There's no way that I'm going to be able to teach them both. But I can sort of put you on a good path to the initial first step and then just admit honestly that consulting and AI are both things that, I myself am like, Trying to improve at and learn better every single day.
+
+07:04-07:23
+
+Copy
+So, like, with consulting, for example, right now, I'm trying to study sales funnels because I try to land more and more bigger clients, more central banks, and policy institutions. And so I want to understand how this sort of enterprise B2B sales process works.
+
+07:23-07:41
+
+Copy
+And so I'm going out and just finding materials on YouTube, other courses, open to paying people to learn this better. And then with AI, I am also continuously learning lots of different things with this. So the general process and attitude to have is that you're just always learning.
+
+07:42-08:00
+
+Copy
+To me, honestly, it's pretty fun. I think a lot of people find cloud code and codecs to be pretty fine too. And so hopefully it is not a chore. So you just have to keep improving day by day with both of these. But I am going to tell you and show you exactly what the actual first steps would be for me if I was getting started.
+
+08:00-08:31
+
+Copy
+We are going map it all out. And so let's talk first about the prerequisites of getting better at AI. And the general approach to getting at better AI, in my opinion, is to learn with projects. So you sort of want to to for every single thing you do, the minimal amount needed to sort of get a project done.
+
+08:31-08:49
+
+Copy
+And so maybe when you're getting started, like let's say you wanna go into this field with zero. So here by zero, it means you got no clients, you've got network and you have no AI knowledge, okay? What I would do is get $20 codex subscription.
+
+08:52-09:10
+
+Copy
+And then I would use that to just work on some basic personal projects. The type of project that might make sense is just making a personal site, something like that. And you've made that, and then think of something that's a little bit out of your reach beyond making just your own personal website.
+
+09:10-09:32
+
+Copy
+Make it better. Can you add authentication? Can make it interactive? Because you make a mobile app. And with every little project, you get that dopamine hit from having learned something. But it's not that you're just learning theoretical concepts without being able to connect them to things that are actually useful.
+
+09:32-10:00
+
+Copy
+So that's sort of the first general principle of learning AI. And then you also want to keep trying something a little bit outside of your range. And so our risk is that you become comfortable with one thing and then there's other things you don't know and you know, dig into those because of this discomfort of what it feels like when you're going outside your comfort zone.
+
+10:01-10:22
+
+Copy
+An important part of just life in general, but also specifically here with getting better at AI and consulting is accepting that periods of discomfort are going to be a natural part, of what it means to get better and improve. And so you always want to try something that's a little bit outside of your range.
+
+10:22-11:09
+
+Copy
+Otherwise, it gets boring. I mean, if you're just sort of cookie cutter producing the same thing over and over again. And one tip is that these days, AI is great for learning AI. And so if there's concepts like Git or WorkTrees or skills or sub-agents that you don't understand, then you can just ask AI itself in the form of Codex or Cloud Code or even if you decide to and just chat GPT or Claude in the web browser about these concepts, explain them to you, but don't just mindlessly accept the explanation, really interrogate it until you get to a point where you can honestly say that you understand it.
+
+11:10-11:31
+
+Copy
+And something that I often do, for example, is if I'm trying to learn something new with AI, I'll sort of tell AI hey, look, um, want you to test me on my knowledge of this thing, or I will just say look I am going to try to express in my own words this concept.
+
+11:31-11:49
+
+Copy
+I want to you look for any weaknesses in understanding, any inaccuracies, anything that Getting wrong and alert me to them and walk me through them, but I'm going to try to give you my explanation. So I like make it active and not just passively going through things now.
+
+11:50-12:27
+
+Copy
+I have, in my opinion, the best codex course there is, there's lots of codecs courses you could get, but if you guys want to learn AI, this is a pretty good course to go through. There are other ones, find it on YouTube. But it's important to not just like go though a course linearly, like a four hour course here is going to be pretty painful to through, and I structure my course here to have, let's say, lots of places where I pause and do something active, something practical early.
+
+12:27-12:43
+
+Copy
+And so you should also get in that habit. Don't go through all four hours just watching it straight through like a zombie at every single time, like maybe watch part one or parts of it, try some project, you get stuck. Find more information that helps you get unstuck.
+
+12:43-13:01
+
+Copy
+If you'd get totally stuck and can't push forward, then fine, leave it aside. Try a simpler project. After you do the simpler projects, you might come back and find that that old one that you couldn't do before you're now able to do. So that's just a very common pattern with learning, working, research in general.
+
+13:02-13:20
+
+Copy
+Okay, so fundamentally though, the promise here is that I'm gonna help you make money. And so a question is, can you money while learning AI? Is that like a reasonable thing? And I think the answer is yes.
+
+13:21-13:44
+
+Copy
+My main recommendation for you guys, if you're starting out, is to use the platform Upwork. So let me explain why exactly I recommend Upworks. So part of the benefits of Upwork is that you can sort of get in the game and get started on Upworks without having any existing network.
+
+13:45-14:03
+
+Copy
+So when I started, I felt confident in my technical abilities because I had been using this stuff already. I just went out to my network and I asked them, like, hey, look, this is what I'm doing now. Do you have any business? Or like anything that makes sense.
+
+14:04-14:24
+
+Copy
+So I had an initial voice AI client did well that I got just through a community in which I was posting. And then I took that voice, AI clients demo and sent it to every single person I know just spammed my whole list, every contact I'd made.
+
+14:25-14:47
+
+Copy
+And then through that, I go my first few retainer clients. And so I was doing that that was going well, and so, I didn't feel the need to press up work too much and So while I used upwork I did it really use it as much as I could have because I If you're without that network and you don't have the pre-existing skills, then you should start on Upwork.
+
+14:47-15:08
+
+Copy
+You don' t have to source the leads, you dont have find leads that are like cold and turn them warm and take them through like a whole sales sequence. When they're on upwork, they are already coming there like fully warm. And then finally, having both a decent profile and like I could easily add to this messaging can put you ahead very quickly.
+
+15:09-15:33
+
+Copy
+And so I'm going to show you kind of what I think disambiguates a descent profile from a bad profile, and good messages from bad messages on Upwork. Now, what are the cons? You have to pay connects this is the concept in awkward world to be able to send a proposal to submit the proposals and that's problematic.
+
+15:34-15:52
+
+Copy
+If you have absolutely no money and so you need some money to make like. To get started with this, it's not a ton like what I would you sort of need to have in my opinion is, let's say a 20 dollar per month. At least codec subscription or cloud code subscription.
+
+15:52-16:11
+
+Copy
+Realistically, you'll have to upgrade that to 100 pretty soon. And you need have some money to pay for these connects. That's like the basic. How you get start in this game. Now, second, if you have some prestigious background, nobody gives a shit.
+
+16:11-16:36
+
+Copy
+So like nobody gave a that I had a PhD. Nobody gave us shit that. I worked as Zell was a machine learning engineer. Later, once you made some money and you'll have reputation on the platform, that helps you get better jobs. But usually when you're starting out, the 19-year-old kid who's just been grinding for the last year and has made $25,000 living in his mom's basement is going to be better than you.
+
+16:42-17:08
+
+Copy
+34-year-old dude who's kind of working on the side, whatever, has some development experience, is technically better than a 19- year- old, just because of how Upwork's reputation puts you on a platform. If you have lots of good reviews, lots like pre-existing good jobs you've done, they're gonna rank you higher and clients are going to see that and want to work with those people who have reputation.
+
+17:09-17:28
+
+Copy
+And so what that means is that relative to what you're making right now, your initial hourly rate net could be very low. Like, you might make 10 bucks an hour on your additional jobs. But the way that you have to sort of perceive it is. This is just like the costs of getting your skin in the game.
+
+17:28-17:58
+
+Copy
+And so you do these initial jobs on the platform to build your reputation. Then once you that, you sort of have paid the cost of entrance to be able to do much bigger, much better jobs. So one of the other reasons to start with Upboard You can look in the market and you can see what is it that people are actually paying for.
+
+17:58-18:21
+
+Copy
+So if you just get started with AI and your not familiar with this space, a type of thing people will do is like cold email local businesses. Everybody is going after AI for local business. You don't have like a clear understanding unless you've worked with people of like what it is they actually need.
+
+18:22-18:40
+
+Copy
+On Upwork, they're just coming to you and most of the time they are just telling you what they need, there's some nuance to that and I'm gonna walk through some of those things by actually just looking at UpWork live with you guys. But it'll help you read the market to see what people are looking for and this kind of thing changes over time, right?
+
+18:40-19:06
+
+Copy
+So as an example, if this was like a year ago, a type of thing that I would have recommended to you guys to start out is to find jobs where people are trying to like, find data scraping jobs, okay? And so data-scraping was this like low-hanging fruit for the initial AI consultant that's like an easy job that you would be able to learn quickly and then tackle.
+
+19:06-19:21
+
+Copy
+And then basically you're working on information arbitrage where There's a local business owner or whoever who's coming on the site, doesn't know how to scrape data, does not want to learn how do it. You learned through watching one of my videos, I have one on like nine ways to scrap data with cloud code.
+
+19:22-19:51
+
+Copy
+And then you tried it, you know, how, to do all nine waves. So now you can get paid and he needs to pay you. But the problem is that the whole market is getting more sophisticated about AI and a lot more skilled people are A lot more like sort of just general people are using cloud code and codecs are like learning that you with natural language can sort just give basic instructions and get pretty incredible outputs out of it.
+
+19:52-20:07
+
+Copy
+It's harder to get these jobs. But those scraping ones still exist, but that might not be the low hanging fruit that's there anymore. So that sense in which if you go on Upwork, you can actually kind of like get an intuition for the market, see what the easy ones are that you could go after.
+
+20:08-20:28
+
+Copy
+And that'll be very helpful for you. And so then, importantly, it also helps you optimize how you do your project-based AI learning. So you may not have an idea of what projects you want to do, or you have may have idea. But if your projects are not oriented towards what's going to make you money, if you're hearing this talk, presumably it's because you wanna make money.
+
+20:29-20:51
+
+Copy
+And by seeing on Upwork, What sorts of things people are actually there trying to pay for, you'll get a sense for technologies or concepts that you should orient your learning towards things that. You should try to understand and that will help you then be a lot more efficient with your learn.
+
+20:52-21:12
+
+Copy
+Uh, very good. So what I'm going to do now is I'll just going walk through up for life and I am going try to find some jobs that are worthwhile and some job that aren't. And like, I kind of like go through them one by one and give my judgment along the way.
+
+21:12-21:32
+
+Copy
+And then the other thing I want to do for you guys is I wants to make a skill that after this talk, you all will be. To sort of pass in a job and identify the degree to which it's like appropriate for you as a beginner.
+
+21:32-21:53
+
+Copy
+And so I'm going to try to do both of those things. So let me show you how I'll do that. Just for starters, I am right here in the Codex desktop app. If you haven't seen it before, this is what it looks like. I love this thing. Like I use the Codex desktop app for everything I do now.
+
+21:53-22:14
+
+Copy
+It's just amazing. And it's got like inbuilt browsers that I can use and I'll also draw here in this ExcalaDraw thing that pulled up. So one nice concept, which is useful here, is let me see if this is feasible. We'll come here. I was working on the slides.
+
+22:14-22:38
+
+Copy
+Can I clear or renew? Let's see. Okay, let's compare Upwork. Yeah, very good. So what I'm gonna do now is just tell Codex, so I always interact with CodeX pretty much with voice.
+
+22:40-23:04
+
+Copy
+I want to help my good friends understand how to evaluate job postings on Upwork for the degree to which they are appropriate for them as beginners.
+
+23:05-23:28
+
+Copy
+But I don't want you to get right to making a skill yet. Eventually we're gonna put this in my public skills repo for all to use. But what I want to do is create some kind of scratch pad. What I'm going to be doing is passing you screenshots of Upwork postings.
+
+23:29-23:48
+
+Copy
+And then along with the screenshot, I'll be giving you my opinion and basically I want to keep accumulating this opinion into wherever we're putting this scratch pad. And, then once we have a lot of data accumulated, i want you to then help me start to actually make the skill.
+
+23:50-24:15
+
+Copy
+Okay, so here on the left hand side, I'm going to have codecs like get started with that. And so I have this like skill that I use to share my public skills. So I guess I can show you where that is. If you come here, github.Com slash skills So here I have a public skills repo.
+
+24:15-24:34
+
+Copy
+And so by the end of this, you'll have. A skill that you will be able to use in this skills, repo to be. To evaluate the quality of an Upwork posting for a beginner as like a way to have this project based oriented AI learning.
+
+24:35-24:54
+
+Copy
+So I'm going to initiate that and then I want to come here and let's just start talking through them. First you come to find work. Okay, so let's do that. We're already there. Let me make this bigger. Okay. So that's what this looks like. I'm going to tell you, let me say some keywords to look for.
+
+24:57-25:18
+
+Copy
+What I look for are these often last time I was here, like Python, Cloud Code, Codex, AI, Training, or Convex because what I like to fulfill on is I try to, I tried to fulfil on primarily like CodeX or Cloud code trainings. I like that because, um, for me personally, that's very easy to fulfill.
+
+25:18-25:37
+
+Copy
+I've done it a ton. So my hourly rate on a fixed price job ends up being pretty high on the cloud code or codex training. And then it's also helpful for if I'm done that, like, let's say at a business or a bigger institution. Because it acts as a discovery process for me to then be able to, like, figure out what their actual problems are.
+
+25:37-25:57
+
+Copy
+So, first phase is I upscale them, then I have access to them to be to figure what the real problems and I can use that to sell them what's actually useful to that. In order to get that access, you gotta put your chops in. So the place where I recommend is starting is web scraping.
+
+25:57-26:16
+
+Copy
+Let's start and look for scraping and see what comes up. Okay. I saw this one yesterday, and this is actually like the perfect one. This is what I would go after for you guys.
+
+26:17-26:20
+
+Copy
+Let me explain why. So let's see if presentify.
+
+26:28-26:57
+
+Copy
+There we go. Why is this kind of like, the Perfect One for a beginner? And in fact, this is one which even though like you, guys may not get it, it's a good type of job around which to orient yourself. So first, it is written in human, so you can tell that this thing is not written as a big Claude or chat GPT dump.
+
+26:57-27:18
+
+Copy
+You'll often see job postings that look like that, and if you see a job posting that looks like it, like a chat, GP or Claud dump, then the takeaway you should have. So I'm just gonna start putting down notes here. Okay. Whoa, what is going on there?
+
+27:19-27:47
+
+Copy
+Let's see here... Yeah, very good. Chat, GPT slash quad dump. It means, uh, the client probably doesn't know what they're looking for or likely, likely doesn' know.
+
+27:47-28:16
+
+Copy
+What they are looking. So I'm sure we're going to find some of those and I'll give you some examples of that. These guys are probably going know, what are they looking? Um, we use Claude slash Git and our into skill world. And so this is like people who, this sort of like a good indication to you guys in terms of the type of thing that you should be directing yourself towards.
+
+28:17-28:36
+
+Copy
+So Git is a version control tool and If you're, let's say working in this space and you don't know Git and the client does, that's gonna be a very bad thing, right? And so Git is super important. It's like a lot easier to use now with these agentic coding tools.
+
+28:36-29:02
+
+Copy
+I've got videos on this. And, so that a thing to learn in through your project-based learning. Are into skill world that's indicating that they're going to like want you to create skills to automate things. And then the types of scraping tasks here that are being described are like not super difficult.
+
+29:03-29:23
+
+Copy
+Like they are not crazy hard. So they want like some kind of automation of processes, right? These scraping tasks. And so I think it's like a totally reasonable fair thing that you would be able to do at a relatively early stage.
+
+29:26-29:47
+
+Copy
+Some other indications they have they, have good reviews themselves. They've paid a lot of money. Um, but what you're going to notice here is, uh, like, whatever this is posted yesterday. And there's whatever 50 plus proposals on the jobs already. So, as I mentioned before, if you want to.
+
+29:48-30:13
+
+Copy
+Apply to a job, you have to pay these connects. And there's also a concept of boosting a jump which you'll see in the application process, which is if you want your job to be seen or your proposal to definitely be seeing at the top. Then you to play even more connects and so I would still apply for this kind of job even though you see 50 proposals out there.
+
+30:14-30:41
+
+Copy
+Why? The reason is that like even with 50 proposal out their most of them are going to be trash. And so let me give you an idea of like what a structure of a good proposal looks like. All right. So you're going like to say here some general tips and then here Call this, let me just go to this mode.
+
+30:42-31:06
+
+Copy
+Perfect. Nope. What is this thing? There, there. Good. Proposal, okay. So the first thing is that you want to be sort of brief and I'm like, I'll show you some of mine.
+
+31:07-31:32
+
+Copy
+So be brief. Get to the point quickly. Something that I like doing and that is to have a loom in every single proposal. Okay. Is going to make you stand out conditional on them actually clicking on your proposal so like what's the game.
+
+31:32-31:54
+
+Copy
+So if you do YouTube. All right, like on YouTube, we think about YouTube then You're thinking about how do I optimize my title so that people click on my video, but it's actually the title plus thumbnail. And so what's in your control here are different things on Upwork.
+
+31:55-32:21
+
+Copy
+The equivalent of like getting a click is let's say the first sentence. Of your proposal, because what a client sees when they're filtering through all the proposals is they'll see. Your profile picture, they will see like.
+
+32:22-32:41
+
+Copy
+Amount of dollars. That you've sort of fulfilled on and they'll see, what do you call it? They'll your customer success score, which is just like the proportion of jobs you had that closed successfully.
+
+32:41-33:02
+
+Copy
+And they see are you online? So these are the things that are in your control. And so what you want to do is have that first sentence, like be a hook to whatever extent is possible.
+
+33:02-33:27
+
+Copy
+So a type of thing, you can't always do this, but like a common hook, a thing that works is something like, hey, John, just scraped a sample of the Salesforce data you asked for, made a quick loom showing you how I did that, something like that.
+
+33:28-33:47
+
+Copy
+Because if I see that sentence, then I'm gonna be interested enough to go and click on it. So that's one thing that is gonna in your control in a good proposal. A second thing that's going to be in your control is this profile picture. So just don't have a shitty profile.
+
+33:48-34:07
+
+Copy
+There's general principles of this. That's in control. These two things aren't in the control initially. Being online is actually in you control, here's how you do it. You buy a burner Android phone, you install Upwork on it, go to the settings.
+
+34:07-34:27
+
+Copy
+In the Settings, You wanna set it so that the Android Phone never goes to sleep. The display always stays on and then just have it on Up work all the time. Then you'll always seem like you're online. And if you think that's unethical or whatever, We're here to make money.
+
+34:27-34:50
+
+Copy
+So you get in the game. That's what you got to do. And so always seem online and then they'll see that green bubble and they will be more likely to click on you because they want to get like a quick response from you. These are sort of the things that you have in your control at the proposal stage when you're setting this connection request.
+
+34:52-35:16
+
+Copy
+If a client never clicks on your proposal, like they don't even look at it, eventually you get those connections you sent back. So they're not burned on every proposal. And so that's why, in general, I recommend boosting all your postings when you send them, even though it's going to be expensive with these connects.
+
+35:17-35:35
+
+Copy
+Now, like, so that's sort of some of the aspects of a good proposal. You have a hook, you have these things that you can control in place. Keep it brief. Have a loom. If I have time, I'll show you these thing directly. But I want to get back to what is actually going to help you with your learning.
+
+35:35-36:01
+
+Copy
+And so my advice to you as a beginner is, if you find a posting like this, this is to me a I wouldn't immediately like go off and apply for this job. But the reason you want to be on Upwork is that you know that this person is looking to pay money to somebody to do this kind of thing.
+
+36:01-36:24
+
+Copy
+And so what you wanna do is can you do these things? Like, do you understand what Cloud and Git are? If not, that's like your next project. If you haven't used version control in your last one, in you next projects, go up and use Git. If you don't know how to scrape social media data, then in your next project, go off and do that.
+
+36:25-36:45
+
+Copy
+If You don' have an understanding of like how t connect API calls to AI tools as needed for additional processing, and how To create a dashboard or that will like help you make a new an end report, then actually go off and do that, like, try to do it.
+
+36:45-37:03
+
+Copy
+And then if you fail, you know that you wouldn't be ready yet to apply for this job. But if The kind of thing you can do is you then use that as a portfolio piece on your Upwork profile.
+
+37:04-37:29
+
+Copy
+And so nobody has to know that it's not for a real client. You can just say, built, whatever. Like, sales force data analysis dashboard, and then you have a short loom video 1 or 2 minutes on your profile, which walks through this this project and that sticks out.
+
+37:29-37:48
+
+Copy
+So, like, if somebody. If you had a good hook that. Causes somebody to click on your proposal and then they go on profile and your profile is well structured, it looks good, then people are going to be more likely to start responding to your messages on Upwork.
+
+37:48-38:09
+
+Copy
+Let's keep looking through here. So what is this one? This is we're looking for an experienced AI automation developer. So this is clearly made with AI, okay?
+
+38:09-38:42
+
+Copy
+How do we know this? I mean, one, I can just have an intuition. This M dash here is a big giveaway. And so here's an example of how like these guys are kind of clueless where they're, sort of suggesting N8N make and airflow as possible options where like N 8N and make are in one entirely different category and then airflow is in another category.
+
+38:44-39:15
+
+Copy
+So it's like kind of an indication that these guys don't know what they're looking for. But what I would do is this could nevertheless be a good one to apply to, but I will just stick this itself into something like Codex, like copy the job posting, stick it into CodeX, explain your current level to Code X of whatever AI knowledge, and then ask it if this is an appropriate thing to applied for.
+
+39:17-39:36
+
+Copy
+Some things that are bad about this is like. Oh, that's weird. Yeah, preferred locations, Brazil and Thailand. That's a little strange that they had that one job posted and they never hired anybody, but I've gotten paid by people who are like that too. So it's not necessarily a red flag.
+
+39:37-39:58
+
+Copy
+Um, so let's look at this one. Looking for someone to build a scraper automation for Williams County, North Dakota records available through I dock market. Access to market the selected freelancer will be responsible for creating an account.
+
+39:59-40:20
+
+Copy
+So it looks like. They want you to sign up to some website and then. Authenticated in that website, they want you to then like scrape things from within a website. So like you have to pay for a subscription to this thing iDocMarket and scrape from it.
+
+40:20-40:39
+
+Copy
+That's sort of the fundamental skill here that you would need to have which might be out of your range. Is that maybe you know how to scrape some public website, but you don't know How to Scrape a website where you have to log in and then like find the correct end point to hit on wherever you've logged in.
+
+40:39-41:02
+
+Copy
+So this one, in my opinion, is another like good project based one. You could try doing it with this exact iDoc market tool like platform or You could just try making an analogous scraping project where there's some other platform where you have to log in in order to be able to access the data.
+
+41:02-41:26
+
+Copy
+Like, maybe Zillow works this day. This way, I don't know. And then try seeing if you're able do that. So that's another example of project-based learning tied to a real job that we're seeing here. Let's keep going. And so this is actually good because I'm seeing a reasonable number of scraping jobs on here.
+
+41:27-41:47
+
+Copy
+So I am happy about that because the scraping chops are kind of like the low hanging easier fruit that I used to recommend to beginners. I wasn't sure how available they were and I would still recommend them. Now, the thing you're going to notice is that there's tons of proposals on these scraping jobs.
+
+41:47-42:06
+
+Copy
+50, 20 to 50. 20-50, etc. So you really want to get your profile nailed down beforehand. You want do these things that I suggested to you that are in your control, like always being online with the Android phone and having your Profile picture.
+
+42:07-42:17
+
+Copy
+So let me show you guys my profile and I'll use that as a basis to help you think about what a good profile should look like.
+
+42:24-42:46
+
+Copy
+I didn't use up work that much because pretty quickly I got clients off of work and so I like a ton of connects I bought and never used. I don't make a lot of money on here just because I had better clients. But, you know, I've got like the signals on there and I think I can at least show the general parameters of what you want.
+
+42:48-43:10
+
+Copy
+At the time I was sort of looking for voice AI type jobs on here. That's what I wanted to target. And so I put the relevant technologies right here in my description. So for you guys, I would tend towards like putting something like data scraping expert, something that.
+
+43:11-43:33
+
+Copy
+Um, and then having like whatever Python type script, et cetera. One tip. Another just like beginner thing is don't take any jobs that have you do N8N and make or dead technologies, total waste of time. Don't spend time with them. Anyway, for your hourly rate, I would put it pretty low.
+
+43:33-44:08
+
+Copy
+So like, what I make hourly in my own consulting business is a lot higher than this. But when I was on Upwork, like your goal with Up work is to establish a relationship. Once people like have a good experience with you just being realistic you're not supposed to do this but like people will take you off the platform or just they'll stay on the Platform, but you'll be able to scope out through this relationship with them like bigger fixed price jobs, right?
+
+44:08-44:34
+
+Copy
+So like that's that something that you can think of like part of what you have to Do is sort of pay to get your first licks in here, get some good reviews on your profile, and then part of what you have to do is through these initial jobs that you do for people, you can build relationships with them that then help you get more work.
+
+44:35-44:58
+
+Copy
+And so you could literally just copy this, right? Hey, I'm Aniket, Here, in the beginning or top of the thing, I tried to show off my main credentials and tried express them in client-relevant ways.
+
+45:00-45:25
+
+Copy
+Obviously, it should be very clear with the emojis that I was using AI at the point I made this to help put it together. I think if you're like looking at the screen recording of this, the type of thing that I would do is just take a screenshot. I take screenshot of these and then tell Codex or Claude code, hey, look, I'm getting started on Upwork.
+
+45:25-45:45
+
+Copy
+This is what this guy did. He has a good framework but my background doesn't exactly apply. Can you help me think about how to adapt my back ground to an initial Upwork posting given that I'm, let's say a beginner on UpWork trying to get my first jobs.
+
+45:47-46:19
+
+Copy
+I have an introduction video, like introducing myself and talking about my background. So that's really useful. Like 95% of people aren't going to have that. And it's just an option to let you like seem better than other people. Why not do that? And then I sort of came back to, I think, Upwork a couple of months ago because I was interested in trying to like target more agentic coding training clients.
+
+46:21-46:55
+
+Copy
+Through up work as well and so I put my codex course on here and then here's like a recording I have with a client for whom I built a voice AI system and CRM and like you can see their reaction live and So that's a good piece of evidence But what you guys should probably put on there is just like I had these like little looms just loom describing projects you've done and again You do these projects like we're learning in a project based way and your projects are directed based on like the types of jobs you're actually applying for.
+
+46:55-47:14
+
+Copy
+And then you put these products on here and you can literally just say, hey, this is actually a client job. OK, just just to say it. Or if you don't want to see that, I just like here's I don't know, a Salesforce-based AI scraping thing I built, something like that, that is on here.
+
+47:14-47:40
+
+Copy
+Have it be short, one or two minutes, have the right keywords on there that people are going to want to see that this guy knows his stuff, and then you'll have better success at getting these jobs. So like one good thing to look for is scraping. So I want to try to find some examples of things that are like going to be bad or that I wouldn't.
+
+47:40-48:03
+
+Copy
+Here's an example of like a likely shift job because it's $40 fixed price. If you were starting out though, it might still be good to apply for this kind of job just because it's helpful to get your first initial reputation on the platform.
+
+48:03-48:21
+
+Copy
+And the game with these sort of really low-priced scraping jobs, like $40 to $100, $200, is that usually people are looking for somebody who is there immediately available to To do the task.
+
+48:22-48:59
+
+Copy
+So what that means for you is that when you're starting on this a good way to do things is like Have two screens on one screen. You're just refreshing up work all the time on the other screen You are learning AI and then if you see something then like right there Two minutes after it's posted if it is a like a basic easy data scraping job you go for it right and like a lot of these people, they're not gonna wait for the absolute best AI guy to come about with this YouTube channel or whatever.
+
+48:59-49:19
+
+Copy
+They just want somebody who can do it. And so if there's something up there and you think you could do, just you gotta jump on it and so just literally being on the platform and refreshing is another aspect of getting your first jobs. So I wanna show you Some that are going to be bad.
+
+49:19-49:39
+
+Copy
+There's gotta be some bad jobs on here. We need a freelancer to extract product data from a large automotive. This is actually another good one because it's in English, what are the bad parts? Like doesn't have the greatest reviews, $1.36 hourly average rate, that's not ideal.
+
+49:40-50:04
+
+Copy
+Like a type of thing that you could do for this kind of one is that, you can find a larger automotive website like that matches this 3 million skew profile, you might even be able to reverse engineer what it is given this guy's in the United Kingdom. Actually do the job and show a sample.
+
+50:05-50:28
+
+Copy
+Like what does doing the jobs mean? For data scraping, it's literally a one-shot with Cloud Coder Codex, right? And now the fact that it is one shot with cloud coder codex also makes it more competitive and means that like there's going to be lots of proposals sent out because everybody else is learning Clock order codex is aware of that too and that's why, like, if you want to get in this game, you have to, get into it in the long run.
+
+50:29-50:51
+
+Copy
+It means you after like always be learning always improving and you can't expect to say, hey, I'll learn data scraping and I'm going to rest on my laurels because. People. Are more people are coming in who are learning this call code and codecs. And so all your intangibles like your profile, how you're presenting yourself the video have to be on point.
+
+50:51-51:08
+
+Copy
+You want to seem always online. You want To have good hooks in your proposals. Those things are all controllable. Right. So those are ways that you can stand out. Even as there are more entrance coming in. And this is all advice I'm giving to you guys. Like you have no network.
+
+51:08-51:28
+
+Copy
+You have. No specialty. And eventually where you want to get to is kind of like making yourself a niche of one or like not a nice of necessarily, but like in some smaller and more specialized niche. So that's sort of what I've done in my business. That's not place where everybody generally can start.
+
+51:29-51:50
+
+Copy
+We're excited by this space. If you think this is something you wanna do, having the long run mindset is quite important. And so part of that is going to be getting your licks in with these lower paid jobs. Let's see. So this is actually good.
+
+51:50-52:21
+
+Copy
+There are these shitty ones, $8 to $12 an hour. It still might be worth to do as your first job if it's what you can get. Lemme try to find ones that are bad. They have to bad ones on here. So let's look up Python. So this one is like, it strikes me as an AI generated one.
+
+52:23-52:45
+
+Copy
+It's a little bit suspicious because it's kind of vague. Like all the technology on here is stuff I understand and I work with. It is going to be out of your guys's range. And it's a little bit weird that they're asking for $1,000 fixed price without any kind of fixed-price job on here.
+
+52:45-53:04
+
+Copy
+And then they have a $3 per hour average hourly rate. So I feel like it is likely that these guys are going to be ridiculous. I guess here on a similar job, They build 30 bucks an hour for 16 hours. So for me, it's not interesting.
+
+53:04-53:25
+
+Copy
+I wouldn't apply to this or work on this particular job and So here, when we search for Python rather than scraping, you're going to start seeing things that are more likely to see a lot more out of your range, right? So this one to me seems sort of interesting and technical.
+
+53:25-53:48
+
+Copy
+And maybe if I was looking for Upwork work, I would apply for this. Because I've worked in like this exact setting, I have evidence of that. And so it's the kind of thing that I can help with this, like, profiling your agentic coding spend. But this is probably going to be something that is out of your range.
+
+53:49-54:28
+
+Copy
+However, it is still like a nice indication of a way in which to learn, right? So here they say their open AI bill went up like 6X, usage only went of 40%. So there's something wrong with their models. And so basically to me as an expert, they have insufficient telemetry into tracking their tool use of whatever agents they must have because if they're Thinking that, like, users usage is only up 40%, but they're not understanding why on a per user basis, apparently their open AI bill is a lot higher.
+
+54:28-54:48
+
+Copy
+That means that they don't have sufficient telemetry, monitoring at each stage of the agentic process. Like, this is still a useful job for you guys in terms of directing you in a project based way, because what are they, they're a 14 person B2B SaaS company.
+
+54:49-55:18
+
+Copy
+We have four features calling the API, a contract summarizer, it clause classifier, chat assistant. And internal search re-ranking. So like these are kind of nice things to be aware of because it gives you an indication of like what a expensive, technical, high-quality client is going to pay for and what kinds of things they built.
+
+55:19-55:36
+
+Copy
+And these could be examples of the types of projects that are currently out of your range that you could aim to work towards over time. It could the kind of thing which you try to do, you fail at, but then you come back in the future, and then, your actually able to it.
+
+55:39-55:58
+
+Copy
+The general, like, I think terms I would search for are like Python, scraping, TypeScript, Next.Js is sort of a standard front-end framework. So you can search that. And you search Claude skills.
+
+55:59-56:17
+
+Copy
+If you look for skills, right? Uh, another nice set of jobs might be like, people who want you to build skills for them. Or people, who are aware of cloud code and again, like some of these things may feel out of your range and it'd be too difficult for you. To do right now.
+
+56:18-56:38
+
+Copy
+And so the place where I generally recommend starting is scraping. Scraping is something that you can learn. Early and quickly and you could do that primarily through. You can do that primarily through YouTube videos online of how to scrape data.
+
+56:38-56:59
+
+Copy
+But then in the scraping jobs, you're going to notice things that are asking you to do more than that. So you'll notice that some of them are asked you build CRMs to show the scrapping data, and people need to be able to log into them. And so that may be a bit out of your range, but that's the way in which you know that, OK, maybe I've made money just scraping into a spreadsheet.
+
+57:00-57:25
+
+Copy
+Now my next step is I need to build a project myself to prove to myself that I can actually get it into web app as well. And so that's the sense in which you sort of build this virtuous cycle. You make a little bit of money, you buy some more connects, You learn the next thing and you can sort have this self-financing AI university, right?
+
+57:26-57:45
+
+Copy
+But when you go to college, you don't know anything initially, so you can't make money right away. And so your initial experience is going to be like that. Your hourly rates are going be low. But over time, You can build up more of a reputation, get better clients.
+
+57:46-58:01
+
+Copy
+Then there are ways you could go in terms of getting like good clients off of work as well, like in the real world, building a reputation for yourself in some niche that's more advanced. This is sort of the general way in which I would start.
