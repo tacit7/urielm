@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Markdown, AGENTS.md, Skills, and Plugins</title>
+  <desc id="desc">A flat-color diagram comparing four building blocks for AI coding agents, with AGENTS.md shared by Codex and Claude Code.</desc>
+  <rect width="1200" height="630" fill="#171925"/>
+
+  <text x="600" y="72" fill="#F4F1E8" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="700" text-anchor="middle">MARKDOWN · AGENTS.md · SKILLS · PLUGINS</text>
+  <text x="600" y="111" fill="#8BE9D2" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="600" text-anchor="middle">Four building blocks for AI coding agents</text>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <rect x="48" y="155" width="246" height="258" rx="18" fill="#22283A" stroke="#5B6685" stroke-width="3"/>
+    <rect x="341" y="155" width="246" height="258" rx="18" fill="#22283A" stroke="#5B6685" stroke-width="3"/>
+    <rect x="634" y="155" width="246" height="258" rx="18" fill="#22283A" stroke="#5B6685" stroke-width="3"/>
+    <rect x="927" y="155" width="225" height="258" rx="18" fill="#22283A" stroke="#5B6685" stroke-width="3"/>
+
+    <g fill="#8BE9D2" stroke="#8BE9D2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M124 198h70l27 27v83H124z" fill="none"/>
+      <path d="M194 198v28h27" fill="none"/>
+      <path d="M145 246h53M145 267h53M145 288h38"/>
+
+      <path d="M417 198h70l27 27v83H417z" fill="none"/>
+      <path d="M487 198v28h27" fill="none"/>
+      <circle cx="440" cy="248" r="4" stroke="none"/>
+      <circle cx="440" cy="272" r="4" stroke="none"/>
+      <circle cx="440" cy="296" r="4" stroke="none"/>
+      <path d="M455 248h37M455 272h37M455 296h28"/>
+
+      <circle cx="757" cy="254" r="47" fill="none"/>
+      <circle cx="757" cy="254" r="18" fill="none"/>
+      <path d="M757 190v17M757 301v17M693 254h17M804 254h17M712 209l12 12M790 287l12 12M712 299l12-12M790 221l12-12"/>
+
+      <path d="M986 225l54-30 54 30-54 30z" fill="none"/>
+      <path d="M986 225v62l54 30 54-30v-62M1040 255v62" fill="none"/>
+    </g>
+
+    <g fill="#F4F1E8" font-size="25" font-weight="700" text-anchor="middle">
+      <text x="171" y="356">MARKDOWN</text>
+      <text x="464" y="356">AGENTS.md</text>
+      <text x="757" y="356">SKILLS</text>
+      <text x="1040" y="356">PLUGINS</text>
+    </g>
+    <g fill="#B7BED4" font-size="16" font-weight="500" text-anchor="middle">
+      <text x="171" y="386">Content and context</text>
+      <text x="464" y="386">Repository instructions</text>
+      <text x="757" y="386">Reusable workflows</text>
+      <text x="1040" y="386">Tools and integrations</text>
+    </g>
+
+    <g stroke="#8BE9D2" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M294 284h32"/><path d="M316 274l10 10-10 10"/>
+      <path d="M587 284h32"/><path d="M609 274l10 10-10 10"/>
+      <path d="M880 284h32"/><path d="M902 274l10 10-10 10"/>
+      <path d="M464 414v33M464 447H350v28M464 447h114v28"/>
+    </g>
+
+    <rect x="252" y="475" width="196" height="70" rx="14" fill="#2D3450" stroke="#8BE9D2" stroke-width="3"/>
+    <rect x="480" y="475" width="196" height="70" rx="14" fill="#2D3450" stroke="#8BE9D2" stroke-width="3"/>
+    <text x="350" y="518" fill="#F4F1E8" font-size="22" font-weight="700" text-anchor="middle">CODEX</text>
+    <text x="578" y="518" fill="#F4F1E8" font-size="22" font-weight="700" text-anchor="middle">CLAUDE CODE</text>
+
+    <text x="464" y="582" fill="#B7BED4" font-size="18" font-weight="600" text-anchor="middle">AGENTS.md works across compatible coding agents</text>
+  </g>
+</svg>
