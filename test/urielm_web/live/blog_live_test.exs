@@ -27,6 +27,23 @@ defmodule UrielmWeb.BlogLiveTest do
     refute has_element?(view, "script[type='application/ld+json']")
   end
 
+  test "published post renders Markdown tables" do
+    body = """
+    | Concept | Best used for |
+    | --- | --- |
+    | Markdown | Notes and documentation |
+    | Skills | Repeatable workflows |
+    """
+
+    post = published_post!(%{body: body})
+
+    {:ok, view, _html} = live(build_conn(), ~p"/blog/#{post.slug}")
+
+    assert has_element?(view, "#blog-article table")
+    assert has_element?(view, "#blog-article thead th", "Concept")
+    assert has_element?(view, "#blog-article tbody td", "Repeatable workflows")
+  end
+
   test "blog index exposes a stable post collection and cards" do
     post = published_post!()
 

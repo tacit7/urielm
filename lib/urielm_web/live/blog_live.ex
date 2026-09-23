@@ -132,7 +132,10 @@ defmodule UrielmWeb.BlogLive do
           <% end %>
 
           <article class="prose blog-prose" id="blog-article" phx-hook="HighlightCode">
-            {UrielmWeb.Markdown.to_html!(@post.body, code_class_prefix: "language-")}
+            {UrielmWeb.Markdown.to_html!(@post.body,
+              code_class_prefix: "language-",
+              extension: [table: true]
+            )}
           </article>
 
           <footer
