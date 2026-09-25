@@ -4,6 +4,7 @@ Downloaded from Google Docs source:
 https://docs.google.com/document/d/1nYLxFVNFSCX0IshIHHFa3ZFMUbJLooXW81Ou0P18pus/edit?tab=t.ikebh5b1122t
 
 Files:
+- USAGE_GUIDE.md: Practical guide for using the prompt workflow from setup through analysis
 - 01-brand-and-company-context-prompt.md: Brand and company context Prompt
 - 02-core-avatar-research-prompt.md: Core avatar research prompt
 - 03-core-avatar-training.md: Core Avatar Training
