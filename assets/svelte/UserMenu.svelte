@@ -82,12 +82,20 @@
   }
 
   $effect(() => {
-    currentTheme = normalizeTheme(
-      localStorage.getItem('phx:theme') || document.documentElement.dataset.theme,
-    )
+    try {
+      currentTheme = normalizeTheme(
+        localStorage.getItem('phx:theme') || document.documentElement.dataset.theme,
+      )
+    } catch (_) {
+      currentTheme = normalizeTheme(document.documentElement.dataset.theme)
+    }
 
     const syncTheme = (event) => {
-      const nextTheme = event.detail?.theme ?? event.newValue
+      if (event.type === 'storage' && event.key !== 'phx:theme') return
+
+      const nextTheme = event.type === 'storage'
+        ? event.newValue
+        : event.detail?.theme ?? event.target?.dataset?.phxTheme
       currentTheme = normalizeTheme(nextTheme)
     }
 

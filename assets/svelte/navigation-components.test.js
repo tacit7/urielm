@@ -1,9 +1,54 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
+import { DARK_THEME, LIGHT_THEME, normalizeTheme } from "../js/theme.js"
 
 const navbar = readFileSync(new URL("./Navbar.svelte", import.meta.url), "utf8")
 const userMenu = readFileSync(new URL("./UserMenu.svelte", import.meta.url), "utf8")
+
+// Exercise the component's event handlers without a browser or Svelte DOM runtime.
+function mountAccountTheme({ blockedStorage = false } = {}) {
+  const listeners = new Map()
+  const script = userMenu.match(/<script>([\s\S]*?)<\/script>/)[1]
+    .replace(/^\s*import .*$/gm, "")
+  const initialize = new Function(
+    "$props", "$state", "$derived", "$effect", "window", "document",
+    "localStorage", "profilePathForUser", "DARK_THEME", "LIGHT_THEME", "normalizeTheme",
+    `${script}; return { theme: () => currentTheme, setTheme }`,
+  )
+  const component = initialize(
+    () => ({ currentUser: { name: "Test" } }), value => value, value => value,
+    effect => effect(),
+    { addEventListener: (name, handler) => listeners.set(name, handler) },
+    { documentElement: { dataset: { theme: LIGHT_THEME } }, addEventListener() {} },
+    { getItem() { if (blockedStorage) throw new Error("Storage blocked"); return LIGHT_THEME } },
+    () => "/u/test", DARK_THEME, LIGHT_THEME, normalizeTheme,
+  )
+  return { ...component, emit: (type, event) => listeners.get(type)({ type, ...event }) }
+}
+
+test("account theme ignores unrelated storage changes", () => {
+  const menu = mountAccountTheme()
+  menu.emit("storage", { key: "reply-draft", newValue: "draft text" })
+  assert.equal(menu.theme(), LIGHT_THEME)
+  menu.emit("storage", { key: "phx:theme", newValue: DARK_THEME })
+  assert.equal(menu.theme(), DARK_THEME)
+})
+
+test("account theme follows Phoenix button and Svelte theme events", () => {
+  const menu = mountAccountTheme()
+  menu.emit("phx:set-theme", { detail: { theme: DARK_THEME } })
+  assert.equal(menu.theme(), DARK_THEME)
+  menu.emit("phx:set-theme", { detail: {}, target: { dataset: { phxTheme: LIGHT_THEME } } })
+  assert.equal(menu.theme(), LIGHT_THEME)
+})
+
+test("account theme initializes when localStorage is unavailable", () => {
+  const menu = mountAccountTheme({ blockedStorage: true })
+  assert.equal(menu.theme(), LIGHT_THEME)
+  menu.emit("phx:set-theme", { detail: { theme: DARK_THEME } })
+  assert.equal(menu.theme(), DARK_THEME)
+})
 
 function classForId(source, id) {
   return source.match(new RegExp(`id="${id}"[\\s\\S]*?class="([^"]+)"`))?.[1] || ""
