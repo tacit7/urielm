@@ -8,119 +8,24 @@ defmodule UrielmWeb.BoardLive do
 
   @impl true
   def mount(params, _session, socket) do
+    {:ok,
+     socket
+     |> assign(:all_categories, [])
+     |> assign(:meta, nil)
+     |> assign(:page, parse_page(params["page"]))
+     |> stream(:threads, [])}
+  end
+
+  @impl true
+  def handle_params(params, _uri, socket) do
     slug = params["board_slug"]
 
     case Forum.get_board(slug) do
       nil ->
-        {:ok, push_navigate(socket, to: ~p"/forum/categories")}
+        {:noreply, push_navigate(socket, to: ~p"/forum/categories")}
 
       board ->
-        categories = Forum.list_categories_with_boards()
-
-        sort = Map.get(params, "sort", "latest")
-        filter = Map.get(params, "filter", "all")
-
-        page =
-          case params["page"] do
-            nil ->
-              1
-
-            p when is_binary(p) ->
-              case Integer.parse(p) do
-                {n, ""} when n >= 1 -> n
-                _ -> 1
-              end
-
-            p when is_integer(p) ->
-              max(p, 1)
-          end
-
-        user = socket.assigns[:current_user]
-
-        {threads, meta} =
-          case filter do
-            "unread" when not is_nil(user) ->
-              case Forum.paginate_unread_threads(user.id, board.id, %{
-                     page: page,
-                     page_size: LiveHelpers.page_size()
-                   }) do
-                {:ok, {data, meta}} -> {data, meta}
-                {:error, _meta} -> {[], nil}
-              end
-
-            "new" ->
-              case Forum.paginate_new_threads(board.id, %{
-                     page: page,
-                     page_size: LiveHelpers.page_size()
-                   }) do
-                {:ok, {data, meta}} -> {data, meta}
-                {:error, _meta} -> {[], nil}
-              end
-
-            "solved" ->
-              flop_params = %{
-                page: page,
-                page_size: LiveHelpers.page_size(),
-                order_by: [:updated_at],
-                order_directions: [:desc]
-              }
-
-              case Forum.paginate_threads(board.id, flop_params, solved: true) do
-                {:ok, {data, meta}} -> {data, meta}
-                {:error, _meta} -> {[], nil}
-              end
-
-            "unsolved" ->
-              flop_params = %{
-                page: page,
-                page_size: LiveHelpers.page_size(),
-                order_by: [:updated_at],
-                order_directions: [:desc]
-              }
-
-              case Forum.paginate_threads(board.id, flop_params, solved: false) do
-                {:ok, {data, meta}} -> {data, meta}
-                {:error, _meta} -> {[], nil}
-              end
-
-            _ ->
-              flop_order =
-                case sort do
-                  "latest" ->
-                    %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
-
-                  "top" ->
-                    %{
-                      order_by: [:score, :inserted_at, :id],
-                      order_directions: [:desc, :desc, :desc]
-                    }
-
-                  "new" ->
-                    %{order_by: [:inserted_at, :id], order_directions: [:desc, :desc]}
-
-                  _ ->
-                    %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
-                end
-
-              flop_params =
-                Map.merge(%{page: page, page_size: LiveHelpers.page_size()}, flop_order)
-
-              case Forum.paginate_threads(board.id, flop_params) do
-                {:ok, {data, meta}} -> {data, meta}
-                {:error, _meta} -> {[], nil}
-              end
-          end
-
-        {:ok,
-         socket
-         |> assign(SEO.forum_metadata(:board, board, page: page, sort: sort, filter: filter))
-         |> assign(:board, board)
-         |> assign(:all_categories, categories)
-         |> assign(:sort, sort)
-         |> assign(:filter, filter)
-         |> assign(:page, page)
-         |> assign(:meta, meta)
-         |> stream(:threads, serialize_threads(threads, user), reset: true)}
+        {:noreply, load_board(socket, board, params)}
     end
   end
 
@@ -299,6 +204,104 @@ defmodule UrielmWeb.BoardLive do
 
   defp serialize_threads(threads, current_user),
     do: LiveHelpers.serialize_thread_list(threads, current_user)
+
+  defp load_board(socket, board, params) do
+    categories = Forum.list_categories_with_boards()
+    sort = Map.get(params, "sort", "latest")
+    filter = Map.get(params, "filter", "all")
+    page = parse_page(params["page"])
+    user = socket.assigns[:current_user]
+    {threads, meta} = paginate_board_threads(board, filter, sort, page, user)
+
+    socket
+    |> assign(SEO.forum_metadata(:board, board, page: page, sort: sort, filter: filter))
+    |> assign(:board, board)
+    |> assign(:all_categories, categories)
+    |> assign(:sort, sort)
+    |> assign(:filter, filter)
+    |> assign(:page, page)
+    |> assign(:meta, meta)
+    |> stream(:threads, serialize_threads(threads, user), reset: true)
+  end
+
+  defp paginate_board_threads(board, "unread", _sort, page, user) when not is_nil(user) do
+    board.id
+    |> then(fn board_id ->
+      Forum.paginate_unread_threads(user.id, board_id, %{
+        page: page,
+        page_size: LiveHelpers.page_size()
+      })
+    end)
+    |> normalize_pagination()
+  end
+
+  defp paginate_board_threads(board, "new", _sort, page, _user) do
+    Forum.paginate_new_threads(board.id, %{
+      page: page,
+      page_size: LiveHelpers.page_size()
+    })
+    |> normalize_pagination()
+  end
+
+  defp paginate_board_threads(board, "solved", _sort, page, _user) do
+    board.id
+    |> Forum.paginate_threads(solved_flop_params(page), solved: true)
+    |> normalize_pagination()
+  end
+
+  defp paginate_board_threads(board, "unsolved", _sort, page, _user) do
+    board.id
+    |> Forum.paginate_threads(solved_flop_params(page), solved: false)
+    |> normalize_pagination()
+  end
+
+  defp paginate_board_threads(board, _filter, sort, page, _user) do
+    flop_params =
+      %{page: page, page_size: LiveHelpers.page_size()}
+      |> Map.merge(sort_flop_order(sort))
+
+    board.id
+    |> Forum.paginate_threads(flop_params)
+    |> normalize_pagination()
+  end
+
+  defp solved_flop_params(page) do
+    %{
+      page: page,
+      page_size: LiveHelpers.page_size(),
+      order_by: [:updated_at],
+      order_directions: [:desc]
+    }
+  end
+
+  defp sort_flop_order("top") do
+    %{
+      order_by: [:score, :inserted_at, :id],
+      order_directions: [:desc, :desc, :desc]
+    }
+  end
+
+  defp sort_flop_order("new") do
+    %{order_by: [:inserted_at, :id], order_directions: [:desc, :desc]}
+  end
+
+  defp sort_flop_order(_sort) do
+    %{order_by: [:updated_at, :id], order_directions: [:desc, :desc]}
+  end
+
+  defp normalize_pagination({:ok, {data, meta}}), do: {data, meta}
+  defp normalize_pagination({:error, _meta}), do: {[], nil}
+
+  defp parse_page(nil), do: 1
+
+  defp parse_page(p) when is_binary(p) do
+    case Integer.parse(p) do
+      {n, ""} when n >= 1 -> n
+      _ -> 1
+    end
+  end
+
+  defp parse_page(p) when is_integer(p), do: max(p, 1)
 
   attr :href, :string, required: true
   attr :active, :boolean, default: false
