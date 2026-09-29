@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+TO_DATE="${NEWS_BOT_TO_DATE:-$(date -u +%F)}"
+FROM_DATE="${NEWS_BOT_FROM_DATE:-$(date -u -d "$TO_DATE - 3 days" +%F)}"
+LIMIT="${NEWS_BOT_LIMIT:-50}"
+RUN_DIR="${NEWS_BOT_RUN_DIR:-tmp/news_bot_runs/$(date -u +%Y%m%dT%H%M%SZ)}"
+LAST_MESSAGE="$RUN_DIR/codex-last-message.txt"
+
+mkdir -p "$RUN_DIR"
+
+./bin/prod-mix news_bot.collect \
+  --from "$FROM_DATE" \
+  --to "$TO_DATE" \
+  --limit "$LIMIT" \
+  --output-dir "$RUN_DIR" \
+  --json
+
+ARTICLE_COUNT="$(python3 - "$RUN_DIR/manifest.json" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    print(json.load(handle).get("count", 0))
+PY
+)"
+
+if [[ "$ARTICLE_COUNT" == "0" ]]; then
+  echo "No new deduped news articles to post for $FROM_DATE through $TO_DATE."
+  exit 0
+fi
+
+codex exec \
+  --cd "$ROOT" \
+  --sandbox danger-full-access \
+  --dangerously-bypass-approvals-and-sandbox \
+  --dangerously-bypass-hook-trust \
+  --output-last-message "$LAST_MESSAGE" \
+  "$(cat <<PROMPT
+Use the news-bot-posts skill.
+
+Create Urielm ai-news forum posts as news-bot for each article staged in:
+
+$RUN_DIR
+
+Process:
+1. Read $RUN_DIR/manifest.json and every markdown file in $RUN_DIR/articles.
+2. Skip an article only if it is already posted or the staged content is unusable.
+3. For each article, write a meaningful, appropriate forum post. Do not merely paste the RSS summary.
+4. Keep each post concise and useful: one short lead paragraph, 2-4 key points, and the source link.
+5. Use the article title as the forum title unless a clearer title is obviously better.
+6. Preserve the article timestamp with --created-at from the manifest.
+7. Create posts through ./bin/prod-mix forum.agent thread --agent news-bot --board ai-news --title ... --body-file ... --created-at ... --json.
+8. Never print production secrets or raw service environment.
+9. At the end, report posted titles and thread URLs. Also mention any skipped articles and why.
+PROMPT
+)"

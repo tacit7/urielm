@@ -67,6 +67,56 @@ defmodule Urielm.NewsBot do
     |> then(&{:ok, &1})
   end
 
+  def collect_articles(opts \\ []) do
+    fetcher = Keyword.get(opts, :fetcher, &fetch/1)
+    output_dir = Keyword.fetch!(opts, :output_dir)
+    from = Keyword.fetch!(opts, :from)
+    to = Keyword.fetch!(opts, :to)
+
+    with {:ok, candidates} <- discover(opts) do
+      output_dir = Path.expand(output_dir)
+      articles_dir = Path.join(output_dir, "articles")
+
+      File.mkdir_p!(articles_dir)
+
+      articles =
+        candidates
+        |> Enum.with_index(1)
+        |> Task.async_stream(
+          fn {candidate, index} ->
+            write_article_file(candidate, index, articles_dir, fetcher)
+          end,
+          ordered: true,
+          timeout: :infinity
+        )
+        |> Enum.map(fn
+          {:ok, article} -> article
+        end)
+
+      manifest = %{
+        generated_at: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601(),
+        from: Date.to_iso8601(from),
+        to: Date.to_iso8601(to),
+        count: length(articles),
+        articles: Enum.map(articles, &article_manifest/1)
+      }
+
+      manifest_path = Path.join(output_dir, "manifest.json")
+      readme_path = Path.join(output_dir, "README.md")
+
+      File.write!(manifest_path, Jason.encode!(manifest, pretty: true))
+      File.write!(readme_path, run_readme(manifest))
+
+      {:ok,
+       %{
+         output_dir: output_dir,
+         manifest_path: manifest_path,
+         readme_path: readme_path,
+         articles: articles
+       }}
+    end
+  end
+
   def source_posted?(%{url: url}) do
     source_posted?(url)
   end
@@ -199,6 +249,114 @@ defmodule Urielm.NewsBot do
     end
   end
 
+  defp write_article_file(candidate, index, articles_dir, fetcher) do
+    {article_text, fetch_status} =
+      case fetch_body(fetcher, candidate.url) do
+        {:ok, html} ->
+          {extract_article_text(html), "fetched"}
+
+        {:error, reason} ->
+          {"", "fetch_failed: #{inspect(reason)}"}
+      end
+
+    text =
+      case article_text do
+        "" -> candidate.summary
+        text -> text
+      end
+
+    filename =
+      "#{index |> Integer.to_string() |> String.pad_leading(2, "0")}-#{slugify(candidate.title)}.md"
+
+    path = Path.join(articles_dir, filename)
+
+    article = %{
+      title: candidate.title,
+      publisher: candidate.source,
+      source: candidate.url,
+      published_on: candidate.published_on,
+      created_at: candidate.created_at,
+      summary: candidate.summary,
+      fetch_status: fetch_status,
+      text: text,
+      path: path
+    }
+
+    File.write!(path, article_markdown(article))
+
+    article
+  end
+
+  defp article_manifest(article) do
+    %{
+      title: article.title,
+      publisher: article.publisher,
+      source: article.source,
+      published_on: Date.to_iso8601(article.published_on),
+      created_at: DateTime.to_iso8601(article.created_at),
+      summary: article.summary,
+      fetch_status: article.fetch_status,
+      path: article.path
+    }
+  end
+
+  defp article_markdown(article) do
+    """
+    # #{article.title}
+
+    Publisher: #{article.publisher}
+    Published on: #{Date.to_iso8601(article.published_on)}
+    Created at: #{DateTime.to_iso8601(article.created_at)}
+    Source: #{article.source}
+    Fetch status: #{article.fetch_status}
+
+    ## Feed summary
+
+    #{article.summary}
+
+    ## Article text
+
+    #{article.text}
+    """
+  end
+
+  defp run_readme(manifest) do
+    """
+    # News Bot Run
+
+    Date range: #{manifest.from} through #{manifest.to}
+    Articles: #{manifest.count}
+
+    Use `manifest.json` for machine-readable metadata. The `articles/` directory contains one
+    markdown file per deduped article candidate, including source URL, publisher, publish date,
+    feed summary, and extracted article text.
+    """
+  end
+
+  defp extract_article_text(html) do
+    with {:ok, document} <- Floki.parse_document(html) do
+      document
+      |> readable_nodes()
+      |> Floki.text(sep: "\n")
+      |> clean_article_text()
+    else
+      _ -> clean_article_text(html)
+    end
+  end
+
+  defp readable_nodes(document) do
+    case Floki.find(document, "article") do
+      [] ->
+        case Floki.find(document, "main") do
+          [] -> Floki.find(document, "body")
+          nodes -> nodes
+        end
+
+      nodes ->
+        nodes
+    end
+  end
+
   defp fetch(url) do
     Req.get(url,
       headers: [
@@ -271,6 +429,30 @@ defmodule Urielm.NewsBot do
     |> String.replace_suffix("]]>", "")
     |> String.replace(~r/\s+/, " ")
     |> String.trim()
+  end
+
+  defp clean_article_text(text) do
+    text
+    |> decode_entities()
+    |> String.split("\n")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.reject(&String.match?(&1, ~r/^(subscribe|cookie|privacy|terms)$/i))
+    |> Enum.join("\n\n")
+    |> String.replace(~r/\n{3,}/, "\n\n")
+    |> String.trim()
+  end
+
+  defp slugify(text) do
+    slug =
+      text
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9]+/, "-")
+      |> String.trim("-")
+      |> String.slice(0, 72)
+      |> String.trim("-")
+
+    if slug == "", do: "article", else: slug
   end
 
   defp canonical_url(url) do

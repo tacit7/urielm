@@ -329,6 +329,30 @@ defmodule UrielmWeb.ForumLiveTest do
       assert html2 =~ "Thread"
     end
 
+    test "pagination patch to page 2 reloads board threads", %{board: board} do
+      user = user_fixture()
+
+      for i <- 1..25 do
+        thread_fixture(%{
+          board_id: board.id,
+          author_id: user.id,
+          title: "Patch Thread #{i}",
+          slug: "patch-thread-#{i}"
+        })
+      end
+
+      {:ok, live, _html} = live(build_conn(), ~p"/forum/b/#{board.slug}")
+
+      html =
+        render_patch(
+          live,
+          ~p"/forum/b/#{board.slug}?sort=latest&filter=all&page=2"
+        )
+
+      assert html =~ board.name
+      assert has_element?(live, "#threads")
+    end
+
     test "sort=top parameter works", %{board: board} do
       {:ok, _live, html} = live(build_conn(), ~p"/forum/b/#{board.slug}?sort=top")
 
