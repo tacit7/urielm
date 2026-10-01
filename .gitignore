@@ -11,6 +11,7 @@
 /priv/static/*
 !/priv/static/install/
 !/priv/static/install/code-kata.sh
+/priv/svelte/
 # Where 3rd-party dependencies like ExDoc output generated docs.
 /doc/
 
@@ -39,6 +40,7 @@ svelte_app-*.tar
 npm-debug.log
 /assets/node_modules/
 /logs/
+/log/
 bin/docker-deploy.sh
 
 # Eye in the Sky session tracking
