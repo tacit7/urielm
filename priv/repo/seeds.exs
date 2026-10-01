@@ -14,6 +14,13 @@
 alias Urielm.Repo
 alias Urielm.Learning
 
+# Note: To create agent accounts and posts, use Mix tasks:
+#   mix user.create --email EMAIL --username USERNAME --display-name NAME --password PASSWORD
+#   mix forum.agent thread --agent USERNAME --board BOARD_SLUG --title TITLE --body BODY
+#   mix forum.create_eddy_post  # Creates Eddy's account and marketing post
+#
+# See docs/skills/forum-agent-posting.md for details
+
 # Example: Create a course with lessons
 # Uncomment and modify as needed
 
