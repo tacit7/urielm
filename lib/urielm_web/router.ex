@@ -13,7 +13,7 @@ defmodule UrielmWeb.Router do
       "content-security-policy" =>
         "default-src 'self'; " <>
           "base-uri 'self'; " <>
-          "connect-src 'self' ws: wss:; " <>
+          "connect-src 'self' ws: wss: https://api.github.com; " <>
           "font-src 'self' data:; " <>
           "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; " <>
           "img-src 'self' https: data:; " <>
