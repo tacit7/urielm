@@ -27,6 +27,7 @@ defmodule UrielmWeb.CodeKataLive do
             data-release-api="https://api.github.com/repos/tacit7/code-kata/releases/latest"
             data-release-page="https://github.com/tacit7/code-kata/releases/latest"
             data-source-page="https://github.com/tacit7/code-kata"
+            data-macos-install="#code-kata-macos-install"
             class="mt-8 grid w-full max-w-xl justify-items-center gap-3"
           >
             <.link
@@ -118,14 +119,13 @@ defmodule UrielmWeb.CodeKataLive do
                 aria-label="All Code Kata downloads"
               >
                 <.link
-                  href="https://github.com/tacit7/code-kata/releases/latest"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#code-kata-macos-install"
                   class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
                 >
                   macOS
                 </.link>
                 <.link
+                  id="code-kata-windows-download"
                   href="https://github.com/tacit7/code-kata/releases/latest"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -143,6 +143,37 @@ defmodule UrielmWeb.CodeKataLive do
                 </.link>
               </div>
             </details>
+
+            <div
+              id="code-kata-macos-install"
+              class="grid w-full gap-3 rounded-2xl border border-base-300 bg-base-100 p-4 text-left sm:max-w-lg"
+            >
+              <div class="flex items-start gap-3">
+                <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-base-200 text-base-content">
+                  <.um_icon name="hero-command-line" class="size-5" />
+                </span>
+                <div>
+                  <h2 class="font-bold text-base-content">Install on macOS from Terminal</h2>
+                  <p class="mt-1 text-sm leading-6 text-base-content/65">
+                    Downloads the latest DMG, installs the app, and removes quarantine from Code
+                    Kata only. Review the script before running it if you prefer.
+                  </p>
+                </div>
+              </div>
+              <code
+                id="code-kata-macos-command"
+                class="block overflow-x-auto rounded-xl bg-neutral px-4 py-3 font-mono text-xs leading-6 text-neutral-content sm:text-sm"
+              >curl -fsSL https://urielm.dev/install/code-kata.sh | bash</code>
+              <.link
+                id="code-kata-review-installer"
+                href="/install/code-kata.sh"
+                target="_blank"
+                class="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Review installer script
+                <.um_icon name="hero-arrow-top-right-on-square" class="size-4" />
+              </.link>
+            </div>
           </div>
 
           <div class="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-3">

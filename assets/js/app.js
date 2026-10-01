@@ -415,9 +415,11 @@ const CodeKataDownload = {
     this.releaseUpdated = this.el.querySelector("#code-kata-release-updated")
     this.releaseNotes = this.el.querySelector("#code-kata-release-notes")
     this.sourceCode = this.el.querySelector("#code-kata-source-code")
+    this.windowsDownload = this.el.querySelector("#code-kata-windows-download")
     this.releasePage = this.el.dataset.releasePage
     this.releaseApi = this.el.dataset.releaseApi
     this.sourcePage = this.el.dataset.sourcePage
+    this.macosInstall = this.el.dataset.macosInstall
 
     const platform = detectDesktopPlatform()
     setDownloadState(this, platform)
@@ -456,6 +458,11 @@ async function loadCodeKataRelease(hook, platform) {
 
     const release = await response.json()
     const asset = findCodeKataAsset(release.assets || [], platform)
+    const windowsAsset = findCodeKataAsset(release.assets || [], "windows")
+    if (hook.windowsDownload && windowsAsset?.browser_download_url) {
+      hook.windowsDownload.href = windowsAsset.browser_download_url
+      hook.windowsDownload.setAttribute("download", "")
+    }
     setDownloadState(hook, platform, asset, release)
   } catch (_) {
     setDownloadState(hook, platform, null, null)
@@ -465,7 +472,7 @@ async function loadCodeKataRelease(hook, platform) {
 function findCodeKataAsset(assets, platform) {
   const patterns = {
     macos: [/\.dmg$/i],
-    windows: [/\.exe$/i, /\.msi$/i],
+    windows: [/\.msi$/i],
     linux: [/\.appimage$/i, /\.deb$/i, /\.rpm$/i]
   }[platform] || []
 
@@ -479,6 +486,18 @@ function setDownloadState(hook, platform, asset = null, release = undefined) {
   const fallbackHref = hook.releasePage || "https://github.com/tacit7/code-kata/releases/latest"
 
   setReleasePanelState(hook, platform, asset, release, fallbackHref)
+
+  if (platform === "macos" && hook.macosInstall) {
+    hook.primaryLink.href = hook.macosInstall
+    hook.primaryLink.removeAttribute("target")
+    hook.primaryLink.removeAttribute("rel")
+    hook.primaryLink.removeAttribute("download")
+    hook.label.textContent = "Install for macOS"
+    hook.note.textContent = asset
+      ? "Install the latest macOS release with one Terminal command."
+      : "Use the Terminal installer; it will install the latest macOS release as soon as its DMG is available."
+    return
+  }
 
   if (asset?.browser_download_url) {
     hook.primaryLink.href = asset.browser_download_url

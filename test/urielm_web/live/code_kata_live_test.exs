@@ -26,7 +26,11 @@ defmodule UrielmWeb.CodeKataLiveTest do
 
     assert has_element?(view, "#code-kata-download-fallbacks", "macOS")
     assert has_element?(view, "#code-kata-download-fallbacks", "Windows")
+    assert has_element?(view, "#code-kata-windows-download")
     assert has_element?(view, "#code-kata-download-fallbacks", "Linux")
+    assert has_element?(view, "#code-kata-macos-install")
+    assert has_element?(view, "#code-kata-macos-command")
+    assert has_element?(view, "#code-kata-review-installer[href='/install/code-kata.sh']")
     assert has_element?(view, "#code-kata-release-panel")
     assert has_element?(view, "#code-kata-release-version", "Latest")
     assert has_element?(view, "#code-kata-release-platform", "Detecting")
@@ -44,5 +48,11 @@ defmodule UrielmWeb.CodeKataLiveTest do
     assert has_element?(view, "img[src='/images/code-kata/progress-overview.png']")
     assert has_element?(view, "img[src='/images/code-kata/progress-mastery.png']")
     assert has_element?(view, "img[src='/images/code-kata/progress-trends.png']")
+  end
+
+  test "serves the macOS installer script" do
+    conn = get(build_conn(), "/install/code-kata.sh")
+
+    assert response(conn, 200) =~ "com.apple.quarantine"
   end
 end
