@@ -7,12 +7,13 @@ alias Urielm.{Accounts, Forum, Repo}
 eddy_user =
   case Accounts.get_user_by_email("eddy.thornfield@urielm.dev") do
     nil ->
-      {:ok, user} = Accounts.register_user(%{
-        email: "eddy.thornfield@urielm.dev",
-        username: "eddy-thornfield",
-        display_name: "Eddy Thornfield",
-        password: "SecurePass2024!"
-      })
+      {:ok, user} =
+        Accounts.register_user(%{
+          email: "eddy.thornfield@urielm.dev",
+          username: "eddy-thornfield",
+          display_name: "Eddy Thornfield",
+          password: "SecurePass2024!"
+        })
 
       IO.puts("✓ Created user: #{user.display_name} (@#{user.username})")
       user

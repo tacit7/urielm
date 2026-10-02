@@ -10,184 +10,200 @@ defmodule UrielmWeb.CodeKataLive do
   def render(assigns) do
     ~H"""
     <div id="code-kata-page" class="bg-base-100">
-      <section id="code-kata-hero" class="px-6 pb-20 pt-10 sm:pb-10 sm:pt-14 lg:pt-16">
-        <div class="mx-auto grid max-w-4xl justify-items-center text-center">
-          <h1 class="max-w-[11ch] text-balance text-4xl font-black leading-tight tracking-[-0.03em] text-base-content sm:text-5xl lg:text-6xl">
-            Practice what matters.
-          </h1>
+      <section id="code-kata-hero" class="px-6 pb-10 pt-10 sm:pb-14 sm:pt-14 lg:pt-16">
+        <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
+          <div class="grid justify-items-center text-center lg:justify-items-start lg:text-left">
+            <h1 class="max-w-[11ch] text-balance text-4xl font-black leading-tight tracking-[-0.03em] text-base-content sm:text-5xl lg:text-6xl">
+              Practice what matters.
+            </h1>
 
-          <p class="mt-6 max-w-2xl text-lg leading-8 text-base-content/65 sm:text-xl sm:leading-9">
-            Build deliberate reps for Python and JavaScript. Choose a review queue, solve in
-            Monaco, run tests locally, and know exactly what to practice next.
-          </p>
-
-          <div
-            id="code-kata-download"
-            phx-hook="CodeKataDownload"
-            data-release-api="https://api.github.com/repos/tacit7/code-kata/releases/latest"
-            data-release-page="https://github.com/tacit7/code-kata/releases/latest"
-            data-source-page="https://github.com/tacit7/code-kata"
-            data-macos-install="#code-kata-macos-install"
-            class="mt-8 grid w-full max-w-xl justify-items-center gap-3"
-          >
-            <.link
-              id="code-kata-primary-download"
-              href="https://github.com/tacit7/code-kata/releases/latest"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-primary min-h-12 w-full rounded-xl px-6 font-bold shadow-lg shadow-base-300/25 transition duration-200 hover:-translate-y-0.5 sm:w-auto"
-            >
-              <.um_icon name="hero-arrow-down-tray" class="size-5" />
-              <span id="code-kata-download-label">Download app</span>
-            </.link>
-
-            <p
-              id="code-kata-download-note"
-              class="max-w-md text-sm leading-6 text-base-content/65"
-            >
-              Detecting your computer. You can always choose any installer from the latest GitHub
-              release.
+            <p class="mt-6 max-w-2xl text-lg leading-8 text-base-content/65 sm:text-xl sm:leading-9 lg:max-w-xl">
+              Build deliberate reps for Python and JavaScript. Choose a review queue, solve in
+              Monaco, run tests locally, and know exactly what to practice next.
             </p>
 
             <div
-              id="code-kata-release-panel"
-              class="grid w-full gap-3 rounded-2xl bg-base-200/55 p-4 text-left shadow-lg shadow-base-300/20 sm:max-w-lg"
-              aria-live="polite"
+              id="code-kata-download"
+              phx-hook="CodeKataDownload"
+              data-release-api="https://api.github.com/repos/tacit7/code-kata/releases/latest"
+              data-release-page="https://github.com/tacit7/code-kata/releases/latest"
+              data-source-page="https://github.com/tacit7/code-kata"
+              data-macos-install="#code-kata-macos-install"
+              class="mt-8 grid w-full max-w-xl justify-items-center gap-3 lg:justify-items-start"
             >
-              <div class="flex flex-col gap-1 min-[360px]:flex-row min-[360px]:items-baseline min-[360px]:justify-between">
-                <p id="code-kata-release-title" class="font-bold text-base-content">
-                  Latest release
-                </p>
-                <p
-                  id="code-kata-release-updated"
-                  class="text-sm font-medium text-base-content/60"
-                >
-                  Checking GitHub
-                </p>
-              </div>
-              <dl class="grid grid-cols-3 gap-3 text-sm">
-                <div>
-                  <dt class="font-semibold text-base-content/55">Version</dt>
-                  <dd id="code-kata-release-version" class="mt-1 font-bold text-base-content">
-                    Latest
-                  </dd>
-                </div>
-                <div>
-                  <dt class="font-semibold text-base-content/55">Platform</dt>
-                  <dd id="code-kata-release-platform" class="mt-1 font-bold text-base-content">
-                    Detecting
-                  </dd>
-                </div>
-                <div>
-                  <dt class="font-semibold text-base-content/55">Installer</dt>
-                  <dd id="code-kata-release-asset" class="mt-1 font-bold text-base-content">
-                    GitHub release
-                  </dd>
-                </div>
-              </dl>
-              <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
+              <div class="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
                 <.link
-                  id="code-kata-release-notes"
+                  id="code-kata-primary-download"
                   href="https://github.com/tacit7/code-kata/releases/latest"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-primary underline-offset-4 hover:underline"
+                  class="btn btn-primary min-h-12 rounded-xl px-6 font-bold shadow-lg shadow-base-300/25 transition duration-200 hover:-translate-y-0.5"
                 >
-                  Release notes
+                  <.um_icon name="hero-arrow-down-tray" class="size-5" />
+                  <span id="code-kata-download-label">Download app</span>
                 </.link>
-                <.link
-                  id="code-kata-source-code"
-                  href="https://github.com/tacit7/code-kata"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-base-content/65 underline-offset-4 transition hover:text-primary hover:underline"
-                >
-                  Source code
-                </.link>
-              </div>
-            </div>
 
-            <details
-              id="code-kata-download-fallbacks"
-              class="group text-sm"
-            >
-              <summary class="cursor-pointer list-none font-semibold text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-                All downloads
-              </summary>
-              <div
-                class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 font-semibold"
-                aria-label="All Code Kata downloads"
-              >
-                <.link
-                  href="#code-kata-macos-install"
-                  class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
+                <details
+                  id="code-kata-download-fallbacks"
+                  class="group text-sm"
                 >
-                  macOS
-                </.link>
-                <.link
-                  id="code-kata-windows-download"
-                  href="https://github.com/tacit7/code-kata/releases/latest"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
-                >
-                  Windows
-                </.link>
-                <.link
-                  href="https://github.com/tacit7/code-kata/releases/latest"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
-                >
-                  Linux
-                </.link>
+                  <summary class="flex min-h-12 cursor-pointer list-none items-center justify-center rounded-xl px-4 font-semibold text-base-content/65 transition hover:bg-base-200 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                    All downloads
+                  </summary>
+                  <div
+                    class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 font-semibold sm:justify-start"
+                    aria-label="All Code Kata downloads"
+                  >
+                    <.link
+                      href="#code-kata-macos-install"
+                      class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
+                    >
+                      macOS
+                    </.link>
+                    <.link
+                      id="code-kata-windows-download"
+                      href="https://github.com/tacit7/code-kata/releases/latest"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
+                    >
+                      Windows
+                    </.link>
+                    <.link
+                      href="https://github.com/tacit7/code-kata/releases/latest"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-base-content/60 underline-offset-4 transition hover:text-primary hover:underline"
+                    >
+                      Linux
+                    </.link>
+                  </div>
+                </details>
               </div>
-            </details>
 
-            <div
-              id="code-kata-macos-install"
-              class="grid w-full gap-3 rounded-2xl border border-base-300 bg-base-100 p-4 text-left sm:max-w-lg"
-            >
-              <div class="flex items-start gap-3">
-                <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-base-200 text-base-content">
-                  <.um_icon name="hero-command-line" class="size-5" />
-                </span>
-                <div>
-                  <h2 class="font-bold text-base-content">Install on macOS from Terminal</h2>
-                  <p class="mt-1 text-sm leading-6 text-base-content/65">
-                    Downloads the latest DMG, installs the app, and removes quarantine from Code
-                    Kata only. Review the script before running it if you prefer.
-                  </p>
-                </div>
-              </div>
-              <code
-                id="code-kata-macos-command"
-                class="block overflow-x-auto rounded-xl bg-neutral px-4 py-3 font-mono text-xs leading-6 text-neutral-content sm:text-sm"
-              >curl -fsSL https://urielm.dev/install/code-kata.sh | bash</code>
-              <.link
-                id="code-kata-review-installer"
-                href="/install/code-kata.sh"
-                target="_blank"
-                class="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              <p
+                id="code-kata-download-note"
+                class="max-w-md text-sm leading-6 text-base-content/65"
               >
-                Review installer script
-                <.um_icon name="hero-arrow-top-right-on-square" class="size-4" />
-              </.link>
+                Detecting your computer. You can always choose any installer from the latest GitHub
+                release.
+              </p>
             </div>
           </div>
 
-          <div class="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-3">
-            <.link
-              href="#practice-mode"
-              class="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 font-semibold text-base-content/70 transition hover:bg-base-200 hover:text-base-content"
+          <div class="grid gap-4">
+            <div
+              id="code-kata-practice-loop"
+              class="grid gap-3 rounded-2xl bg-base-200/55 p-4 shadow-2xl shadow-base-300/20 sm:p-5"
+              aria-label="Code Kata practice loop"
             >
-              See practice mode <.um_icon name="hero-arrow-right" class="size-5" />
-            </.link>
+              <div class="flex items-center justify-between gap-3">
+                <p class="font-bold text-base-content">Practice loop</p>
+                <span class="badge badge-primary badge-outline font-semibold">Local tests</span>
+              </div>
+
+              <div class="grid gap-2">
+                <div class="flex items-center gap-3 rounded-xl bg-base-100/75 px-3 py-3 text-left">
+                  <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-content">
+                    <.um_icon name="hero-list-bullet" class="size-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <h2 class="font-bold text-base-content">Choose the queue</h2>
+                    <p class="truncate text-sm text-base-content/60">
+                      Due, failed, daily, speed, or level-based practice.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 rounded-xl bg-base-100/75 px-3 py-3 text-left">
+                  <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-base-200 text-base-content">
+                    <.um_icon name="hero-code-bracket" class="size-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <h2 class="font-bold text-base-content">Solve in Monaco</h2>
+                    <p class="truncate text-sm text-base-content/60">
+                      Run private checks without leaving the editor.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 rounded-xl bg-base-100/75 px-3 py-3 text-left">
+                  <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-success text-success-content">
+                    <.um_icon name="hero-check" class="size-4" />
+                  </span>
+                  <div class="min-w-0">
+                    <h2 class="font-bold text-base-content">Review what decays</h2>
+                    <p class="truncate text-sm text-base-content/60">
+                      Keep stale categories and misses in view.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+              <.link
+                href="#practice-mode"
+                class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-base-200/65 px-4 font-semibold text-base-content/75 transition hover:bg-base-200 hover:text-base-content sm:justify-start"
+              >
+                See practice mode <.um_icon name="hero-arrow-right" class="size-5" />
+              </.link>
+              <.link
+                href="#progress"
+                class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-base-200/65 px-4 font-semibold text-base-content/75 transition hover:bg-base-200 hover:text-base-content sm:justify-start"
+              >
+                Track progress <.um_icon name="hero-arrow-right" class="size-5" />
+              </.link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="code-kata-macos-install"
+        class="border-t border-base-300/80 bg-base-200/30 px-6 py-8 sm:py-10"
+      >
+        <div class="mx-auto flex max-w-5xl flex-col gap-4 rounded-2xl border border-base-300 bg-base-100 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-3">
+            <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-base-200 text-base-content">
+              <.um_icon name="hero-command-line" class="size-5" />
+            </span>
+            <div>
+              <h2 class="font-bold text-base-content">Install on macOS from Terminal</h2>
+              <p class="mt-1 max-w-2xl text-sm leading-6 text-base-content/65">
+                Downloads the latest DMG, installs the app, and removes quarantine from Code Kata
+                only.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid min-w-0 gap-2 lg:w-[30rem]">
+            <div class="flex items-stretch gap-2">
+              <code
+                id="code-kata-macos-command"
+                class="block min-w-0 flex-1 overflow-x-auto rounded-xl bg-neutral px-4 py-3 font-mono text-xs leading-6 text-neutral-content sm:text-sm"
+              >curl -fsSL https://urielm.dev/install/code-kata.sh | bash</code>
+              <button
+                id="code-kata-copy-macos-command"
+                type="button"
+                phx-hook="CopyToClipboard"
+                data-text="curl -fsSL https://urielm.dev/install/code-kata.sh | bash"
+                data-copied-label="Copied macOS install command"
+                class="btn btn-ghost min-h-12 w-12 shrink-0 rounded-xl border border-base-300 bg-base-200/55 text-base-content/70 transition hover:bg-base-200 hover:text-primary"
+                title="Copy install command"
+                aria-label="Copy macOS install command"
+              >
+                <.um_icon name="hero-clipboard-document" class="size-5" />
+              </button>
+            </div>
             <.link
-              href="#progress"
-              class="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 font-semibold text-base-content/70 transition hover:bg-base-200 hover:text-base-content"
+              id="code-kata-review-installer"
+              href="/install/code-kata.sh"
+              target="_blank"
+              class="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline"
             >
-              Track progress <.um_icon name="hero-arrow-right" class="size-5" />
+              Review installer script
+              <.um_icon name="hero-arrow-top-right-on-square" class="size-4" />
             </.link>
           </div>
         </div>
@@ -198,66 +214,6 @@ defmodule UrielmWeb.CodeKataLive do
         aria-label="Code Kata editor screenshot"
         class="px-6 pb-16 sm:pb-20"
       >
-        <div
-          id="code-kata-practice-loop"
-          class="mx-auto mb-10 grid max-w-5xl gap-px overflow-hidden rounded-2xl bg-base-300/80 sm:mb-12 lg:grid-cols-3"
-          aria-label="Code Kata practice loop"
-        >
-          <div class="grid gap-4 bg-base-200/65 p-4 text-left sm:p-5">
-            <div class="flex flex-wrap gap-2">
-              <span class="badge badge-primary badge-outline font-semibold">Spaced review</span>
-              <span class="badge badge-ghost font-semibold text-base-content/65">Weak spots</span>
-            </div>
-            <div>
-              <h2 class="text-lg font-black tracking-[-0.02em] text-base-content">
-                Choose the queue
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-base-content/65">
-                Start with due, failed, daily, speed, or level-based practice instead of scanning
-                every problem.
-              </p>
-            </div>
-          </div>
-
-          <div class="grid gap-4 bg-base-200/65 p-4 text-left sm:p-5">
-            <div class="rounded-xl bg-base-100/80 p-3 font-mono text-xs leading-5 text-base-content/70">
-              <p><span class="text-primary">def</span> solve(nums):</p>
-              <p class="pl-4">return window(nums)</p>
-            </div>
-            <div>
-              <h2 class="text-lg font-black tracking-[-0.02em] text-base-content">
-                Solve and run tests
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-base-content/65">
-                Work in Monaco and run the checks locally, so the feedback loop stays fast and
-                private.
-              </p>
-            </div>
-          </div>
-
-          <div class="grid gap-4 bg-base-200/65 p-4 text-left sm:p-5">
-            <div class="grid gap-2 text-sm">
-              <div class="flex items-center justify-between rounded-xl bg-base-100/80 px-3 py-2">
-                <span class="font-semibold text-base-content/75">Sliding Window</span>
-                <span class="badge badge-success badge-sm font-bold">passed</span>
-              </div>
-              <div class="flex items-center justify-between rounded-xl bg-base-100/80 px-3 py-2">
-                <span class="font-semibold text-base-content/75">Dynamic Programming</span>
-                <span class="badge badge-warning badge-sm font-bold">review</span>
-              </div>
-            </div>
-            <div>
-              <h2 class="text-lg font-black tracking-[-0.02em] text-base-content">
-                Review what decays
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-base-content/65">
-                Keep stale categories and recently missed problems visible before they fall out of
-                memory.
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div class="mx-auto max-w-5xl">
           <.screenshot
             src={~p"/images/code-kata/hero-editor-results.png"}

@@ -137,11 +137,17 @@ const CopyToClipboard = {
       const text = this.el.dataset.text || this.el.textContent
       navigator.clipboard.writeText(text).then(
         () => {
-          // Visual feedback - change button text briefly
-          const originalText = this.el.textContent
-          this.el.textContent = "✓ Copied!"
+          const originalHtml = this.el.innerHTML
+          const originalLabel = this.el.getAttribute("aria-label")
+          this.el.innerHTML = '<span class="hero-check size-5"></span>'
+          this.el.setAttribute("aria-label", this.el.dataset.copiedLabel || "Copied")
           setTimeout(() => {
-            this.el.textContent = originalText
+            this.el.innerHTML = originalHtml
+            if (originalLabel) {
+              this.el.setAttribute("aria-label", originalLabel)
+            } else {
+              this.el.removeAttribute("aria-label")
+            }
           }, 2000)
         },
         (err) => {
