@@ -9,10 +9,13 @@ defmodule UrielmWeb.UserSocket do
   @impl true
   def connect(%{"token" => token}, socket, _connect_info) do
     case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
-      {:ok, user_id} ->
-        case Urielm.Accounts.get_user(user_id) do
-          nil -> :error
-          user -> {:ok, assign(socket, :current_user, user)}
+      {:ok, session_token} ->
+        case Urielm.Accounts.Sessions.user(session_token) do
+          nil ->
+            :error
+
+          user ->
+            {:ok, socket |> assign(:current_user, user) |> assign(:session_token, session_token)}
         end
 
       {:error, _} ->
@@ -24,6 +27,6 @@ defmodule UrielmWeb.UserSocket do
 
   @impl true
   def id(socket) do
-    "user_socket:#{socket.assigns.current_user.id}"
+    Urielm.Accounts.Sessions.topic(socket.assigns.session_token)
   end
 end

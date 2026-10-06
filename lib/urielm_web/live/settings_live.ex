@@ -63,18 +63,8 @@ defmodule UrielmWeb.SettingsLive do
           {:ok, _user} ->
             {:noreply,
              socket
-             |> put_flash(:info, "Password changed successfully")
-             |> assign(
-               :password_form,
-               to_form(
-                 %{
-                   "current_password" => "",
-                   "new_password" => "",
-                   "confirm_password" => ""
-                 },
-                 as: :password
-               )
-             )}
+             |> put_flash(:info, "Password changed. Please sign in again.")
+             |> redirect(to: ~p"/signin")}
 
           {:error, _changeset} ->
             {:noreply, put_flash(socket, :error, "Failed to change password")}
@@ -359,7 +349,7 @@ defmodule UrielmWeb.SettingsLive do
           <section id="password-settings-section" class="ui-card h-auto p-5 sm:p-7">
             <h2 class="text-xl font-black text-base-content">Change password</h2>
             <p class="text-sm text-base-content/70">
-              Update your password to keep your account secure.
+              Changing your password signs you out on all devices.
             </p>
 
             <div class="divider my-6"></div>

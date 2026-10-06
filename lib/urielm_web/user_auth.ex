@@ -5,7 +5,7 @@ defmodule UrielmWeb.UserAuth do
 
   import Phoenix.Component
   import Phoenix.LiveView
-  alias Urielm.Accounts
+  alias Urielm.Accounts.Sessions
   alias Urielm.Accounts.User
   alias Urielm.Forum
 
@@ -60,12 +60,44 @@ defmodule UrielmWeb.UserAuth do
   end
 
   defp load_current_user(session, socket) do
-    case session do
-      %{"user_id" => user_id} ->
-        assign_new(socket, :current_user, fn -> Accounts.get_user(user_id) end)
+    socket = assign_new(socket, :session_token, fn -> session["session_token"] end)
+    token = socket.assigns.session_token
+    socket = assign(socket, :current_user, Sessions.user(token))
 
-      %{} ->
-        assign_new(socket, :current_user, fn -> nil end)
+    if connected?(socket) && socket.assigns.current_user && !socket.assigns[:session_guard] do
+      # Subscribe before re-checking to close the mount/revocation race.
+      Phoenix.PubSub.subscribe(Urielm.PubSub, Sessions.topic(token))
+
+      case Sessions.fetch(token) do
+        nil ->
+          assign(socket, :current_user, nil)
+
+        {_user, record} ->
+          delay = max(DateTime.diff(record.expires_at, DateTime.utc_now(), :millisecond), 0)
+          Process.send_after(self(), :session_expired, delay)
+
+          socket
+          |> assign(:session_guard, true)
+          |> attach_hook(:session_revocation, :handle_info, fn
+            %Phoenix.Socket.Broadcast{event: "disconnect"}, socket ->
+              {:halt, redirect(socket, to: "/signin")}
+
+            :session_expired, socket ->
+              {:halt, redirect(socket, to: "/signin")}
+
+            _, socket ->
+              {:cont, socket}
+          end)
+          |> attach_hook(:session_validity, :handle_event, fn _event, _params, socket ->
+            if Sessions.user(socket.assigns.session_token) do
+              {:cont, socket}
+            else
+              {:halt, redirect(socket, to: "/signin")}
+            end
+          end)
+      end
+    else
+      socket
     end
   end
 

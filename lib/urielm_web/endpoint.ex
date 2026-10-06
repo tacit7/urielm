@@ -8,7 +8,8 @@ defmodule UrielmWeb.Endpoint do
     store: :cookie,
     key: "_urielm_key",
     signing_salt: "K4fuzxis",
-    same_site: "Lax"
+    same_site: "Lax",
+    max_age: 30 * 24 * 60 * 60
   ]
 
   # The `secure` flag on the session cookie is driven from config

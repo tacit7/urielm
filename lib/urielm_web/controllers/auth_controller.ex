@@ -43,7 +43,7 @@ defmodule UrielmWeb.AuthController do
         conn =
           conn
           |> put_flash(:info, "Welcome #{user.name || user.email}!")
-          |> put_session(:user_id, user.id)
+          |> UrielmWeb.SessionAuth.log_in(user)
           |> delete_session(:return_to)
           |> configure_session(renew: true)
 
@@ -117,7 +117,7 @@ defmodule UrielmWeb.AuthController do
     case Accounts.register_user(user_params) do
       {:ok, user} ->
         conn
-        |> put_session(:user_id, user.id)
+        |> UrielmWeb.SessionAuth.log_in(user)
         |> configure_session(renew: true)
         |> put_status(:ok)
         |> json(%{success: true})
@@ -146,7 +146,7 @@ defmodule UrielmWeb.AuthController do
     case Accounts.authenticate_user(email, password) do
       {:ok, user} ->
         conn
-        |> put_session(:user_id, user.id)
+        |> UrielmWeb.SessionAuth.log_in(user)
         |> configure_session(renew: true)
         |> put_status(:ok)
         |> json(%{success: true})
@@ -251,7 +251,10 @@ defmodule UrielmWeb.AuthController do
   Called immediately after user record creation.
   """
   def sign_post_signup_token(conn_or_endpoint, user_id) do
-    Phoenix.Token.sign(conn_or_endpoint, "post signup", user_id,
+    Phoenix.Token.sign(
+      conn_or_endpoint,
+      "post signup",
+      Urielm.Accounts.Sessions.create(Accounts.get_user(user_id), "signup"),
       max_age: @post_signup_token_max_age
     )
   end
@@ -265,8 +268,8 @@ defmodule UrielmWeb.AuthController do
       {:error, _} ->
         conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
-      {:ok, user_id} ->
-        case Accounts.get_user(user_id) do
+      {:ok, grant} ->
+        case Urielm.Accounts.Sessions.consume_signup(grant) do
           nil ->
             conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
 
@@ -275,7 +278,7 @@ defmodule UrielmWeb.AuthController do
 
             conn =
               conn
-              |> put_session(:user_id, user.id)
+              |> UrielmWeb.SessionAuth.log_in(user)
               |> delete_session(:return_to)
               |> configure_session(renew: true)
 
@@ -302,7 +305,7 @@ defmodule UrielmWeb.AuthController do
   """
   def delete(conn, _params) do
     conn
-    |> configure_session(drop: true)
+    |> UrielmWeb.SessionAuth.log_out()
     |> put_flash(:info, "You have been signed out.")
     |> redirect(to: ~p"/")
   end

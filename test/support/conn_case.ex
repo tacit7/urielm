@@ -44,6 +44,6 @@ defmodule UrielmWeb.ConnCase do
   def log_in_user(conn, user) do
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
-    |> Plug.Conn.put_session(:user_id, user.id)
+    |> UrielmWeb.SessionAuth.log_in(user)
   end
 end

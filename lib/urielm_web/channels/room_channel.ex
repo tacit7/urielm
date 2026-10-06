@@ -6,7 +6,7 @@ defmodule UrielmWeb.RoomChannel do
   require Logger
 
   def join("room:" <> room_id, _payload, socket) do
-    user = socket.assigns[:current_user]
+    user = Urielm.Accounts.Sessions.user(socket.assigns[:session_token])
 
     room_id_int =
       case Integer.parse(room_id) do
@@ -21,6 +21,9 @@ defmodule UrielmWeb.RoomChannel do
 
       room_id_int ->
         if user && Chat.member?(user.id, room_id_int) do
+          {_user, session} = Urielm.Accounts.Sessions.fetch(socket.assigns.session_token)
+          delay = max(DateTime.diff(session.expires_at, DateTime.utc_now(), :millisecond), 0)
+          Process.send_after(self(), :session_expired, delay)
           messages = load_room_messages(room_id_int)
           {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
         else
@@ -33,7 +36,17 @@ defmodule UrielmWeb.RoomChannel do
       {:error, %{reason: "error"}}
   end
 
-  def handle_in("new_message", %{"body" => body}, socket) do
+  def handle_in(event, payload, socket) do
+    if Urielm.Accounts.Sessions.user(socket.assigns[:session_token]) do
+      handle_authenticated(event, payload, socket)
+    else
+      {:stop, :normal, socket}
+    end
+  end
+
+  def handle_info(:session_expired, socket), do: {:stop, :normal, socket}
+
+  defp handle_authenticated("new_message", %{"body" => body}, socket) do
     user = socket.assigns[:current_user]
     room_id = socket.assigns[:room_id]
 
@@ -61,7 +74,7 @@ defmodule UrielmWeb.RoomChannel do
       {:reply, {:error, %{reason: "error"}}, socket}
   end
 
-  def handle_in("typing", _payload, socket) do
+  defp handle_authenticated("typing", _payload, socket) do
     user = socket.assigns[:current_user]
 
     broadcast_from!(socket, "typing", %{

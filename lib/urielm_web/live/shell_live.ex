@@ -71,7 +71,7 @@ defmodule UrielmWeb.ShellLive do
         {live_render(@socket, child_module(@live_action),
           id: "page-#{@live_action}",
           session: %{
-            "current_user_id" => current_user_id(@current_user),
+            "session_token" => @session_token,
             "child_params" => @child_params
           }
         )}
@@ -94,9 +94,6 @@ defmodule UrielmWeb.ShellLive do
   defp child_module(:themes), do: UrielmWeb.ThemesLive
   defp child_module(:user_profile), do: UrielmWeb.UserProfileLive
   defp child_module(_), do: UrielmWeb.HomeLive
-
-  defp current_user_id(nil), do: nil
-  defp current_user_id(user), do: user.id
 
   defp maybe_raise_not_found!(%{assigns: %{not_found?: true}} = socket) do
     unless connected?(socket) do

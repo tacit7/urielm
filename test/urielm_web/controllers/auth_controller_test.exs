@@ -17,6 +17,79 @@ defmodule UrielmWeb.AuthControllerTest do
 
   alias Urielm.Accounts
 
+  describe "session revocation" do
+    setup %{conn: conn} do
+      {:ok, user} =
+        Accounts.register_user(%{
+          email: "sessions@example.com",
+          username: "sessions",
+          display_name: "Sessions",
+          password: "password123"
+        })
+
+      login = post(conn, ~p"/auth/signin", %{email: user.email, password: "password123"})
+      # Replay the exact signed cookie, not the mutable test session map.
+      cookie = login.resp_cookies["_urielm_key"].value
+      %{user: user, cookie: cookie, session_token: get_session(login, :session_token)}
+    end
+
+    test "expired and legacy cookies cannot authenticate", %{cookie: cookie, user: user} do
+      Urielm.Repo.update_all(Urielm.Accounts.UserSession,
+        set: [expires_at: DateTime.add(DateTime.utc_now(:second), -1)]
+      )
+
+      replay = build_conn() |> put_req_cookie("_urielm_key", cookie) |> get(~p"/settings")
+      assert is_nil(replay.assigns.current_user)
+      legacy = build_conn() |> init_test_session(%{user_id: user.id}) |> get(~p"/settings")
+      assert is_nil(legacy.assigns.current_user)
+    end
+
+    test "login rotates the current session but logout preserves another device", %{
+      cookie: cookie,
+      user: user,
+      session_token: old
+    } do
+      other = Urielm.Accounts.Sessions.create(user)
+
+      login =
+        build_conn()
+        |> put_req_cookie("_urielm_key", cookie)
+        |> post(~p"/auth/signin", %{email: user.email, password: "password123"})
+
+      new = get_session(login, :session_token)
+      refute new == old
+      assert Urielm.Accounts.Sessions.user(old) == nil
+      assert Urielm.Accounts.Sessions.user(new).id == user.id
+      delete(recycle(login), ~p"/auth/logout")
+      assert Urielm.Accounts.Sessions.user(new) == nil
+      assert Urielm.Accounts.Sessions.user(other).id == user.id
+    end
+
+    test "a post-signup link cannot mint a new session after logout", %{user: user} do
+      grant = UrielmWeb.AuthController.sign_post_signup_token(@endpoint, user.id)
+      login = get(build_conn(), ~p"/auth/post-signup/#{grant}")
+      assert get_session(login, :session_token)
+      delete(recycle(login), ~p"/auth/logout")
+      replay = get(build_conn(), ~p"/auth/post-signup/#{grant}")
+      assert is_nil(get_session(replay, :session_token))
+    end
+
+    test "fixes replay of a cookie after logout", %{cookie: cookie} do
+      authenticated = build_conn() |> put_req_cookie("_urielm_key", cookie) |> get(~p"/settings")
+      assert authenticated.assigns.current_user
+      build_conn() |> put_req_cookie("_urielm_key", cookie) |> delete(~p"/auth/logout")
+      replay = build_conn() |> put_req_cookie("_urielm_key", cookie) |> get(~p"/settings")
+      assert is_nil(replay.assigns.current_user)
+      assert redirected_to(replay) == "/signup"
+    end
+
+    test "fixes replay of a cookie after a password change", %{cookie: cookie, user: user} do
+      assert {:ok, _} = Accounts.update_user_password(user, %{password: "newpassword123"})
+      replay = build_conn() |> put_req_cookie("_urielm_key", cookie) |> get(~p"/settings")
+      assert is_nil(replay.assigns.current_user)
+    end
+  end
+
   describe "POST /auth/signup" do
     test "successful signup with valid credentials", %{conn: conn} do
       signup_params = %{

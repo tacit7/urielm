@@ -888,7 +888,8 @@ defmodule UrielmWeb.ForumLiveTest do
   # Helper functions
   defp build_conn_with_user(user) do
     build_conn()
-    |> Plug.Test.init_test_session(%{"user_id" => user.id})
+    |> Plug.Test.init_test_session(%{})
+    |> UrielmWeb.SessionAuth.log_in(user)
   end
 
   defp render_page(live) do

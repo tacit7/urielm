@@ -236,12 +236,25 @@ defmodule Urielm.Accounts do
   end
 
   @doc """
-  Updates a user's password. Only touches the password hash.
+  Updates a user's password and revokes all sessions atomically.
   """
   def update_user_password(%User{} = user, attrs) do
-    user
-    |> User.password_changeset(attrs)
-    |> Repo.update()
+    result =
+      Repo.transaction(fn ->
+        case user |> User.password_changeset(attrs) |> Repo.update() do
+          {:ok, updated} -> {updated, Urielm.Accounts.Sessions.delete_for_user(user.id)}
+          {:error, changeset} -> Repo.rollback(changeset)
+        end
+      end)
+
+    case result do
+      {:ok, {updated, hashes}} ->
+        Enum.each(hashes, &Urielm.Accounts.Sessions.disconnect_hash/1)
+        {:ok, updated}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
   end
 
   @doc """
