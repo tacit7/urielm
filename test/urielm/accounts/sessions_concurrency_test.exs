@@ -105,6 +105,7 @@ defmodule Urielm.Accounts.SessionsConcurrencyTest do
         :ok
 
       System.monotonic_time(:millisecond) < deadline ->
+        Process.sleep(10)
         await_blocked_consumers(backends, deadline)
 
       true ->
