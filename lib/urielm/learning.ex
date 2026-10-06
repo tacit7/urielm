@@ -146,9 +146,18 @@ defmodule Urielm.Learning do
   Creates a lesson comment.
   """
   def create_lesson_comment(attrs) do
-    %LessonComment{}
-    |> LessonComment.changeset(attrs)
-    |> Repo.insert()
+    changeset = LessonComment.changeset(%LessonComment{}, attrs)
+
+    if changeset.valid? do
+      with :ok <-
+             Urielm.Accounts.PostingAuthorization.authorize(
+               Ecto.Changeset.get_field(changeset, :user_id)
+             ) do
+        Repo.insert(changeset)
+      end
+    else
+      Repo.insert(changeset)
+    end
   end
 
   @doc """

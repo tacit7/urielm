@@ -494,9 +494,21 @@ defmodule Urielm.Content do
   Creates a comment on a prompt.
   """
   def create_comment(attrs \\ %{}) do
-    %Comment{}
-    |> Comment.changeset(attrs)
-    |> Repo.insert()
+    changeset = Comment.changeset(%Comment{}, attrs)
+
+    result =
+      if changeset.valid? do
+        with :ok <-
+               Urielm.Accounts.PostingAuthorization.authorize(
+                 Ecto.Changeset.get_field(changeset, :user_id)
+               ) do
+          Repo.insert(changeset)
+        end
+      else
+        Repo.insert(changeset)
+      end
+
+    result
     |> case do
       {:ok, comment} ->
         # Update comment count

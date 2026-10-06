@@ -117,7 +117,11 @@ defmodule UrielmWeb.PromptLive do
                  |> put_flash(:info, "Comment posted")}
             end
 
-          {:error, changeset} ->
+          {:error, reason} when is_atom(reason) ->
+            {:noreply,
+             put_flash(socket, :error, Urielm.Accounts.PostingAuthorization.message(reason))}
+
+          {:error, %Ecto.Changeset{} = changeset} ->
             {:noreply, assign(socket, :comment_form, to_form(changeset))}
         end
     end

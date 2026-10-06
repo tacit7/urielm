@@ -129,7 +129,7 @@ defmodule UrielmWeb.LessonLiveTest do
   end
 
   test "posting a comment refreshes the lesson and tab count" do
-    user = user_fixture()
+    user = user_fixture() |> Ecto.Changeset.change(email_verified: true) |> Urielm.Repo.update!()
     {course, [_first, lesson, _third]} = course_with_lessons!()
 
     conn = UrielmWeb.ConnCase.log_in_user(build_conn(), user)
@@ -148,6 +148,58 @@ defmodule UrielmWeb.LessonLiveTest do
     assert has_element?(lesson_view, "#lesson-tab-comments", "1")
     assert has_element?(lesson_view, "#lesson-comment-list [id^='lesson-comment-']")
     assert has_element?(lesson_view, "#lesson-comment-submit")
+  end
+
+  test "fixes silenced account posting after the lesson page opens" do
+    user = user_fixture() |> Ecto.Changeset.change(email_verified: true) |> Urielm.Repo.update!()
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+    conn = UrielmWeb.ConnCase.log_in_user(build_conn(), user)
+    {:ok, view, _html} = live(conn, ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+    view = find_live_child(view, "page-lesson")
+
+    user
+    |> Ecto.Changeset.change(%{silenced_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+    |> Urielm.Repo.update!()
+
+    view
+    |> form("#lesson-comment-form", %{comment: %{body: "Blocked comment"}})
+    |> render_submit()
+
+    assert Learning.list_lesson_comments(lesson) == []
+  end
+
+  test "fixes unverified account posting after the lesson page opens" do
+    user = user_fixture() |> Ecto.Changeset.change(email_verified: true) |> Urielm.Repo.update!()
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+    conn = UrielmWeb.ConnCase.log_in_user(build_conn(), user)
+    {:ok, view, _html} = live(conn, ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+    view = find_live_child(view, "page-lesson")
+
+    user |> Ecto.Changeset.change(%{email_verified: false}) |> Urielm.Repo.update!()
+
+    view
+    |> form("#lesson-comment-form", %{comment: %{body: "Blocked comment"}})
+    |> render_submit()
+
+    assert Learning.list_lesson_comments(lesson) == []
+  end
+
+  test "fixes suspended account posting after the lesson page opens" do
+    user = user_fixture() |> Ecto.Changeset.change(email_verified: true) |> Urielm.Repo.update!()
+    {course, [_first, lesson, _third]} = course_with_lessons!()
+    conn = UrielmWeb.ConnCase.log_in_user(build_conn(), user)
+    {:ok, view, _html} = live(conn, ~p"/courses/#{course.slug}/lessons/#{lesson.slug}")
+    view = find_live_child(view, "page-lesson")
+
+    user
+    |> Ecto.Changeset.change(%{suspended_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+    |> Urielm.Repo.update!()
+
+    view
+    |> form("#lesson-comment-form", %{comment: %{body: "Blocked comment"}})
+    |> render_submit()
+
+    assert Learning.list_lesson_comments(lesson) == []
   end
 
   defp course_with_lessons! do
@@ -200,5 +252,31 @@ defmodule UrielmWeb.LessonLiveTest do
       assert section |> LazyHTML.query("del") |> LazyHTML.text() =~ "outdated"
       refute section |> LazyHTML.text() =~ "~~outdated~~"
     end
+  end
+
+  test "comment context requires an existing account and permits expired restrictions" do
+    {_, [_, lesson, _]} = course_with_lessons!()
+    attrs = %{body: "Context comment", lesson_id: lesson.id}
+    assert {:error, :unauthenticated} = Learning.create_lesson_comment(attrs)
+
+    assert {:error, :unauthenticated} =
+             Learning.create_lesson_comment(Map.put(attrs, :user_id, -1))
+
+    user = user_fixture() |> Ecto.Changeset.change(email_verified: true) |> Urielm.Repo.update!()
+    expired = DateTime.utc_now() |> DateTime.add(-60) |> DateTime.truncate(:second)
+
+    user
+    |> Ecto.Changeset.change(
+      silenced_at: expired,
+      silenced_until: expired,
+      suspended_at: expired,
+      suspended_until: expired
+    )
+    |> Urielm.Repo.update!()
+
+    assert {:ok, _comment} = Learning.create_lesson_comment(Map.put(attrs, :user_id, user.id))
+
+    assert {:error, %Ecto.Changeset{}} =
+             Learning.create_lesson_comment(Map.merge(attrs, %{user_id: user.id, body: ""}))
   end
 end
