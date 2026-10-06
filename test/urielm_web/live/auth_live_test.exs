@@ -1,8 +1,86 @@
 defmodule UrielmWeb.AuthLiveTest do
   use UrielmWeb.ConnCase, async: false
 
+  setup do
+    previous = Application.fetch_env(:urielm, :email_signup_enabled)
+    Application.put_env(:urielm, :email_signup_enabled, true)
+
+    on_exit(fn ->
+      case previous do
+        {:ok, value} -> Application.put_env(:urielm, :email_signup_enabled, value)
+        :error -> Application.delete_env(:urielm, :email_signup_enabled)
+      end
+    end)
+
+    :ok
+  end
+
   import Phoenix.LiveViewTest
   import Urielm.Fixtures
+
+  describe "email signup disabled" do
+    setup do
+      previous = Application.fetch_env(:urielm, :email_signup_enabled)
+      Application.delete_env(:urielm, :email_signup_enabled)
+
+      on_exit(fn ->
+        case previous do
+          {:ok, value} -> Application.put_env(:urielm, :email_signup_enabled, value)
+          :error -> Application.delete_env(:urielm, :email_signup_enabled)
+        end
+      end)
+
+      :ok
+    end
+
+    test "fixes public email registration remaining available by default", %{conn: conn} do
+      count = Urielm.Repo.aggregate(Urielm.Accounts.User, :count)
+
+      response =
+        post(conn, ~p"/auth/signup", %{
+          email: "disabled@example.com",
+          password: "password123",
+          username: "disabledsignup",
+          displayName: "Disabled"
+        })
+
+      assert json_response(response, 403)["error"] =~ "temporarily unavailable"
+      assert is_nil(get_session(response, :user_id))
+      assert Urielm.Repo.aggregate(Urielm.Accounts.User, :count) == count
+    end
+
+    test "existing users can still sign in while email signup is disabled", %{conn: conn} do
+      {:ok, user} =
+        Urielm.Accounts.register_user(%{
+          email: "existing@example.com",
+          password: "password123",
+          username: "existinguser",
+          display_name: "Existing User"
+        })
+
+      response = post(conn, ~p"/auth/signin", %{email: user.email, password: "password123"})
+      assert json_response(response, 200) == %{"success" => true}
+      assert get_session(response, :user_id) == user.id
+    end
+
+    test "shows Google signup and redirects direct email signup", %{conn: conn} do
+      {:ok, view, _} = live(conn, ~p"/signup")
+      assert has_element?(view, "#google-signup-link[href='/auth/google']")
+      assert has_element?(view, "#email-signup-disabled")
+      refute has_element?(view, "#signup-form")
+      assert {:error, {:redirect, %{to: "/signup"}}} = live(conn, ~p"/signup/email")
+    end
+
+    test "rejects submission from an email signup page opened before disabling", %{conn: conn} do
+      Application.put_env(:urielm, :email_signup_enabled, true)
+      {:ok, view, _} = live(conn, ~p"/signup/email")
+      Application.put_env(:urielm, :email_signup_enabled, false)
+      count = Urielm.Repo.aggregate(Urielm.Accounts.User, :count)
+      render_submit(view, "submit", %{email: "stale@example.com", password: "password123"})
+      assert_redirect(view, "/signup")
+      assert Urielm.Repo.aggregate(Urielm.Accounts.User, :count) == count
+    end
+  end
 
   describe "sign in" do
     test "renders the polished authentication shell and form", %{conn: conn} do

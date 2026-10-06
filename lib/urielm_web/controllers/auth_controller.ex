@@ -82,6 +82,16 @@ defmodule UrielmWeb.AuthController do
   Sign up with email and password
   """
   def signup(conn, params) do
+    if Accounts.email_signup_enabled?() do
+      signup_enabled(conn, params)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Email signup is temporarily unavailable. Please continue with Google."})
+    end
+  end
+
+  defp signup_enabled(conn, params) do
     email = Map.get(params, "email")
     password = Map.get(params, "password")
     username = Map.get(params, "username")

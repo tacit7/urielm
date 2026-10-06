@@ -1,5 +1,20 @@
 defmodule UrielmWeb.SignupEmailLiveTest do
   use UrielmWeb.ConnCase
+
+  setup do
+    previous = Application.fetch_env(:urielm, :email_signup_enabled)
+    Application.put_env(:urielm, :email_signup_enabled, true)
+
+    on_exit(fn ->
+      case previous do
+        {:ok, value} -> Application.put_env(:urielm, :email_signup_enabled, value)
+        :error -> Application.delete_env(:urielm, :email_signup_enabled)
+      end
+    end)
+
+    :ok
+  end
+
   import Phoenix.LiveViewTest
 
   setup do

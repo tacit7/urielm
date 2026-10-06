@@ -11,6 +11,10 @@ defmodule Urielm.Accounts do
 
   ## User functions
 
+  # Keep public email registration closed until email verification is implemented.
+  def email_signup_enabled?,
+    do: Application.get_env(:urielm, :email_signup_enabled, false) == true
+
   @doc """
   Gets a single user by ID.
   """

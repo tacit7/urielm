@@ -4,6 +4,14 @@ defmodule UrielmWeb.SignupEmailLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if Accounts.email_signup_enabled?() do
+      mount_enabled(socket)
+    else
+      {:ok, redirect(socket, to: ~p"/signup")}
+    end
+  end
+
+  defp mount_enabled(socket) do
     socket =
       socket
       |> assign(:form, to_form(%{"email" => "", "password" => ""}))
@@ -94,7 +102,15 @@ defmodule UrielmWeb.SignupEmailLive do
   end
 
   @impl true
-  def handle_event("submit", %{"email" => email, "password" => password}, socket) do
+  def handle_event("submit", params, socket) do
+    if Accounts.email_signup_enabled?() do
+      submit_enabled(params, socket)
+    else
+      {:noreply, redirect(socket, to: ~p"/signup")}
+    end
+  end
+
+  defp submit_enabled(%{"email" => email, "password" => password}, socket) do
     socket = assign(socket, :loading, true)
 
     case UrielmWeb.RegistrationLimiter.check(socket.assigns.registration_ip, email) do

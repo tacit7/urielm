@@ -9,6 +9,7 @@ defmodule UrielmWeb.SignupLive do
         :form,
         to_form(%{"email" => "", "password" => "", "username" => "", "displayName" => ""})
       )
+      |> assign(:email_signup_enabled, Urielm.Accounts.email_signup_enabled?())
       |> assign(:error, nil)
       |> assign(:loading, false)
       |> assign(:page_title, "Create account")
@@ -66,7 +67,7 @@ defmodule UrielmWeb.SignupLive do
                 Create your account
               </h2>
               <p class="mt-2 text-sm leading-relaxed text-base-content/55">
-                A few details, then you’re ready to start building.
+                Continue with Google to create your account.
               </p>
             </header>
 
@@ -96,89 +97,95 @@ defmodule UrielmWeb.SignupLive do
               Continue with Google
             </a>
 
-            <div class="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-base-content/35">
-              <span class="h-px flex-1 bg-base-300/70"></span>
-              or use email <span class="h-px flex-1 bg-base-300/70"></span>
-            </div>
-
-            <.form
-              for={@form}
-              phx-submit="submit"
-              id="signup-form"
-              phx-hook="SignupForm"
-              aria-busy={@loading}
-              class="space-y-4"
-            >
-              <div phx-update="ignore" id="signup-form-fields" class="space-y-3">
-                <div>
-                  <.input
-                    field={@form[:username]}
-                    id="signup-username"
-                    type="text"
-                    label="Username"
-                    required
-                    autocomplete="username"
-                    minlength="3"
-                    maxlength="20"
-                    pattern="[a-z0-9_-]+"
-                    help="3–20 lowercase letters, numbers, dashes, or underscores."
-                    placeholder="lowercase-username"
-                    class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  />
-                </div>
-                <.input
-                  field={@form[:displayName]}
-                  id="signup-display-name"
-                  type="text"
-                  label="Display name"
-                  required
-                  autocomplete="name"
-                  maxlength="50"
-                  placeholder="Your name"
-                  class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-                <.input
-                  field={@form[:email]}
-                  id="signup-email"
-                  type="email"
-                  label="Email address"
-                  required
-                  autocomplete="email"
-                  placeholder="you@example.com"
-                  class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-                <div>
-                  <.input
-                    field={@form[:password]}
-                    id="signup-password"
-                    type="password"
-                    label="Password"
-                    required
-                    autocomplete="new-password"
-                    minlength="8"
-                    help="Use at least 8 characters."
-                    placeholder="At least 8 characters"
-                    class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-                  />
-                </div>
+            <%= if @email_signup_enabled do %>
+              <div class="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-base-content/35">
+                <span class="h-px flex-1 bg-base-300/70"></span>
+                or use email <span class="h-px flex-1 bg-base-300/70"></span>
               </div>
 
-              <%= if @error do %>
-                <.form_feedback id="signup-error" kind={:error} title="Account not created">
-                  {@error}
-                </.form_feedback>
-              <% end %>
-
-              <.button
-                id="signup-submit"
-                type="submit"
-                loading_label="Creating account…"
-                disabled={@loading}
-                class="btn btn-primary h-12 w-full rounded-full font-bold shadow-md shadow-primary/15 transition hover:-translate-y-0.5 disabled:translate-y-0"
+              <.form
+                for={@form}
+                phx-submit="submit"
+                id="signup-form"
+                phx-hook="SignupForm"
+                aria-busy={@loading}
+                class="space-y-4"
               >
-                Create account
-              </.button>
-            </.form>
+                <div phx-update="ignore" id="signup-form-fields" class="space-y-3">
+                  <div>
+                    <.input
+                      field={@form[:username]}
+                      id="signup-username"
+                      type="text"
+                      label="Username"
+                      required
+                      autocomplete="username"
+                      minlength="3"
+                      maxlength="20"
+                      pattern="[a-z0-9_-]+"
+                      help="3–20 lowercase letters, numbers, dashes, or underscores."
+                      placeholder="lowercase-username"
+                      class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    />
+                  </div>
+                  <.input
+                    field={@form[:displayName]}
+                    id="signup-display-name"
+                    type="text"
+                    label="Display name"
+                    required
+                    autocomplete="name"
+                    maxlength="50"
+                    placeholder="Your name"
+                    class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                  <.input
+                    field={@form[:email]}
+                    id="signup-email"
+                    type="email"
+                    label="Email address"
+                    required
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                  <div>
+                    <.input
+                      field={@form[:password]}
+                      id="signup-password"
+                      type="password"
+                      label="Password"
+                      required
+                      autocomplete="new-password"
+                      minlength="8"
+                      help="Use at least 8 characters."
+                      placeholder="At least 8 characters"
+                      class="input input-bordered h-12 w-full rounded-xl border-base-300 bg-base-100/45 px-4 text-base-content outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    />
+                  </div>
+                </div>
+
+                <%= if @error do %>
+                  <.form_feedback id="signup-error" kind={:error} title="Account not created">
+                    {@error}
+                  </.form_feedback>
+                <% end %>
+
+                <.button
+                  id="signup-submit"
+                  type="submit"
+                  loading_label="Creating account…"
+                  disabled={@loading}
+                  class="btn btn-primary h-12 w-full rounded-full font-bold shadow-md shadow-primary/15 transition hover:-translate-y-0.5 disabled:translate-y-0"
+                >
+                  Create account
+                </.button>
+              </.form>
+            <% else %>
+              <p id="email-signup-disabled" class="mt-6 text-center text-sm text-base-content/55">
+                Email signup is temporarily unavailable. Please continue with Google.
+              </p>
+            <% end %>
 
             <p class="mt-6 text-center text-sm text-base-content/55">
               Already have an account?
