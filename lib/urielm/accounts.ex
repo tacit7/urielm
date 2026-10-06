@@ -512,6 +512,21 @@ defmodule Urielm.Accounts do
 
   defp authorized_moderator?(_, _), do: false
 
+  defp moderation_target(%User{id: target_id}, %User{id: actor_id}) do
+    with %User{active: true} = actor <- get_user(actor_id),
+         %User{} = target <- get_user(target_id),
+         true <- not User.suspended?(actor),
+         true <-
+           actor.is_admin or
+             (actor.is_moderator and not target.is_admin and not target.is_moderator) do
+      {:ok, target}
+    else
+      _ -> {:error, :unauthorized}
+    end
+  end
+
+  defp moderation_target(_, _), do: {:error, :unauthorized}
+
   ## User Suspension (Admin/Mod only)
 
   @doc """
@@ -522,10 +537,9 @@ defmodule Urielm.Accounts do
   - :until - DateTime when suspension expires (nil = permanent)
   """
   def suspend_user(%User{} = user, actor, opts) do
-    if authorized_moderator?(actor, :moderator) do
-      do_suspend_user(user, opts)
-    else
-      {:error, :unauthorized}
+    case moderation_target(user, actor) do
+      {:ok, current_user} -> do_suspend_user(current_user, opts)
+      error -> error
     end
   end
 
@@ -548,10 +562,9 @@ defmodule Urielm.Accounts do
   Removes suspension from a user.
   """
   def unsuspend_user(%User{} = user, actor) do
-    if authorized_moderator?(actor, :moderator) do
-      do_unsuspend_user(user)
-    else
-      {:error, :unauthorized}
+    case moderation_target(user, actor) do
+      {:ok, current_user} -> do_unsuspend_user(current_user)
+      error -> error
     end
   end
 
@@ -577,10 +590,9 @@ defmodule Urielm.Accounts do
   - :until - DateTime when silencing expires (nil = permanent)
   """
   def silence_user(%User{} = user, actor, opts) do
-    if authorized_moderator?(actor, :moderator) do
-      do_silence_user(user, opts)
-    else
-      {:error, :unauthorized}
+    case moderation_target(user, actor) do
+      {:ok, current_user} -> do_silence_user(current_user, opts)
+      error -> error
     end
   end
 
@@ -603,10 +615,9 @@ defmodule Urielm.Accounts do
   Removes silencing from a user.
   """
   def unsilence_user(%User{} = user, actor) do
-    if authorized_moderator?(actor, :moderator) do
-      do_unsilence_user(user)
-    else
-      {:error, :unauthorized}
+    case moderation_target(user, actor) do
+      {:ok, current_user} -> do_unsilence_user(current_user)
+      error -> error
     end
   end
 

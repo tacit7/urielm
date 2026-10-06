@@ -149,4 +149,48 @@ defmodule Urielm.Accounts.PermissionRevocationTest do
     refute_receive %Phoenix.Socket.Broadcast{event: "disconnect"}
   end
 
+  for role <- [:is_admin, :is_moderator],
+      action <- [:suspend, :unsuspend, :silence, :unsilence] do
+    test "fixes moderator #{action} of persisted #{role} targets" do
+      moderator = user_fixture() |> Ecto.Changeset.change(is_moderator: true) |> Repo.update!()
+      stale_target = user_fixture()
+
+      target =
+        stale_target
+        |> Ecto.Changeset.change([
+          {unquote(role), true},
+          suspended_at: DateTime.utc_now(:second),
+          silenced_at: DateTime.utc_now(:second)
+        ])
+        |> Repo.update!()
+
+      token = Sessions.create(target)
+      UrielmWeb.Endpoint.subscribe(Sessions.topic(token))
+
+      for supplied_target <- [target, stale_target] do
+        assert {:error, :unauthorized} = moderate(unquote(action), supplied_target, moderator)
+        persisted = Accounts.get_user(target.id)
+        assert persisted.suspended_at == target.suspended_at
+        assert persisted.silenced_at == target.silenced_at
+        assert Repo.get_by(Urielm.Accounts.UserSession, token_hash: :crypto.hash(:sha256, token))
+        refute_receive %Phoenix.Socket.Broadcast{event: "disconnect"}
+      end
+    end
+  end
+
+  for role <- [:is_admin, :is_moderator] do
+    test "admin may restrict and restore #{role} targets" do
+      admin = admin_fixture()
+      target = user_fixture() |> Ecto.Changeset.change([{unquote(role), true}]) |> Repo.update!()
+      assert {:ok, suspended} = Accounts.suspend_user(target, admin, reason: "spam")
+      assert {:ok, %{suspended_at: nil}} = Accounts.unsuspend_user(suspended, admin)
+      assert {:ok, silenced} = Accounts.silence_user(target, admin, reason: "spam")
+      assert {:ok, %{silenced_at: nil}} = Accounts.unsilence_user(silenced, admin)
+    end
+  end
+
+  defp moderate(:suspend, target, actor), do: Accounts.suspend_user(target, actor, reason: "spam")
+  defp moderate(:unsuspend, target, actor), do: Accounts.unsuspend_user(target, actor)
+  defp moderate(:silence, target, actor), do: Accounts.silence_user(target, actor, reason: "spam")
+  defp moderate(:unsilence, target, actor), do: Accounts.unsilence_user(target, actor)
 end
