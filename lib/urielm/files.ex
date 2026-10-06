@@ -95,23 +95,50 @@ defmodule Urielm.Files do
     end
   end
 
-  def can_access_file?(%{id: user_id}, %File{user_id: file_user_id, visibility: "private"}) do
+  def can_access_file?(user, %File{} = file) do
+    forum_parent_visible?(user, file) and file_visibility_allows?(user, file)
+  end
+
+  defp forum_parent_visible?(user, %File{entity_type: "thread", entity_id: thread_id}) do
+    not is_nil(Forum.get_thread(thread_id, viewer: user, allow_removed?: true))
+  end
+
+  defp forum_parent_visible?(user, %File{entity_type: "comment", entity_id: comment_id}) do
+    case Repo.get(Urielm.Forum.Comment, comment_id) do
+      nil ->
+        false
+
+      comment ->
+        forum_parent_visible?(user, %File{entity_type: "thread", entity_id: comment.thread_id})
+    end
+  end
+
+  defp forum_parent_visible?(_user, %File{}), do: true
+
+  defp file_visibility_allows?(%{id: user_id}, %File{user_id: file_user_id, visibility: "private"}) do
     user_id == file_user_id
   end
 
-  def can_access_file?(_, %File{visibility: "public"}), do: true
+  defp file_visibility_allows?(_, %File{visibility: "public"}), do: true
 
-  def can_access_file?(user, %File{visibility: "participants"} = file) do
+  defp file_visibility_allows?(user, %File{visibility: "participants"} = file) do
     participant_can_access_file?(user, file)
   end
 
-  def can_access_file?(_, %File{}), do: false
+  defp file_visibility_allows?(_, %File{}), do: false
 
   defp participant_can_access_file?(%{id: user_id}, %File{user_id: user_id}), do: true
 
-  defp participant_can_access_file?(%{is_admin: true}, %File{}), do: true
+  defp participant_can_access_file?(%{id: user_id} = user, %File{} = file) do
+    case Repo.get(Urielm.Accounts.User, user_id) do
+      %{is_admin: true} -> true
+      _ -> visible_thread_attachment?(user, file)
+    end
+  end
 
-  defp participant_can_access_file?(_user, %File{entity_type: "thread", entity_id: thread_id}) do
+  defp participant_can_access_file?(user, file), do: visible_thread_attachment?(user, file)
+
+  defp visible_thread_attachment?(_user, %File{entity_type: "thread", entity_id: thread_id}) do
     case Forum.get_thread(thread_id) do
       nil -> false
       %{board: %{is_hidden: true}} -> false
@@ -119,7 +146,7 @@ defmodule Urielm.Files do
     end
   end
 
-  defp participant_can_access_file?(_user, %File{}), do: false
+  defp visible_thread_attachment?(_user, %File{}), do: false
 
   @doc """
   Check if a file is an image.

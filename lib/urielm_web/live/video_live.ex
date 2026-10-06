@@ -68,7 +68,8 @@ defmodule UrielmWeb.VideoLive do
              |> assign(:upvotes, upvotes)
              |> assign(:downvotes, downvotes)
              |> assign(:user_vote, user_vote && user_vote.value)
-             |> assign_meta_tags(video, slug)}
+             |> assign_meta_tags(video, slug)
+             |> UrielmWeb.ForumVisibility.attach(:video)}
           end
         end
       end
@@ -96,7 +97,8 @@ defmodule UrielmWeb.VideoLive do
          |> assign(:upvotes, upvotes)
          |> assign(:downvotes, downvotes)
          |> assign(:user_vote, nil)
-         |> assign_meta_tags(video, slug)}
+         |> assign_meta_tags(video, slug)
+         |> UrielmWeb.ForumVisibility.attach(:video)}
       else
         {:ok,
          socket
@@ -153,9 +155,10 @@ defmodule UrielmWeb.VideoLive do
   defp load_thread_and_comments(%{thread_id: nil}, _user), do: {nil, []}
 
   defp load_thread_and_comments(%{thread_id: thread_id}, user) do
-    thread = Forum.get_thread!(thread_id, include_comments?: true)
-    comment_tree = LiveHelpers.build_comment_tree(thread.comments, user)
-    {thread, comment_tree}
+    case Forum.get_thread(thread_id, include_comments?: true) do
+      nil -> {nil, []}
+      thread -> {thread, LiveHelpers.build_comment_tree(thread.comments, user)}
+    end
   end
 
   defp build_nav_items(video, thread) do

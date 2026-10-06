@@ -8,7 +8,7 @@ defmodule UrielmWeb.NewThreadLive do
 
   @impl true
   def mount(%{"board_slug" => slug}, _session, socket) do
-    case Forum.get_board(slug) do
+    case Forum.get_board(slug, viewer: socket.assigns.current_user) do
       nil ->
         {:ok, push_navigate(socket, to: ~p"/forum/categories")}
 
@@ -36,7 +36,8 @@ defmodule UrielmWeb.NewThreadLive do
              |> assign(:page_title, "New Discussion")
              |> assign(:board, board)
              |> assign(:all_categories, categories)
-             |> assign_composer(Thread.create_changeset(%Thread{}, %{}), %{})}
+             |> assign_composer(Thread.create_changeset(%Thread{}, %{}), %{})
+             |> UrielmWeb.ForumVisibility.attach(:board)}
         end
     end
   end

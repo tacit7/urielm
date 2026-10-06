@@ -8,7 +8,7 @@ defmodule UrielmWeb.ComposerUploadController do
   def create(conn, %{"thread_id" => thread_id, "file" => %Plug.Upload{} = upload}) do
     user = conn.assigns.current_user
 
-    with %Thread{} = thread <- Forum.get_thread(thread_id),
+    with %Thread{} = thread <- Forum.get_thread(thread_id, viewer: user),
          :ok <- Forum.authorize_comment(thread, user),
          {:ok, file} <- Files.create_file(upload, user.id, "thread", thread.id) do
       conn

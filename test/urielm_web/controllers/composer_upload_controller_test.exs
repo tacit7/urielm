@@ -39,6 +39,30 @@ defmodule UrielmWeb.ComposerUploadControllerTest do
       assert file.user_id == user.id
     end
 
+    test "rejects author uploads when the board or category becomes hidden", %{
+      user: user,
+      thread: thread
+    } do
+      board = Repo.get!(Urielm.Forum.Board, thread.board_id)
+      category = Repo.get!(Urielm.Forum.Category, board.category_id)
+
+      for parent <- [board, category] do
+        parent |> Ecto.Changeset.change(is_hidden: true) |> Repo.update!()
+
+        upload =
+          upload_fixture("hidden.png", "image/png", <<0x89, "PNG\r\n", 0x1A, "\n", "data">>)
+
+        conn =
+          Phoenix.ConnTest.build_conn()
+          |> log_in_user(user)
+          |> post("/forum/t/#{thread.id}/uploads", %{"file" => upload})
+
+        assert %{"error" => "Thread not found"} = json_response(conn, 404)
+        refute Repo.get_by(File, original_filename: "hidden.png")
+        parent |> Ecto.Changeset.change(is_hidden: false) |> Repo.update!()
+      end
+    end
+
     test "requires an authenticated user", %{conn: conn, thread: thread} do
       upload = upload_fixture("diagram.png", "image/png", <<0x89, "PNG\r\n", 0x1A, "\n", "data">>)
 

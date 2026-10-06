@@ -209,6 +209,54 @@ defmodule Urielm.FilesTest do
     end
   end
 
+  describe "hidden forum attachments" do
+    test "fixes hidden parent access for all file visibility levels" do
+      owner = user_fixture()
+      other = user_fixture()
+      admin = admin_fixture()
+      thread = thread_fixture(%{author_id: owner.id})
+      comment = comment_fixture(thread, owner)
+      board = Repo.get!(Urielm.Forum.Board, thread.board_id)
+      category = Repo.get!(Urielm.Forum.Category, board.category_id)
+
+      for hidden_parent <- [board, category] do
+        hidden_parent |> Ecto.Changeset.change(is_hidden: true) |> Repo.update!()
+
+        for {entity_type, entity_id} <- [{"thread", thread.id}, {"comment", comment.id}],
+            visibility <- ["public", "private", "participants"] do
+          file = %File{
+            entity_type: entity_type,
+            entity_id: entity_id,
+            user_id: owner.id,
+            visibility: visibility
+          }
+
+          refute Files.can_access_file?(nil, file)
+          refute Files.can_access_file?(other, file)
+          refute Files.can_access_file?(owner, file)
+          refute Files.can_access_file?(%{other | is_admin: true}, file)
+
+          if visibility != "private", do: assert(Files.can_access_file?(admin, file))
+        end
+
+        hidden_parent |> Ecto.Changeset.change(is_hidden: false) |> Repo.update!()
+      end
+    end
+
+    test "denies a stale administrator access after role removal" do
+      admin = admin_fixture()
+      thread = thread_fixture()
+
+      Repo.get!(Urielm.Forum.Board, thread.board_id)
+      |> Ecto.Changeset.change(is_hidden: true)
+      |> Repo.update!()
+
+      admin |> Ecto.Changeset.change(is_admin: false) |> Repo.update!()
+      file = %File{entity_type: "thread", entity_id: thread.id, visibility: "participants"}
+      refute Files.can_access_file?(admin, file)
+    end
+  end
+
   describe "image? and document?" do
     test "correctly identifies images" do
       file = %File{content_type: "image/jpeg"}

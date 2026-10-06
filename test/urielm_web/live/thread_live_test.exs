@@ -7,6 +7,84 @@ defmodule UrielmWeb.ThreadLiveTest do
   alias Urielm.Forum
   alias Urielm.Repo
 
+  test "hidden board direct thread access is denied anonymously", %{conn: conn} do
+    board = Fixtures.board_fixture()
+    thread = Fixtures.thread_fixture(%{board_id: board.id})
+    {:ok, _} = board |> Ecto.Changeset.change(is_hidden: true) |> Repo.update()
+
+    assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/forum/t/#{thread.id}")
+  end
+
+  describe "hidden discussion access" do
+    setup do
+      author = Fixtures.user_fixture()
+      board = Fixtures.board_fixture()
+      thread = Fixtures.thread_fixture(%{board_id: board.id, author_id: author.id})
+      %{author: author, board: board, thread: thread}
+    end
+
+    test "authors and regular users cannot read hidden threads", %{
+      conn: conn,
+      author: author,
+      board: board,
+      thread: thread
+    } do
+      Repo.update!(Ecto.Changeset.change(board, is_hidden: true))
+
+      for user <- [author, Fixtures.user_fixture()] do
+        assert {:error, {:redirect, %{to: "/"}}} =
+                 live(log_in_user(conn, user), "/forum/t/#{thread.id}")
+      end
+    end
+
+    test "hidden categories also deny direct thread access", %{
+      conn: conn,
+      board: board,
+      thread: thread
+    } do
+      category = Repo.get!(Urielm.Forum.Category, board.category_id)
+      Repo.update!(Ecto.Changeset.change(category, is_hidden: true))
+      assert {:error, {:redirect, %{to: "/"}}} = live(conn, "/forum/t/#{thread.id}")
+    end
+
+    test "current administrators can inspect hidden discussions", %{
+      conn: conn,
+      board: board,
+      thread: thread
+    } do
+      Repo.update!(Ecto.Changeset.change(board, is_hidden: true))
+      {:ok, view, _} = live(log_in_user(conn, Fixtures.admin_fixture()), "/forum/t/#{thread.id}")
+      assert has_element?(view, "#thread-topic")
+    end
+
+    test "an open thread cannot submit comments after its board is hidden", %{
+      conn: conn,
+      author: author,
+      board: board,
+      thread: thread
+    } do
+      {:ok, view, _} = live(log_in_user(conn, author), "/forum/t/#{thread.id}")
+      Repo.update!(Ecto.Changeset.change(board, is_hidden: true))
+      render_submit(view, "create_comment", %{body: "Must not be published"})
+      assert_redirect(view, "/")
+      assert Repo.aggregate(Urielm.Forum.Comment, :count) == 0
+    end
+
+    test "a demoted administrator loses hidden discussion access on the next event", %{
+      conn: conn,
+      board: board,
+      thread: thread
+    } do
+      admin = Fixtures.admin_fixture()
+      Repo.update!(Ecto.Changeset.change(board, is_hidden: true))
+      {:ok, view, _} = live(log_in_user(conn, admin), "/forum/t/#{thread.id}")
+      Repo.update!(Ecto.Changeset.change(admin, is_admin: false))
+      render_submit(view, "create_comment", %{body: "Must not be published"})
+      assert_redirect(view, "/")
+      assert Repo.aggregate(Urielm.Forum.Comment, :count) == 0
+    end
+  end
+
   describe "discussion reading experience" do
     setup do
       author = Fixtures.user_fixture()

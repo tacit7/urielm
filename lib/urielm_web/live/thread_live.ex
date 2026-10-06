@@ -15,7 +15,7 @@ defmodule UrielmWeb.ThreadLive do
 
     # Fetch thread with comments for the thread page
     # Admins can view soft-deleted threads; regular users cannot
-    case Forum.get_thread(id, include_comments?: true, allow_removed?: is_admin) do
+    case Forum.get_thread(id, viewer: user, include_comments?: true, allow_removed?: is_admin) do
       nil ->
         {:ok,
          socket
@@ -69,7 +69,8 @@ defmodule UrielmWeb.ThreadLive do
          |> assign(:notification_level, notification_level)
          |> assign(:reporting_comment_id, nil)
          |> assign(:comment_form, to_form(%{"body" => ""}))
-         |> assign(:all_categories, all_categories)}
+         |> assign(:all_categories, all_categories)
+         |> UrielmWeb.ForumVisibility.attach(:thread)}
     end
   end
 
@@ -222,7 +223,10 @@ defmodule UrielmWeb.ThreadLive do
 
     LiveHelpers.with_auth(socket, "delete threads", fn socket, user ->
       # Fetch thread metadata only (no comments needed for deletion)
-      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+      case Forum.get_thread(thread_data.id,
+             allow_removed?: true,
+             viewer: socket.assigns.current_user
+           ) do
         nil ->
           {:noreply,
            socket
@@ -254,7 +258,7 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "mark threads as solved", fn socket, user ->
       thread_id = thread_data.id
       # Fetch thread metadata only (no comments needed for mark as solved)
-      case Forum.get_thread(thread_id, allow_removed?: true) do
+      case Forum.get_thread(thread_id, allow_removed?: true, viewer: socket.assigns.current_user) do
         nil ->
           {:noreply,
            socket
@@ -286,7 +290,7 @@ defmodule UrielmWeb.ThreadLive do
     LiveHelpers.with_auth(socket, "unmark threads as solved", fn socket, user ->
       thread_id = thread_data.id
       # Fetch thread metadata only (no comments needed for unmark solved)
-      case Forum.get_thread(thread_id, allow_removed?: true) do
+      case Forum.get_thread(thread_id, allow_removed?: true, viewer: socket.assigns.current_user) do
         nil ->
           {:noreply,
            socket
@@ -437,7 +441,10 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for locking)
-      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+      case Forum.get_thread(thread_data.id,
+             allow_removed?: true,
+             viewer: socket.assigns.current_user
+           ) do
         nil ->
           {:noreply,
            socket
@@ -470,7 +477,10 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for unlocking)
-      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+      case Forum.get_thread(thread_data.id,
+             allow_removed?: true,
+             viewer: socket.assigns.current_user
+           ) do
         nil ->
           {:noreply,
            socket
@@ -503,7 +513,10 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for pinning)
-      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+      case Forum.get_thread(thread_data.id,
+             allow_removed?: true,
+             viewer: socket.assigns.current_user
+           ) do
         nil ->
           {:noreply,
            socket
@@ -536,7 +549,10 @@ defmodule UrielmWeb.ThreadLive do
 
     if user && (user.is_admin || user.is_moderator) do
       # Fetch thread metadata only (no comments needed for unpinning)
-      case Forum.get_thread(thread_data.id, allow_removed?: true) do
+      case Forum.get_thread(thread_data.id,
+             allow_removed?: true,
+             viewer: socket.assigns.current_user
+           ) do
         nil ->
           {:noreply,
            socket
@@ -1204,9 +1220,13 @@ defmodule UrielmWeb.ThreadLive do
     thread_id = socket.assigns.thread.id
     is_admin = current_user && current_user.is_admin
     # Fetch thread with comments for refresh (no view count increment)
-    case Forum.get_thread(thread_id, include_comments?: true, allow_removed?: is_admin) do
+    case Forum.get_thread(thread_id,
+           viewer: current_user,
+           include_comments?: true,
+           allow_removed?: is_admin
+         ) do
       nil ->
-        socket
+        socket |> put_flash(:error, "Thread not found") |> redirect(to: ~p"/")
 
       thread ->
         comment_tree = LiveHelpers.build_comment_tree(thread.comments, current_user)

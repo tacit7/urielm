@@ -13,14 +13,15 @@ defmodule UrielmWeb.BoardLive do
      |> assign(:all_categories, [])
      |> assign(:meta, nil)
      |> assign(:page, parse_page(params["page"]))
-     |> stream(:threads, [])}
+     |> stream(:threads, [])
+     |> UrielmWeb.ForumVisibility.attach(:board)}
   end
 
   @impl true
   def handle_params(params, _uri, socket) do
     slug = params["board_slug"]
 
-    case Forum.get_board(slug) do
+    case Forum.get_board(slug, viewer: socket.assigns.current_user) do
       nil ->
         {:noreply, push_navigate(socket, to: ~p"/forum/categories")}
 

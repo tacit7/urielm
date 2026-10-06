@@ -58,19 +58,19 @@ defmodule Urielm.Forum do
   # Convenience: categories with boards preloaded (includes thread counts and last activity)
   def list_categories_with_boards(opts \\ []) do
     thread_count_subquery =
-      from(t in Thread,
+      from(t in visible_threads(),
         where: t.board_id == parent_as(:board).id and t.is_removed == false,
         select: count(t.id)
       )
 
     post_count_subquery =
-      from(t in Thread,
+      from(t in visible_threads(),
         where: t.board_id == parent_as(:board).id and t.is_removed == false,
         select: sum(t.comment_count)
       )
 
     last_activity_subquery =
-      from(t in Thread,
+      from(t in visible_threads(),
         where: t.board_id == parent_as(:board).id and t.is_removed == false,
         order_by: [desc: t.updated_at],
         limit: 1,
@@ -78,7 +78,7 @@ defmodule Urielm.Forum do
       )
 
     latest_title_subquery =
-      from(t in Thread,
+      from(t in visible_threads(),
         where: t.board_id == parent_as(:board).id and t.is_removed == false,
         order_by: [desc: t.updated_at],
         limit: 1,
@@ -86,7 +86,7 @@ defmodule Urielm.Forum do
       )
 
     latest_id_subquery =
-      from(t in Thread,
+      from(t in visible_threads(),
         where: t.board_id == parent_as(:board).id and t.is_removed == false,
         order_by: [desc: t.updated_at],
         limit: 1,
@@ -126,22 +126,21 @@ defmodule Urielm.Forum do
   def list_boards(category_id, opts \\ []) do
     hidden = Keyword.get(opts, :hidden, false)
 
-    from(b in Board)
+    query = if hidden_viewer?(opts), do: Board, else: visible_boards()
+
+    from(b in query)
     |> where([b], b.category_id == ^category_id and b.is_hidden == ^hidden)
     |> preload(:category)
     |> Repo.all()
   end
 
-  def get_board(slug) do
-    case Repo.get_by(Board, slug: slug) do
-      nil -> nil
-      board -> Repo.preload(board, :category)
-    end
+  def get_board(slug, opts \\ []) do
+    query = if hidden_viewer?(opts), do: Board, else: visible_boards()
+    Repo.one(from(b in query, where: b.slug == ^slug, preload: :category))
   end
 
-  def get_board!(slug) do
-    Repo.get_by!(Board, slug: slug)
-    |> Repo.preload(:category)
+  def get_board!(slug, opts \\ []) do
+    get_board(slug, opts) || raise Ecto.NoResultsError, queryable: Board
   end
 
   def create_board(attrs \\ %{}) do
@@ -156,7 +155,7 @@ defmodule Urielm.Forum do
     sort = Keyword.get(opts, :sort, :new)
 
     query =
-      from(t in Thread)
+      from(t in visible_threads())
       |> where([t], t.board_id == ^board_id and t.is_removed == false)
       |> thread_preloads()
 
@@ -176,7 +175,7 @@ defmodule Urielm.Forum do
   def list_related_threads(%Thread{} = thread, opts \\ []) do
     limit = opts |> Keyword.get(:limit, 5) |> max(1) |> min(10)
 
-    from(t in Thread,
+    from(t in visible_threads(),
       where: t.board_id == ^thread.board_id and t.id != ^thread.id and t.is_removed == false,
       order_by: [desc: t.updated_at, desc: t.id],
       limit: ^limit
@@ -193,7 +192,7 @@ defmodule Urielm.Forum do
   """
   def paginate_latest_threads(params \\ %{}, opts \\ []) do
     base =
-      from(t in Thread)
+      from(t in visible_threads())
       |> where([t], t.is_removed == false)
       |> filter_latest_feed(Keyword.get(opts, :feed, :discussions))
       |> thread_preloads()
@@ -215,7 +214,7 @@ defmodule Urielm.Forum do
     params = prepend_flop_order(params, :is_pinned, :desc)
 
     base =
-      from(t in Thread)
+      from(t in visible_threads())
       |> where([t], t.board_id == ^board_id and t.is_removed == false)
       |> maybe_filter_solved(solved_filter)
       |> thread_preloads()
@@ -246,45 +245,29 @@ defmodule Urielm.Forum do
       get_thread!(123, include_comments?: true)
   """
   def get_thread!(id, opts \\ []) do
-    include_comments? = Keyword.get(opts, :include_comments?, false)
-    allow_removed? = Keyword.get(opts, :allow_removed?, false)
-
-    thread =
-      Repo.get!(Thread, id)
-      |> preload_thread_meta()
-
-    # Block access to soft-deleted threads unless explicitly allowed (admin viewing)
-    if thread.is_removed and not allow_removed? do
-      raise Ecto.NoResultsError, queryable: Thread
-    end
-
-    if include_comments? do
-      comments = list_comments_with_authors(id)
-      Map.put(thread, :comments, comments)
-    else
-      thread
-    end
+    get_thread(id, opts) || raise Ecto.NoResultsError, queryable: Thread
   end
 
-  @doc """
-  Non-raising version of get_thread! Returns nil if not found or soft-deleted
-  (unless allow_removed?: true).
-  """
   def get_thread(id, opts \\ []) do
-    Repo.get(Thread, id)
-    |> case do
+    query = if hidden_viewer?(opts), do: Thread, else: visible_threads(false)
+    query = from(t in query, where: t.id == ^id)
+
+    query =
+      if Keyword.get(opts, :allow_removed?, false),
+        do: query,
+        else: where(query, [t], not t.is_removed)
+
+    case Repo.one(query) do
       nil ->
         nil
 
       thread ->
         thread = preload_thread_meta(thread)
-        allow_removed? = Keyword.get(opts, :allow_removed?, false)
-        include_comments? = Keyword.get(opts, :include_comments?, false)
 
-        cond do
-          thread.is_removed and not allow_removed? -> nil
-          include_comments? -> Map.put(thread, :comments, list_comments_with_authors(id))
-          true -> thread
+        if Keyword.get(opts, :include_comments?, false) do
+          Map.put(thread, :comments, list_comments(id, opts))
+        else
+          thread
         end
     end
   end
@@ -299,16 +282,8 @@ defmodule Urielm.Forum do
     |> Repo.update_all(inc: [view_count: 1])
   end
 
-  defp list_comments_with_authors(thread_id) do
-    from(c in Comment)
-    |> where([c], c.thread_id == ^thread_id and c.is_removed == false)
-    |> order_by([c], c.inserted_at)
-    |> preload(:author)
-    |> Repo.all()
-  end
-
   def create_thread(board_id, author_id, attrs \\ %{}) do
-    board = Repo.get!(Board, board_id)
+    board = Repo.get!(Board, board_id) |> Repo.preload(:category)
     user = Repo.get!(Urielm.Accounts.User, author_id)
 
     case authorize_thread_creation(board, user) do
@@ -324,6 +299,9 @@ defmodule Urielm.Forum do
         error
     end
   end
+
+  defp authorize_thread_creation(%Board{category: %Category{is_hidden: true}}, _user),
+    do: {:error, :board_hidden}
 
   defp authorize_thread_creation(%Board{is_hidden: true}, _user), do: {:error, :board_hidden}
   defp authorize_thread_creation(%Board{is_locked: true}, _user), do: {:error, :board_locked}
@@ -519,24 +497,24 @@ defmodule Urielm.Forum do
 
   # Comments
 
-  def list_comments(thread_id, _opts \\ []) do
-    from(c in Comment)
-    |> where([c], c.thread_id == ^thread_id and c.is_removed == false)
-    |> order_by([c], c.inserted_at)
-    |> preload([:author])
+  def list_comments(thread_id, opts \\ []) do
+    query = if hidden_viewer?(opts), do: Comment, else: visible_comments()
+
+    from(c in query,
+      where: c.thread_id == ^thread_id and not c.is_removed,
+      order_by: c.inserted_at,
+      preload: :author
+    )
     |> Repo.all()
   end
 
-  def get_comment!(id) do
-    Repo.get!(Comment, id)
-    |> Repo.preload(:author)
+  def get_comment!(id, opts \\ []) do
+    get_comment(id, opts) || raise Ecto.NoResultsError, queryable: Comment
   end
 
-  def get_comment(id) do
-    case Repo.get(Comment, id) do
-      nil -> nil
-      comment -> Repo.preload(comment, :author)
-    end
+  def get_comment(id, opts \\ []) do
+    query = if hidden_viewer?(opts), do: Comment, else: visible_comments(false)
+    Repo.one(from(c in query, where: c.id == ^id, preload: :author))
   end
 
   def create_comment(thread_id, author_id, attrs \\ %{}) do
@@ -551,16 +529,29 @@ defmodule Urielm.Forum do
 
   def authorize_comment(%Thread{} = thread, user) do
     user = current_user(user)
-    thread = Repo.preload(thread, :board)
+    thread = Repo.preload(thread, board: :category)
 
     cond do
-      thread.is_removed -> {:error, :thread_not_found}
-      thread.is_locked -> {:error, :thread_locked}
-      thread.board && thread.board.is_hidden -> {:error, :board_hidden}
-      not account_available?(user) -> {:error, :unauthorized}
-      user.email_verified == false -> {:error, :email_unverified}
-      Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
-      true -> :ok
+      thread.is_removed ->
+        {:error, :thread_not_found}
+
+      thread.is_locked ->
+        {:error, :thread_locked}
+
+      thread.board && (thread.board.is_hidden or thread.board.category.is_hidden) ->
+        {:error, :board_hidden}
+
+      not account_available?(user) ->
+        {:error, :unauthorized}
+
+      user.email_verified == false ->
+        {:error, :email_unverified}
+
+      Urielm.Accounts.User.silenced?(user) ->
+        {:error, :silenced}
+
+      true ->
+        :ok
     end
   end
 
@@ -784,6 +775,7 @@ defmodule Urielm.Forum do
 
   def bulk_saved_thread_ids(user_id, thread_ids) do
     from(st in SavedThread,
+      where: st.thread_id in subquery(visible_thread_ids()),
       where: st.user_id == ^user_id and st.thread_id in ^thread_ids,
       select: st.thread_id
     )
@@ -798,6 +790,7 @@ defmodule Urielm.Forum do
 
   def bulk_subscribed_thread_ids(user_id, thread_ids) do
     from(s in Subscription,
+      where: s.thread_id in subquery(visible_thread_ids()),
       where: s.user_id == ^user_id and s.thread_id in ^thread_ids,
       select: s.thread_id
     )
@@ -821,7 +814,7 @@ defmodule Urielm.Forum do
       |> MapSet.new()
 
     suppressed_ids =
-      from(t in Thread,
+      from(t in visible_threads(),
         join: b in Board,
         on: b.id == t.board_id,
         left_join: setting in TopicNotificationSetting,
@@ -838,7 +831,9 @@ defmodule Urielm.Forum do
       |> Repo.all()
       |> MapSet.new()
 
-    thread_ids
+    visible_ids = Repo.all(from(t in visible_threads(), where: t.id in ^thread_ids, select: t.id))
+
+    visible_ids
     |> MapSet.new()
     |> MapSet.difference(read_ids)
     |> MapSet.difference(suppressed_ids)
@@ -851,6 +846,7 @@ defmodule Urielm.Forum do
 
   def bulk_saved_comment_ids(user_id, comment_ids) do
     from(sc in SavedComment,
+      where: sc.comment_id in subquery(visible_comment_ids()),
       where: sc.user_id == ^user_id and sc.comment_id in ^comment_ids,
       select: sc.comment_id
     )
@@ -868,6 +864,7 @@ defmodule Urielm.Forum do
 
   def get_thread_by_link(link_type, link_id) do
     ThreadLink
+    |> where([tl], tl.thread_id in subquery(visible_thread_ids()))
     |> where([tl], tl.link_type == ^link_type and tl.link_id == ^link_id)
     |> preload(:thread)
     |> Repo.one()
@@ -878,33 +875,39 @@ defmodule Urielm.Forum do
   end
 
   def get_or_create_lesson_thread(lesson_id, board_id) do
-    case get_thread_by_link("lesson", lesson_id) do
-      %Thread{} = thread ->
-        {:ok, thread}
+    case Repo.get_by(ThreadLink, link_type: "lesson", link_id: lesson_id) do
+      %ThreadLink{thread_id: thread_id} ->
+        case get_thread(thread_id) do
+          nil -> {:error, :thread_not_found}
+          thread -> {:ok, thread}
+        end
 
       nil ->
-        # Create a new thread for the lesson
-        lesson = Urielm.Learning.get_lesson!(lesson_id)
-        title = "Discussion: #{lesson.title}"
-        slug = Urielm.Slugify.slugify(title)
+        create_lesson_thread(lesson_id, board_id)
+    end
+  end
 
-        case create_thread(board_id, 1, %{
-               "title" => title,
-               "slug" => slug,
-               "body" => "Discuss this lesson in the forum."
-             }) do
-          {:ok, thread} ->
-            {:ok, _link} = create_thread_link(thread.id, "lesson", lesson_id)
-            {:ok, thread}
+  defp create_lesson_thread(lesson_id, board_id) do
+    lesson = Urielm.Learning.get_lesson!(lesson_id)
+    title = "Discussion: #{lesson.title}"
+    slug = Urielm.Slugify.slugify(title)
 
-          error ->
-            error
-        end
+    case create_thread(board_id, 1, %{
+           "title" => title,
+           "slug" => slug,
+           "body" => "Discuss this lesson in the forum."
+         }) do
+      {:ok, thread} ->
+        {:ok, _link} = create_thread_link(thread.id, "lesson", lesson_id)
+        {:ok, thread}
+
+      error ->
+        error
     end
   end
 
   def list_lesson_threads(lesson_id, opts \\ []) do
-    from(t in Thread,
+    from(t in visible_threads(),
       join: tl in ThreadLink,
       on: t.id == tl.thread_id,
       where: tl.link_type == "lesson" and tl.link_id == ^lesson_id,
@@ -933,7 +936,10 @@ defmodule Urielm.Forum do
 
   def thread_saved?(user_id, thread_id) do
     Repo.exists?(
-      from(st in SavedThread, where: st.user_id == ^user_id and st.thread_id == ^thread_id)
+      from(st in SavedThread,
+        where: st.thread_id in subquery(visible_thread_ids()),
+        where: st.user_id == ^user_id and st.thread_id == ^thread_id
+      )
     )
   end
 
@@ -946,7 +952,7 @@ defmodule Urielm.Forum do
   end
 
   def list_saved_threads(user_id, opts \\ []) do
-    from(t in Thread,
+    from(t in visible_threads(),
       join: st in SavedThread,
       on: st.thread_id == t.id,
       where: st.user_id == ^user_id,
@@ -964,7 +970,7 @@ defmodule Urielm.Forum do
   """
   def paginate_saved_threads(user_id, params \\ %{}) do
     base =
-      from(t in Thread,
+      from(t in visible_threads(),
         join: st in SavedThread,
         on: st.thread_id == t.id,
         where: st.user_id == ^user_id and t.is_removed == false,
@@ -976,7 +982,10 @@ defmodule Urielm.Forum do
   end
 
   def count_saved_threads(user_id) do
-    from(st in SavedThread, where: st.user_id == ^user_id)
+    from(st in SavedThread,
+      where: st.thread_id in subquery(visible_thread_ids()),
+      where: st.user_id == ^user_id
+    )
     |> Repo.aggregate(:count)
   end
 
@@ -997,7 +1006,10 @@ defmodule Urielm.Forum do
 
   def comment_saved?(user_id, comment_id) do
     Repo.exists?(
-      from(sc in SavedComment, where: sc.user_id == ^user_id and sc.comment_id == ^comment_id)
+      from(sc in SavedComment,
+        where: sc.comment_id in subquery(visible_comment_ids()),
+        where: sc.user_id == ^user_id and sc.comment_id == ^comment_id
+      )
     )
   end
 
@@ -1013,7 +1025,7 @@ defmodule Urielm.Forum do
     limit = Keyword.get(opts, :limit, 20)
     offset = Keyword.get(opts, :offset, 0)
 
-    from(c in Comment,
+    from(c in visible_comments(),
       join: sc in SavedComment,
       on: sc.comment_id == c.id,
       where: sc.user_id == ^user_id,
@@ -1027,7 +1039,10 @@ defmodule Urielm.Forum do
   end
 
   def count_saved_comments(user_id) do
-    from(sc in SavedComment, where: sc.user_id == ^user_id)
+    from(sc in SavedComment,
+      where: sc.comment_id in subquery(visible_comment_ids()),
+      where: sc.user_id == ^user_id
+    )
     |> Repo.aggregate(:count)
   end
 
@@ -1082,7 +1097,7 @@ defmodule Urielm.Forum do
     from(t in Tag,
       left_join: tt in ThreadTag,
       on: tt.tag_id == t.id,
-      left_join: thread in Thread,
+      left_join: thread in subquery(visible_threads()),
       on: thread.id == tt.thread_id and thread.is_removed == false,
       group_by: [t.id, t.name, t.slug, t.inserted_at, t.updated_at],
       order_by: [asc: t.name],
@@ -1210,7 +1225,7 @@ defmodule Urielm.Forum do
   defp tag_group_transaction_result({:error, _operation, reason, _changes}), do: {:error, reason}
 
   def count_threads_by_tag(tag_id) do
-    from(t in Thread,
+    from(t in visible_threads(),
       join: tt in ThreadTag,
       on: tt.thread_id == t.id,
       where: tt.tag_id == ^tag_id,
@@ -1234,7 +1249,7 @@ defmodule Urielm.Forum do
 
   def list_thread_tags(thread_id) do
     from(tt in ThreadTag,
-      where: tt.thread_id == ^thread_id,
+      where: tt.thread_id == ^thread_id and tt.thread_id in subquery(visible_thread_ids()),
       join: t in Tag,
       on: tt.tag_id == t.id,
       select: t
@@ -1243,7 +1258,7 @@ defmodule Urielm.Forum do
   end
 
   def list_threads_by_tag(tag_id, opts \\ []) do
-    from(t in Thread,
+    from(t in visible_threads(),
       join: tt in ThreadTag,
       on: tt.thread_id == t.id,
       where: tt.tag_id == ^tag_id,
@@ -1257,7 +1272,7 @@ defmodule Urielm.Forum do
 
   def paginate_threads_by_tag(tag_id, params \\ %{}) do
     base =
-      from(t in Thread,
+      from(t in visible_threads(),
         join: tt in ThreadTag,
         on: tt.thread_id == t.id,
         where: tt.tag_id == ^tag_id,
@@ -1368,12 +1383,15 @@ defmodule Urielm.Forum do
 
   def subscribed?(user_id, thread_id) do
     Repo.exists?(
-      from(s in Subscription, where: s.user_id == ^user_id and s.thread_id == ^thread_id)
+      from(s in Subscription,
+        where: s.thread_id in subquery(visible_thread_ids()),
+        where: s.user_id == ^user_id and s.thread_id == ^thread_id
+      )
     )
   end
 
   def list_subscriptions(user_id, opts \\ []) do
-    from(t in Thread,
+    from(t in visible_threads(),
       join: s in Subscription,
       on: s.thread_id == t.id,
       where: s.user_id == ^user_id,
@@ -1386,7 +1404,10 @@ defmodule Urielm.Forum do
   end
 
   def count_subscriptions(user_id) do
-    from(s in Subscription, where: s.user_id == ^user_id)
+    from(s in Subscription,
+      where: s.thread_id in subquery(visible_thread_ids()),
+      where: s.user_id == ^user_id
+    )
     |> Repo.aggregate(:count)
   end
 
@@ -1417,7 +1438,7 @@ defmodule Urielm.Forum do
     unread_only = Keyword.get(opts, :unread_only, false)
 
     query =
-      from(n in Notification,
+      from(n in visible_notifications(),
         where: n.user_id == ^user_id,
         preload: [:actor, :thread],
         order_by: [desc: n.inserted_at, desc: n.id]
@@ -1445,7 +1466,7 @@ defmodule Urielm.Forum do
   end
 
   def mark_notification_as_read(notification_id) do
-    case Repo.get(Notification, notification_id) do
+    case Repo.one(from(n in visible_notifications(), where: n.id == ^notification_id)) do
       nil ->
         {:error, :not_found}
 
@@ -1455,7 +1476,11 @@ defmodule Urielm.Forum do
   end
 
   def mark_notification_as_read(user_id, notification_id) do
-    case Repo.get_by(Notification, id: notification_id, user_id: user_id) do
+    case Repo.one(
+           from(n in visible_notifications(),
+             where: n.id == ^notification_id and n.user_id == ^user_id
+           )
+         ) do
       nil ->
         {:error, :not_found}
 
@@ -1479,7 +1504,7 @@ defmodule Urielm.Forum do
 
   def mark_all_notifications_as_read(user_id) do
     result =
-      from(n in Notification,
+      from(n in visible_notifications(),
         where: n.user_id == ^user_id and is_nil(n.read_at)
       )
       |> Repo.update_all(set: [read_at: DateTime.utc_now()])
@@ -1489,7 +1514,7 @@ defmodule Urielm.Forum do
   end
 
   def count_unread_notifications(user_id) do
-    from(n in Notification,
+    from(n in visible_notifications(),
       where: n.user_id == ^user_id and is_nil(n.read_at)
     )
     |> Repo.aggregate(:count)
@@ -1509,6 +1534,7 @@ defmodule Urielm.Forum do
       true ->
         subscribers =
           from(s in Subscription,
+            where: s.thread_id in subquery(visible_thread_ids()),
             left_join: setting in TopicNotificationSetting,
             on: setting.user_id == s.user_id and setting.thread_id == s.thread_id,
             where: s.thread_id == ^thread_id and s.user_id != ^actor_id,
@@ -1545,12 +1571,13 @@ defmodule Urielm.Forum do
     try do
       parent_author_id =
         if comment.parent_id do
-          from(c in Comment, where: c.id == ^comment.parent_id, select: c.author_id)
+          from(c in visible_comments(), where: c.id == ^comment.parent_id, select: c.author_id)
           |> Repo.one()
         end
 
       subscriber_ids =
         from(s in Subscription,
+          where: s.thread_id in subquery(visible_thread_ids()),
           where: s.thread_id == ^thread.id,
           select: s.user_id
         )
@@ -1758,7 +1785,7 @@ defmodule Urielm.Forum do
   end
 
   def list_unread_threads(user_id, board_id, opts \\ []) do
-    from(t in Thread,
+    from(t in visible_threads(),
       left_join: tr in TopicRead,
       on: tr.user_id == ^user_id and tr.thread_id == t.id,
       left_join: setting in TopicNotificationSetting,
@@ -1786,7 +1813,7 @@ defmodule Urielm.Forum do
   """
   def paginate_unread_threads(user_id, board_id, params \\ %{}) do
     base =
-      from(t in Thread,
+      from(t in visible_threads(),
         left_join: tr in TopicRead,
         on: tr.user_id == ^user_id and tr.thread_id == t.id,
         left_join: setting in TopicNotificationSetting,
@@ -1815,7 +1842,7 @@ defmodule Urielm.Forum do
 
     cutoff = DateTime.utc_now() |> DateTime.add(-days * 86_400, :second)
 
-    from(t in Thread,
+    from(t in visible_threads(),
       where: t.board_id == ^board_id and t.is_removed == false and t.inserted_at > ^cutoff,
       preload: [:author, :board],
       order_by: [desc: t.inserted_at, desc: t.id]
@@ -1833,7 +1860,7 @@ defmodule Urielm.Forum do
     cutoff = DateTime.utc_now() |> DateTime.add(-days * 86_400, :second)
 
     base =
-      from(t in Thread,
+      from(t in visible_threads(),
         where: t.board_id == ^board_id and t.is_removed == false and t.inserted_at > ^cutoff,
         preload: [:author, :board]
       )
@@ -1846,7 +1873,7 @@ defmodule Urielm.Forum do
   end
 
   def list_latest_threads(board_id, opts \\ []) do
-    from(t in Thread,
+    from(t in visible_threads(),
       where: t.board_id == ^board_id and t.is_removed == false,
       preload: [:author, :board],
       order_by: [desc: t.updated_at, desc: t.id]
@@ -1938,7 +1965,7 @@ defmodule Urielm.Forum do
   # User Profiles
 
   def list_threads_by_author(author_id, opts \\ []) do
-    from(t in Thread)
+    from(t in visible_threads())
     |> where([t], t.author_id == ^author_id and t.is_removed == false)
     |> thread_preloads()
     |> order_by([t], desc: t.inserted_at, desc: t.id)
@@ -1952,7 +1979,7 @@ defmodule Urielm.Forum do
   """
   def paginate_threads_by_author(author_id, params \\ %{}) do
     base =
-      from(t in Thread)
+      from(t in visible_threads())
       |> where([t], t.author_id == ^author_id and t.is_removed == false)
       |> thread_preloads()
 
@@ -1964,7 +1991,7 @@ defmodule Urielm.Forum do
   end
 
   def list_comments_by_author(author_id, opts \\ []) do
-    from(c in Comment)
+    from(c in visible_comments())
     |> where([c], c.author_id == ^author_id and c.is_removed == false)
     |> preload([:author, thread: :board])
     |> order_by([c], desc: c.inserted_at, desc: c.id)
@@ -1978,7 +2005,7 @@ defmodule Urielm.Forum do
   """
   def paginate_comments_by_author(author_id, params \\ %{}) do
     base =
-      from(c in Comment)
+      from(c in visible_comments())
       |> where([c], c.author_id == ^author_id and c.is_removed == false)
       |> preload([:author, thread: :board])
 
@@ -1990,12 +2017,12 @@ defmodule Urielm.Forum do
   end
 
   def count_threads_by_author(author_id) do
-    from(t in Thread, where: t.author_id == ^author_id and t.is_removed == false)
+    from(t in visible_threads(), where: t.author_id == ^author_id and t.is_removed == false)
     |> Repo.aggregate(:count)
   end
 
   def count_comments_by_author(author_id) do
-    from(c in Comment, where: c.author_id == ^author_id and c.is_removed == false)
+    from(c in visible_comments(), where: c.author_id == ^author_id and c.is_removed == false)
     |> Repo.aggregate(:count)
   end
 
@@ -2041,6 +2068,54 @@ defmodule Urielm.Forum do
   end
 
   # --- small internal helpers (refactor)
+
+  # Public reads require both levels of the forum hierarchy to be visible.
+  defp visible_boards do
+    from(b in Board,
+      join: category in Category,
+      on: category.id == b.category_id,
+      where: not b.is_hidden and not category.is_hidden
+    )
+  end
+
+  defp visible_threads(exclude_removed? \\ true) do
+    query =
+      from(t in Thread, where: t.board_id in subquery(from(b in visible_boards(), select: b.id)))
+
+    if exclude_removed?, do: where(query, [t], not t.is_removed), else: query
+  end
+
+  defp visible_thread_ids, do: from(t in visible_threads(), select: t.id)
+
+  defp visible_comments(exclude_removed? \\ true) do
+    thread_ids = from(t in visible_threads(exclude_removed?), select: t.id)
+    query = from(c in Comment, where: c.thread_id in subquery(thread_ids))
+    if exclude_removed?, do: where(query, [c], not c.is_removed), else: query
+  end
+
+  defp visible_comment_ids, do: from(c in visible_comments(), select: c.id)
+
+  defp visible_notifications do
+    hidden_threads =
+      from(t in Thread, where: t.id not in subquery(visible_thread_ids()), select: t.id)
+
+    hidden_comments =
+      from(c in Comment, where: c.thread_id in subquery(hidden_threads), select: c.id)
+
+    from(n in Notification,
+      where: is_nil(n.thread_id) or n.thread_id in subquery(visible_thread_ids()),
+      where:
+        n.subject_id not in subquery(hidden_threads) and
+          n.subject_id not in subquery(hidden_comments)
+    )
+  end
+
+  defp hidden_viewer?(opts) do
+    case current_user(Keyword.get(opts, :viewer)) do
+      %Urielm.Accounts.User{is_admin: true} = user -> account_available?(user)
+      _ -> false
+    end
+  end
 
   # Common thread preloads used across queries
   defp thread_preloads(query), do: preload(query, [:author, :board])
@@ -2097,7 +2172,7 @@ defmodule Urielm.Forum do
 
   defp search_query(query, opts) do
     base_query =
-      from(t in Thread)
+      from(t in visible_threads())
       |> where([t], t.is_removed == false)
       |> thread_preloads()
 
@@ -2298,7 +2373,7 @@ defmodule Urielm.Forum do
          title_after
        ) do
     # Get current revision count
-    revision_number = count_revisions(target_type, target_id) + 1
+    revision_number = Repo.aggregate(revision_query(target_type, target_id), :count) + 1
 
     %PostRevision{}
     |> PostRevision.changeset(%{
@@ -2314,19 +2389,37 @@ defmodule Urielm.Forum do
     |> Repo.insert()
   end
 
-  def list_revisions(target_type, target_id) do
-    from(r in PostRevision,
-      where: r.target_type == ^target_type and r.target_id == ^target_id,
-      preload: :editor,
-      order_by: [desc: r.revision_number]
-    )
+  def list_revisions(target_type, target_id, opts \\ []) do
+    revision_query(target_type, target_id)
+    |> visible_revisions(opts)
+    |> preload(:editor)
+    |> order_by([r], desc: r.revision_number)
     |> Repo.all()
   end
 
-  def count_revisions(target_type, target_id) do
-    from(r in PostRevision,
-      where: r.target_type == ^target_type and r.target_id == ^target_id
-    )
+  def count_revisions(target_type, target_id, opts \\ []) do
+    revision_query(target_type, target_id)
+    |> visible_revisions(opts)
     |> Repo.aggregate(:count)
+  end
+
+  defp revision_query(target_type, target_id) do
+    from(r in PostRevision, where: r.target_type == ^target_type and r.target_id == ^target_id)
+  end
+
+  defp visible_revisions(query, opts) do
+    if hidden_viewer?(opts) do
+      query
+    else
+      thread_ids = from(t in visible_threads(false), select: t.id)
+      comment_ids = from(c in visible_comments(false), select: c.id)
+
+      where(
+        query,
+        [r],
+        (r.target_type == "thread" and r.target_id in subquery(thread_ids)) or
+          (r.target_type == "comment" and r.target_id in subquery(comment_ids))
+      )
+    end
   end
 end

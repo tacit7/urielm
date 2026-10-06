@@ -397,13 +397,8 @@ defmodule Urielm.Accounts do
   end
 
   def get_user_stats(user_id) do
-    from_count =
-      from(t in Urielm.Forum.Thread, where: t.author_id == ^user_id and t.is_removed == false)
-      |> Repo.aggregate(:count)
-
-    comment_count =
-      from(c in Urielm.Forum.Comment, where: c.author_id == ^user_id and c.is_removed == false)
-      |> Repo.aggregate(:count)
+    from_count = Urielm.Forum.count_threads_by_author(user_id)
+    comment_count = Urielm.Forum.count_comments_by_author(user_id)
 
     follower_count = count_followers(user_id)
     following_count = count_following(user_id)

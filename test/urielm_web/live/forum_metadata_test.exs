@@ -77,8 +77,28 @@ defmodule UrielmWeb.ForumMetadataTest do
     thread = Fixtures.thread_fixture(%{board_id: board.id, title: "Hidden thread title"})
     board |> Ecto.Changeset.change(is_hidden: true) |> Repo.update!()
 
+    for {path, destination} <- [
+          {"/forum/b/#{board.slug}", "/forum/categories"},
+          {"/forum/t/#{thread.id}", "/"}
+        ] do
+      conn = build_conn() |> get(path)
+      assert redirected_to(conn, 302) == destination
+      page = conn |> html_response(302) |> LazyHTML.from_document()
+      assert LazyHTML.query(page, "link[rel=canonical]") |> Enum.empty?()
+      refute LazyHTML.text(page) =~ board.name
+      refute LazyHTML.text(page) =~ thread.title
+    end
+
+    admin = Fixtures.admin_fixture()
+
     for path <- ["/forum/b/#{board.slug}", "/forum/t/#{thread.id}"] do
-      page = document(path)
+      page =
+        build_conn()
+        |> log_in_user(admin)
+        |> get(path)
+        |> html_response(200)
+        |> LazyHTML.from_document()
+
       assert value(page, "meta[name=robots]", "content") =~ "noindex"
       assert LazyHTML.query(page, "link[rel=canonical]") |> Enum.empty?()
       refute text(page, "title") =~ "Hidden"
@@ -99,15 +119,17 @@ defmodule UrielmWeb.ForumMetadataTest do
     assert is_nil(payload["robots"])
   end
 
-  test "hidden categories and admin-visible removed threads retain generic metadata" do
+  test "hidden categories deny public access and admin-visible removed threads retain generic metadata" do
     category = Fixtures.category_fixture()
     board = Fixtures.board_fixture(%{category_id: category.id})
     hidden_thread = Fixtures.thread_fixture(%{board_id: board.id, title: "Hidden category topic"})
     category |> Ecto.Changeset.change(is_hidden: true) |> Repo.update!()
 
-    hidden_page = document("/forum/t/#{hidden_thread.id}")
-    assert value(hidden_page, "meta[name=robots]", "content") =~ "noindex"
-    refute text(hidden_page, "title") =~ hidden_thread.title
+    hidden_conn = build_conn() |> get("/forum/t/#{hidden_thread.id}")
+    assert redirected_to(hidden_conn, 302) == "/"
+    hidden_page = hidden_conn |> html_response(302) |> LazyHTML.from_document()
+    refute LazyHTML.text(hidden_page) =~ hidden_thread.title
+    assert LazyHTML.query(hidden_page, "link[rel=canonical]") |> Enum.empty?()
 
     removed_thread = Fixtures.thread_fixture(%{title: "Removed topic", is_removed: true})
     admin = Fixtures.admin_fixture()
