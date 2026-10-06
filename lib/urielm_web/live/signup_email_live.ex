@@ -132,12 +132,22 @@ defmodule UrielmWeb.SignupEmailLive do
   end
 
   defp register(socket, email, password) do
+    case Map.get(socket.assigns, :signup_binding) do
+      binding when is_binary(binding) and byte_size(binding) == 43 ->
+        register_bound(socket, email, password, binding)
+
+      _ ->
+        {:noreply, redirect(socket, to: ~p"/signup")}
+    end
+  end
+
+  defp register_bound(socket, email, password, binding) do
     case Accounts.register_user_email_only(%{email: email, password: password}) do
       {:ok, user} ->
         case UrielmWeb.AuthController.sign_post_signup_token(
                socket,
                user.id,
-               socket.assigns.signup_binding
+               binding
              ) do
           {:ok, token} -> {:noreply, redirect(socket, to: "/auth/post-signup/#{token}")}
           {:error, _} -> {:noreply, redirect(socket, to: ~p"/signup")}

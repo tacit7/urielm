@@ -17,6 +17,11 @@ defmodule UrielmWeb.SignupEmailLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias Urielm.Accounts
+  alias Urielm.Accounts.UserSession
+  alias Urielm.Repo
+  alias UrielmWeb.SignupEmailLive
+
   setup do
     old = Application.get_env(:urielm, :rate_limit_bypass)
     Application.put_env(:urielm, :rate_limit_bypass, false)
@@ -151,6 +156,58 @@ defmodule UrielmWeb.SignupEmailLiveTest do
 
     assert Urielm.Accounts.get_user_by_email("permitted@example.com")
     assert_redirect(view)
+  end
+
+  for {label, assigns} <- [
+        {"absent", %{}},
+        {"nil", %{signup_binding: nil}},
+        {"empty", %{signup_binding: ""}},
+        {"short", %{signup_binding: String.duplicate("a", 42)}},
+        {"long", %{signup_binding: String.duplicate("a", 44)}},
+        {"nonbinary", %{signup_binding: 43}}
+      ] do
+    test "rejects #{label} browser binding before persisting an account" do
+      email = unquote(label) <> "-binding@example.com"
+      session_count = Repo.aggregate(UserSession, :count)
+      socket = signup_socket(unquote(Macro.escape(assigns)))
+
+      assert {:noreply, socket} =
+               SignupEmailLive.handle_event(
+                 "submit",
+                 %{"email" => email, "password" => "password123"},
+                 socket
+               )
+
+      refute Accounts.get_user_by_email(email)
+      assert Repo.aggregate(UserSession, :count) == session_count
+      assert {:redirect, %{to: "/signup"}} = socket.redirected
+    end
+  end
+
+  test "a forged submit binding cannot replace a missing browser binding" do
+    email = "forged-binding@example.com"
+    session_count = Repo.aggregate(UserSession, :count)
+
+    assert {:noreply, socket} =
+             SignupEmailLive.handle_event(
+               "submit",
+               %{
+                 "email" => email,
+                 "password" => "password123",
+                 "signup_binding" => String.duplicate("a", 43)
+               },
+               signup_socket(%{signup_binding: nil})
+             )
+
+    refute Accounts.get_user_by_email(email)
+    assert Repo.aggregate(UserSession, :count) == session_count
+    assert {:redirect, %{to: "/signup"}} = socket.redirected
+  end
+
+  defp signup_socket(assigns) do
+    %Phoenix.LiveView.Socket{endpoint: UrielmWeb.Endpoint, router: UrielmWeb.Router}
+    |> Phoenix.Component.assign(%{registration_ip: "198.51.100.10", loading: false})
+    |> Phoenix.Component.assign(assigns)
   end
 
   defp with_peer(conn, address) do
