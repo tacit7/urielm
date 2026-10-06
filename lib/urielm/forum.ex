@@ -332,7 +332,11 @@ defmodule Urielm.Forum do
     do: {:error, :email_unverified}
 
   defp authorize_thread_creation(_board, user) do
-    if Urielm.Accounts.User.silenced?(user), do: {:error, :silenced}, else: :ok
+    cond do
+      not account_available?(user) -> {:error, :unauthorized}
+      Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
+      true -> :ok
+    end
   end
 
   defp insert_thread(board, user, attrs) do
@@ -546,12 +550,14 @@ defmodule Urielm.Forum do
   end
 
   def authorize_comment(%Thread{} = thread, user) do
+    user = current_user(user)
     thread = Repo.preload(thread, :board)
 
     cond do
       thread.is_removed -> {:error, :thread_not_found}
       thread.is_locked -> {:error, :thread_locked}
       thread.board && thread.board.is_hidden -> {:error, :board_hidden}
+      not account_available?(user) -> {:error, :unauthorized}
       user.email_verified == false -> {:error, :email_unverified}
       Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
       true -> :ok
@@ -670,10 +676,10 @@ defmodule Urielm.Forum do
         {:error, :unauthorized}
 
       user ->
-        if Urielm.Accounts.User.silenced?(user) do
-          {:error, :silenced}
-        else
-          do_cast_vote(user_id, target_type, target_id, value)
+        cond do
+          not account_available?(user) -> {:error, :unauthorized}
+          Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
+          true -> do_cast_vote(user_id, target_type, target_id, value)
         end
     end
   end
@@ -727,6 +733,16 @@ defmodule Urielm.Forum do
   end
 
   def unvote(user_id, target_type, target_id) do
+    user = Repo.get(Urielm.Accounts.User, user_id)
+
+    cond do
+      not account_available?(user) -> {:error, :unauthorized}
+      Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
+      true -> do_unvote(user_id, target_type, target_id)
+    end
+  end
+
+  defp do_unvote(user_id, target_type, target_id) do
     case Repo.get_by(Vote, user_id: user_id, target_type: target_type, target_id: target_id) do
       nil ->
         {:ok, nil}
@@ -2239,15 +2255,36 @@ defmodule Urielm.Forum do
   defp preload_thread_meta(%Thread{} = thread),
     do: Repo.preload(thread, [:author, :board, :tag_records])
 
-  # Authorization helper for owner-or-admin checks
-  defp authorized?(%{id: id, is_admin: true}, _owner_id) when not is_nil(id), do: true
-  defp authorized?(%{id: id, is_admin: _}, owner_id) when not is_nil(id), do: id == owner_id
-  defp authorized?(_user, _owner_id), do: false
+  # Mutation authorization uses persisted roles and account restrictions.
+  defp authorized?(user, owner_id) do
+    case current_user(user) do
+      nil ->
+        false
 
-  # Moderator authorization (admin or moderator)
-  defp moderator?(%{is_admin: true}), do: true
-  defp moderator?(%{is_moderator: true}), do: true
-  defp moderator?(_user), do: false
+      user ->
+        account_available?(user) and not Urielm.Accounts.User.silenced?(user) and
+          (user.is_admin or user.id == owner_id)
+    end
+  end
+
+  defp moderator?(user) do
+    case current_user(user) do
+      nil ->
+        false
+
+      user ->
+        account_available?(user) and not Urielm.Accounts.User.silenced?(user) and
+          (user.is_admin or user.is_moderator)
+    end
+  end
+
+  defp current_user(%{id: id}) when not is_nil(id), do: Repo.get(Urielm.Accounts.User, id)
+  defp current_user(_user), do: nil
+
+  defp account_available?(%Urielm.Accounts.User{active: true} = user),
+    do: not Urielm.Accounts.User.suspended?(user)
+
+  defp account_available?(_user), do: false
 
   # Post Revisions
 

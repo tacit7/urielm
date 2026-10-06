@@ -9,6 +9,88 @@ defmodule Urielm.ForumTest do
   alias Urielm.Engagement.Vote
   alias Urielm.Repo
 
+  describe "current account authorization" do
+    test "fixes comment authorization after cached user is silenced" do
+      user = user_fixture()
+      thread = thread_fixture()
+      assert :ok = Forum.authorize_comment(thread, user)
+
+      user
+      |> Ecto.Changeset.change(silenced_at: DateTime.utc_now() |> DateTime.truncate(:second))
+      |> Repo.update!()
+
+      assert {:error, :silenced} = Forum.authorize_comment(thread, user)
+    end
+
+    test "fixes body editing and moderation after cached actor is silenced" do
+      user = admin_fixture()
+      thread = thread_fixture(%{author_id: user.id})
+
+      user
+      |> Ecto.Changeset.change(silenced_at: DateTime.utc_now() |> DateTime.truncate(:second))
+      |> Repo.update!()
+
+      assert {:error, :unauthorized} = Forum.edit_thread(thread, "Forbidden edit", user)
+      assert {:error, :unauthorized} = Forum.lock_thread(thread, user)
+    end
+
+    test "fixes moderation after cached moderator role is revoked" do
+      moderator = user_fixture() |> Ecto.Changeset.change(is_moderator: true) |> Repo.update!()
+      thread = thread_fixture()
+      moderator |> Ecto.Changeset.change(is_moderator: false) |> Repo.update!()
+      assert {:error, :unauthorized} = Forum.lock_thread(thread, moderator)
+      refute Repo.get!(Thread, thread.id).is_locked
+    end
+
+    test "fixes editing another author's content after cached admin role is revoked" do
+      admin = admin_fixture()
+      thread = thread_fixture()
+      admin |> Ecto.Changeset.change(is_admin: false) |> Repo.update!()
+      assert {:error, :unauthorized} = Forum.edit_thread(thread, "Forbidden edit", admin)
+      assert Repo.get!(Thread, thread.id).body == thread.body
+    end
+
+    test "fixes vote removal after account posting permissions are revoked" do
+      for attrs <- [
+            %{active: false},
+            %{suspended_at: DateTime.utc_now() |> DateTime.truncate(:second)},
+            %{silenced_at: DateTime.utc_now() |> DateTime.truncate(:second)}
+          ] do
+        user = user_fixture()
+        thread = thread_fixture()
+        assert {:ok, _} = Forum.cast_vote(user.id, "thread", thread.id, 1)
+        user |> Ecto.Changeset.change(attrs) |> Repo.update!()
+        expected = if Map.has_key?(attrs, :silenced_at), do: :silenced, else: :unauthorized
+        assert {:error, ^expected} = Forum.unvote(user.id, "thread", thread.id)
+        assert Forum.get_user_vote(user.id, "thread", thread.id).value == 1
+      end
+    end
+
+    test "fixes forum mutations after cached owner is suspended or deactivated" do
+      for attrs <- [
+            %{active: false},
+            %{suspended_at: DateTime.utc_now() |> DateTime.truncate(:second)}
+          ] do
+        user = user_fixture()
+        thread = thread_fixture(%{author_id: user.id})
+        user |> Ecto.Changeset.change(attrs) |> Repo.update!()
+        assert {:error, :unauthorized} = Forum.authorize_comment(thread, user)
+        assert {:error, :unauthorized} = Forum.edit_thread(thread, "Forbidden edit", user)
+
+        assert {:error, :unauthorized} =
+                 Forum.create_thread(thread.board_id, user.id, %{
+                   title: "Forbidden",
+                   body: "Forbidden"
+                 })
+
+        assert {:error, :unauthorized} =
+                 Forum.create_comment(thread.id, user.id, %{body: "Forbidden"})
+
+        assert {:error, :unauthorized} = Forum.cast_vote(user.id, "thread", thread.id, 1)
+      end
+    end
+  end
+
   describe "categories" do
     test "list_categories/1 returns all non-hidden categories" do
       cat1 = category_fixture(%{name: "Category 1", slug: "cat-1"})

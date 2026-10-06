@@ -208,9 +208,13 @@ defmodule Urielm.Accounts do
   params from the profile form here; use `update_user_profile/2` for that.
   """
   def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
+    changeset = User.changeset(get_user(user.id), attrs)
+
+    if Ecto.Changeset.get_change(changeset, :active) == false do
+      update_and_revoke_sessions(changeset)
+    else
+      Repo.update(changeset)
+    end
   end
 
   @doc """
@@ -455,30 +459,58 @@ defmodule Urielm.Accounts do
 
   ## Moderator Management (Admin only)
 
-  def update_trust_level(%User{} = user, trust_level, %{is_admin: true} = _admin)
+  def update_trust_level(%User{} = user, trust_level, actor)
       when trust_level in 0..4 do
-    user
-    |> Ecto.Changeset.change(trust_level: trust_level)
-    |> Repo.update()
+    if authorized_moderator?(actor, :admin) do
+      user = get_user(user.id)
+      changeset = Ecto.Changeset.change(user, trust_level: trust_level)
+
+      if trust_level < user.trust_level do
+        update_and_revoke_sessions(changeset)
+      else
+        Repo.update(changeset)
+      end
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def update_trust_level(_user, _level, _non_admin), do: {:error, :unauthorized}
+  def update_trust_level(_user, _level, _actor), do: {:error, :unauthorized}
 
-  def grant_moderator(%User{} = user, %{is_admin: true} = _admin) do
-    user
-    |> Ecto.Changeset.change(is_moderator: true)
-    |> Repo.update()
+  def grant_moderator(%User{} = user, actor) do
+    if authorized_moderator?(actor, :admin) do
+      user |> Ecto.Changeset.change(is_moderator: true) |> Repo.update()
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def grant_moderator(_user, _non_admin), do: {:error, :unauthorized}
+  def grant_moderator(_user, _actor), do: {:error, :unauthorized}
 
-  def revoke_moderator(%User{} = user, %{is_admin: true} = _admin) do
-    user
-    |> Ecto.Changeset.change(is_moderator: false)
-    |> Repo.update()
+  def revoke_moderator(%User{} = user, actor) do
+    if authorized_moderator?(actor, :admin) do
+      get_user(user.id)
+      |> Ecto.Changeset.change(is_moderator: false)
+      |> update_and_revoke_sessions()
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def revoke_moderator(_user, _non_admin), do: {:error, :unauthorized}
+  def revoke_moderator(_user, _actor), do: {:error, :unauthorized}
+
+  defp authorized_moderator?(%User{id: id}, role) do
+    case get_user(id) do
+      %User{active: true} = actor ->
+        not User.suspended?(actor) and
+          (actor.is_admin or (role == :moderator and actor.is_moderator))
+
+      _ ->
+        false
+    end
+  end
+
+  defp authorized_moderator?(_, _), do: false
 
   ## User Suspension (Admin/Mod only)
 
@@ -489,15 +521,15 @@ defmodule Urielm.Accounts do
   - :reason - Required reason for suspension
   - :until - DateTime when suspension expires (nil = permanent)
   """
-  def suspend_user(%User{} = user, %{is_admin: true} = _admin, opts) do
-    do_suspend_user(user, opts)
+  def suspend_user(%User{} = user, actor, opts) do
+    if authorized_moderator?(actor, :moderator) do
+      do_suspend_user(user, opts)
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def suspend_user(%User{} = user, %{is_moderator: true} = _moderator, opts) do
-    do_suspend_user(user, opts)
-  end
-
-  def suspend_user(_user, _non_mod, _opts), do: {:error, :unauthorized}
+  def suspend_user(_user, _actor, _opts), do: {:error, :unauthorized}
 
   defp do_suspend_user(user, opts) do
     reason = Keyword.fetch!(opts, :reason)
@@ -515,15 +547,15 @@ defmodule Urielm.Accounts do
   @doc """
   Removes suspension from a user.
   """
-  def unsuspend_user(%User{} = user, %{is_admin: true} = _admin) do
-    do_unsuspend_user(user)
+  def unsuspend_user(%User{} = user, actor) do
+    if authorized_moderator?(actor, :moderator) do
+      do_unsuspend_user(user)
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def unsuspend_user(%User{} = user, %{is_moderator: true} = _moderator) do
-    do_unsuspend_user(user)
-  end
-
-  def unsuspend_user(_user, _non_mod), do: {:error, :unauthorized}
+  def unsuspend_user(_user, _actor), do: {:error, :unauthorized}
 
   defp do_unsuspend_user(user) do
     user
@@ -544,15 +576,15 @@ defmodule Urielm.Accounts do
   - :reason - Required reason for silencing
   - :until - DateTime when silencing expires (nil = permanent)
   """
-  def silence_user(%User{} = user, %{is_admin: true} = _admin, opts) do
-    do_silence_user(user, opts)
+  def silence_user(%User{} = user, actor, opts) do
+    if authorized_moderator?(actor, :moderator) do
+      do_silence_user(user, opts)
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def silence_user(%User{} = user, %{is_moderator: true} = _moderator, opts) do
-    do_silence_user(user, opts)
-  end
-
-  def silence_user(_user, _non_mod, _opts), do: {:error, :unauthorized}
+  def silence_user(_user, _actor, _opts), do: {:error, :unauthorized}
 
   defp do_silence_user(user, opts) do
     reason = Keyword.fetch!(opts, :reason)
@@ -564,21 +596,21 @@ defmodule Urielm.Accounts do
       silenced_until: until,
       silenced_reason: reason
     })
-    |> Repo.update()
+    |> update_and_revoke_sessions()
   end
 
   @doc """
   Removes silencing from a user.
   """
-  def unsilence_user(%User{} = user, %{is_admin: true} = _admin) do
-    do_unsilence_user(user)
+  def unsilence_user(%User{} = user, actor) do
+    if authorized_moderator?(actor, :moderator) do
+      do_unsilence_user(user)
+    else
+      {:error, :unauthorized}
+    end
   end
 
-  def unsilence_user(%User{} = user, %{is_moderator: true} = _moderator) do
-    do_unsilence_user(user)
-  end
-
-  def unsilence_user(_user, _non_mod), do: {:error, :unauthorized}
+  def unsilence_user(_user, _actor), do: {:error, :unauthorized}
 
   defp do_unsilence_user(user) do
     user

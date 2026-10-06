@@ -15,11 +15,15 @@ defmodule UrielmWeb.UserAuth do
       |> load_current_user(socket)
       |> mount_notification_updates()
 
-    # Check if user is suspended and redirect to suspended page
-    if socket.assigns.current_user && User.suspended?(socket.assigns.current_user) do
-      {:halt, redirect_to_suspended(socket, socket.assigns.current_user)}
-    else
-      {:cont, socket}
+    cond do
+      socket.assigns.current_user && !socket.assigns.current_user.active ->
+        {:halt, redirect(socket, to: "/signin")}
+
+      socket.assigns.current_user && User.suspended?(socket.assigns.current_user) ->
+        {:halt, redirect_to_suspended(socket, socket.assigns.current_user)}
+
+      true ->
+        {:cont, socket}
     end
   end
 
@@ -27,6 +31,9 @@ defmodule UrielmWeb.UserAuth do
     socket = load_current_user(session, socket)
 
     cond do
+      socket.assigns.current_user && !socket.assigns.current_user.active ->
+        {:halt, redirect(socket, to: "/signin")}
+
       socket.assigns.current_user && User.suspended?(socket.assigns.current_user) ->
         {:halt, redirect_to_suspended(socket, socket.assigns.current_user)}
 
@@ -40,9 +47,12 @@ defmodule UrielmWeb.UserAuth do
   end
 
   def on_mount(:ensure_admin, _params, session, socket) do
-    socket = load_current_user(session, socket)
+    socket = session |> load_current_user(socket) |> assign(:admin_required, true)
 
     cond do
+      socket.assigns.current_user && !socket.assigns.current_user.active ->
+        {:halt, redirect(socket, to: "/signin")}
+
       socket.assigns.current_user && User.suspended?(socket.assigns.current_user) ->
         {:halt, redirect_to_suspended(socket, socket.assigns.current_user)}
 
@@ -72,11 +82,12 @@ defmodule UrielmWeb.UserAuth do
         nil ->
           assign(socket, :current_user, nil)
 
-        {_user, record} ->
+        {user, record} ->
           delay = max(DateTime.diff(record.expires_at, DateTime.utc_now(), :millisecond), 0)
           Process.send_after(self(), :session_expired, delay)
 
           socket
+          |> assign(:current_user, user)
           |> assign(:session_guard, true)
           |> attach_hook(:session_revocation, :handle_info, fn
             %Phoenix.Socket.Broadcast{event: "disconnect"}, socket ->
@@ -89,15 +100,38 @@ defmodule UrielmWeb.UserAuth do
               {:cont, socket}
           end)
           |> attach_hook(:session_validity, :handle_event, fn _event, _params, socket ->
-            if Sessions.allowed?(socket.assigns.session_token) do
-              {:cont, socket}
-            else
-              {:halt, redirect(socket, to: "/signin")}
-            end
+            refresh_authorization(socket)
           end)
+          |> mount_params_guard()
       end
     else
       socket
+    end
+  end
+
+  # Nested LiveViews cannot handle URL parameters; the root guards navigation.
+  defp mount_params_guard(%{parent_pid: nil, router: router} = socket)
+       when not is_nil(router) do
+    attach_hook(socket, :session_validity, :handle_params, fn _params, _uri, socket ->
+      refresh_authorization(socket)
+    end)
+  end
+
+  defp mount_params_guard(socket), do: socket
+
+  defp refresh_authorization(socket) do
+    user = Sessions.user(socket.assigns.session_token)
+    socket = assign(socket, :current_user, user)
+
+    cond do
+      is_nil(user) || !user.active || User.suspended?(user) ->
+        {:halt, redirect(socket, to: "/signin")}
+
+      socket.assigns[:admin_required] && !user.is_admin ->
+        {:halt, redirect(socket, to: "/")}
+
+      true ->
+        {:cont, socket}
     end
   end
 

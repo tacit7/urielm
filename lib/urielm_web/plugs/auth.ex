@@ -27,14 +27,20 @@ defmodule UrielmWeb.Plugs.Auth do
 
     cond do
       user = Sessions.user(token) ->
-        # Check if user is suspended
-        if User.suspended?(user) do
-          conn
-          |> configure_session(drop: true)
-          |> assign(:current_user, nil)
-          |> assign(:suspended_user, user)
-        else
-          assign(conn, :current_user, user)
+        cond do
+          !user.active ->
+            conn
+            |> configure_session(drop: true)
+            |> assign(:current_user, nil)
+
+          User.suspended?(user) ->
+            conn
+            |> configure_session(drop: true)
+            |> assign(:current_user, nil)
+            |> assign(:suspended_user, user)
+
+          true ->
+            assign(conn, :current_user, user)
         end
 
       true ->
