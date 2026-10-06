@@ -20,8 +20,6 @@ defmodule UrielmWeb.AuthController do
   # is capped. Tune here.
   @signin_ip_limit {10, 60}
   @signin_id_limit {5, 60}
-  @signup_ip_limit {5, 60}
-  @signup_id_limit {3, 60}
   # check_handle is called from the signup form (client-side debounced), so it
   # gets more headroom than the password endpoints.
   @check_handle_ip_limit {30, 60}
@@ -89,7 +87,10 @@ defmodule UrielmWeb.AuthController do
     username = Map.get(params, "username")
     display_name = Map.get(params, "displayName")
 
-    case rate_limit(conn, "signup", email, @signup_ip_limit, @signup_id_limit) do
+    case UrielmWeb.RegistrationLimiter.check(
+           UrielmWeb.RegistrationLimiter.client_ip(conn.remote_ip, conn.req_headers),
+           email
+         ) do
       {:error, :rate_limited} -> too_many_requests(conn)
       :ok -> do_signup(conn, email, password, username, display_name)
     end

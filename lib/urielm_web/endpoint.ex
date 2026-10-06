@@ -24,8 +24,12 @@ defmodule UrielmWeb.Endpoint do
   end
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: {__MODULE__, :session_options, []}]],
-    longpoll: [connect_info: [session: {__MODULE__, :session_options, []}]]
+    websocket: [
+      connect_info: [:peer_data, :x_headers, session: {__MODULE__, :session_options, []}]
+    ],
+    longpoll: [
+      connect_info: [:peer_data, :x_headers, session: {__MODULE__, :session_options, []}]
+    ]
 
   socket "/socket", UrielmWeb.UserSocket,
     websocket: [connect_info: [session: {__MODULE__, :session_options, []}]],

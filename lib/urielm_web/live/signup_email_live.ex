@@ -7,6 +7,7 @@ defmodule UrielmWeb.SignupEmailLive do
     socket =
       socket
       |> assign(:form, to_form(%{"email" => "", "password" => ""}))
+      |> assign(:registration_ip, registration_ip(socket))
       |> assign(:error, nil)
       |> assign(:loading, false)
       |> assign(:page_title, "Create account with email")
@@ -96,6 +97,25 @@ defmodule UrielmWeb.SignupEmailLive do
   def handle_event("submit", %{"email" => email, "password" => password}, socket) do
     socket = assign(socket, :loading, true)
 
+    case UrielmWeb.RegistrationLimiter.check(socket.assigns.registration_ip, email) do
+      :ok ->
+        register(socket, email, password)
+
+      {:error, :rate_limited} ->
+        {:noreply,
+         socket
+         |> assign(:loading, false)
+         |> assign(:error, "Too many attempts. Please try again later.")}
+    end
+  end
+
+  defp registration_ip(socket) do
+    peer = get_connect_info(socket, :peer_data)
+    headers = get_connect_info(socket, :x_headers) || []
+    UrielmWeb.RegistrationLimiter.client_ip(peer.address, headers)
+  end
+
+  defp register(socket, email, password) do
     case Accounts.register_user_email_only(%{email: email, password: password}) do
       {:ok, user} ->
         token = UrielmWeb.AuthController.sign_post_signup_token(socket, user.id)
