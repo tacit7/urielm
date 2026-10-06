@@ -5,6 +5,8 @@ defmodule UrielmWeb.RoomChannel do
   alias Urielm.Chat
   require Logger
 
+  intercept ["message_created", "typing"]
+
   def join("room:" <> room_id, _payload, socket) do
     session = Urielm.Accounts.Sessions.fetch(socket.assigns[:session_token])
 
@@ -20,13 +22,22 @@ defmodule UrielmWeb.RoomChannel do
         {:error, %{reason: "invalid_room_id"}}
 
       room_id_int ->
-        with {user, record} <- session,
-             true <- user.active && !Urielm.Accounts.User.suspended?(user),
-             true <- Chat.member?(user.id, room_id_int) do
+        with {user, _record} <- session,
+             :ok <-
+               Phoenix.PubSub.subscribe(
+                 Urielm.PubSub,
+                 Chat.membership_topic(user.id, room_id_int)
+               ),
+             joined = socket |> assign(:room_id, room_id_int) |> assign(:current_user, user),
+             {:ok, _current_user} <- authorize_socket(joined, :read),
+             messages = load_room_messages(room_id_int),
+             {:ok, current_user} <- authorize_socket(joined, :read),
+             {session_user, record} <-
+               Urielm.Accounts.Sessions.fetch(socket.assigns[:session_token]),
+             true <- session_user.id == current_user.id do
           delay = max(DateTime.diff(record.expires_at, DateTime.utc_now(), :millisecond), 0)
           Process.send_after(self(), :session_expired, delay)
-          messages = load_room_messages(room_id_int)
-          {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
+          {:ok, %{messages: messages}, assign(joined, :current_user, current_user)}
         else
           _ -> {:error, %{reason: "unauthorized"}}
         end
@@ -38,14 +49,45 @@ defmodule UrielmWeb.RoomChannel do
   end
 
   def handle_in(event, payload, socket) do
-    if Urielm.Accounts.Sessions.allowed?(socket.assigns[:session_token]) do
-      handle_authenticated(event, payload, socket)
-    else
+    case authorize_socket(socket, :post) do
+      {:ok, user} -> handle_authenticated(event, payload, assign(socket, :current_user, user))
+      {:error, :silenced} -> {:reply, {:error, %{reason: "silenced"}}, socket}
+      {:error, :unauthorized} -> {:stop, :normal, {:error, %{reason: "unauthorized"}}, socket}
+    end
+  end
+
+  def handle_out(event, payload, socket) when event in ["message_created", "typing"] do
+    case authorize_socket(socket, :read) do
+      {:ok, user} ->
+        push(socket, event, payload)
+        {:noreply, assign(socket, :current_user, user)}
+
+      {:error, :unauthorized} ->
+        {:stop, :normal, socket}
+    end
+  end
+
+  def handle_info({:room_access_revoked, user_id, room_id}, socket) do
+    if user_id == socket.assigns.current_user.id && room_id == socket.assigns.room_id do
       {:stop, :normal, socket}
+    else
+      {:noreply, socket}
     end
   end
 
   def handle_info(:session_expired, socket), do: {:stop, :normal, socket}
+
+  defp authorize_socket(socket, mode) do
+    case Urielm.Accounts.Sessions.fetch(socket.assigns[:session_token]) do
+      {user, _record} when user.id == socket.assigns.current_user.id ->
+        if mode == :post,
+          do: Chat.authorize_post(user.id, socket.assigns.room_id),
+          else: Chat.authorize_access(user.id, socket.assigns.room_id)
+
+      _ ->
+        {:error, :unauthorized}
+    end
+  end
 
   defp handle_authenticated("new_message", %{"body" => body}, socket) do
     user = socket.assigns[:current_user]
@@ -65,9 +107,18 @@ defmodule UrielmWeb.RoomChannel do
         broadcast!(socket, "message_created", serialized)
         {:noreply, socket}
 
-      {:error, changeset} ->
-        Logger.error("Error creating message: #{inspect(changeset)}")
-        {:reply, {:error, %{errors: changeset}}, socket}
+      {:error, %Ecto.Changeset{} = changeset} ->
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
+            Enum.reduce(opts, message, fn {key, value}, text ->
+              String.replace(text, "%{#{key}}", to_string(value))
+            end)
+          end)
+
+        {:reply, {:error, %{errors: errors}}, socket}
+
+      {:error, reason} when reason in [:unauthorized, :silenced] ->
+        {:reply, {:error, %{reason: Atom.to_string(reason)}}, socket}
     end
   rescue
     e ->
@@ -84,6 +135,10 @@ defmodule UrielmWeb.RoomChannel do
     })
 
     {:noreply, socket}
+  end
+
+  defp handle_authenticated(_event, _payload, socket) do
+    {:reply, {:error, %{reason: "invalid_event"}}, socket}
   end
 
   defp load_room_messages(room_id_int) do

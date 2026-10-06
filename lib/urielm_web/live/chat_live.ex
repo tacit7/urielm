@@ -23,38 +23,48 @@ defmodule UrielmWeb.ChatLive do
 
   @impl true
   def handle_params(%{"room_id" => room_id}, _url, socket) do
-    case Integer.parse(room_id) do
-      {id, ""} ->
-        case Chat.get_room(id) do
-          nil ->
-            {:noreply, push_navigate(socket, to: ~p"/")}
+    socket = clear_room(socket)
+    user = socket.assigns.current_user
 
-          room ->
-            user = socket.assigns[:current_user]
+    with true <- is_binary(room_id),
+         {id, ""} when id > 0 and id <= 9_223_372_036_854_775_807 <- Integer.parse(room_id),
+         room when not is_nil(room) <- Chat.get_room(id) do
+      # Subscribe before checking membership so a concurrent removal cannot be missed.
+      if connected?(socket) do
+        Phoenix.PubSub.subscribe(Urielm.PubSub, Chat.membership_topic(user.id, id))
+      end
 
-            if Chat.member?(user.id, id) do
-              messages = Chat.list_room_messages(id)
+      socket = assign(socket, :membership_room_id, id)
 
-              {:noreply,
-               socket
-               |> assign(:selected_room, room)
-               |> assign(:messages, messages)}
-            else
-              {:noreply,
-               socket
-               |> put_flash(:error, "Chat room not found")
-               |> push_patch(to: ~p"/chat")}
-            end
-        end
+      case authorized_messages(user.id, id) do
+        {:ok, fresh_user, messages} ->
+          {:noreply,
+           socket
+           |> assign(:current_user, fresh_user)
+           |> assign(:selected_room, room)
+           |> assign(:messages, messages)}
 
-      :error ->
-        {:noreply, socket}
+        {:error, :unauthorized} ->
+          {:noreply, revoke_room_access(socket)}
+      end
+    else
+      _ -> {:noreply, revoke_room_access(socket)}
     end
   end
 
   @impl true
   def handle_params(_params, _url, socket) do
-    {:noreply, socket}
+    {:noreply, clear_room(socket)}
+  end
+
+  @impl true
+  def handle_info({:room_access_revoked, user_id, room_id}, socket) do
+    if socket.assigns.current_user.id == user_id and
+         socket.assigns[:membership_room_id] == room_id do
+      {:noreply, revoke_room_access(socket)}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -235,22 +245,69 @@ defmodule UrielmWeb.ChatLive do
 
   @impl true
   def handle_event("send_message", %{"body" => body}, socket) do
-    user = socket.assigns[:current_user]
-    room = socket.assigns[:selected_room]
+    user = socket.assigns.current_user
 
-    case Chat.create_message(%{
-           body: body,
-           user_id: user.id,
-           room_id: room.id
-         }) do
-      {:ok, _message} ->
-        {:noreply,
-         socket
-         |> assign(:messages, Chat.list_room_messages(room.id))}
-
-      {:error, _changeset} ->
+    case socket.assigns.selected_room do
+      nil ->
         {:noreply, socket}
+
+      room ->
+        case Chat.create_message(%{body: body, user_id: user.id, room_id: room.id}) do
+          {:ok, _message} ->
+            case authorized_messages(user.id, room.id) do
+              {:ok, fresh_user, messages} ->
+                {:noreply,
+                 socket
+                 |> assign(:current_user, fresh_user)
+                 |> assign(:messages, messages)}
+
+              {:error, :unauthorized} ->
+                {:noreply, revoke_room_access(socket)}
+            end
+
+          {:error, :unauthorized} ->
+            {:noreply, revoke_room_access(socket)}
+
+          {:error, :silenced} ->
+            {:noreply, put_flash(socket, :error, "You cannot send messages while silenced")}
+
+          {:error, _changeset} ->
+            {:noreply, socket}
+        end
     end
+  end
+
+  defp authorized_messages(user_id, room_id) do
+    with {:ok, _user} <- Chat.authorize_access(user_id, room_id) do
+      messages = Chat.list_room_messages(room_id)
+
+      # Do not assign history if access changed while the query was running.
+      with {:ok, user} <- Chat.authorize_access(user_id, room_id) do
+        {:ok, user, messages}
+      end
+    end
+  end
+
+  defp clear_room(socket) do
+    if connected?(socket) && socket.assigns[:membership_room_id] do
+      Phoenix.PubSub.unsubscribe(
+        Urielm.PubSub,
+        Chat.membership_topic(socket.assigns.current_user.id, socket.assigns.membership_room_id)
+      )
+    end
+
+    socket
+    |> assign(:membership_room_id, nil)
+    |> assign(:selected_room, nil)
+    |> assign(:messages, [])
+  end
+
+  defp revoke_room_access(socket) do
+    socket
+    |> clear_room()
+    |> assign(:rooms, Chat.list_rooms_for_user(socket.assigns.current_user.id))
+    |> put_flash(:error, "Chat room not found")
+    |> push_patch(to: ~p"/chat")
   end
 
   defp serialize_room(room) do

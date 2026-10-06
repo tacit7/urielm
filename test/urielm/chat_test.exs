@@ -434,6 +434,136 @@ defmodule Urielm.ChatTest do
     end
   end
 
+  describe "current room authorization" do
+    setup do
+      user = Fixtures.user_fixture()
+      room = create_room(%{name: "authorization-room"})
+      {:ok, user: user, room: room}
+    end
+
+    test "fixes messages accepted from nonmembers and revoked members", %{user: user, room: room} do
+      attrs = %{body: "private", user_id: user.id, room_id: room.id}
+      assert {:error, :unauthorized} = Chat.create_message(attrs)
+      assert {:ok, _} = Chat.add_member(user.id, room.id)
+      assert {:ok, _} = Chat.create_message(attrs)
+      assert {1, nil} = Chat.remove_member(user.id, room.id)
+      assert {:error, :unauthorized} = Chat.create_message(attrs)
+      assert length(Chat.list_room_messages(room.id)) == 1
+    end
+
+    test "rejects current inactive and suspended accounts", %{user: user, room: room} do
+      Chat.add_member(user.id, room.id)
+
+      attrs = %{
+        "body" => "private",
+        "user_id" => to_string(user.id),
+        "room_id" => to_string(room.id)
+      }
+
+      Urielm.Repo.update!(Ecto.Changeset.change(user, active: false))
+      assert {:error, :unauthorized} = Chat.create_message(attrs)
+      assert {:error, :unauthorized} = Chat.authorize_access(user.id, room.id)
+
+      Urielm.Repo.update!(
+        Ecto.Changeset.change(user, active: true, suspended_at: DateTime.utc_now(:second))
+      )
+
+      assert {:error, :unauthorized} = Chat.create_message(attrs)
+      assert Chat.list_room_messages(room.id) == []
+    end
+
+    test "silenced members can read but cannot post and expired restrictions allow posts", %{
+      user: user,
+      room: room
+    } do
+      Chat.add_member(user.id, room.id)
+
+      attrs = %{
+        "body" => "private",
+        "user_id" => to_string(user.id),
+        "room_id" => to_string(room.id)
+      }
+
+      current =
+        Urielm.Repo.update!(Ecto.Changeset.change(user, silenced_at: DateTime.utc_now(:second)))
+
+      assert {:ok, authorized} = Chat.authorize_access(user.id, room.id)
+      assert authorized.id == current.id
+      assert authorized.silenced_at == current.silenced_at
+      assert {:error, :silenced} = Chat.authorize_post(user.id, room.id)
+      assert {:error, :silenced} = Chat.create_message(attrs)
+
+      Urielm.Repo.update!(
+        Ecto.Changeset.change(current,
+          silenced_until: DateTime.add(DateTime.utc_now(:second), -1)
+        )
+      )
+
+      assert {:ok, _} = Chat.create_message(attrs)
+    end
+
+    test "invalid identifiers fail safely", %{user: user, room: room} do
+      assert {:error, :unauthorized} = Chat.authorize_access(nil, room.id)
+      assert {:error, :unauthorized} = Chat.authorize_post(user.id, "invalid")
+      assert {:error, :unauthorized} = Chat.authorize_access(%{}, room.id)
+      assert {:error, :unauthorized} = Chat.authorize_access(user.id, "999999999999999999999999")
+
+      assert {:error, :unauthorized} =
+               Chat.create_message(%{
+                 body: "test",
+                 user_id: user.id,
+                 room_id: "999999999999999999999999"
+               })
+
+      assert {:error, %Ecto.Changeset{}} =
+               Chat.create_message(%{body: "test", user_id: "invalid", room_id: room.id})
+    end
+
+    test "membership removal with string IDs publishes normalized identities", %{
+      user: user,
+      room: room
+    } do
+      Chat.add_member(user.id, room.id)
+      Phoenix.PubSub.subscribe(Urielm.PubSub, Chat.membership_topic(user.id, room.id))
+      assert {1, nil} = Chat.remove_member(to_string(user.id), to_string(room.id))
+      user_id = user.id
+      room_id = room.id
+      assert_receive {:room_access_revoked, ^user_id, ^room_id}
+    end
+
+    test "membership removal rejects outer transactions before changing membership", %{
+      user: user,
+      room: room
+    } do
+      Chat.add_member(user.id, room.id)
+      Phoenix.PubSub.subscribe(Urielm.PubSub, Chat.membership_topic(user.id, room.id))
+
+      assert_raise ArgumentError, "remove_member/2 must be called outside a transaction", fn ->
+        Urielm.Repo.transact(fn ->
+          Chat.remove_member(user.id, room.id)
+          {:ok, :removed}
+        end)
+      end
+
+      assert Chat.member?(user.id, room.id)
+      refute_receive {:room_access_revoked, _, _}
+    end
+
+    test "membership removal announces revocation only when a membership was deleted", %{
+      user: user,
+      room: room
+    } do
+      Phoenix.PubSub.subscribe(Urielm.PubSub, Chat.membership_topic(user.id, room.id))
+      Chat.add_member(user.id, room.id)
+      assert {1, nil} = Chat.remove_member(user.id, room.id)
+      assert_receive {:room_access_revoked, user_id, room_id}
+      assert user_id == user.id
+      assert room_id == room.id
+      assert {0, nil} = Chat.remove_member(user.id, room.id)
+      refute_receive {:room_access_revoked, _, _}
+    end
+  end
+
   # Private helpers
 
   defp create_room(attrs) do

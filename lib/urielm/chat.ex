@@ -4,6 +4,7 @@ defmodule Urielm.Chat do
   """
 
   import Ecto.Query, warn: false
+  alias Urielm.Accounts.User
   alias Urielm.Repo
   alias Urielm.Chat.{Room, RoomMembership, Message}
 
@@ -74,12 +75,74 @@ defmodule Urielm.Chat do
     |> Repo.insert(on_conflict: :nothing)
   end
 
+  @doc """
+  Removes membership and announces revocation after the deletion commits.
+
+  Must be called outside an Ecto transaction so a later rollback cannot emit a
+  revocation for membership that was retained.
+  """
   def remove_member(user_id, room_id) do
-    Repo.delete_all(
-      from(m in RoomMembership,
-        where: m.user_id == ^user_id and m.room_id == ^room_id
-      )
-    )
+    if Repo.in_transaction?() do
+      raise ArgumentError, "remove_member/2 must be called outside a transaction"
+    end
+
+    with {:ok, user_id} <- valid_id(user_id),
+         {:ok, room_id} <- valid_id(room_id) do
+      result =
+        Repo.delete_all(
+          from(m in RoomMembership,
+            where: m.user_id == ^user_id and m.room_id == ^room_id
+          )
+        )
+
+      case result do
+        {count, _} when count > 0 ->
+          Phoenix.PubSub.broadcast(
+            Urielm.PubSub,
+            membership_topic(user_id, room_id),
+            {:room_access_revoked, user_id, room_id}
+          )
+
+        _ ->
+          :ok
+      end
+
+      result
+    else
+      {:error, :unauthorized} -> {0, nil}
+    end
+  end
+
+  def membership_topic(user_id, room_id), do: "chat_membership:#{user_id}:#{room_id}"
+
+  @doc "Checks membership against the current account state; silenced users may read."
+  def authorize_access(user_id, room_id) do
+    with {:ok, user_id} <- valid_id(user_id),
+         {:ok, room_id} <- valid_id(room_id),
+         %User{active: true} = user <- Repo.get(User, user_id),
+         false <- User.suspended?(user),
+         true <- member?(user_id, room_id) do
+      {:ok, user}
+    else
+      _ -> {:error, :unauthorized}
+    end
+  end
+
+  @doc "Checks current room membership and account restrictions before posting."
+  def authorize_post(user_id, room_id) do
+    with {:ok, user} <- authorize_access(user_id, room_id) do
+      if User.silenced?(user), do: {:error, :silenced}, else: {:ok, user}
+    end
+  end
+
+  defp valid_id(id) do
+    case Ecto.Type.cast(:id, id) do
+      {:ok, id} when is_integer(id) and id > 0 and id <= 9_223_372_036_854_775_807 ->
+        {:ok, id}
+
+      _ ->
+        {:error, :unauthorized}
+    end
   end
 
   # Messages
@@ -94,9 +157,36 @@ defmodule Urielm.Chat do
   end
 
   def create_message(attrs \\ %{}) do
-    %Message{}
-    |> Message.changeset(attrs)
-    |> Repo.insert()
+    changeset = Message.changeset(%Message{}, Urielm.Params.normalize(attrs))
+
+    if changeset.valid? do
+      user_id = Ecto.Changeset.get_field(changeset, :user_id)
+      room_id = Ecto.Changeset.get_field(changeset, :room_id)
+
+      with {:ok, user_id} <- valid_id(user_id),
+           {:ok, room_id} <- valid_id(room_id) do
+        Repo.transact(fn ->
+          # The membership lock serializes insertion with concurrent removal.
+          membership =
+            Repo.one(
+              from(m in RoomMembership,
+                where: m.user_id == ^user_id and m.room_id == ^room_id,
+                lock: "FOR UPDATE"
+              )
+            )
+
+          with %RoomMembership{} <- membership,
+               {:ok, _user} <- authorize_post(user_id, room_id) do
+            Repo.insert(changeset)
+          else
+            nil -> {:error, :unauthorized}
+            {:error, reason} -> {:error, reason}
+          end
+        end)
+      end
+    else
+      Repo.insert(changeset)
+    end
   end
 
   def get_message!(id) do
