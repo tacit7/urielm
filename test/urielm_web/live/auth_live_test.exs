@@ -45,7 +45,7 @@ defmodule UrielmWeb.AuthLiveTest do
         })
 
       assert json_response(response, 403)["error"] =~ "temporarily unavailable"
-      assert is_nil(get_session(response, :user_id))
+      assert is_nil(get_session(response, :session_token))
       assert Urielm.Repo.aggregate(Urielm.Accounts.User, :count) == count
     end
 
@@ -60,7 +60,7 @@ defmodule UrielmWeb.AuthLiveTest do
 
       response = post(conn, ~p"/auth/signin", %{email: user.email, password: "password123"})
       assert json_response(response, 200) == %{"success" => true}
-      assert get_session(response, :user_id) == user.id
+      assert Urielm.Accounts.Sessions.user(get_session(response, :session_token)).id == user.id
     end
 
     test "shows Google signup and redirects direct email signup", %{conn: conn} do

@@ -239,10 +239,14 @@ defmodule Urielm.Accounts do
   Updates a user's password and revokes all sessions atomically.
   """
   def update_user_password(%User{} = user, attrs) do
+    update_and_revoke_sessions(User.password_changeset(user, attrs))
+  end
+
+  defp update_and_revoke_sessions(changeset) do
     result =
       Repo.transaction(fn ->
-        case user |> User.password_changeset(attrs) |> Repo.update() do
-          {:ok, updated} -> {updated, Urielm.Accounts.Sessions.delete_for_user(user.id)}
+        case Repo.update(changeset) do
+          {:ok, updated} -> {updated, Urielm.Accounts.Sessions.delete_for_user(changeset.data.id)}
           {:error, changeset} -> Repo.rollback(changeset)
         end
       end)
@@ -505,7 +509,7 @@ defmodule Urielm.Accounts do
       suspended_until: until,
       suspended_reason: reason
     })
-    |> Repo.update()
+    |> update_and_revoke_sessions()
   end
 
   @doc """

@@ -65,9 +65,40 @@ defmodule UrielmWeb.AuthControllerTest do
       assert Urielm.Accounts.Sessions.user(other).id == user.id
     end
 
+    test "a copied signup URL cannot authenticate a different browser", %{user: user} do
+      {origin, grant} = post_signup_token(build_conn(), user.id)
+      replay = get(build_conn(), ~p"/auth/post-signup/#{grant}")
+      assert is_nil(get_session(replay, :session_token))
+
+      wrong_browser =
+        build_conn()
+        |> init_test_session(%{signup_binding: String.duplicate("x", 43)})
+        |> get(~p"/auth/post-signup/#{grant}")
+
+      assert is_nil(get_session(wrong_browser, :session_token))
+      completed = get(origin, ~p"/auth/post-signup/#{grant}")
+      assert Urielm.Accounts.Sessions.user(get_session(completed, :session_token)).id == user.id
+      assert is_nil(get_session(completed, :signup_binding))
+      assert is_nil(get_session(completed, :user_id))
+    end
+
+    test "signup grant creation fails cleanly for missing users or missing browser binding", %{
+      user: user
+    } do
+      assert {:error, :invalid_signup} =
+               UrielmWeb.AuthController.sign_post_signup_token(
+                 @endpoint,
+                 -1,
+                 String.duplicate("a", 43)
+               )
+
+      assert {:error, :invalid_signup} =
+               UrielmWeb.AuthController.sign_post_signup_token(@endpoint, user.id, nil)
+    end
+
     test "a post-signup link cannot mint a new session after logout", %{user: user} do
-      grant = UrielmWeb.AuthController.sign_post_signup_token(@endpoint, user.id)
-      login = get(build_conn(), ~p"/auth/post-signup/#{grant}")
+      {origin, grant} = post_signup_token(build_conn(), user.id)
+      login = get(origin, ~p"/auth/post-signup/#{grant}")
       assert get_session(login, :session_token)
       delete(recycle(login), ~p"/auth/logout")
       replay = get(build_conn(), ~p"/auth/post-signup/#{grant}")
@@ -102,7 +133,7 @@ defmodule UrielmWeb.AuthControllerTest do
       conn = post(conn, ~p"/auth/signup", signup_params)
 
       assert json_response(conn, 200) == %{"success" => true}
-      assert get_session(conn, :user_id)
+      assert get_session(conn, :session_token)
 
       # Verify user was created
       user = Accounts.get_user_by_email("newuser@example.com")
@@ -388,7 +419,7 @@ defmodule UrielmWeb.AuthControllerTest do
       conn = post(conn, ~p"/auth/signin", signin_params)
 
       assert json_response(conn, 200) == %{"success" => true}
-      assert get_session(conn, :user_id)
+      assert get_session(conn, :session_token)
     end
 
     test "signin fails with wrong password", %{conn: conn} do
@@ -645,7 +676,7 @@ defmodule UrielmWeb.AuthControllerTest do
       }
 
       signed_in_conn = post(conn, ~p"/auth/signin", signin_params)
-      assert get_session(signed_in_conn, :user_id)
+      assert get_session(signed_in_conn, :session_token)
 
       # Then log out
       logout_conn = delete(signed_in_conn, ~p"/auth/logout")
@@ -656,11 +687,14 @@ defmodule UrielmWeb.AuthControllerTest do
   end
 
   describe "GET /auth/post-signup/:token" do
-    defp post_signup_token(_conn, user_id) do
-      UrielmWeb.AuthController.sign_post_signup_token(UrielmWeb.Endpoint, user_id)
+    defp post_signup_token(conn, user_id) do
+      origin = get(conn, ~p"/signup/email")
+      binding = get_session(origin, :signup_binding)
+      {:ok, token} = UrielmWeb.AuthController.sign_post_signup_token(@endpoint, user_id, binding)
+      {recycle(origin), token}
     end
 
-    test "post_signup sets user_id in session and redirects", %{conn: conn} do
+    test "post_signup creates a revocable session and redirects", %{conn: conn} do
       {:ok, user} =
         Accounts.register_user(%{
           email: "session@example.com",
@@ -669,10 +703,10 @@ defmodule UrielmWeb.AuthControllerTest do
           password: "password123"
         })
 
-      token = post_signup_token(conn, user.id)
+      {conn, token} = post_signup_token(conn, user.id)
       conn = get(conn, ~p"/auth/post-signup/#{token}")
 
-      assert get_session(conn, :user_id) == user.id
+      assert Urielm.Accounts.Sessions.user(get_session(conn, :session_token)).id == user.id
       assert is_binary(redirected_to(conn))
     end
 
@@ -685,7 +719,7 @@ defmodule UrielmWeb.AuthControllerTest do
           password: "password123"
         })
 
-      token = post_signup_token(conn, user.id)
+      {conn, token} = post_signup_token(conn, user.id)
       conn = get(conn, ~p"/auth/post-signup/#{token}")
 
       assert redirected_to(conn) == "/"
@@ -700,17 +734,17 @@ defmodule UrielmWeb.AuthControllerTest do
           password: "password123"
         })
 
-      token = post_signup_token(conn, user.id)
+      {conn, token} = post_signup_token(conn, user.id)
       conn = get(conn, ~p"/auth/post-signup/#{token}")
 
-      assert get_session(conn, :user_id) == user.id
+      assert Urielm.Accounts.Sessions.user(get_session(conn, :session_token)).id == user.id
       assert is_binary(redirected_to(conn))
     end
 
     test "post_signup rejects invalid token", %{conn: conn} do
       conn = get(conn, ~p"/auth/post-signup/not_a_real_token")
 
-      assert get_session(conn, :user_id) == nil
+      assert get_session(conn, :session_token) == nil
       assert redirected_to(conn) == "/"
     end
   end

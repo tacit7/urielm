@@ -6,7 +6,6 @@
   export let room
   export let messages = []
   export let userId
-  export let socketToken
 
   let newMessage = ""
   let channel = null
@@ -17,7 +16,7 @@
 
   onMount(async () => {
     socket = new Socket("/socket", {
-      params: { token: socketToken }
+      params: { _csrf_token: document.querySelector('meta[name="csrf-token"]')?.content }
     })
     socket.connect()
 

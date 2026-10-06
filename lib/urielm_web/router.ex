@@ -5,6 +5,7 @@ defmodule UrielmWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_cookies
     plug :fetch_session
+    plug UrielmWeb.SessionAuth
     plug :fetch_live_flash
     plug :put_root_layout, html: {UrielmWeb.Layouts, :root}
     plug :protect_from_forgery

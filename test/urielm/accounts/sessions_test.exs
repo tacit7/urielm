@@ -4,6 +4,25 @@ defmodule Urielm.Accounts.SessionsTest do
   alias Urielm.Accounts.{Sessions, UserSession}
   alias Urielm.Accounts
 
+  test "the scheduled cleaner purges expired sessions and signup grants while preserving live sessions" do
+    user = user_fixture()
+    active = Sessions.create(user)
+    expired = Sessions.create(user)
+    grant = Sessions.create(user, "signup")
+    hashes = Enum.map([expired, grant], &:crypto.hash(:sha256, &1))
+
+    Repo.update_all(from(s in UserSession, where: s.token_hash in ^hashes),
+      set: [expires_at: DateTime.add(DateTime.utc_now(:second), -1)]
+    )
+
+    cleaner = Process.whereis(Urielm.Accounts.SessionCleaner)
+    assert cleaner
+    send(cleaner, :purge_expired)
+    :sys.get_state(cleaner)
+    assert Repo.aggregate(from(s in UserSession, where: s.token_hash in ^hashes), :count) == 0
+    assert Sessions.user(active).id == user.id
+  end
+
   test "tokens are unique, stored as hashes, and invalid after expiry" do
     user = user_fixture()
     token = Sessions.create(user)

@@ -247,56 +247,55 @@ defmodule UrielmWeb.AuthController do
   @post_signup_token_max_age 600
 
   @doc """
-  Signs a short-lived token that authorizes the post-signup redirect for a specific user.
-  Called immediately after user record creation.
+  Creates a single-use signup grant bound to the originating browser cookie.
   """
-  def sign_post_signup_token(conn_or_endpoint, user_id) do
-    Phoenix.Token.sign(
-      conn_or_endpoint,
-      "post signup",
-      Urielm.Accounts.Sessions.create(Accounts.get_user(user_id), "signup"),
-      max_age: @post_signup_token_max_age
-    )
+  def sign_post_signup_token(endpoint, user_id, binding)
+      when is_binary(binding) and byte_size(binding) == 43 do
+    case Accounts.get_user(user_id) do
+      nil ->
+        {:error, :invalid_signup}
+
+      user ->
+        grant = Urielm.Accounts.Sessions.create(user, "signup")
+
+        {:ok,
+         Phoenix.Token.sign(
+           endpoint,
+           "post signup",
+           %{grant: grant, binding: :crypto.hash(:sha256, binding)},
+           max_age: @post_signup_token_max_age
+         )}
+    end
   end
 
-  @doc """
-  Post-signup redirect - verifies a signed token and sets the session.
-  The token is minted by sign_post_signup_token/2 immediately after registration.
-  """
+  def sign_post_signup_token(_endpoint, _user_id, _binding), do: {:error, :invalid_signup}
+
   def post_signup(conn, %{"token" => token}) do
-    case Phoenix.Token.verify(conn, "post signup", token, max_age: @post_signup_token_max_age) do
-      {:error, _} ->
-        conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
+    with true <- Accounts.email_signup_enabled?(),
+         {:ok, %{grant: grant, binding: expected}} <-
+           Phoenix.Token.verify(conn, "post signup", token, max_age: @post_signup_token_max_age),
+         binding when is_binary(binding) <- get_session(conn, :signup_binding),
+         true <- Plug.Crypto.secure_compare(:crypto.hash(:sha256, binding), expected),
+         %Accounts.User{} = user <- Urielm.Accounts.Sessions.consume_signup(grant) do
+      return_to = Redirects.safe_return_path(get_session(conn, :return_to))
+      conn = UrielmWeb.SessionAuth.log_in(conn, user)
 
-      {:ok, grant} ->
-        case Urielm.Accounts.Sessions.consume_signup(grant) do
-          nil ->
-            conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
+      cond do
+        !user.email_verified ->
+          conn
+          |> put_session(:pending_redirect, return_to)
+          |> redirect(to: ~p"/signup/verify-email")
 
-          user ->
-            return_to = Redirects.safe_return_path(get_session(conn, :return_to))
+        needs_handle_for_action?(return_to) && is_nil(user.username) ->
+          conn
+          |> put_session(:pending_redirect, return_to)
+          |> redirect(to: ~p"/signup/set-handle")
 
-            conn =
-              conn
-              |> UrielmWeb.SessionAuth.log_in(user)
-              |> delete_session(:return_to)
-              |> configure_session(renew: true)
-
-            cond do
-              !user.email_verified ->
-                conn
-                |> put_session(:pending_redirect, return_to)
-                |> redirect(to: ~p"/signup/verify-email")
-
-              needs_handle_for_action?(return_to) && is_nil(user.username) ->
-                conn
-                |> put_session(:pending_redirect, return_to)
-                |> redirect(to: ~p"/signup/set-handle")
-
-              true ->
-                redirect(conn, to: return_to)
-            end
-        end
+        true ->
+          redirect(conn, to: return_to)
+      end
+    else
+      _ -> conn |> put_flash(:error, "Session invalid") |> redirect(to: ~p"/")
     end
   end
 

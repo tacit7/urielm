@@ -71,7 +71,6 @@ defmodule UrielmWeb.ShellLive do
         {live_render(@socket, child_module(@live_action),
           id: "page-#{@live_action}",
           session: %{
-            "session_token" => @session_token,
             "child_params" => @child_params
           }
         )}

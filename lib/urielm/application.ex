@@ -18,6 +18,7 @@ defmodule Urielm.Application do
       Urielm.RateLimiter,
       # Auto-close threads with expired timers
       Urielm.Forum.ThreadCloser,
+      Urielm.Accounts.SessionCleaner,
       # Start a worker by calling: Urielm.Worker.start_link(arg)
       # {Urielm.Worker, arg},
       # Start to serve requests, typically the last entry

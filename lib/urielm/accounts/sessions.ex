@@ -52,6 +52,19 @@ defmodule Urielm.Accounts.Sessions do
     end
   end
 
+  def allowed?(token) do
+    case user(token) do
+      nil -> false
+      user -> user.active && !User.suspended?(user)
+    end
+  end
+
+  def purge_expired do
+    now = DateTime.utc_now(:second)
+    {count, _} = Repo.delete_all(from(s in UserSession, where: s.expires_at <= ^now))
+    count
+  end
+
   def revoke(token) when is_binary(token) do
     Repo.delete_all(from(s in UserSession, where: s.token_hash == ^hash(token)))
     disconnect_hash(hash(token))

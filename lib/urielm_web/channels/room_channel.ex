@@ -6,7 +6,7 @@ defmodule UrielmWeb.RoomChannel do
   require Logger
 
   def join("room:" <> room_id, _payload, socket) do
-    user = Urielm.Accounts.Sessions.user(socket.assigns[:session_token])
+    session = Urielm.Accounts.Sessions.fetch(socket.assigns[:session_token])
 
     room_id_int =
       case Integer.parse(room_id) do
@@ -20,14 +20,15 @@ defmodule UrielmWeb.RoomChannel do
         {:error, %{reason: "invalid_room_id"}}
 
       room_id_int ->
-        if user && Chat.member?(user.id, room_id_int) do
-          {_user, session} = Urielm.Accounts.Sessions.fetch(socket.assigns.session_token)
-          delay = max(DateTime.diff(session.expires_at, DateTime.utc_now(), :millisecond), 0)
+        with {user, record} <- session,
+             true <- user.active && !Urielm.Accounts.User.suspended?(user),
+             true <- Chat.member?(user.id, room_id_int) do
+          delay = max(DateTime.diff(record.expires_at, DateTime.utc_now(), :millisecond), 0)
           Process.send_after(self(), :session_expired, delay)
           messages = load_room_messages(room_id_int)
           {:ok, %{messages: messages}, assign(socket, :room_id, room_id_int)}
         else
-          {:error, %{reason: "unauthorized"}}
+          _ -> {:error, %{reason: "unauthorized"}}
         end
     end
   rescue
@@ -37,7 +38,7 @@ defmodule UrielmWeb.RoomChannel do
   end
 
   def handle_in(event, payload, socket) do
-    if Urielm.Accounts.Sessions.user(socket.assigns[:session_token]) do
+    if Urielm.Accounts.Sessions.allowed?(socket.assigns[:session_token]) do
       handle_authenticated(event, payload, socket)
     else
       {:stop, :normal, socket}

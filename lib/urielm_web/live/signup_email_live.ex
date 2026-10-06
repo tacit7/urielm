@@ -3,9 +3,9 @@ defmodule UrielmWeb.SignupEmailLive do
   alias Urielm.Accounts
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     if Accounts.email_signup_enabled?() do
-      mount_enabled(socket)
+      mount_enabled(assign(socket, :signup_binding, session["signup_binding"]))
     else
       {:ok, redirect(socket, to: ~p"/signup")}
     end
@@ -134,8 +134,14 @@ defmodule UrielmWeb.SignupEmailLive do
   defp register(socket, email, password) do
     case Accounts.register_user_email_only(%{email: email, password: password}) do
       {:ok, user} ->
-        token = UrielmWeb.AuthController.sign_post_signup_token(socket, user.id)
-        {:noreply, redirect(socket, to: "/auth/post-signup/#{token}")}
+        case UrielmWeb.AuthController.sign_post_signup_token(
+               socket,
+               user.id,
+               socket.assigns.signup_binding
+             ) do
+          {:ok, token} -> {:noreply, redirect(socket, to: "/auth/post-signup/#{token}")}
+          {:error, _} -> {:noreply, redirect(socket, to: ~p"/signup")}
+        end
 
       {:error, changeset} ->
         error_message = format_error(changeset)

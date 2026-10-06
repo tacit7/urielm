@@ -3,23 +3,20 @@ defmodule UrielmWeb.UserSocket do
 
   channel "room:*", UrielmWeb.RoomChannel
 
-  # Tokens are valid for 10 minutes — enough for page load + initial connect.
-  @max_age 600
-
+  # Phoenix supplies this session only after validating the signed cookie and
+  # the socket CSRF token. Never authenticate from browser-visible params.
   @impl true
-  def connect(%{"token" => token}, socket, _connect_info) do
-    case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
-      {:ok, session_token} ->
-        case Urielm.Accounts.Sessions.user(session_token) do
-          nil ->
-            :error
-
-          user ->
-            {:ok, socket |> assign(:current_user, user) |> assign(:session_token, session_token)}
-        end
-
-      {:error, _} ->
+  def connect(_params, socket, %{session: %{"session_token" => token}}) do
+    case Urielm.Accounts.Sessions.user(token) do
+      nil ->
         :error
+
+      user ->
+        if Urielm.Accounts.User.suspended?(user) || !user.active do
+          :error
+        else
+          {:ok, socket |> assign(:current_user, user) |> assign(:session_token, token)}
+        end
     end
   end
 

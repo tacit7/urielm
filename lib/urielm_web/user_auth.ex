@@ -89,7 +89,7 @@ defmodule UrielmWeb.UserAuth do
               {:cont, socket}
           end)
           |> attach_hook(:session_validity, :handle_event, fn _event, _params, socket ->
-            if Sessions.user(socket.assigns.session_token) do
+            if Sessions.allowed?(socket.assigns.session_token) do
               {:cont, socket}
             else
               {:halt, redirect(socket, to: "/signin")}
