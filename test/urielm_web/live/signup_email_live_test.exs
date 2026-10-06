@@ -128,6 +128,43 @@ defmodule UrielmWeb.SignupEmailLiveTest do
            |> Map.fetch!(:status) == 422
   end
 
+  test "mapped CIDR proxy shares normalized forwarded IP across transports", %{conn: conn} do
+    old = Application.get_env(:urielm, :trusted_proxy_cidrs)
+    Application.put_env(:urielm, :trusted_proxy_cidrs, ["173.245.48.0/20"])
+
+    on_exit(fn ->
+      if old,
+        do: Application.put_env(:urielm, :trusted_proxy_cidrs, old),
+        else: Application.delete_env(:urielm, :trusted_proxy_cidrs)
+    end)
+
+    conn = with_peer(conn, {0, 0, 0, 0, 0, 65535, 0xADF5, 0x3001})
+
+    for i <- 1..5 do
+      {:ok, view, _} =
+        live(
+          put_req_header(conn, "x-forwarded-for", "203.0.113.#{i}, 198.51.100.20"),
+          ~p"/signup/email"
+        )
+
+      view
+      |> form("#signup-email-form", %{email: "proxy#{i}@example.com", password: "short"})
+      |> render_submit()
+
+      assert has_element?(view, "#signup-email-error", "at least 8 characters")
+    end
+
+    assert conn
+           |> put_req_header("x-forwarded-for", "203.0.113.99, 198.51.100.20")
+           |> post(~p"/auth/signup", %{email: "proxynew@example.com", password: "short"})
+           |> Map.fetch!(:status) == 429
+
+    assert conn
+           |> put_req_header("x-forwarded-for", "198.51.100.21")
+           |> post(~p"/auth/signup", %{email: "otherclient@example.com", password: "short"})
+           |> Map.fetch!(:status) == 422
+  end
+
   test "repeated LiveView attempts exhaust the identifier budget", %{conn: conn} do
     {:ok, view, _} = live(conn, ~p"/signup/email")
 

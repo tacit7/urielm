@@ -6,13 +6,16 @@ defmodule UrielmWeb.ClientIP do
   `:trusted_proxy_ips` (IP tuples, defaulting to loopback) or
   `:trusted_proxy_cidrs` (CIDR strings, defaulting to none).
   `:trusted_proxy_hops` must match the number of appending proxies in the
-  deployment. Invalid addresses or incomplete chains fall back to the peer.
+  deployment. IPv4-mapped socket peers and exact trusted tuples are normalized
+  to IPv4 before trust checks; IPv6 CIDRs do not grant IPv4 trust.
+  Invalid addresses or incomplete chains fall back to the peer.
   """
   import Bitwise
 
   @loopback [{127, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 0, 1}]
 
   def client_ip(peer, headers) do
+    peer = unmap(peer)
     hops = Application.get_env(:urielm, :trusted_proxy_hops, 1)
 
     with true <- trusted?(peer),
@@ -26,7 +29,7 @@ defmodule UrielmWeb.ClientIP do
   end
 
   defp trusted?(peer) do
-    peer in Application.get_env(:urielm, :trusted_proxy_ips, @loopback) or
+    Enum.any?(Application.get_env(:urielm, :trusted_proxy_ips, @loopback), &(unmap(&1) == peer)) or
       Enum.any?(Application.get_env(:urielm, :trusted_proxy_cidrs, []), &within_cidr?(peer, &1))
   end
 
@@ -68,9 +71,11 @@ defmodule UrielmWeb.ClientIP do
 
   defp parse_ip(_), do: {:error, :einval}
 
-  # IPv4-mapped IPv6 and IPv4 must spend the same rate-limit budget.
-  defp canonical({0, 0, 0, 0, 0, 65535, high, low}),
-    do: canonical({high >>> 8, high &&& 255, low >>> 8, low &&& 255})
+  # Share normalization between socket trust and bucket output.
+  defp unmap({0, 0, 0, 0, 0, 65535, high, low}),
+    do: {high >>> 8, high &&& 255, low >>> 8, low &&& 255}
 
-  defp canonical(ip), do: ip |> :inet.ntoa() |> to_string()
+  defp unmap(ip), do: ip
+
+  defp canonical(ip), do: ip |> unmap() |> :inet.ntoa() |> to_string()
 end

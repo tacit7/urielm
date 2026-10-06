@@ -19,6 +19,49 @@ defmodule UrielmWeb.ClientIPTest do
     :ok
   end
 
+  test "fixes mapped Cloudflare peers falling outside their IPv4 trust CIDR" do
+    Application.put_env(:urielm, :trusted_proxy_cidrs, ["173.245.48.0/20"])
+    peer = {0, 0, 0, 0, 0, 65535, 0xADF5, 0x3001}
+    assert ClientIP.client_ip(peer, xff("198.51.100.4")) == "198.51.100.4"
+  end
+
+  test "mapped loopback and native or mapped exact tuples have equivalent trust" do
+    native = {10, 0, 0, 1}
+    mapped = {0, 0, 0, 0, 0, 65535, 0x0A00, 1}
+
+    assert ClientIP.client_ip({0, 0, 0, 0, 0, 65535, 0x7F00, 1}, xff("198.51.100.4")) ==
+             "198.51.100.4"
+
+    for configured <- [native, mapped], peer <- [native, mapped] do
+      Application.put_env(:urielm, :trusted_proxy_ips, [configured])
+      assert ClientIP.client_ip(peer, xff("198.51.100.4")) == "198.51.100.4"
+    end
+  end
+
+  test "mapped IPv4 CIDR boundaries exclude outsiders and retain IPv6 family separation" do
+    Application.put_env(:urielm, :trusted_proxy_cidrs, ["173.245.48.0/20"])
+
+    for low <- [0x3000, 0x3FFF] do
+      assert ClientIP.client_ip({0, 0, 0, 0, 0, 65535, 0xADF5, low}, xff("198.51.100.4")) ==
+               "198.51.100.4"
+    end
+
+    for {low, expected} <- [{0x2FFF, "173.245.47.255"}, {0x4000, "173.245.64.0"}] do
+      assert ClientIP.client_ip({0, 0, 0, 0, 0, 65535, 0xADF5, low}, xff("198.51.100.4")) ==
+               expected
+    end
+
+    Application.put_env(:urielm, :trusted_proxy_cidrs, ["::/0"])
+
+    assert ClientIP.client_ip({0, 0, 0, 0, 0, 65535, 0xADF5, 0x3001}, xff("198.51.100.4")) ==
+             "173.245.48.1"
+
+    assert ClientIP.client_ip({173, 245, 48, 1}, xff("198.51.100.4")) == "173.245.48.1"
+
+    assert ClientIP.client_ip({0x2001, 0xDB8, 0, 0, 0, 0, 0, 1}, xff("198.51.100.4")) ==
+             "198.51.100.4"
+  end
+
   test "untrusted peers ignore malicious headers and Cloudflare is not trusted by default" do
     for peer <- [{192, 0, 2, 3}, {173, 245, 48, 1}] do
       expected = peer |> :inet.ntoa() |> to_string()

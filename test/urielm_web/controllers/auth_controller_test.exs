@@ -666,6 +666,36 @@ defmodule UrielmWeb.AuthControllerTest do
       assert List.last(statuses) == 429
     end
 
+    test "mapped Cloudflare peers retain independent visitor budgets despite forged prefixes", %{
+      conn: conn
+    } do
+      old = Application.fetch_env(:urielm, :trusted_proxy_cidrs)
+      Application.put_env(:urielm, :trusted_proxy_cidrs, ["173.245.48.0/20"])
+
+      on_exit(fn ->
+        case old do
+          {:ok, value} -> Application.put_env(:urielm, :trusted_proxy_cidrs, value)
+          :error -> Application.delete_env(:urielm, :trusted_proxy_cidrs)
+        end
+      end)
+
+      conn = %{conn | remote_ip: {0, 0, 0, 0, 0, 65535, 0xADF5, 0x3001}}
+
+      for i <- 1..31 do
+        response =
+          conn
+          |> put_req_header("x-forwarded-for", "203.0.113.#{i}, 198.51.100.4")
+          |> get(~p"/api/check-handle?username=#{"mappedvisitor#{i}"}")
+
+        assert response.status == if(i <= 30, do: 200, else: 429)
+      end
+
+      assert conn
+             |> put_req_header("x-forwarded-for", "203.0.113.99, 198.51.100.5")
+             |> get(~p"/api/check-handle?username=mappedothervisitor")
+             |> Map.fetch!(:status) == 200
+    end
+
     test "distinct real client IPs get independent buckets", %{conn: conn} do
       # The rightmost entry is what the proxy observed, so two genuinely
       # different clients must not share a budget.
