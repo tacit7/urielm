@@ -304,12 +304,15 @@ sudo systemctl restart urielm
 
 ```bash
 sudo ufw allow OpenSSH
-sudo ufw allow 4000/tcp  # Phoenix server
+# Add allow rules for the current Cloudflare IPv4/IPv6 ranges on port 4000.
+# Do not add a public allow rule for 4000/tcp.
 sudo ufw enable
 sudo ufw status
 ```
 
-**Note:** Since Cloudflare proxies all traffic, only Cloudflare's IPs need access to port 4000. For added security, you could restrict port 4000 to Cloudflare IP ranges, but this is optional for a simple setup.
+For the current Cloudflare-to-Phoenix topology, restricting origin port 4000 to Cloudflare's IPv4 and IPv6 ranges is required. Remove any existing public port-4000 allow rule after installing the specific range rules.
+
+Production explicitly trusts Cloudflare peers through `trusted_proxy_cidrs` in `config/prod.exs`; other environments trust only loopback by default. Authentication and registration share the same client-address resolver. Refresh these CIDRs and the firewall rules together from [Cloudflare IPv4 ranges](https://www.cloudflare.com/ips-v4) and [IPv6 ranges](https://www.cloudflare.com/ips-v6). The default `trusted_proxy_hops: 1` selects the rightmost forwarded address and must reflect the actual number of appending proxies; review the trusted peers and hop count whenever topology changes.
 
 ## Performance Tips
 

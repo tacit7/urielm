@@ -170,32 +170,8 @@ defmodule UrielmWeb.AuthController do
     ])
   end
 
-  # Client IP, used as a rate-limit key.
-  #
-  # X-Forwarded-For is a client-supplied header, so the LEFTMOST entries are
-  # attacker-controlled: anyone can send "X-Forwarded-For: 1.2.3.4" and mint a
-  # fresh rate-limit bucket per request. Our reverse proxy appends the peer it
-  # actually saw, so the RIGHTMOST entry is the first value the attacker cannot
-  # forge. Take that one, dropping any hops the attacker prepended.
-  #
-  # :trusted_proxy_hops is how many proxies sit in front of the app (default 1).
-  # Raise it only if you add another appending proxy; each extra hop discards one
-  # more entry from the right.
-  defp client_ip(conn) do
-    hops = Application.get_env(:urielm, :trusted_proxy_hops, 1)
-
-    forwarded =
-      conn
-      |> get_req_header("x-forwarded-for")
-      |> Enum.flat_map(&String.split(&1, ","))
-      |> Enum.map(&String.trim/1)
-      |> Enum.reject(&(&1 == ""))
-
-    case Enum.at(forwarded, -hops) do
-      value when is_binary(value) -> value
-      nil -> conn.remote_ip |> :inet.ntoa() |> to_string()
-    end
-  end
+  defp client_ip(conn),
+    do: UrielmWeb.ClientIP.client_ip(conn.remote_ip, conn.req_headers)
 
   # 429 for the JSON endpoints. Deliberately generic so it never leaks whether
   # the account/handle exists.

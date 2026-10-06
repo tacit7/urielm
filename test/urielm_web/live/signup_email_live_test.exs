@@ -91,14 +91,14 @@ defmodule UrielmWeb.SignupEmailLiveTest do
     refute Urielm.Accounts.get_user_by_email("directlive@example.com")
   end
 
-  test "configured proxy shares normalized forwarded IP across transports", %{conn: conn} do
-    old = Application.get_env(:urielm, :trusted_proxy_ips)
-    Application.put_env(:urielm, :trusted_proxy_ips, [{10, 0, 0, 1}])
+  test "configured CIDR proxy shares normalized forwarded IP across transports", %{conn: conn} do
+    old = Application.get_env(:urielm, :trusted_proxy_cidrs)
+    Application.put_env(:urielm, :trusted_proxy_cidrs, ["10.0.0.0/24"])
 
     on_exit(fn ->
       if old,
-        do: Application.put_env(:urielm, :trusted_proxy_ips, old),
-        else: Application.delete_env(:urielm, :trusted_proxy_ips)
+        do: Application.put_env(:urielm, :trusted_proxy_cidrs, old),
+        else: Application.delete_env(:urielm, :trusted_proxy_cidrs)
     end)
 
     conn = with_peer(conn, {10, 0, 0, 1})

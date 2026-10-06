@@ -621,6 +621,34 @@ defmodule UrielmWeb.AuthControllerTest do
       assert List.last(statuses) == 429
     end
 
+    test "untrusted peers cannot rotate forwarded addresses to reset signin or handle budgets", %{
+      conn: conn
+    } do
+      conn = %{conn | remote_ip: {192, 0, 2, 44}}
+
+      signin_statuses =
+        for i <- 1..11 do
+          conn
+          |> put_req_header("x-forwarded-for", "198.51.100.#{i}")
+          |> post(~p"/auth/signin", %{email: "direct#{i}@example.com", password: "x"})
+          |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(signin_statuses, 10) == List.duplicate(401, 10)
+      assert List.last(signin_statuses) == 429
+
+      handle_statuses =
+        for i <- 1..31 do
+          conn
+          |> put_req_header("x-forwarded-for", "198.51.100.#{i}")
+          |> get(~p"/api/check-handle?username=#{"directhandle#{i}"}")
+          |> Map.fetch!(:status)
+        end
+
+      assert Enum.take(handle_statuses, 30) == List.duplicate(200, 30)
+      assert List.last(handle_statuses) == 429
+    end
+
     test "a spoofed X-Forwarded-For cannot mint a fresh per-IP bucket", %{conn: conn} do
       # X-Forwarded-For is client-supplied. If the limiter keyed on the leftmost
       # entry, varying it per request would reset the per-IP budget every time
