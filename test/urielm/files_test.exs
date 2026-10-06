@@ -189,7 +189,7 @@ defmodule Urielm.FilesTest do
 
       {:ok, _thread} = Urielm.Forum.remove_thread(thread, owner)
 
-      assert Files.can_access_file?(owner, file)
+      refute Files.can_access_file?(owner, file)
       refute Files.can_access_file?(other_user, file)
       refute Files.can_access_file?(nil, file)
     end
@@ -206,6 +206,74 @@ defmodule Urielm.FilesTest do
       assert Files.can_access_file?(owner, file)
       assert Files.can_access_file?(other_user, file)
       assert Files.can_access_file?(nil, file)
+    end
+  end
+
+  describe "removed forum attachments" do
+    test "fixes removed thread and comment attachment access for all visibility levels" do
+      owner = user_fixture()
+      other = user_fixture()
+      admin = admin_fixture()
+      thread = thread_fixture(%{author_id: owner.id})
+      comment = comment_fixture(thread, owner)
+
+      for removed_parent <- [comment, thread] do
+        removed_parent |> Ecto.Changeset.change(is_removed: true) |> Repo.update!()
+
+        for {entity_type, entity_id} <- [{"thread", thread.id}, {"comment", comment.id}],
+            visibility <- ["public", "private", "participants"],
+            removed_parent.id == thread.id or entity_type == "comment" do
+          file = %File{
+            entity_type: entity_type,
+            entity_id: entity_id,
+            user_id: owner.id,
+            visibility: visibility
+          }
+
+          for viewer <- [nil, owner, other, %{other | is_admin: true}] do
+            refute Files.can_access_file?(viewer, file)
+          end
+
+          if visibility == "private" do
+            refute Files.can_access_file?(admin, file)
+            assert Files.can_access_file?(admin, %{file | user_id: admin.id})
+          else
+            assert Files.can_access_file?(admin, file)
+          end
+
+          for attrs <- [
+                [is_admin: false],
+                [active: false],
+                [suspended_at: DateTime.utc_now(:second)]
+              ] do
+            admin |> Ecto.Changeset.change(attrs) |> Repo.update!()
+            refute Files.can_access_file?(admin, file)
+
+            Repo.get!(Urielm.Accounts.User, admin.id)
+            |> Ecto.Changeset.change(is_admin: true, active: true, suspended_at: nil)
+            |> Repo.update!()
+          end
+        end
+
+        Repo.get!(removed_parent.__struct__, removed_parent.id)
+        |> Ecto.Changeset.change(is_removed: false)
+        |> Repo.update!()
+      end
+    end
+
+    test "fixes participant administrator fallback for inactive and suspended accounts" do
+      admin = admin_fixture()
+      file = %File{entity_type: "chat_message", entity_id: 1, visibility: "participants"}
+      assert Files.can_access_file?(admin, file)
+
+      for attrs <- [[active: false], [suspended_at: DateTime.utc_now(:second)]] do
+        admin |> Ecto.Changeset.change(attrs) |> Repo.update!()
+        refute Files.can_access_file?(admin, file)
+
+        Repo.get!(Urielm.Accounts.User, admin.id)
+        |> Ecto.Changeset.change(active: true, suspended_at: nil)
+        |> Repo.update!()
+      end
     end
   end
 
@@ -239,7 +307,9 @@ defmodule Urielm.FilesTest do
           if visibility != "private", do: assert(Files.can_access_file?(admin, file))
         end
 
-        hidden_parent |> Ecto.Changeset.change(is_hidden: false) |> Repo.update!()
+        Repo.get!(hidden_parent.__struct__, hidden_parent.id)
+        |> Ecto.Changeset.change(is_hidden: false)
+        |> Repo.update!()
       end
     end
 

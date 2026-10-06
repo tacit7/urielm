@@ -221,7 +221,7 @@ defmodule UrielmWeb.LiveHelpers do
   Uses bulk loading to avoid N+1 queries for user state.
   """
   def update_thread_in_stream(socket, stream_name, thread_id, current_user) do
-    case Forum.get_thread(thread_id) do
+    case Forum.get_thread(thread_id, viewer: current_user) do
       nil ->
         Phoenix.LiveView.stream_delete(socket, stream_name, %{id: to_string(thread_id)})
 

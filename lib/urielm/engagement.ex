@@ -29,27 +29,29 @@ defmodule Urielm.Engagement do
   """
   def toggle_vote(user_id, target_type, target_id, value)
       when is_integer(value) and value in [-1, 1] do
-    Repo.transaction(fn ->
-      existing = get_vote(user_id, target_type, target_id)
+    with :ok <- authorize_forum_vote(user_id, target_type, target_id) do
+      Repo.transaction(fn ->
+        existing = get_vote(user_id, target_type, target_id)
 
-      {result, score_delta} =
-        case {existing, value} do
-          # No existing vote: create new
-          {nil, v} ->
-            {create_vote(user_id, target_type, target_id, v), v}
+        {result, score_delta} =
+          case {existing, value} do
+            # No existing vote: create new
+            {nil, v} ->
+              {create_vote(user_id, target_type, target_id, v), v}
 
-          # Same value: remove vote
-          {%Vote{value: ^value}, _} ->
-            {delete_vote(existing), -value}
+            # Same value: remove vote
+            {%Vote{value: ^value}, _} ->
+              {delete_vote(existing), -value}
 
-          # Different value: switch
-          {%Vote{value: old_value} = vote, v} ->
-            {update_vote(vote, v), v - old_value}
-        end
+            # Different value: switch
+            {%Vote{value: old_value} = vote, v} ->
+              {update_vote(vote, v), v - old_value}
+          end
 
-      apply_score_delta(target_type, target_id, score_delta)
-      result
-    end)
+        apply_score_delta(target_type, target_id, score_delta)
+        result
+      end)
+    end
   end
 
   def toggle_vote(_user_id, _target_type, _target_id, _value) do
@@ -62,24 +64,26 @@ defmodule Urielm.Engagement do
   """
   def cast_vote(user_id, target_type, target_id, value)
       when is_integer(value) and value in [-1, 1] do
-    Repo.transaction(fn ->
-      existing = get_vote(user_id, target_type, target_id)
+    with :ok <- authorize_forum_vote(user_id, target_type, target_id) do
+      Repo.transaction(fn ->
+        existing = get_vote(user_id, target_type, target_id)
 
-      delta =
-        case {existing, value} do
-          {nil, v} -> v
-          {%Vote{value: old_v}, new_v} -> new_v - old_v
-        end
+        delta =
+          case {existing, value} do
+            {nil, v} -> v
+            {%Vote{value: old_v}, new_v} -> new_v - old_v
+          end
 
-      result =
-        case existing do
-          nil -> create_vote(user_id, target_type, target_id, value)
-          vote -> update_vote(vote, value)
-        end
+        result =
+          case existing do
+            nil -> create_vote(user_id, target_type, target_id, value)
+            vote -> update_vote(vote, value)
+          end
 
-      apply_score_delta(target_type, target_id, delta)
-      result
-    end)
+        apply_score_delta(target_type, target_id, delta)
+        result
+      end)
+    end
   end
 
   def cast_vote(_user_id, _target_type, _target_id, _value) do
@@ -90,15 +94,17 @@ defmodule Urielm.Engagement do
   Remove a vote from a target.
   """
   def unvote(user_id, target_type, target_id) do
-    case get_vote(user_id, target_type, target_id) do
-      nil ->
-        {:ok, nil}
+    with :ok <- authorize_forum_vote(user_id, target_type, target_id) do
+      case get_vote(user_id, target_type, target_id) do
+        nil ->
+          {:ok, nil}
 
-      vote ->
-        Repo.transaction(fn ->
-          apply_score_delta(target_type, target_id, -vote.value)
-          Repo.delete!(vote)
-        end)
+        vote ->
+          Repo.transaction(fn ->
+            apply_score_delta(target_type, target_id, -vote.value)
+            Repo.delete!(vote)
+          end)
+      end
     end
   end
 
@@ -143,6 +149,12 @@ defmodule Urielm.Engagement do
       %{upvotes: up, downvotes: down, score: score} -> {up || 0, down || 0, score || 0}
     end
   end
+
+  defp authorize_forum_vote(user_id, target_type, target_id)
+       when target_type in ["thread", "comment"],
+       do: Forum.authorize_vote(user_id, target_type, target_id)
+
+  defp authorize_forum_vote(_user_id, _target_type, _target_id), do: :ok
 
   # Private vote helpers
 

@@ -1278,11 +1278,12 @@ defmodule Urielm.ForumTest do
       user = user_fixture()
       thread1 = thread_fixture()
       thread2 = thread_fixture()
-      removed = thread_fixture(%{is_removed: true})
+      removed = thread_fixture()
 
       {:ok, _} = Forum.save_thread(user.id, thread1.id)
       {:ok, _} = Forum.save_thread(user.id, thread2.id)
       {:ok, _} = Forum.save_thread(user.id, removed.id)
+      removed |> Ecto.Changeset.change(is_removed: true) |> Repo.update!()
 
       results = Forum.list_saved_threads(user.id)
 
@@ -1734,11 +1735,12 @@ defmodule Urielm.ForumTest do
       user = user_fixture()
       thread1 = thread_fixture()
       thread2 = thread_fixture()
-      removed = thread_fixture(%{is_removed: true})
+      removed = thread_fixture()
 
       {:ok, _} = Forum.subscribe_to_thread(user.id, thread1.id)
       {:ok, _} = Forum.subscribe_to_thread(user.id, thread2.id)
       {:ok, _} = Forum.subscribe_to_thread(user.id, removed.id)
+      removed |> Ecto.Changeset.change(is_removed: true) |> Repo.update!()
 
       subscriptions = Forum.list_subscriptions(user.id)
 

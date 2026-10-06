@@ -36,7 +36,7 @@ defmodule UrielmWeb.ForumVisibility do
                 "report_comment"
               ] or (event == "vote" and params["target_type"] == "comment")
 
-            if thread, do: Forum.get_thread(thread.id), else: not discussion_event?
+            if thread, do: Forum.get_thread(thread.id, viewer: user), else: not discussion_event?
 
           :board ->
             Forum.get_board(socket.assigns.board.slug, viewer: user)

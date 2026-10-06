@@ -19,25 +19,25 @@ defmodule UrielmWeb.CommentHandlers do
   def create(_thread, _body, _parent_id, _user), do: {:error, :not_found}
 
   def edit(thread, comment_id, body, user) do
-    with {:ok, comment} <- fetch_for_thread(thread, comment_id) do
+    with {:ok, comment} <- fetch_for_thread(thread, comment_id, user) do
       Forum.edit_comment(comment, body, user)
     end
   end
 
   def delete(thread, comment_id, user) do
-    with {:ok, comment} <- fetch_for_thread(thread, comment_id) do
+    with {:ok, comment} <- fetch_for_thread(thread, comment_id, user) do
       Forum.remove_comment(comment, user)
     end
   end
 
   def report(thread, comment_id, attrs, user) do
-    with {:ok, comment} <- fetch_for_thread(thread, comment_id) do
+    with {:ok, comment} <- fetch_for_thread(thread, comment_id, user) do
       Forum.create_report(user.id, "comment", comment.id, attrs)
     end
   end
 
   def vote(thread, comment_id, value, user, strategy) when strategy in [:cast, :toggle] do
-    with {:ok, _comment} <- fetch_for_thread(thread, comment_id),
+    with {:ok, _comment} <- fetch_for_thread(thread, comment_id, user),
          {:ok, value} <- parse_vote(value) do
       case strategy do
         :cast -> Forum.cast_vote(user.id, "comment", comment_id, value)
@@ -46,21 +46,20 @@ defmodule UrielmWeb.CommentHandlers do
     end
   end
 
-  def fetch_for_thread(%{id: thread_id}, comment_id) do
-    case Forum.get_comment(comment_id) do
-      nil ->
-        {:error, :not_found}
+  def fetch_for_thread(thread, comment_id, viewer \\ nil)
 
-      comment ->
-        if to_string(comment.thread_id) == to_string(thread_id) do
-          {:ok, comment}
-        else
-          {:error, :not_found}
-        end
+  def fetch_for_thread(%{id: thread_id}, comment_id, viewer) do
+    with {:ok, comment_id} <- Ecto.UUID.cast(comment_id),
+         %{thread_id: comment_thread_id} = comment <-
+           Forum.get_comment(comment_id, viewer: viewer),
+         true <- to_string(comment_thread_id) == to_string(thread_id) do
+      {:ok, comment}
+    else
+      _ -> {:error, :not_found}
     end
   end
 
-  def fetch_for_thread(_thread, _comment_id), do: {:error, :not_found}
+  def fetch_for_thread(_thread, _comment_id, _viewer), do: {:error, :not_found}
 
   defp parse_vote(value) when is_integer(value) and value in [-1, 1], do: {:ok, value}
 

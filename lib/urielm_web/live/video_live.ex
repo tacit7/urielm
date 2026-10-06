@@ -155,7 +155,7 @@ defmodule UrielmWeb.VideoLive do
   defp load_thread_and_comments(%{thread_id: nil}, _user), do: {nil, []}
 
   defp load_thread_and_comments(%{thread_id: thread_id}, user) do
-    case Forum.get_thread(thread_id, include_comments?: true) do
+    case Forum.get_thread(thread_id, include_comments?: true, viewer: user) do
       nil -> {nil, []}
       thread -> {thread, LiveHelpers.build_comment_tree(thread.comments, user)}
     end
@@ -437,7 +437,7 @@ defmodule UrielmWeb.VideoLive do
   end
 
   defp refresh_video_comments(socket, user) do
-    case Forum.get_thread(socket.assigns.thread.id, include_comments?: true) do
+    case Forum.get_thread(socket.assigns.thread.id, include_comments?: true, viewer: user) do
       nil ->
         socket
         |> assign(:thread, nil)

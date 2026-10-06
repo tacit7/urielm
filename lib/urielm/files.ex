@@ -100,7 +100,7 @@ defmodule Urielm.Files do
   end
 
   defp forum_parent_visible?(user, %File{entity_type: "thread", entity_id: thread_id}) do
-    not is_nil(Forum.get_thread(thread_id, viewer: user, allow_removed?: true))
+    not is_nil(Forum.get_thread(thread_id, viewer: user, allow_removed?: available_admin?(user)))
   end
 
   defp forum_parent_visible?(user, %File{entity_type: "comment", entity_id: comment_id}) do
@@ -109,7 +109,8 @@ defmodule Urielm.Files do
         false
 
       comment ->
-        forum_parent_visible?(user, %File{entity_type: "thread", entity_id: comment.thread_id})
+        (not comment.is_removed or available_admin?(user)) and
+          forum_parent_visible?(user, %File{entity_type: "thread", entity_id: comment.thread_id})
     end
   end
 
@@ -130,13 +131,22 @@ defmodule Urielm.Files do
   defp participant_can_access_file?(%{id: user_id}, %File{user_id: user_id}), do: true
 
   defp participant_can_access_file?(%{id: user_id} = user, %File{} = file) do
-    case Repo.get(Urielm.Accounts.User, user_id) do
-      %{is_admin: true} -> true
-      _ -> visible_thread_attachment?(user, file)
-    end
+    available_admin?(%{id: user_id}) or visible_thread_attachment?(user, file)
   end
 
   defp participant_can_access_file?(user, file), do: visible_thread_attachment?(user, file)
+
+  defp available_admin?(%{id: user_id}) do
+    case Repo.get(Urielm.Accounts.User, user_id) do
+      %Urielm.Accounts.User{is_admin: true, active: true} = persisted_user ->
+        not Urielm.Accounts.User.suspended?(persisted_user)
+
+      _ ->
+        false
+    end
+  end
+
+  defp available_admin?(_user), do: false
 
   defp visible_thread_attachment?(_user, %File{entity_type: "thread", entity_id: thread_id}) do
     case Forum.get_thread(thread_id) do

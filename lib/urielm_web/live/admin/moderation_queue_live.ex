@@ -57,7 +57,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
      socket
      |> assign(:page, next_page)
      |> assign(:has_more, length(reports) == @page_size)
-     |> stream(:reports, serialize_reports(reports))}
+     |> stream(:reports, serialize_reports(reports, socket.assigns.current_user))}
   end
 
   @impl true
@@ -365,7 +365,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     |> assign(:pending_count, Forum.count_pending_reports())
     |> assign(:reports_empty?, reports == [])
     |> assign(:has_more, length(reports) == @page_size)
-    |> stream(:reports, serialize_reports(reports), opts)
+    |> stream(:reports, serialize_reports(reports, socket.assigns.current_user), opts)
   end
 
   defp fetch_reports(socket, page) do
@@ -377,9 +377,9 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     )
   end
 
-  defp serialize_reports(reports) do
+  defp serialize_reports(reports, viewer) do
     Enum.map(reports, fn report ->
-      {target_title, target_path, thread_id} = report_target(report)
+      {target_title, target_path, thread_id} = report_target(report, viewer)
 
       %{
         id: to_string(report.id),
@@ -405,15 +405,15 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end)
   end
 
-  defp report_target(%{target_type: "thread"} = report) do
-    case Forum.get_thread(report.target_id) do
+  defp report_target(%{target_type: "thread"} = report, viewer) do
+    case Forum.get_thread(report.target_id, viewer: viewer) do
       nil -> {"Deleted thread", nil, to_string(report.target_id)}
       thread -> {thread.title, "/forum/t/#{report.target_id}", to_string(report.target_id)}
     end
   end
 
-  defp report_target(%{target_type: "comment"} = report) do
-    case Forum.get_comment(report.target_id) do
+  defp report_target(%{target_type: "comment"} = report, viewer) do
+    case Forum.get_comment(report.target_id, viewer: viewer) do
       nil ->
         {"Deleted comment", nil, nil}
 
@@ -426,7 +426,7 @@ defmodule UrielmWeb.Admin.ModerationQueueLive do
     end
   end
 
-  defp report_target(_report), do: {"Unavailable content", nil, nil}
+  defp report_target(_report, _viewer), do: {"Unavailable content", nil, nil}
 
   defp status_label("all"), do: "All"
   defp status_label(status), do: String.capitalize(status)

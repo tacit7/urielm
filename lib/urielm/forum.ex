@@ -352,41 +352,48 @@ defmodule Urielm.Forum do
   end
 
   def edit_thread(%Thread{} = thread, body, user) do
-    if authorized?(user, thread.author_id) do
-      # Save revision before updating
-      save_revision("thread", thread.id, user.id, thread.body, body, thread.title, thread.title)
+    with {:ok, thread} <- mutation_target(actor_id(user), "thread", thread.id) do
+      if authorized?(user, thread.author_id) do
+        # Save revision before updating
+        save_revision("thread", thread.id, user.id, thread.body, body, thread.title, thread.title)
 
-      thread
-      |> Thread.edit_changeset(%{body: body, edited_at: DateTime.utc_now()})
-      |> Repo.update()
-    else
-      {:error, :unauthorized}
+        thread
+        |> Thread.edit_changeset(%{body: body, edited_at: DateTime.utc_now()})
+        |> Repo.update()
+      else
+        {:error, :unauthorized}
+      end
     end
   end
 
   def remove_thread(%Thread{} = thread, %{id: user_id} = user) do
-    if authorized?(user, thread.author_id) do
-      update_thread(thread, %{is_removed: true, removed_by_id: user_id})
-    else
-      {:error, :unauthorized}
+    with {:ok, thread} <-
+           mutation_target(actor_id(user), "thread", thread.id, allow_removed?: true) do
+      if authorized?(user, thread.author_id) do
+        update_thread(thread, %{is_removed: true, removed_by_id: user_id})
+      else
+        {:error, :unauthorized}
+      end
     end
   end
 
   def mark_as_solved(%Thread{} = thread, comment_id, %{id: user_id} = user) do
-    cond do
-      not authorized?(user, thread.author_id) ->
-        {:error, :unauthorized}
+    with {:ok, thread} <- mutation_target(actor_id(user), "thread", thread.id) do
+      cond do
+        not authorized?(user, thread.author_id) ->
+          {:error, :unauthorized}
 
-      not comment_belongs_to_thread?(comment_id, thread.id) ->
-        {:error, :invalid_comment}
+        not comment_belongs_to_thread?(comment_id, thread.id) ->
+          {:error, :invalid_comment}
 
-      true ->
-        update_thread(thread, %{
-          is_solved: true,
-          solved_comment_id: comment_id,
-          solved_at: DateTime.utc_now(),
-          solved_by_id: user_id
-        })
+        true ->
+          update_thread(thread, %{
+            is_solved: true,
+            solved_comment_id: comment_id,
+            solved_at: DateTime.utc_now(),
+            solved_by_id: user_id
+          })
+      end
     end
   end
 
@@ -401,15 +408,17 @@ defmodule Urielm.Forum do
   end
 
   def unmark_as_solved(%Thread{} = thread, user) do
-    if authorized?(user, thread.author_id) do
-      update_thread(thread, %{
-        is_solved: false,
-        solved_comment_id: nil,
-        solved_at: nil,
-        solved_by_id: nil
-      })
-    else
-      {:error, :unauthorized}
+    with {:ok, thread} <- mutation_target(actor_id(user), "thread", thread.id) do
+      if authorized?(user, thread.author_id) do
+        update_thread(thread, %{
+          is_solved: false,
+          solved_comment_id: nil,
+          solved_at: nil,
+          solved_by_id: nil
+        })
+      else
+        {:error, :unauthorized}
+      end
     end
   end
 
@@ -631,30 +640,35 @@ defmodule Urielm.Forum do
   end
 
   def edit_comment(%Comment{} = comment, body, user) do
-    if authorized?(user, comment.author_id) do
-      # Save revision before updating
-      save_revision("comment", comment.id, user.id, comment.body, body, nil, nil)
-      update_comment(comment, %{body: body, edited_at: DateTime.utc_now()})
-    else
-      {:error, :unauthorized}
+    with {:ok, comment} <- mutation_target(actor_id(user), "comment", comment.id) do
+      if authorized?(user, comment.author_id) do
+        # Save revision before updating
+        save_revision("comment", comment.id, user.id, comment.body, body, nil, nil)
+        update_comment(comment, %{body: body, edited_at: DateTime.utc_now()})
+      else
+        {:error, :unauthorized}
+      end
     end
   end
 
   def remove_comment(%Comment{} = comment, %{id: user_id} = user) do
-    if authorized?(user, comment.author_id) do
-      case update_comment(comment, %{is_removed: true, removed_by_id: user_id}) do
-        {:ok, _removed} = result ->
-          unless comment.is_removed do
-            change_thread_comment_count(comment.thread_id, -1)
-          end
+    with {:ok, comment} <-
+           mutation_target(actor_id(user), "comment", comment.id, allow_removed?: true) do
+      if authorized?(user, comment.author_id) do
+        case update_comment(comment, %{is_removed: true, removed_by_id: user_id}) do
+          {:ok, _removed} = result ->
+            unless comment.is_removed do
+              change_thread_comment_count(comment.thread_id, -1)
+            end
 
-          result
+            result
 
-        error ->
-          error
+          error ->
+            error
+        end
+      else
+        {:error, :unauthorized}
       end
-    else
-      {:error, :unauthorized}
     end
   end
 
@@ -662,16 +676,8 @@ defmodule Urielm.Forum do
 
   def cast_vote(user_id, target_type, target_id, value)
       when is_integer(value) and value in [-1, 1] do
-    case Repo.get(Urielm.Accounts.User, user_id) do
-      nil ->
-        {:error, :unauthorized}
-
-      user ->
-        cond do
-          not account_available?(user) -> {:error, :unauthorized}
-          Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
-          true -> do_cast_vote(user_id, target_type, target_id, value)
-        end
+    with :ok <- authorize_vote(user_id, target_type, target_id) do
+      do_cast_vote(user_id, target_type, target_id, value)
     end
   end
 
@@ -724,12 +730,8 @@ defmodule Urielm.Forum do
   end
 
   def unvote(user_id, target_type, target_id) do
-    user = Repo.get(Urielm.Accounts.User, user_id)
-
-    cond do
-      not account_available?(user) -> {:error, :unauthorized}
-      Urielm.Accounts.User.silenced?(user) -> {:error, :silenced}
-      true -> do_unvote(user_id, target_type, target_id)
+    with :ok <- authorize_vote(user_id, target_type, target_id) do
+      do_unvote(user_id, target_type, target_id)
     end
   end
 
@@ -922,15 +924,19 @@ defmodule Urielm.Forum do
   # Saves/Bookmarks
 
   def save_thread(user_id, thread_id) do
-    %SavedThread{}
-    |> SavedThread.changeset(%{user_id: user_id, thread_id: thread_id})
-    |> Repo.insert()
+    with {:ok, _target} <- mutation_target(user_id, "thread", thread_id) do
+      %SavedThread{}
+      |> SavedThread.changeset(%{user_id: user_id, thread_id: thread_id})
+      |> Repo.insert()
+    end
   end
 
   def unsave_thread(user_id, thread_id) do
-    case Repo.get_by(SavedThread, user_id: user_id, thread_id: thread_id) do
-      nil -> {:error, :not_found}
-      saved -> Repo.delete(saved)
+    with {:ok, _target} <- mutation_target(user_id, "thread", thread_id) do
+      case Repo.get_by(SavedThread, user_id: user_id, thread_id: thread_id) do
+        nil -> {:error, :not_found}
+        saved -> Repo.delete(saved)
+      end
     end
   end
 
@@ -944,10 +950,12 @@ defmodule Urielm.Forum do
   end
 
   def toggle_save_thread(user_id, thread_id) do
-    if thread_saved?(user_id, thread_id) do
-      unsave_thread(user_id, thread_id)
-    else
-      save_thread(user_id, thread_id)
+    with {:ok, _target} <- mutation_target(user_id, "thread", thread_id) do
+      if Repo.get_by(SavedThread, user_id: user_id, thread_id: thread_id) do
+        unsave_thread(user_id, thread_id)
+      else
+        save_thread(user_id, thread_id)
+      end
     end
   end
 
@@ -992,15 +1000,19 @@ defmodule Urielm.Forum do
   # Saved Comments/Bookmarks
 
   def save_comment(user_id, comment_id) do
-    %SavedComment{}
-    |> SavedComment.changeset(%{user_id: user_id, comment_id: comment_id})
-    |> Repo.insert()
+    with {:ok, _target} <- mutation_target(user_id, "comment", comment_id) do
+      %SavedComment{}
+      |> SavedComment.changeset(%{user_id: user_id, comment_id: comment_id})
+      |> Repo.insert()
+    end
   end
 
   def unsave_comment(user_id, comment_id) do
-    case Repo.get_by(SavedComment, user_id: user_id, comment_id: comment_id) do
-      nil -> {:error, :not_found}
-      saved -> Repo.delete(saved)
+    with {:ok, _target} <- mutation_target(user_id, "comment", comment_id) do
+      case Repo.get_by(SavedComment, user_id: user_id, comment_id: comment_id) do
+        nil -> {:error, :not_found}
+        saved -> Repo.delete(saved)
+      end
     end
   end
 
@@ -1014,10 +1026,12 @@ defmodule Urielm.Forum do
   end
 
   def toggle_save_comment(user_id, comment_id) do
-    if comment_saved?(user_id, comment_id) do
-      unsave_comment(user_id, comment_id)
-    else
-      save_comment(user_id, comment_id)
+    with {:ok, _target} <- mutation_target(user_id, "comment", comment_id) do
+      if Repo.get_by(SavedComment, user_id: user_id, comment_id: comment_id) do
+        unsave_comment(user_id, comment_id)
+      else
+        save_comment(user_id, comment_id)
+      end
     end
   end
 
@@ -1369,15 +1383,19 @@ defmodule Urielm.Forum do
   # Subscriptions
 
   def subscribe_to_thread(user_id, thread_id) do
-    %Subscription{}
-    |> Subscription.changeset(%{user_id: user_id, thread_id: thread_id})
-    |> Repo.insert()
+    with {:ok, _target} <- mutation_target(user_id, "thread", thread_id) do
+      %Subscription{}
+      |> Subscription.changeset(%{user_id: user_id, thread_id: thread_id})
+      |> Repo.insert()
+    end
   end
 
   def unsubscribe_from_thread(user_id, thread_id) do
-    case Repo.get_by(Subscription, user_id: user_id, thread_id: thread_id) do
-      nil -> {:error, :not_found}
-      subscription -> Repo.delete(subscription)
+    with {:ok, _target} <- mutation_target(user_id, "thread", thread_id) do
+      case Repo.get_by(Subscription, user_id: user_id, thread_id: thread_id) do
+        nil -> {:error, :not_found}
+        subscription -> Repo.delete(subscription)
+      end
     end
   end
 
@@ -2329,6 +2347,74 @@ defmodule Urielm.Forum do
   # Preload thread metadata for struct (post-fetch)
   defp preload_thread_meta(%Thread{} = thread),
     do: Repo.preload(thread, [:author, :board, :tag_records])
+
+  @doc "Authorizes forum voting against the current actor and persisted target visibility."
+  def authorize_vote(user_id, target_type, target_id) do
+    user = current_user(%{id: user_id})
+
+    cond do
+      not account_available?(user) ->
+        {:error, :unauthorized}
+
+      Urielm.Accounts.User.silenced?(user) ->
+        {:error, :silenced}
+
+      true ->
+        case mutation_target(user_id, target_type, target_id) do
+          {:ok, _target} -> :ok
+          error -> error
+        end
+    end
+  end
+
+  defp actor_id(%{id: id}), do: id
+  defp actor_id(_user), do: nil
+
+  defp mutation_target(user_id, target_type, target_id, opts \\ []) do
+    user = current_user(%{id: user_id})
+
+    if account_available?(user) do
+      with {:ok, id} <- Ecto.UUID.cast(target_id),
+           {:ok, target, thread} <- persisted_mutation_target(target_type, id) do
+        thread = Repo.preload(thread, board: :category)
+
+        cond do
+          (thread.is_removed or Map.get(target, :is_removed, false)) and
+              not Keyword.get(opts, :allow_removed?, false) ->
+            {:error, :not_found}
+
+          is_nil(thread.board) or is_nil(thread.board.category) ->
+            {:error, :not_found}
+
+          (thread.board.is_hidden or thread.board.category.is_hidden) and not user.is_admin ->
+            {:error, :not_found}
+
+          true ->
+            {:ok, target}
+        end
+      else
+        _ -> {:error, :not_found}
+      end
+    else
+      {:error, :unauthorized}
+    end
+  end
+
+  defp persisted_mutation_target("thread", id) do
+    case Repo.get(Thread, id) do
+      nil -> {:error, :not_found}
+      thread -> {:ok, thread, thread}
+    end
+  end
+
+  defp persisted_mutation_target("comment", id) do
+    case Repo.get(Comment, id) |> Repo.preload(:thread) do
+      %Comment{thread: %Thread{} = thread} = comment -> {:ok, comment, thread}
+      _ -> {:error, :not_found}
+    end
+  end
+
+  defp persisted_mutation_target(_target_type, _id), do: {:error, :not_found}
 
   # Mutation authorization uses persisted roles and account restrictions.
   defp authorized?(user, owner_id) do
