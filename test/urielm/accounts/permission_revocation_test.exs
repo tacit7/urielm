@@ -101,4 +101,52 @@ defmodule Urielm.Accounts.PermissionRevocationTest do
       assert is_nil(persisted.silenced_at)
     end
   end
+
+  test "normal deactivation and reactivation keep old sessions revoked" do
+    user = user_fixture()
+    token = Sessions.create(user)
+    assert {:ok, inactive} = Accounts.update_user(user, %{active: false})
+    assert {:ok, _} = Accounts.update_user(inactive, %{active: true})
+    assert is_nil(Sessions.fetch(token))
+  end
+
+  test "fixes reactivation reviving sessions left by direct database deactivation" do
+    user = user_fixture()
+    token = Sessions.create(user)
+    user |> Ecto.Changeset.change(active: false) |> Repo.update!()
+    assert {:ok, %{active: true}} = Accounts.update_user(user, %{active: true})
+    assert is_nil(Sessions.fetch(token))
+  end
+
+  test "fixes inactive profile updates retaining residual sessions" do
+    user = user_fixture()
+    token = Sessions.create(user)
+    user |> Ecto.Changeset.change(active: false) |> Repo.update!()
+    assert {:ok, _} = Accounts.update_user(user, %{display_name: "Updated"})
+
+    assert is_nil(
+             Repo.get_by(Urielm.Accounts.UserSession, token_hash: :crypto.hash(:sha256, token))
+           )
+  end
+
+  test "failed reactivation preserves account state and residual sessions" do
+    user = user_fixture()
+    token = Sessions.create(user)
+    user |> Ecto.Changeset.change(active: false) |> Repo.update!()
+    UrielmWeb.Endpoint.subscribe(Sessions.topic(token))
+    assert {:error, _} = Accounts.update_user(user, %{active: true, email: "invalid"})
+    refute Accounts.get_user(user.id).active
+    assert Repo.get_by(Urielm.Accounts.UserSession, token_hash: :crypto.hash(:sha256, token))
+    refute_receive %Phoenix.Socket.Broadcast{event: "disconnect"}
+  end
+
+  test "active profile updates preserve sessions and emit no disconnect" do
+    user = user_fixture()
+    token = Sessions.create(user)
+    UrielmWeb.Endpoint.subscribe(Sessions.topic(token))
+    assert {:ok, _} = Accounts.update_user(user, %{display_name: "Updated", active: true})
+    assert Sessions.allowed?(token)
+    refute_receive %Phoenix.Socket.Broadcast{event: "disconnect"}
+  end
+
 end

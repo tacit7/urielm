@@ -210,7 +210,7 @@ defmodule Urielm.Accounts do
   def update_user(%User{} = user, attrs) do
     changeset = User.changeset(get_user(user.id), attrs)
 
-    if Ecto.Changeset.get_change(changeset, :active) == false do
+    if Map.has_key?(changeset.changes, :active) or not changeset.data.active do
       update_and_revoke_sessions(changeset)
     else
       Repo.update(changeset)
